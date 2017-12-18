@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <ows:Identifier>RA</ows:Identifier>
+
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>productionName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>example ra 01_ra_meris</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>inputPath</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <!--or-->
+        <wps:Input>
+            <ows:Identifier>geoInventory</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/geoInventory/MER_RR__1P_r03</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        
+        
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/home/marcoz/ra-example/004</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>minDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2010-03-01</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>maxDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2010-03-31</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>periodLength</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>5</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.ra.parameters</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+<!--
+                        <regions>
+                            <region>
+                                <name>northsea</name>
+                                <wkt>polygon((-19.94 40.00, -20.00 60.00, 0.0 60.00, 0.00 65.00, 13.06 65.00, 12.99 53.99, 0.00 49.22, 0.00 40.00, -19.94 40.00))
+                                </wkt>
+                            </region>
+                        </regions>
+-->
+                        <shapeFilePath>/calvalus/home/marcoz/shapefiles/HELCOM_offshore_subbasins.zip</shapeFilePath>
+                        <filterAttributeName>HELCOM_ID</filterAttributeName>
+                        <!--<filterAttributeName>CellCode</filterAttributeName>-->
+                        <!--<filterAttributeValues>100kmE40N28,100kmE40N29,100kmE40N30,100kmE40N31,100kmE40N32,100kmE40N33,100kmE40N34,100kmE40N35</filterAttributeValues>-->
+                        <validExpression>!l1_flags.LAND_OCEAN</validExpression>
+                        <bands>
+                            <band>
+                                <name>radiance_1</name>
+                                <numBins>10</numBins>
+                                <lowValue>0.0</lowValue>
+                                <highValue>300.0</highValue>
+                            </band>
+                            <band>
+                                <name>radiance_2</name>
+                                <numBins>3</numBins>
+                                <lowValue>50.0</lowValue>
+                                <highValue>200.0</highValue>
+                            </band>
+                            <band>
+                                <name>radiance_3</name>
+                            </band>
+                        </bands>
+                        <percentiles>2,50,75,98</percentiles>
+                        <writePixelValues>true</writePixelValues>
+                    </parameters>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
+    </wps:DataInputs>
+</wps:Execute>

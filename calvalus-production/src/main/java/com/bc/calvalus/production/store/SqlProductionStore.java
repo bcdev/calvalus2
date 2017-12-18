@@ -7,10 +7,11 @@ import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.ceres.binding.BindingException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -18,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -216,6 +218,19 @@ public class SqlProductionStore implements ProductionStore {
         float procProgress = resultSet.getFloat("processing_progress");
         String procMessage = resultSet.getString("processing_message");
         String outputPath = resultSet.getString("output_path");
+        String[] intermediatePathes = new String[0];
+        if (outputPath != null) {
+            if (outputPath.contains(";")) {
+                String[] elems = outputPath.split(";");
+                outputPath = decodeNull(elems[0]);
+                intermediatePathes = new String[elems.length - 1];
+                for (int i = 1; i < elems.length; i++) {
+                    intermediatePathes[i - 1] = decodeNull(elems[i]);
+                }
+            } else {
+                outputPath = decodeNull(outputPath);
+            }
+        }
         String stagingState = resultSet.getString("staging_state");
         float stagingProgress = resultSet.getFloat("staging_progress");
         String stagingMessage = resultSet.getString("staging_message");
@@ -247,6 +262,7 @@ public class SqlProductionStore implements ProductionStore {
                                                    processStatus);
         Production production = new Production(id, name,
                                                outputPath,
+                                               intermediatePathes,
                                                stagingPath,
                                                autoStaging,
                                                productionRequest,
@@ -299,7 +315,7 @@ public class SqlProductionStore implements ProductionStore {
         insertProductionStmt.setString(9, production.getProcessingStatus().getState().toString());
         insertProductionStmt.setFloat(10, production.getProcessingStatus().getProgress());
         insertProductionStmt.setString(11, production.getProcessingStatus().getMessage());
-        insertProductionStmt.setString(12, production.getOutputPath());
+        insertProductionStmt.setString(12, formatOutputPathes(production.getOutputPath(), production.getIntermediateDataPath()));
         insertProductionStmt.setString(13, production.getStagingStatus().getState().toString());
         insertProductionStmt.setFloat(14, production.getStagingStatus().getProgress());
         insertProductionStmt.setString(15, production.getStagingStatus().getMessage());
@@ -345,14 +361,14 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     private void init() throws SQLException, IOException {
-        InputStreamReader streamReader = new InputStreamReader(
-                SqlProductionStore.class.getResourceAsStream("calvalus-store.sql"));
+        Reader reader = new BufferedReader(new InputStreamReader(
+                SqlProductionStore.class.getResourceAsStream("calvalus-store.sql")));
         try {
-            SqlReader sqlReader = new SqlReader(streamReader);
+            SqlReader sqlReader = new SqlReader(reader);
             sqlReader.executeAll(connection);
             connection.commit();
         } finally {
-            streamReader.close();
+            reader.close();
         }
     }
 
@@ -378,5 +394,21 @@ public class SqlProductionStore implements ProductionStore {
 
     private static Timestamp toSqlTimestamp(Date date) {
         return date != null ? new Timestamp(date.getTime()) : null;
+    }
+
+    private static String formatOutputPathes(String outputPath, String[] intermediateDataPath) {
+        StringBuilder sb = new StringBuilder(encodeNull(outputPath));
+        for (String path : intermediateDataPath) {
+            sb.append(";").append(encodeNull(path));
+        }
+        return sb.toString();
+    }
+
+    private static String encodeNull(String s) {
+        return s == null ? "[[null]]" : s;
+    }
+
+    private static String decodeNull(String s) {
+        return "[[null]]".equals(s) ? null : s;
     }
 }

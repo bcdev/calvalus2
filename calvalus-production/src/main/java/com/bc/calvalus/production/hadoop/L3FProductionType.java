@@ -2,7 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.QLWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -28,14 +28,14 @@ public class L3FProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new L3FProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new L3FProductionType(fileSystemService, processing, staging);
         }
     }
 
-    L3FProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    L3FProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                       StagingService stagingService) {
-        super("L3F", inventoryService, processingService, stagingService);
+        super("L3F", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -89,12 +89,5 @@ public class L3FProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               workflow);
-    }
-
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
     }
 }

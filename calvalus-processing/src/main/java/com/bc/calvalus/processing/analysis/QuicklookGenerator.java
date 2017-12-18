@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
@@ -32,8 +33,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
 import org.esa.snap.core.datamodel.*;
+import org.esa.snap.core.dataop.barithm.BandArithmetic;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
+import org.esa.snap.core.jexp.ParseException;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;
 import org.esa.snap.core.util.DefaultPropertyMap;
@@ -48,7 +51,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
@@ -58,14 +60,24 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Genrates Quicklooks from products
+ * Generates Quick look images from products
  */
 public class QuicklookGenerator {
 
-    public static final Logger LOGGER = CalvalusLogger.getLogger();
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
+    
+    private final TaskAttemptContext context;
+    private final Product sourceProduct;
+    private final Quicklooks.QLConfig qlConfig;
 
-    static RenderedImage createImage(final TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
+    public QuicklookGenerator(TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) {
+        this.context = context;
+        this.sourceProduct = product;
+        this.qlConfig = qlConfig;
+    }
 
+    public RenderedImage createImage() throws IOException {
+        Product product = sourceProduct;
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<>();
             subsetParams.put("subSamplingX", qlConfig.getSubSamplingX());
@@ -75,28 +87,41 @@ public class QuicklookGenerator {
         ColoredBandImageMultiLevelSource multiLevelSource;
         Band masterBand;
         if (qlConfig.getRGBAExpressions() != null && qlConfig.getRGBAExpressions().length > 0) {
-            String[] rgbaExpressions;
-            if (qlConfig.getRGBAExpressions().length == 4) {
-                rgbaExpressions = qlConfig.getRGBAExpressions();
-            } else if (qlConfig.getRGBAExpressions().length == 3) {
-                rgbaExpressions = new String[4];
-                System.arraycopy(qlConfig.getRGBAExpressions(), 0, rgbaExpressions, 0,
-                                 qlConfig.getRGBAExpressions().length);
-                rgbaExpressions[3] = "";
-            } else {
+            String[] rgbaExpressions = qlConfig.getRGBAExpressions();
+            if (rgbaExpressions.length != 3 && rgbaExpressions.length != 4) {
                 throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
             }
-            RGBImageProfile.storeRgbaExpressions(product, rgbaExpressions);
-            final Band[] rgbBands = {
-                    product.getBand(RGBImageProfile.RED_BAND_NAME),
-                    product.getBand(RGBImageProfile.GREEN_BAND_NAME),
-                    product.getBand(RGBImageProfile.BLUE_BAND_NAME),
-            };
-            masterBand = rgbBands[0];
-            for (Band band : rgbBands) {
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
+            try {
+                if (!BandArithmetic.areRastersEqualInSize(product, rgbaExpressions)) {
+                    throw new IllegalArgumentException("Referenced rasters are not of the same size");
+                }
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("Expressions are invalid");
             }
+            final Band[] rgbBands = new Band[3];
+            for (int i = 0; i < rgbBands.length; i++) {
+                String expression = rgbaExpressions[i];
+                Band rgbBand = product.getBand(expression);
+                if (rgbBand == null) {
+                    rgbBand = new VirtualBand(RGBImageProfile.RGB_BAND_NAMES[i],
+                                              ProductData.TYPE_FLOAT32,
+                                              determineWidth(expression, product),
+                                              determineHeight(expression, product),
+                                              expression);
+//                    rgbBand.setOwner(product);
+//                    rgbBand.setModified(false);
+                    product.addBand(rgbBand);
+                    rgbBand.setNoDataValue(Float.NaN);
+                    rgbBand.setNoDataValueUsed(true);
+                }
+                rgbBands[i] = rgbBand;
+            }
+            masterBand = rgbBands[0];
+// commented away in order to avoid parsing errors for expressions in RGB statement
+//            for (Band band : rgbBands) {
+//                band.setNoDataValue(Float.NaN);
+//                band.setNoDataValueUsed(true);
+//            }
             multiLevelSource = ColoredBandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
             if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null &&
                 qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {
@@ -127,7 +152,7 @@ public class QuicklookGenerator {
             masterBand.getImageInfo(wrapPM(context));
             multiLevelSource = ColoredBandImageMultiLevelSource.create(masterBand, wrapPM(context));
 
-            try (InputStream inputStream = new URL(cpdURL).openStream()) {
+            try (InputStream inputStream = HadoopProcessingService.openUrlAsStream(cpdURL, context.getConfiguration())) {
                 ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
                 if (masterBand.getIndexCoding() != null) {
@@ -201,7 +226,33 @@ public class QuicklookGenerator {
         return rendering.getImage();
     }
 
-    private static Layer createShapefileLayer(final Product product, String shapefileUrl) throws IOException {
+    private static int determineWidth(String expression, Product product) {
+        int width = product.getSceneRasterWidth();
+        try {
+            final RasterDataNode[] refRasters = BandArithmetic.getRefRasters(expression, product);
+            if (refRasters.length > 0) {
+                width = refRasters[0].getRasterWidth();
+            }
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid expression: " + expression);
+        }
+        return width;
+    }
+
+    private static int determineHeight(String expression, Product product) {
+        int height = product.getSceneRasterHeight();
+        try {
+            final RasterDataNode[] refRasters = BandArithmetic.getRefRasters(expression, product);
+            if (refRasters.length > 0) {
+                height = refRasters[0].getRasterHeight();
+            }
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid expression: " + expression);
+        }
+        return height;
+    }
+
+    private Layer createShapefileLayer(final Product product, String shapefileUrl) throws IOException {
         final File shapefile = extractShapefile(shapefileUrl);
         final LayerContext layerContext = new LayerContext() {
             @Override
@@ -281,11 +332,11 @@ public class QuicklookGenerator {
 //        return gf.createPolygon(gf.createLinearRing(coordinates), null);
 //    }
 
-    private static File extractShapefile(String shapefileUrl) throws IOException {
+    private File extractShapefile(String shapefileUrl) throws IOException {
         File shapefile = null;
         final String shapeDir = Files.createTempDirectory("shapefile").toFile().getAbsolutePath();
         final byte[] buffer = new byte[2048];
-        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(new URL(shapefileUrl).openStream()))) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(HadoopProcessingService.openUrlAsStream(shapefileUrl, context.getConfiguration())))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 FileOutputStream output = null;
@@ -309,10 +360,11 @@ public class QuicklookGenerator {
         return shapefile;
     }
 
-    private static void addFreshmonOverlay(Quicklooks.QLConfig qlConfig, Band masterBand, ImageLayer imageLayer,
+    private void addFreshmonOverlay(Quicklooks.QLConfig qlConfig, Band masterBand, ImageLayer imageLayer,
                                            boolean canUseAlpha, List<Layer> layerChildren) throws IOException {
         BufferedImage legend = createImageLegend(masterBand, canUseAlpha, ImageLegend.VERTICAL);
-        RenderedImage logo = ImageIO.read(new URL(qlConfig.getOverlayURL()).openStream());
+        Configuration conf = context.getConfiguration();
+        RenderedImage logo = ImageIO.read(HadoopProcessingService.openUrlAsStream(qlConfig.getOverlayURL(), conf));
         float scale = (float) legend.getWidth() / (float) logo.getWidth();
         RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
                                                   RenderingHints.VALUE_ANTIALIAS_ON);
@@ -340,9 +392,9 @@ public class QuicklookGenerator {
         layerChildren.add(noDataLayer); // add layer as background
     }
 
-    private static void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
+    private void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
                                                                                                         IOException {
-        InputStream inputStream = new URL(overlayURL).openStream();
+        InputStream inputStream = HadoopProcessingService.openUrlAsStream(overlayURL, context.getConfiguration());
         BufferedImage bufferedImage = ImageIO.read(inputStream);
         final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
         layerChildren.add(0, overlayLayer);

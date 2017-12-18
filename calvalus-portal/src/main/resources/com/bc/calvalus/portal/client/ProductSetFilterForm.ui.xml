@@ -8,60 +8,61 @@
     <ui:style src="style.css"/>
 
 
-    <g:HorizontalPanel spacing="16">
+    <g:FlowPanel styleName="{style.filterPanel}" width="70em">
 
-        <g:VerticalPanel spacing="2">
+        <g:FlowPanel styleName="{style.temporalFilterPanel}" width="30%">
 
-            <g:HTMLPanel width="100%">
-                <h3>Temporal Filter</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                <g:InlineLabel styleName="{style.panelTitleText}">Temporal Filter</g:InlineLabel>
             </g:HTMLPanel>
 
             <g:HTMLPanel>
-                <table cellspacing="2">
+                <table cellspacing="2" width="100%">
                     <tr>
                     </tr>
                     <tr>
                         <td colspan="3">
-                            <g:RadioButton ui:field='temporalFilterOff' name="temporalFilter" text="No filter"/>
+                            <g:RadioButton ui:field='temporalFilterOff' name="temporalFilter"
+                                           text="No filter" styleName="{style.radioButton}"/>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="3">
                             <g:RadioButton ui:field='temporalFilterByDateRange' name="temporalFilter"
-                                           text="By date range"/>
+                                           text="By date range" styleName="{style.radioButton}"/>
                         </td>
                     </tr>
                     <tr>
                         <td>&nbsp;&nbsp;&nbsp;</td>
                         <td>Start date:</td>
                         <td align="right">
-                            <date:DateBox ui:field='minDate' width="6em"/>
+                            <date:DateBox ui:field='minDate' styleName="{style.dateBox}"/>
                         </td>
                     </tr>
                     <tr>
                         <td>&nbsp;&nbsp;&nbsp;</td>
                         <td>End date:</td>
                         <td align="right">
-                            <date:DateBox ui:field='maxDate' width="6em"/>
+                            <date:DateBox ui:field='maxDate' styleName="{style.dateBox}"/>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="3">
                             <g:RadioButton ui:field='temporalFilterByDateList' name="temporalFilter"
-                                           text="By date list"/>
+                                           text="By date list" styleName="{style.radioButton}"/>
                         </td>
                     </tr>
                     <tr>
                         <td>&nbsp;&nbsp;&nbsp;</td>
                         <td colspan="2">
-                            <g:TextArea ui:field='dateList' width="100%" visibleLines="4"/>
+                            <g:TextArea ui:field='dateList' width="100%" visibleLines="4" styleName="{style.textBox}"/>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2"/>
                         <td align="right">
-                            <g:TextBox ui:field='numDays' enabled="false" width="4em"/>&nbsp;days
+                            <g:TextBox ui:field='numDays' enabled="false" width="4em" styleName="{style.textBox}"/>&nbsp;
+                            <g:InlineLabel styleName="{style.textBox}">days</g:InlineLabel>
                         </td>
                     </tr>
                 </table>
@@ -69,19 +70,20 @@
 
             <g:Anchor ui:field="showFilterHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
 
-        </g:VerticalPanel>
+        </g:FlowPanel>
 
-        <g:VerticalPanel spacing="2">
+        <g:FlowPanel styleName="{style.spatialFilterPanel}" width="70%">
 
-            <g:HTMLPanel width="100%">
-                <h3>Spatial Filter</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                <g:InlineLabel styleName="{style.panelTitleText}">Spatial Filter</g:InlineLabel>
             </g:HTMLPanel>
 
             <!-- <g:HorizontalPanel width="100%"> -->
                 <g:HorizontalPanel spacing="2">
-                    <g:RadioButton ui:field='spatialFilterOff' name="spatialFilter" text="No filter (global)"/>
-                    <g:RadioButton ui:field='spatialFilterByRegion' name="spatialFilter" text="By region"/>
+                    <g:RadioButton ui:field='spatialFilterOff' name="spatialFilter"
+                                   text="No filter (global)" styleName="{style.radioButton}"/>
+                    <g:RadioButton ui:field='spatialFilterByRegion' name="spatialFilter"
+                                   text="By region" styleName="{style.radioButton}"/>
                 </g:HorizontalPanel>
             <!-- </g:HorizontalPanel> -->
 
@@ -89,8 +91,8 @@
 
             <g:Anchor ui:field="manageRegionsAnchor" addStyleNames="{style.anchor}">Add and manage user regions</g:Anchor>
 
-        </g:VerticalPanel>
+        </g:FlowPanel>
 
-    </g:HorizontalPanel>
+    </g:FlowPanel>
 
 </ui:UiBinder>

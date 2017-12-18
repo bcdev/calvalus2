@@ -3,8 +3,8 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
-import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -31,11 +31,11 @@ public interface PortalContext {
     DtoProcessorDescriptor[] getProcessors(String filter);
     DtoAggregatorDescriptor[] getAggregators(String filter);
 
-    DtoMaskDescriptor[] getMasks();
-
     ListDataProvider<DtoProduction> getProductions();
 
     BackendServiceAsync getBackendService();
+
+    ContextRetrievalServiceAsync getContextRetrievalService();
 
     void showView(String id);
 
@@ -46,4 +46,8 @@ public interface PortalContext {
     void setProductionListFiltered(boolean filter);
 
     boolean withPortalFeature(String featureName);
+
+    String[] getRequestQueues();
+
+    OrderProductionView getViewForRestore(String productionType);
 }

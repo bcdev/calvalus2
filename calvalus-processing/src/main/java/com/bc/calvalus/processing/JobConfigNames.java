@@ -35,6 +35,7 @@ public interface JobConfigNames {
     String CALVALUS_INPUT_INVENTORY = "calvalus.input.productInventory";
     String CALVALUS_INPUT_TABLE = "calvalus.input.table";
     String CALVALUS_INPUT_GEO_INVENTORY = "calvalus.input.geoInventory";
+    String CALVALUS_INPUT_PRODUCT_IDENTIFIERS = "calvalus.input.productIdentifiers";
 
     String CALVALUS_OUTPUT_DIR = "calvalus.output.dir";
     String CALVALUS_OUTPUT_FORMAT = "calvalus.output.format";
@@ -51,6 +52,8 @@ public interface JobConfigNames {
 
     String CALVALUS_OUTPUT_QUICKLOOKS = "calvalus.output.quicklooks";
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
+
+    String CALVALUS_REQUEST_SIZE_LIMIT = "calvalus.requestSizeLimit";
 
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
@@ -73,6 +76,8 @@ public interface JobConfigNames {
     String CALVALUS_L3_COMPUTE_OUTPUTS = "calvalus.l3.computeOutputs";
     String CALVALUS_MOSAIC_PARAMETERS = "calvalus.mosaic.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
+    String CALVALUS_MA_USE_INPUT_PIXEL_POS = "calvalus.ma.useInputPixelPos";
+    String CALVALUS_RA_PARAMETERS = "calvalus.ra.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String PROCESSING_HISTORY = "processing_history";
 
@@ -102,4 +107,8 @@ public interface JobConfigNames {
     String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
 
     String CALVALUS_DEBUG_TILECACHE = "calvalus.debug.tileCache";
+    String CALVALUS_INPUT_SUBSETTING = "calvalus.input.subsetting";
+    String CALVALUS_OUTPUT_SUBSETTING = "calvalus.output.subsetting";
+    String CALVALUS_OUTPUT_DATE_ELEMENT = "calvalus.output.dateElement";
+    String CALVALUS_OUTPUT_DATE_FORMAT = "calvalus.output.dateFormat";
 }

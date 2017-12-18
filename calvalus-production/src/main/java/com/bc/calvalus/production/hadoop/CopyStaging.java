@@ -19,6 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionStaging;
 import org.apache.hadoop.conf.Configuration;
@@ -26,6 +27,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
 import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
@@ -45,13 +47,16 @@ class CopyStaging extends ProductionStaging {
     private static final long GIGABYTE = 1024L * 1024L * 1024L;
 
     private final Configuration hadoopConfiguration;
+    private final FileSystem fileSystem;
     private final File stagingDir;
 
     public CopyStaging(Production production,
                        Configuration hadoopConfiguration,
+                       FileSystem fileSystem,
                        File stagingAreaPath) {
         super(production);
         this.hadoopConfiguration = hadoopConfiguration;
+        this.fileSystem = fileSystem;
         this.stagingDir = new File(stagingAreaPath, production.getStagingPath());
     }
 
@@ -65,7 +70,7 @@ class CopyStaging extends ProductionStaging {
         LOG.info("staging dir is: " + stagingDir);
 
         Path remoteOutputDir = new Path(production.getOutputPath());
-        FileSystem fileSystem = FileSystem.get(remoteOutputDir.toUri(), hadoopConfiguration, production.getProductionRequest().getUserName());
+        //FileSystem fileSystem = FileSystem.get(remoteOutputDir.toUri(), hadoopConfiguration, production.getProductionRequest().getUserName());
 
         // Simply copy entire content of remoteOutputDir
         FileStatus[] fileStatuses = fileSystem.globStatus(new Path(remoteOutputDir, "*.*"));

@@ -7,21 +7,20 @@
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel>
-                <h3>Input File Set</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}">
+                <g:InlineLabel styleName="{style.panelTitleText}">Input File Set</g:InlineLabel>
             </g:HTMLPanel>
 
 
-            <g:VerticalPanel spacing="2">
-                <g:CheckBox ui:field="predefinedProductSets" text="Show predefined file sets" checked="true"/>
+            <g:VerticalPanel spacing="2" styleName="{style.inputFileSetPanel}">
+                <g:CheckBox ui:field="predefinedProductSets" text="Show predefined file sets" checked="true" styleName="{style.checkBox}"/>
                 <g:HorizontalPanel spacing="2">
-                    <g:CheckBox ui:field="userProductionProductSets" text="Show my outputs" checked="false"/>
-                    <g:CheckBox ui:field="allProductionProductSets" text="and of other users" checked="false"/>
+                    <g:CheckBox ui:field="userProductionProductSets" text="Show my outputs" checked="false" styleName="{style.checkBox}"/>
+                    <g:CheckBox ui:field="allProductionProductSets" text="and of other users" checked="false" styleName="{style.checkBox}"/>
                 </g:HorizontalPanel>
 
                 <g:HorizontalPanel spacing="0">
-                    <g:ListBox ui:field="productSetListBox" width="24em" visibleItemCount="8" name="inputProductSet"/>
+                    <g:ListBox ui:field="productSetListBox" width="30em" visibleItemCount="8" name="inputProductSet"/>
 
                     <g:VerticalPanel width="1em"/>
 

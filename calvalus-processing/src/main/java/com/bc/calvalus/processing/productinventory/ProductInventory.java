@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.util.io.CsvReader;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -50,7 +51,7 @@ public class ProductInventory {
         if (!fileSystem.exists(path)) {
             return null;
         }
-        InputStreamReader reader = new InputStreamReader(fileSystem.open(path));
+        Reader reader = new BufferedReader(new InputStreamReader(fileSystem.open(path)));
         try {
             return createInventory(reader);
         } finally {

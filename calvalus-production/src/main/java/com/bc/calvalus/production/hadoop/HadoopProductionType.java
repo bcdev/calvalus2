@@ -17,7 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -25,15 +25,20 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
@@ -44,16 +49,16 @@ import java.util.*;
 public abstract class HadoopProductionType implements ProductionType {
 
     private final String name;
-    private final InventoryService inventoryService;
+    private final FileSystemService fileSystemService;
     private final HadoopProcessingService processingService;
     private final StagingService stagingService;
 
     protected HadoopProductionType(String name,
-                                   InventoryService inventoryService,
+                                   FileSystemService fileSystemService,
                                    HadoopProcessingService processingService,
                                    StagingService stagingService) {
         this.name = name;
-        this.inventoryService = inventoryService;
+        this.fileSystemService = fileSystemService;
         this.processingService = processingService;
         this.stagingService = stagingService;
     }
@@ -80,8 +85,8 @@ public abstract class HadoopProductionType implements ProductionType {
         return sb.toString().trim();
     }
 
-    public InventoryService getInventoryService() {
-        return inventoryService;
+    public FileSystemService getFileSystemService() {
+        return fileSystemService;
     }
 
     public HadoopProcessingService getProcessingService() {
@@ -106,6 +111,7 @@ public abstract class HadoopProductionType implements ProductionType {
     public Staging createStaging(Production production) throws ProductionException {
         try {
             Staging staging = createUnsubmittedStaging(production);
+            ((ProductionStaging) staging).setProductionService((ProductionService)stagingService.getProductionService());
             getStagingService().submitStaging(staging);
             return staging;
         } catch (IOException e) {
@@ -116,6 +122,9 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected void setInputLocationParameters(ProductionRequest productionRequest, Configuration conf) throws ProductionException {
         Map<String, String> productionRequestParameters = productionRequest.getParameters();
+        if(productionRequestParameters.containsKey("productIdentifiers")){
+            conf.set(JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS, productionRequest.getString("productIdentifiers"));
+        }
         if (productionRequestParameters.containsKey("inputTable")) {
             conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
         } else if (productionRequestParameters.containsKey("geoInventory")) {
@@ -127,11 +136,23 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    protected abstract Staging createUnsubmittedStaging(Production production) throws IOException;
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
+        String userName = production.getProductionRequest().getUserName();
+        Configuration conf = getProcessingService().getJobClient(userName).getConf();
+        return new CopyStaging(production,
+                               conf,
+                               getProcessingService().getFileSystem(userName, conf, new Path(production.getOutputPath())),
+                               getStagingService().getStagingDir());
+    }
 
     protected final Configuration createJobConfig(ProductionRequest productionRequest) throws ProductionException {
         try {
             Configuration jobConfig = getProcessingService().createJobConfig(productionRequest.getUserName());
+            // the following values have defaults in mapred-default.xml
+            // we instead want to apply our settings in the mapred-site.xml on the RM
+            // user provided still values take precedence
+            jobConfig.unset("mapreduce.map.memory.mb");
+            jobConfig.unset("mapreduce.reduce.memory.mb");
             jobConfig.set(JobConfigNames.CALVALUS_USER, productionRequest.getUserName());
             jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, productionRequest.getProductionType());
             return jobConfig;
@@ -173,7 +194,7 @@ public abstract class HadoopProductionType implements ProductionType {
             outputDir = outputDir.substring(0, outputDir.length() - 1);
         }
         try {
-            return getInventoryService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
+            return getFileSystemService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
         } catch (IOException e) {
             throw new ProductionException(e);
         }
@@ -188,7 +209,7 @@ public abstract class HadoopProductionType implements ProductionType {
      */
     protected boolean successfullyCompleted(String outputDir) {
         try {
-            return inventoryService.pathExists(outputDir + "/_SUCCESS");
+            return fileSystemService.pathExists(outputDir + "/_SUCCESS");
         } catch (IOException e) {
             return false;
         }
@@ -216,7 +237,10 @@ public abstract class HadoopProductionType implements ProductionType {
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
                 jobConfig.set(hadoopName, entry.getValue());
-            } else if (name.startsWith("calvalus.")) {
+            } else if (name.startsWith("calvalus.")
+                    && !name.startsWith("calvalus.portal")
+                    && !name.startsWith("calvalus.queue")
+                    && !name.startsWith("calvalus.crypt")) {
                 jobConfig.set(name, entry.getValue());
             }
         }
@@ -225,10 +249,10 @@ public abstract class HadoopProductionType implements ProductionType {
     public static abstract class Spi implements ProductionTypeSpi {
 
         @Override
-        public ProductionType create(InventoryService inventory, ProcessingService processing, StagingService staging) {
-            return create(inventory, (HadoopProcessingService) processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, ProcessingService processing, StagingService staging) {
+            return create(fileSystemService, (HadoopProcessingService) processing, staging);
         }
 
-        abstract public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging);
+        abstract public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging);
     }
 }

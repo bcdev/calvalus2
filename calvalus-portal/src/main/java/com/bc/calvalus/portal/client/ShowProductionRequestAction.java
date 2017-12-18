@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.geotools.gml3.GML.result;
+
 /**
  * @author Norman
  * @since 0.3
@@ -16,6 +18,14 @@ public class ShowProductionRequestAction {
 
     public static void run(String title, DtoProductionRequest result) {
         FlexTable flexTable = new FlexTable();
+        fillTable(flexTable, result);
+        ScrollPanel scrollPanel = new ScrollPanel(flexTable);
+        scrollPanel.setWidth("640px");
+        scrollPanel.setHeight("480px");
+        Dialog.info(title, scrollPanel);
+    }
+
+    public static void fillTable(FlexTable flexTable, DtoProductionRequest result) {
         FlexTable.FlexCellFormatter flexCellFormatter = flexTable.getFlexCellFormatter();
         flexCellFormatter.setColSpan(0, 0, 2);
         flexTable.setCellSpacing(5);
@@ -29,13 +39,12 @@ public class ShowProductionRequestAction {
         int i = 2;
         for (String name : names) {
             flexTable.setHTML(i, 0, name + ":");
-            String value = productionParameters.get(name).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            String value = productionParameters.get(name);
+            if (value != null && !value.isEmpty()) {
+                value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            }
             flexTable.setHTML(i, 1, "<pre>" + value + "</pre>");
             i++;
         }
-        ScrollPanel scrollPanel = new ScrollPanel(flexTable);
-        scrollPanel.setWidth("640px");
-        scrollPanel.setHeight("480px");
-        Dialog.info(title, scrollPanel);
     }
 }

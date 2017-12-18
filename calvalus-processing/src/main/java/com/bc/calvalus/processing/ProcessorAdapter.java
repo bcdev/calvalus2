@@ -39,6 +39,11 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 /**
@@ -84,6 +89,8 @@ import java.util.logging.Logger;
  */
 public abstract class ProcessorAdapter {
 
+    public enum MODE {TARGET, EXECUTE}
+
     private static final Logger LOG = CalvalusLogger.getLogger();
     public static final String[] EMPTY_PARAMETERS = new String[0];
 
@@ -106,9 +113,11 @@ public abstract class ProcessorAdapter {
             System.setProperty("snap.userdir", cwd);
             System.setProperty("snap.home", cwd);
             System.setProperty("snap.pythonModuleDir", cwd);
+            LOG.info("Set 'snap.userdir', 'snap.home', 'snap.pythonModuleDir' to CWD: " + cwd);
         }
         GpfUtils.init(conf);
         Engine.start();
+        CalvalusLogger.restoreCalvalusLogFormatter();
     }
 
     protected MapContext getMapContext() {
@@ -125,10 +134,53 @@ public abstract class ProcessorAdapter {
 
     /**
      * Prepares the processing.
-     * The default implementation does nothing.
+     * The default implementation does nothing except creating a shallow copy tree with symlinks to files of patch packages.
      */
     public void prepareProcessing() throws IOException {
+        shallowCopyPatches(new File(".").getAbsolutePath());
     }
+
+    protected static void shallowCopyPatches(String wd) throws IOException {
+        java.nio.file.Path dir = Paths.get(wd);
+        try (DirectoryStream<java.nio.file.Path> directoryStream =
+                     Files.newDirectoryStream(dir,
+                                              new DirectoryStream.Filter<java.nio.file.Path>() {
+                                                  @Override
+                                                  public boolean accept(java.nio.file.Path entry) throws IOException {
+                                                      return entry.getFileName().toString().endsWith("-patch") && Files.isSymbolicLink(entry);
+                                                  }
+                                              })) {
+            for (java.nio.file.Path srcChild : directoryStream) {
+                String srcName = srcChild.getFileName().toString();
+                String destName = srcName.substring(0, srcName.length() - "-patch".length());
+                java.nio.file.Path destChild = dir.resolve(destName);
+                try {
+                    Files.createDirectory(destChild);
+                } catch (FileAlreadyExistsException ignore) {}
+                shallowCopyRecursive(srcChild, destChild);
+            }
+        }
+    }
+
+    private static void shallowCopyRecursive(java.nio.file.Path src, java.nio.file.Path dest) throws IOException {
+        try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(src)) {
+            for (java.nio.file.Path srcChild : directoryStream) {
+                String name = srcChild.getFileName().toString();
+                java.nio.file.Path destChild = dest.resolve(name);
+                if (Files.isDirectory(srcChild, LinkOption.NOFOLLOW_LINKS)) {
+                    try {
+                        Files.createDirectory(destChild);
+                    } catch (FileAlreadyExistsException ignore) {}
+                    shallowCopyRecursive(srcChild, destChild);
+                } else {
+                    try {
+                        Files.createSymbolicLink(destChild, srcChild);
+                    } catch (FileAlreadyExistsException ignore) {}
+                }
+            }
+        }
+    }
+
 
     /**
      * Returns whether the adapter can skip processing the current input product.
@@ -158,10 +210,10 @@ public abstract class ProcessorAdapter {
      * <p/>
      *
      * @param pm A progress monitor
-     * @return The number of processed products.
+     * @return False, if the product has not be processed
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
+    public abstract boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException;
 
     /**
      * Returns the product resulting from the processing.
@@ -252,8 +304,7 @@ public abstract class ProcessorAdapter {
             Rectangle sourceRectangle = getInputRectangle();
             if (sourceRectangle == null || !sourceRectangle.isEmpty()) {
                 prepareProcessing();
-                int numProducts = processSourceProduct(pm);
-                if (numProducts > 0) {
+                if (processSourceProduct(MODE.TARGET, pm)) {
                     processedProduct = openProcessedProduct();
                 }
             }
@@ -313,6 +364,7 @@ public abstract class ProcessorAdapter {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
             Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
+            LOG.info("getInputRectangle: for geometryWkt = " + geometryWkt);
             ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
                                                                                          roiRectangle,
                                                                                          inputSplit,
@@ -323,7 +375,7 @@ public abstract class ProcessorAdapter {
                 }
             };
             inputRectangle = calculator.computeRect();
-            LOG.info("computed inputRectangle = " + inputRectangle);
+            LOG.info("getInputRectangle: calculated inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
     }
@@ -354,12 +406,21 @@ public abstract class ProcessorAdapter {
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         if (inputFile != null) {
             if (inputFormat != null) {
+                LOG.info(String.format("openInputProduct: inputFile  = %s inputFormat  = %s", inputFile, inputFormat));
                 return ProductIO.readProduct(inputFile, inputFormat);
             } else {
+                LOG.info(String.format("openInputProduct: inputFile  = %s", inputFile));
                 return ProductIO.readProduct(inputFile);
             }
         } else {
-            return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
+            Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            File fileLocation = product.getFileLocation();
+            LOG.info(String.format("openInputProduct: fileLocation  = %s", fileLocation));
+            if (fileLocation != null) {
+                setInputFile(fileLocation);
+            }
+            return product;
         }
     }
 
@@ -392,10 +453,7 @@ public abstract class ProcessorAdapter {
         if (startTime == null || endTime == null) {
             return true;
         }
-        if (endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0) {
-            return true;
-        }
-        return false;
+        return endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0;
     }
 
     public static void copySceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,

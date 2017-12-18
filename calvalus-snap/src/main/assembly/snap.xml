@@ -1,0 +1,137 @@
+<!--
+   This assembly is part of the "client.xml" assembly.
+   It creates a directory with some required SNAP system includes and their dependencies.
+-->
+
+<assembly
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>snap</id>
+
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <containerDescriptorHandlers>
+        <containerDescriptorHandler>
+            <handlerName>metaInf-services</handlerName>
+        </containerDescriptorHandler>
+    </containerDescriptorHandlers>
+
+    <dependencySets>
+        <dependencySet>
+            <includes>
+                <!--
+                <include>org.esa.snap:ceres-metadata</include>
+                <include>org.esa.snap:snap-core</include>
+                <include>org.esa.snap:snap-gpf</include>
+                <include>org.esa.snap:snap-envisat-reader</include>
+                <include>org.esa.snap:snap-geotiff</include>
+                <include>org.esa.snap:snap-bigtiff</include>
+                <include>org.esa.snap:snap-netcdf</include>
+                <include>org.esa.snap.seadas:seadas-reader</include>
+                <include>org.esa.s3tbx:s3tbx-avhrr-reader</include>
+                <include>org.esa.s3tbx:s3tbx-spot-vgt-reader</include>
+                <include>org.esa.s3tbx:s3tbx-landsat-reader</include>
+                <include>hsqldb:hsqldb</include>
+                <include>org.geotools:gt-render</include>
+                -->
+
+                <include>org.esa.snap:ceres-metadata</include>
+        
+                <!-- SNAP System Modules -->
+        
+                <include>org.esa.snap:snap-core</include>
+                <include>org.esa.snap:snap-runtime</include>
+                <!--<include>org.esa.snap:snap-engine-utilities</include>-->
+                <include>org.esa.snap:snap-gpf</include>
+        
+                <!-- SNAP Extension Modules -->
+        
+                <include>org.esa.snap:snap-arcbingrid-reader</include>
+                <include>org.esa.snap:snap-bigtiff</include>
+                <include>org.esa.snap:snap-binning</include>
+                <include>org.esa.snap:snap-classification</include>
+                <include>org.esa.snap:snap-cluster-analysis</include>
+                <include>org.esa.snap:snap-collocation</include>
+                <include>org.esa.snap:snap-csv-dataio</include>
+                <include>org.esa.snap:snap-dem</include>
+                <include>org.esa.snap:snap-envi-reader</include>
+                <include>org.esa.snap:snap-envisat-reader</include>
+                <include>org.esa.snap:snap-getasse30-dem</include>
+                <include>org.esa.snap:snap-geotiff</include>
+                <include>org.esa.snap:snap-hdf5-writer</include>
+                <include>org.esa.snap:snap-jython</include>
+                <include>org.esa.snap:snap-land-cover</include>
+                <include>org.esa.snap:snap-ndvi</include>
+                <include>org.esa.snap:snap-netcdf</include>
+                <include>org.esa.snap:snap-pconvert</include>
+                <include>org.esa.snap:snap-pgx-reader</include>
+                <include>org.esa.snap:snap-pixel-extraction</include>
+                <include>org.esa.snap:snap-python</include>
+                <include>org.esa.snap:snap-raster</include>
+                <include>org.esa.snap:snap-rtp-codec</include>
+                <include>org.esa.snap:snap-smart-configurator</include>
+                <include>org.esa.snap:snap-statistics</include>
+                <include>org.esa.snap:snap-temporal-percentile</include>
+                <include>org.esa.snap:snap-unmix</include>
+                <include>org.esa.snap:snap-watermask</include>
+                <!--<include>org.esa.snap:blue-marble-worldmap</include>-->
+                <!--<include>org.esa.snap:globcover-worldmap</include>-->
+                <include>org.esa.snap:snap-sta</include>
+        
+                <include>ncsa.hdf:lib-hdf</include>
+
+                <include>org.esa.s3tbx:s3tbx-alos-reader</include>
+                <include>org.esa.s3tbx:s3tbx-atsr-reader</include>
+                <include>org.esa.s3tbx:s3tbx-avhrr-reader</include>
+                <include>org.esa.s3tbx:s3tbx-chris-reader</include>
+                <include>org.esa.s3tbx:s3tbx-landsat-reader</include>
+                <include>org.esa.s3tbx:s3tbx-merisl3-reader</include>
+                <include>org.esa.s3tbx:s3tbx-modis-reader</include>
+                <include>org.esa.s3tbx:s3tbx-rad2refl</include>
+                <include>org.esa.s3tbx:s3tbx-sentinel3-reader</include>
+                <include>org.esa.s3tbx:s3tbx-slstr-regrid</include>
+                <include>org.esa.s3tbx:s3tbx-spot-vgt-reader</include>
+                <include>org.esa.snap.seadas:seadas-reader</include>
+
+                <include>org.esa.s2tbx:s2tbx-cache</include>
+                <include>org.esa.s2tbx:s2tbx-s2msi-reader</include>
+                <include>org.esa.s2tbx:lib-openjpeg</include>
+                <include>org.esa.s2tbx:s2tbx-jp2-reader</include>
+                <include>org.esa.s2tbx:s2tbx-jp2-writer</include>
+                <include>org.esa.s2tbx:s2tbx-commons</include>
+                <include>org.esa.s2tbx:s2tbx-spot-reader</include>
+                <include>org.esa.s2tbx:s2tbx-spot6-reader</include>
+                <include>org.esa.s2tbx:s2tbx-rapideye-reader</include>
+                <include>org.esa.s2tbx:s2tbx-deimos-reader</include>
+                <include>org.esa.s2tbx:s2tbx-sta-adapters-help</include>
+                <include>org.esa.s2tbx:s2tbx-radiometric-indices</include>
+                <include>org.esa.s2tbx:s2tbx-reflectance-to-radiance</include>
+                <!-- <include>org.esa.s2tbx:lib-gdal</include> -->
+                <!-- <include>org.esa.s2tbx:s2tbx-gdal-reader</include>  -->
+                <include>org.esa.s2tbx:s2tbx-grm</include>
+
+                <include>org.esa.s1tbx:s1tbx-commons</include>
+                <include>org.esa.s1tbx:s1tbx-io</include>
+                <include>org.esa.s1tbx:s1tbx-op-sentinel1</include>
+                <include>org.esa.s1tbx:s1tbx-op-sentinel1-ui</include>
+                <include>org.esa.s1tbx:s1tbx-op-utilities</include>
+                <include>org.esa.s1tbx:s1tbx-rcp</include>
+
+                <include>org.xeustechnologies:jtar</include>
+                <include>com.thoughtworks.xstream:xstream</include>
+                <include>org.hsqldb:hsqldb</include>
+                <include>xerces:xercesImpl</include>
+
+            </includes>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>false</useProjectArtifact>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+        </dependencySet>
+    </dependencySets>
+</assembly>

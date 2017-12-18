@@ -16,11 +16,11 @@
 
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.WorkflowItem;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -42,7 +42,7 @@ public class ProductionWriter {
 
     private static final String HTML_TEMPLATE = "com/bc/calvalus/production/request.html.vm";
     private static final String XML_TEMPLATE = "com/bc/calvalus/production/request.xml.vm";
-    private static final DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private final Map<String, Object> templateMap;
 

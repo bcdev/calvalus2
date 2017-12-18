@@ -1,0 +1,38 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css"/>
+
+    <g:HorizontalPanel spacing="16">
+        <g:VerticalPanel spacing="2">
+
+            <g:HTMLPanel styleName="{style.panelTitle}">
+                <g:InlineLabel styleName="{style.panelTitleText}">Input Files</g:InlineLabel>
+            </g:HTMLPanel>
+
+
+            <g:VerticalPanel spacing="2" styleName="{style.inputFilePanel}">
+                <g:HorizontalPanel spacing="0">
+                    <g:FlowPanel styleName="{style.inputFileListPanel}">
+                        <g:TextArea ui:field="productListTextArea" width="43em" visibleLines="10"/>
+                        <g:FlowPanel styleName="{style.fileCount}">
+                            <g:InlineLabel styleName="{style.fileCountLabel}">File count:</g:InlineLabel>
+                            <g:InlineLabel ui:field="inputFileCount"/>
+                        </g:FlowPanel>
+                    </g:FlowPanel>
+
+                    <g:VerticalPanel width="1em"/>
+
+                    <g:FlowPanel width="20em" styleName="{style.inputFileButtonContainer}">
+                        <g:Button ui:field='pasteFromCatalogueButton' text="Paste from catalogue"/>
+                        <g:HorizontalPanel height="1em"/>
+                        <g:Button ui:field='clearSelectionButton' text="Clear selection"/>
+                    </g:FlowPanel>
+                </g:HorizontalPanel>
+            </g:VerticalPanel>
+
+        </g:VerticalPanel>
+    </g:HorizontalPanel>
+
+</ui:UiBinder>

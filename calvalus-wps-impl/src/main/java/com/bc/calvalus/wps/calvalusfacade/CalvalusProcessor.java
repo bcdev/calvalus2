@@ -5,10 +5,12 @@ import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 
+import java.util.Map;
+
 /**
  * @author hans
  */
-public class CalvalusProcessor implements IWpsProcess {
+public class CalvalusProcessor implements WpsProcess {
 
     public static final String DELIMITER = "~";
 
@@ -31,24 +33,38 @@ public class CalvalusProcessor implements IWpsProcess {
         this.defaultSnapBundle = processorDescriptor.getJobConfiguration().get("calvalus.snap.bundle");
     }
 
+    @Override
     public String getIdentifier() {
         return identifier;
     }
 
+    @Override
     public String getTitle() {
         return title;
     }
 
+    @Override
     public String getAbstractText() {
         return abstractText;
     }
 
+    @Override
     public String getVersion() {
         return processorDescriptor.getProcessorVersion();
     }
 
+    @Override
+    public boolean isLocal() {
+        return false;
+    }
+
+    @Override
     public ParameterDescriptor[] getParameterDescriptors() {
         return processorDescriptor.getParameterDescriptors();
+    }
+
+    public Map<String,String> getJobConfiguration() {
+        return processorDescriptor.getJobConfiguration();
     }
 
     /**
@@ -56,10 +72,12 @@ public class CalvalusProcessor implements IWpsProcess {
      *
      * @return A template of processor parameters in a plain text format.
      */
+    @Override
     public String getDefaultParameters() {
         return processorDescriptor.getDefaultParameters();
     }
 
+    @Override
     public String[] getPossibleOutputFormats() {
         return processorDescriptor.getOutputFormats();
     }

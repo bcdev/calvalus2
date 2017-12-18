@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.DataInputsType;
@@ -96,22 +95,22 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(executeResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("productionResults"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Production results"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("production_result"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getAbstract().getValue(),
                    equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(), equalTo("productionResults"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getTitle().getValue(), equalTo("Production results"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(), equalTo("production_result"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getTitle().getValue(), equalTo("Production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getAbstract().getValue(),
                    equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getIdentifier().getValue(), equalTo("resultMetadataFile"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getTitle().getValue(), equalTo("Result metadata file"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getIdentifier().getValue(), equalTo("result_metadata"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getTitle().getValue(), equalTo("Metadata OWS context XML"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getAbstract().getValue(),
-                   equalTo("This is the URL link to the result metadata file"));
+                   equalTo("The URL to the result metadata file"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/zzz-metadata"));
 
@@ -145,11 +144,11 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getDataInputs().getInput().get(1).getData().getLiteralData().getValue(), equalTo("2009-06-03"));
         assertThat(executeResponse.getOutputDefinitions().getOutput().get(0).getIdentifier().getValue(), equalTo("productionResults"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
 
@@ -184,6 +183,62 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getProcessStarted().getValue(), equalTo("RUNNING"));
         assertThat(executeResponse.getStatus().getProcessStarted().getPercentCompleted(), equalTo(50));
 
+    }
+
+    @Test
+    public void canGetQuotationResponse() throws Exception {
+        DataInputsType dataInputs = getDataInputsType();
+
+        ExecuteResponse executeResponse = calvalusExecuteResponse.getQuotationResponse("tepUser", "ref-1", dataInputs);
+
+        assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been quoted successfully."));
+        assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(1));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("QUOTATION"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Job Quotation"));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString("{\n" +
+                                  "  \"id\": \"ref-1\",\n" +
+                                  "  \"account\": {\n" +
+                                  "    \"platform\": \"Brockmann Consult GmbH Processing Center\",\n" +
+                                  "    \"username\": \"tepUser\",\n" +
+                                  "    \"ref\": \"ref-1\"\n" +
+                                  "  },\n" +
+                                  "  \"compound\": {\n" +
+                                  "    \"id\": \"any-id\",\n" +
+                                  "    \"name\": \"processName\",\n" +
+                                  "    \"type\": \"processType\"\n" +
+                                  "  },\n" +
+                                  "  \"quantity\": [\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"CPU_MILLISECONDS\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
+                                  "      \"value\": 2\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PROC_INSTANCE\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    }\n" +
+                                  "  ],\n" +
+                                  "  \"hostName\": \"www.brockmann-consult.de\",\n"));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString("  \"status\": \"QUOTATION\"\n" +
+                                  "}"));
+    }
+
+    private DataInputsType getDataInputsType() {
+        DataInputsType dataInputs = new DataInputsType();
+        InputType input1 = getInputType("inputDataSetName", "MERIS FSG v2013 L1b 2002-2012");
+        dataInputs.getInput().add(input1);
+        InputType input2 = getInputType("maxDate", "2009-06-03");
+        dataInputs.getInput().add(input2);
+        return dataInputs;
     }
 
     private DocumentOutputDefinitionType getOutputType() {

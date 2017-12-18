@@ -26,9 +26,11 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.annotations.ParameterDescriptorFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -42,43 +44,67 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
 
     public SnapOperatorAdapter(MapContext mapContext) {
         super(mapContext);
+
+        if (getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY) != null) {
+            if (getConfiguration().get("calvalus.system.snap.dataio.reader.tileHeight") == null) {
+                System.setProperty("snap.dataio.reader.tileHeight", "128");
+                getLogger().info("Setting tileHeight to 128 for subsetting");
+            }
+            if ((getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth") == null
+                 || "*".equals(getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth")))
+                && ! getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false)) {
+                System.setProperty("snap.dataio.reader.tileWidth", "128");
+                getLogger().info("Setting tileWidth to 128 for subsetting");
+            }
+        }
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("SNAP Level 2");
         try {
             Configuration conf = getConfiguration();
             String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
             String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
-            Product subsetProduct = createSubset();
+            Product inputProduct = getInputProduct();
+            Product sourceProduct;
+            if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
+                sourceProduct = createSubsetFromInput(inputProduct);
+            } else {
+                sourceProduct = inputProduct;
+            }
             int minWidth = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, 0);
             int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
-            if (subsetProduct.getSceneRasterWidth() < minWidth &&
-                subsetProduct.getSceneRasterHeight() < minHeight) {
+            if (sourceProduct.getSceneRasterWidth() < minWidth && sourceProduct.getSceneRasterHeight() < minHeight) {
                 String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
                                     "It will be suppressed from the processing.";
-                getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
-                                               subsetProduct.getSceneRasterHeight()));
-                return 0;
+                getLogger().info(String.format(msgPattern, sourceProduct.getSceneRasterWidth(),
+                                               sourceProduct.getSceneRasterHeight()));
+                return false;
             }
-            targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+            Product processedProduct = getProcessedProduct(sourceProduct, processorName, processorParameters);
+            if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
+                targetProduct = createSubsetFromOutput(processedProduct);
+            } else {
+                targetProduct = processedProduct;
+            }
             if (targetProduct == null ||
                 targetProduct.getSceneRasterWidth() == 0 ||
                 targetProduct.getSceneRasterHeight() == 0) {
-                return 0;
+                getLogger().info("Skip processing");
+                return false;
             }
             getLogger().info(String.format("Processed product width = %d height = %d",
                                            targetProduct.getSceneRasterWidth(),
                                            targetProduct.getSceneRasterHeight()));
             if (hasInvalidStartAndStopTime(targetProduct)) {
-                copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+                copySceneRasterStartAndStopTime(inputProduct, targetProduct, null);
             }
         } finally {
             pm.done();
         }
-        return 1;
+        return true;
     }
 
     @Override
@@ -106,7 +132,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             // transform request into parameter objects
             Map<String, Object> parameterMap;
             try {
-                parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+                parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
                 for (int i=0; i<getInputParameters().length; i+=2) {
                     if (! "output".equals(getInputParameters()[i])) {
                         parameterMap.put(getInputParameters()[i], getInputParameters()[i + 1]);
@@ -120,13 +146,23 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         return product;
     }
 
-    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws
-                                                                                                            BindingException {
+    public static Map<String, Object> getOperatorParameterMap(Product inputProduct, 
+                                                              String operatorName, 
+                                                              String level2Parameters) throws BindingException {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }
         Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
-        return new ParameterBlockConverter().convertXmlToMap(level2Parameters, operatorClass);
+        ParameterBlockConverter parameterBlockConverter;
+        if (inputProduct != null) {
+            Map<String, Product> sourceProductMap = new HashMap<>();
+            sourceProductMap.put("source", inputProduct);
+            ParameterDescriptorFactory descriptorFactory = new ParameterDescriptorFactory(sourceProductMap);
+            parameterBlockConverter = new ParameterBlockConverter(descriptorFactory);
+        } else {
+            parameterBlockConverter = new ParameterBlockConverter();
+        }
+        return parameterBlockConverter.convertXmlToMap(level2Parameters, operatorClass);
     }
 
     private static Class<? extends Operator> getOperatorClass(String operatorName) {

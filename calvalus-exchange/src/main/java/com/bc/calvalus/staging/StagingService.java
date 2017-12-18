@@ -2,6 +2,7 @@ package com.bc.calvalus.staging;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Observable;
 
 /**
  * The interface to the Calvalus staging service.
@@ -30,4 +31,16 @@ public interface StagingService {
      * Invocation has no additional effect if already closed.
      */
     void close();
+
+    /**
+     * Memorises service for notification of observers for final production state changes
+     * @param productionService
+     */
+    void setProductionService(Observable productionService);
+
+    /**
+     * Returns the service for the notification of observers.
+     * @return the production service
+     */
+    Observable getProductionService();
 }

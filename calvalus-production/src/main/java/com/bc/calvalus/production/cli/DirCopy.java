@@ -61,7 +61,7 @@ public class DirCopy {
                     Path file = new Path(unzipDir, entry.getName());
                     Path parent = file.getParent();
                     if (!fs.mkdirs(parent)) {
-                        if (!fs.getFileStatus(parent).isDir()) {
+                        if (!fs.getFileStatus(parent).isDirectory()) {
                             throw new IOException("FileSystem.mkdirs() failed to create " + parent.toString());
                         }
                     }

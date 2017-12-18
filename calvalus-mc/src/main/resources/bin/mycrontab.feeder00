@@ -1,4 +1,0 @@
-# m h dom mon dow command
-#
-# back up processing system instances
-0 1,7,12,20 * * * bash -c 'i=io-inst; ( cd ~; tar czf backup/${i}.tgz ${i}/{my*,*py,*report,bin,src,lib}; mkdir -p backup/archive; backup/rotate.bash backup/${i}.tgz backup/archive 30 ) >> backup/backup-${i}.log 2>&1'

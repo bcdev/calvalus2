@@ -38,7 +38,7 @@ public class ManageMasksView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Masks";
+        return "Masks";
     }
 
 }

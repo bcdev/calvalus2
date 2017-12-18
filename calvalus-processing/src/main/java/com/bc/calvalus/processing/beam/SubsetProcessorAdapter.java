@@ -16,10 +16,14 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessingRectangleCalculator;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -57,19 +61,19 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("L2 Subset");
 
-        subsetProduct = createSubset();
+        subsetProduct = createSubsetFromInput(getInputProduct());
         if (subsetProduct == null ||
                 subsetProduct.getSceneRasterWidth() == 0 ||
                 subsetProduct.getSceneRasterHeight() == 0) {
-            return 0;
+            return false;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
-                                       subsetProduct.getSceneRasterWidth(),
-                                       subsetProduct.getSceneRasterHeight()));
-        return 1;
+                subsetProduct.getSceneRasterWidth(),
+                subsetProduct.getSceneRasterHeight()));
+        return true;
     }
 
     @Override
@@ -102,14 +106,18 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected void saveTargetProduct(Product product, ProgressMonitor pm) throws IOException {
-        Configuration conf = getConfiguration();
-        Dimension preferredTileSize = product.getPreferredTileSize();
-        if (preferredTileSize == null) {
-            System.out.println("saveTargetProduct: product has no preferredTileSize -> setting it");
-            product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
-            System.out.println("new preferredTileSize = " + product.getPreferredTileSize());
+        if (product != null) {
+            Dimension preferredTileSize = product.getPreferredTileSize();
+            if (preferredTileSize == null) {
+                getLogger().info("saveTargetProduct: product has no preferredTileSize -> setting it");
+                product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
+                getLogger().info("new preferredTileSize = " + product.getPreferredTileSize());
+            }
+            Configuration conf = getConfiguration();
+            StreamingProductWriter.writeProductInTiles(conf, pm, product, getWorkOutputProductPath());
+        } else {
+            getLogger().warning("No 'targetProduct' set. Nothing to save.");
         }
-        StreamingProductWriter.writeProductInTiles(conf, pm, product, getWorkOutputProductPath());
     }
 
     private Path getWorkOutputProductPath() throws IOException {
@@ -126,12 +134,12 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         return "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
     }
 
-    protected Product createSubset() throws IOException {
-        Product product = getInputProduct();
-        // full region
+    protected Product createSubsetFromInput(Product product) throws IOException {
         Rectangle srcProductRect = getInputRectangle();
+        getLogger().info("createSubsetFromInput: calculated inputProductRect = " + srcProductRect);
         if (srcProductRect == null ||
                 (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
+            // full region
             return product;
         }
         if (srcProductRect.isEmpty()) {
@@ -139,10 +147,28 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         }
         ProductTransformation productTransformation = new ProductTransformation(srcProductRect, false, false);
         setInput2OutputTransform(productTransformation.getTransform());
+        
+        return createSubset(product, srcProductRect);
+    }
+
+    protected Product createSubsetFromOutput(Product product) throws IOException {
+        String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
+        Rectangle outputProductRect = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry);
+        getLogger().info("createSubsetFromOutput: calculated outputProductRect = " + outputProductRect);
+        if (outputProductRect == null ||
+                (outputProductRect.width == product.getSceneRasterWidth() && outputProductRect.height == product.getSceneRasterHeight())) {
+            // full region
+            return product;
+        }
+        return createSubset(product, outputProductRect);
+    }
+
+    protected Product createSubset(Product product, Rectangle subsetRect) throws IOException {
 
         final SubsetOp op = new SubsetOp();
         op.setSourceProduct(product);
-        op.setRegion(srcProductRect);
+        op.setRegion(subsetRect);
         op.setCopyMetadata(true);
         Product subsetProduct = op.getTargetProduct();
         getLogger().info(String.format("Created Subset product width = %d height = %d",

@@ -115,11 +115,7 @@ public class DtoProductSet implements IsSerializable {
         if (!regionName.equals(that.regionName)) {
             return false;
         }
-        if (regionWKT != null ? !regionWKT.equals(that.regionWKT) : that.regionWKT != null) {
-            return false;
-        }
-
-        return true;
+        return regionWKT != null ? regionWKT.equals(that.regionWKT) : that.regionWKT == null;
     }
 
     @Override

@@ -1,6 +1,6 @@
 <!doctype html>
 
-<%@page language="java" import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
+<%@page import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
 <%@ page import="java.security.Principal" %>
 
 <html>
@@ -72,7 +72,7 @@
 <table style="width: 99%; border: 0;" align="center">
     <tr>
         <td>
-            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; 2015 Brockmann Consult GmbH
+            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; <%= BackendServiceImpl.COPYRIGHT_YEAR %> Brockmann Consult GmbH
                 &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html"
                                 target="_blank">Impressum</a></p>
         </td>

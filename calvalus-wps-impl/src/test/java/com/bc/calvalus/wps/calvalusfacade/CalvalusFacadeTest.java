@@ -8,21 +8,22 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.wps.cmd.LdapHelper;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
+import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.api.schema.CodeType;
+import com.bc.wps.api.schema.Execute;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.apache.commons.collections.map.HashedMap;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.RuntimeConstants;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.junit.*;
 import org.junit.runner.*;
 import org.mockito.ArgumentCaptor;
@@ -30,14 +31,11 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hans
@@ -45,9 +43,14 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
             CalvalusFacade.class, CalvalusProduction.class,
-            CalvalusProductionService.class, CalvalusProductionService.class
+            CalvalusProductionService.class, LdapHelper.class, ExecuteRequestExtractor.class,
+            ProcessorNameConverter.class, CalvalusProcessorExtractor.class, CalvalusDataInputs.class,
+            ProductionRequest.class
 })
 public class CalvalusFacadeTest {
+
+    private static final String MOCK_USER_NAME = "mockUserName";
+    private static final String MOCK_PROCESS_ID = "process-00";
 
     private WpsRequestContext mockRequestContext;
     private CalvalusProduction mockCalvalusProduction;
@@ -67,7 +70,7 @@ public class CalvalusFacadeTest {
         mockCalvalusStaging = mock(CalvalusStaging.class);
         mockCalvalusProcessorExtractor = mock(CalvalusProcessorExtractor.class);
 
-        when(mockRequestContext.getUserName()).thenReturn("mockUserName");
+        when(mockRequestContext.getUserName()).thenReturn(MOCK_USER_NAME);
 
         PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         configureProductionServiceMocking();
@@ -80,124 +83,164 @@ public class CalvalusFacadeTest {
 
     @Test
     public void testOrderProductionAsynchronous() throws Exception {
+        Execute mockExecuteRequest = mock(Execute.class);
+        CalvalusProcessor mockProcessor = mock(CalvalusProcessor.class);
+        CodeType mockIdentifier = new CodeType();
+        mockIdentifier.setValue(MOCK_PROCESS_ID);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(mockIdentifier);
+        ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
+        ProcessorNameConverter mockNameConverter = mock(ProcessorNameConverter.class);
+        CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
+        Map<String, String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
+        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), anyString()))
+                    .thenReturn(mockProcessor);
+        when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
+        when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
-        ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
+        whenNew(ExecuteRequestExtractor.class).withArguments(Execute.class).thenReturn(mockRequestExtractor);
+        whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockNameConverter);
+        whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
+        whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInput);
+        whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
+        ArgumentCaptor<Execute> requestArgumentCaptor = ArgumentCaptor.forClass(Execute.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.orderProductionAsynchronous(mockProductionRequest);
+        calvalusFacade.orderProductionAsynchronous(mockExecuteRequest);
 
-        verify(mockCalvalusProduction).orderProductionAsynchronous(any(ProductionService.class), requestArgumentCaptor.capture(), userNameCaptor.capture());
+        verify(mockCalvalusProduction).orderProductionAsynchronous(requestArgumentCaptor.capture(), userNameCaptor.capture(), any(CalvalusFacade.class));
 
-        assertThat(requestArgumentCaptor.getValue(), equalTo(mockProductionRequest));
+        assertThat(requestArgumentCaptor.getValue(), equalTo(mockExecuteRequest));
         assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
     @Test
     public void testOrderProductionSynchronous() throws Exception {
+        Execute mockExecuteRequest = mock(Execute.class);
+        CalvalusProcessor mockProcessor = mock(CalvalusProcessor.class);
+        LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
+        CodeType mockIdentifier = new CodeType();
+        mockIdentifier.setValue(MOCK_PROCESS_ID);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(mockIdentifier);
+        ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
+        ProcessorNameConverter mockNameConverter = mock(ProcessorNameConverter.class);
+        CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
+        Map<String, String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
+        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), anyString()))
+                    .thenReturn(mockProcessor);
+        when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
+        when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
+        when(mockStatus.getJobId()).thenReturn(MOCK_PROCESS_ID);
+        when(mockCalvalusProduction.orderProductionSynchronous(any(Execute.class), anyString(), any(CalvalusFacade.class))).thenReturn(mockStatus);
+        whenNew(ExecuteRequestExtractor.class).withArguments(Execute.class).thenReturn(mockRequestExtractor);
+        whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockNameConverter);
+        whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
+        whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInput);
+        whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
-        ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
+        whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
+        ArgumentCaptor<Execute> requestArgumentCaptor = ArgumentCaptor.forClass(Execute.class);
+        ArgumentCaptor<String> userNameArgumentCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.orderProductionSynchronous(mockProductionRequest);
+        calvalusFacade.orderProductionSynchronous(mockExecuteRequest);
 
-        verify(mockCalvalusProduction).orderProductionSynchronous(any(ProductionService.class), requestArgumentCaptor.capture());
+        verify(mockCalvalusProduction).orderProductionSynchronous(requestArgumentCaptor.capture(), userNameArgumentCaptor.capture(), any(CalvalusFacade.class));
 
-        assertThat(requestArgumentCaptor.getValue(), equalTo(mockProductionRequest));
+        assertThat(requestArgumentCaptor.getValue(), equalTo(mockExecuteRequest));
     }
 
     @Test
     public void testGetProductResultUrls() throws Exception {
         Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
-        ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
+        when(mockProductionService.getProduction("job-00")).thenReturn(mockProduction);
+        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.getProductResultUrls(mockProduction);
+        calvalusFacade.getProductResultUrls("job-00");
 
-        verify(mockCalvalusStaging).getProductResultUrls(anyMapOf(String.class, String.class), productionCaptor.capture());
+        verify(mockCalvalusStaging).getProductResultUrls(jobIdCaptor.capture(), anyMapOf(String.class, String.class));
 
-        assertThat(productionCaptor.getValue(), equalTo(mockProduction));
+        assertThat(jobIdCaptor.getValue(), equalTo("job-00"));
     }
 
     @Test
     public void testStageProduction() throws Exception {
-        Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
-        ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
+        ArgumentCaptor<String> jobidCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.stageProduction(mockProduction);
+        calvalusFacade.stageProduction("job-00");
 
-        verify(mockCalvalusStaging).stageProduction(any(ProductionService.class), productionCaptor.capture());
+        verify(mockCalvalusStaging).stageProduction(jobidCaptor.capture());
 
-        assertThat(productionCaptor.getValue(), equalTo(mockProduction));
+        assertThat(jobidCaptor.getValue(), equalTo("job-00"));
     }
 
     @Test
     public void testObserveStagingStatus() throws Exception {
         Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
-        ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
+        when(mockProductionService.getProduction("job-00")).thenReturn(mockProduction);
+        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.observeStagingStatus(mockProduction);
+        calvalusFacade.observeStagingStatus("job-00");
 
-        verify(mockCalvalusStaging).observeStagingStatus(any(ProductionService.class), productionCaptor.capture());
+        verify(mockCalvalusStaging).observeStagingStatus(jobIdCaptor.capture());
 
-        assertThat(productionCaptor.getValue(), equalTo(mockProduction));
+        assertThat(jobIdCaptor.getValue(), equalTo("job-00"));
     }
 
     @Test
     public void testGetProcessors() throws Exception {
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
 
-        ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProcessors();
 
-        verify(mockCalvalusProcessorExtractor).getProcessors(productionServiceCaptor.capture(), userNameCaptor.capture());
+        verify(mockCalvalusProcessorExtractor).getProcessors(userNameCaptor.capture());
 
-        assertThat(productionServiceCaptor.getValue(), equalTo(mockProductionService));
         assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
     @Test
     public void testGetProcessor() throws Exception {
-        ProcessorNameParser mockParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
-        ArgumentCaptor<ProcessorNameParser> parserCaptor = ArgumentCaptor.forClass(ProcessorNameParser.class);
-        ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
+        ArgumentCaptor<ProcessorNameConverter> parserCaptor = ArgumentCaptor.forClass(ProcessorNameConverter.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProcessor(mockParser);
 
-        verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture(), productionServiceCaptor.capture(), userNameCaptor.capture());
+        verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture(), userNameCaptor.capture());
 
         assertThat(parserCaptor.getValue(), equalTo(mockParser));
-        assertThat(productionServiceCaptor.getValue(), equalTo(mockProductionService));
         assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
     @Test
     public void testGetProductSets() throws Exception {
         PowerMockito.mockStatic(CalvalusProductionService.class);
-        ProductionService mockProductionService = mock(ProductionService.class);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
+        InventoryService mockInventoryService = mock(InventoryService.class);
         ProductSet[] mockProductSets = new ProductSet[]{};
-        when(mockProductionService.getProductSets(anyString(), anyString())).thenReturn(mockProductSets);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        when(mockInventoryService.getProductSets(anyString(), anyString())).thenReturn(mockProductSets);
+        PowerMockito.when(mockServiceContainer.getInventoryService()).thenReturn(mockInventoryService);
         ArgumentCaptor<String> arg1 = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> arg2 = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProductSets();
 
-        verify(mockProductionService, times(2)).getProductSets(arg1.capture(), arg2.capture());
+        verify(mockInventoryService, times(3)).getProductSets(arg1.capture(), arg2.capture());
 
         assertThat((arg1.getAllValues().get(0)), equalTo("mockUserName"));
         assertThat((arg2.getAllValues().get(0)), equalTo(""));
@@ -206,90 +249,92 @@ public class CalvalusFacadeTest {
         assertThat((arg2.getAllValues().get(1)), equalTo("user=mockUserName"));
     }
 
-    @Test
-    public void testVelocity() throws Exception {
-        VelocityEngine ve = new VelocityEngine();
-        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
-        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-        ve.init();
+    @Test(expected = IOException.class)
+    public void canThrowIOExceptionWhenGetNullProductSets() throws Exception {
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        InventoryService mockInventoryService = mock(InventoryService.class);
+        PowerMockito.when(mockServiceContainer.getInventoryService()).thenReturn(mockInventoryService);
+        ProductSet[] mockProductSets = new ProductSet[]{};
+        when(mockInventoryService.getProductSets("mockUserName", "")).thenReturn(mockProductSets);
+        when(mockInventoryService.getProductSets("mockUserName", "user=mockUserName")).thenThrow(new IOException("null productsets"));
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
 
-        ArrayList<Map> list = new ArrayList();
-        Map<String, String> map = new HashMap<>();
-
-        map.put("name", "Cow");
-        map.put("price", "$100.00");
-        list.add(map);
-
-        map = new HashMap<>();
-        map.put("name", "Eagle");
-        map.put("price", "$59.99");
-        list.add(map);
-
-        map = new HashMap<>();
-        map.put("name", "Shark");
-        map.put("price", "$3.99");
-        list.add(map);
-
-        VelocityContext context = new VelocityContext();
-        context.put("test", "attribute");
-        context.put("petList", list);
-
-        Template t = ve.getTemplate("test-velocity.vm");
-
-        StringWriter writer = new StringWriter();
-
-        t.merge(context, writer);
-
-        System.out.println(writer.toString());
+        calvalusFacade = new CalvalusFacade(mockRequestContext);
+        calvalusFacade.getProductSets();
     }
 
     @Test
-    public void testMetadataVelocity() throws Exception {
-        VelocityEngine ve = new VelocityEngine();
-        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
-        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-        ve.init();
+    public void canResolveRemoteUserNameFromCache() throws Exception {
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        Set<String> dummyRemoteUserSet = new HashSet<>();
+        dummyRemoteUserSet.add("tep_mockUserName");
+        dummyRemoteUserSet.add("tep_mockUserName2");
+        PowerMockito.when(CalvalusProductionService.getRemoteUserSet()).thenReturn(dummyRemoteUserSet);
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(MOCK_USER_NAME);
+        LdapHelper mockLdapHelper = mock(LdapHelper.class);
+        when(mockLdapHelper.isRegistered(anyString())).thenReturn(false);
+        PowerMockito.whenNew(LdapHelper.class).withNoArguments().thenReturn(mockLdapHelper);
 
-        VelocityContext context = new VelocityContext();
-        Template template = ve.getTemplate("test-velocity2.vm");
-        StringWriter writer = new StringWriter();
+        calvalusFacade = new CalvalusFacade(mockRequestContext);
+        verify(mockLdapHelper, times(0)).register(anyString());
 
-        context.put("jobUrl", "http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=GetStatus&JobId=20160317105702_L3_8ae4f737a2b6");
-        context.put("jobFinishTime", "2016-03-17T14:00:00.000000Z");
-        context.put("productOutputDir", "Jakarta GUF test/hans/20160317_10000000");
-        context.put("productionName", "Jakarta GUF test");
-        context.put("processName", "Subset");
-        context.put("inputDatasetName", "Urban Footprint Global (Urban TEP)");
-        context.put("stagingDir", "http://www.brockmann-consult.de/bc-wps/staging/hans");
-        context.put("regionWkt", "100 -10 100 0 110 0 110 -10 100 -10");
-        context.put("startDate", "2008-01-01T00:00:00Z");
-        context.put("stopDate", "2012-12-31T23:59:59Z");
-        context.put("collectionUrl", "http://www.brockmann-consult.de/bc-wps/staging/hans/20160317_10000000");
-        context.put("productOutputPath", "Jakarta GUF test/hans/20160317_10000000");
-        context.put("processorVersion", "3.0");
-        context.put("productionType", "L2");
-        context.put("outputFormat", "NetCDF-4");
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
+    }
 
-        List<Map> productList = new ArrayList<>();
-        Map<String, String> product1 = new HashMap<>();
-        product1.put("productUrl","http://www.brockmann-consult.de/bc-wps/staging/hans/20160317092654_L2Plus_85f7236d9c82/L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc");
-        product1.put("productFileName","L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc");
-        product1.put("productFileFormat","NetCDF-4");
-        product1.put("productFileSize","123000");
-        product1.put("productQuickLookUrl","http://www.brockmann-consult.de/bc-wps/staging/hans/20160317092654_L2Plus_85f7236d9c82/L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.png");
-        productList.add(product1);
+    @Test
+    public void canResolveAndRegisterRemoteUserName() throws Exception {
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        Set<String> dummyRemoteUserSet = new HashSet<>();
+        PowerMockito.when(CalvalusProductionService.getRemoteUserSet()).thenReturn(dummyRemoteUserSet);
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(MOCK_USER_NAME);
+        LdapHelper mockLdapHelper = mock(LdapHelper.class);
+        when(mockLdapHelper.isRegistered(anyString())).thenReturn(false);
+        PowerMockito.whenNew(LdapHelper.class).withNoArguments().thenReturn(mockLdapHelper);
+        ArgumentCaptor<String> ldapUser = ArgumentCaptor.forClass(String.class);
 
-        context.put("productList", productList);
+        calvalusFacade = new CalvalusFacade(mockRequestContext);
+        verify(mockLdapHelper, times(1)).register(ldapUser.capture());
 
-        template.merge(context, writer);
+        assertThat(ldapUser.getValue(), equalTo("tep_mockUserName"));
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
+        assertThat(dummyRemoteUserSet.size(), equalTo(1));
+        assertThat(dummyRemoteUserSet.iterator().next(), equalTo("tep_mockUserName"));
+    }
 
-        System.out.println(writer);
+    @Test
+    public void canResolveRemoteUserName() throws Exception {
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(MOCK_USER_NAME);
+        LdapHelper mockLdapHelper = mock(LdapHelper.class);
+        when(mockLdapHelper.isRegistered(anyString())).thenReturn(true);
+        PowerMockito.whenNew(LdapHelper.class).withNoArguments().thenReturn(mockLdapHelper);
+
+        calvalusFacade = new CalvalusFacade(mockRequestContext);
+        verify(mockLdapHelper, times(0)).register(anyString());
+
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
+    }
+
+    @Test
+    public void canGetUserNameWhenNoRemoteUser() throws Exception {
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(null);
+        when(mockRequestContext.getUserName()).thenReturn(MOCK_USER_NAME);
+
+        calvalusFacade = new CalvalusFacade(mockRequestContext);
+
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("mockUserName"));
+
     }
 
     private void configureProductionServiceMocking() throws IOException, ProductionException {
         mockProductionService = mock(ProductionService.class);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        InventoryService mockInventoryService = mock(InventoryService.class);
+        when(mockInventoryService.getProductSets(anyString(), anyString())).thenReturn(new ProductSet[0]);
         PowerMockito.mockStatic(CalvalusProductionService.class);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(mockServiceContainer.getInventoryService()).thenReturn(mockInventoryService);
     }
 
 }

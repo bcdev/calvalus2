@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.ma;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Ignore;
+
 
 /**
  * @author Norman
@@ -9,7 +11,7 @@ import org.junit.Ignore;
 public class TestRecordSourceSpi extends RecordSourceSpi {
 
     @Override
-    public RecordSource createRecordSource(String url) {
+    public RecordSource createRecordSource(String url, Configuration conf) {
         Header header = new TestHeader(true, "lat", "lon");
         DefaultRecordSource recordSource = new DefaultRecordSource(header);
         RecordUtils.addPointRecord(recordSource, 0F, 0F);

@@ -16,9 +16,14 @@
 
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.shared.BundleFilter;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
@@ -35,10 +40,14 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.DtoRegionDataInfo;
+import com.bc.calvalus.portal.shared.DtoValueRange;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
@@ -49,27 +58,64 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
-import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.ServiceContainerFactory;
+import com.bc.calvalus.production.cli.WpsProductionRequestConverter;
+import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
+import com.bc.calvalus.production.util.DateRangeCalculator;
+import com.bc.calvalus.production.util.DebugTokenGenerator;
+import com.bc.calvalus.production.util.TokenGenerator;
+import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.ProductData;
+import org.jasig.cas.client.validation.AssertionImpl;
+import org.jdom.JDOMException;
+import org.jdom2.Element;
+import org.jdom2.input.DOMBuilder;
+import org.jdom2.output.DOMOutputter;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringWriter;
 import java.security.Principal;
+import java.security.PrivilegedExceptionAction;
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -84,7 +130,10 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final Properties calvalusVersionProperties;
+    private static final String REQUEST_FILE_EXTENSION = ".xml";
+    private static final String USER_ROLE = "calvalus.portal.userRole";
 
     static {
         InputStream in = BackendServiceImpl.class.getResourceAsStream("/calvalus-version.properties");
@@ -97,15 +146,16 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     public static final String VERSION = String.format("Calvalus version %s (built %s)",
-                                                       calvalusVersionProperties.get("version"),
-                                                       calvalusVersionProperties.get("timestamp"));
+            calvalusVersionProperties.get("version"),
+            calvalusVersionProperties.get("timestamp"));
+    public static final String COPYRIGHT_YEAR = "2017";
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 5000;
 
-    private ProductionService productionService;
+    private ServiceContainer serviceContainer;
     private BackendConfig backendConfig;
     private Timer statusObserver;
-    private static final DateFormat CCSDS_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final DateFormat CCSDS_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     /**
      * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
@@ -135,9 +185,20 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public void init() throws ServletException {
-        if (productionService == null) {
+        if (serviceContainer != null) {
+            LOG.log(Level.WARNING, String.format("Found pre-existing service container %s, closing...", serviceContainer.toString()));
+            statusObserver.cancel();
+            try {
+                serviceContainer.close();
+            } catch (ProductionException e) {
+                LOG.log(Level.WARNING, "Unable to close obsolete service container.", e);
+            }
+            serviceContainer = null;
+            System.gc();
+        }
+        if (serviceContainer == null) {
             synchronized (this) {
-                if (productionService == null) {
+                if (serviceContainer == null) {
                     ServletContext servletContext = getServletContext();
                     initLogger(servletContext);
                     initBackendConfig(servletContext);
@@ -150,14 +211,14 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public void destroy() {
-        if (productionService != null) {
+        if (serviceContainer != null) {
             statusObserver.cancel();
             try {
-                productionService.close();
+                serviceContainer.close();
             } catch (Exception e) {
                 log("Failed to close production service", e);
             }
-            productionService = null;
+            serviceContainer = null;
         }
         super.destroy();
     }
@@ -166,8 +227,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoRegion[] loadRegions(String filter) throws BackendServiceException {
         RegionPersistence regionPersistence = new RegionPersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
         try {
-            return regionPersistence.loadRegions();
+            DtoRegion[] dtoRegions = regionPersistence.loadRegions();
+            LOG.fine("loadRegions returns " + dtoRegions.length);
+            return dtoRegions;
         } catch (IOException e) {
+            log(e.getMessage(), e);
             throw new BackendServiceException("Failed to load regions: " + e.getMessage(), e);
         }
     }
@@ -188,13 +252,14 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             filter = filter.replace("dummy", getUserName());
         }
         try {
-            ProductSet[] productSets = productionService.getProductSets(getUserName(), filter);
+            ProductSet[] productSets = serviceContainer.getInventoryService().getProductSets(getUserName(), filter);
             DtoProductSet[] dtoProductSets = new DtoProductSet[productSets.length];
             for (int i = 0; i < productSets.length; i++) {
                 dtoProductSets[i] = convert(productSets[i]);
             }
+            LOG.fine("getProductSets returns " + dtoProductSets.length);
             return dtoProductSets;
-        } catch (ProductionException e) {
+        } catch (IOException e) {
             throw convert(e);
         }
     }
@@ -202,16 +267,17 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoProcessorDescriptor[] getProcessors(String filterString) throws BackendServiceException {
         try {
-            List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<DtoProcessorDescriptor>();
+            List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<>();
             final BundleFilter filter = BundleFilter.fromString(filterString);
             String userName = getUserName();
             filter.withTheUser(userName);
 
-            final BundleDescriptor[] bundleDescriptors = productionService.getBundles(userName, filter);
+            final BundleDescriptor[] bundleDescriptors = serviceContainer.getProductionService().getBundles(userName, filter);
             for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
                 DtoProcessorDescriptor[] dtoDescriptors = getDtoProcessorDescriptors(bundleDescriptor);
                 dtoProcessorDescriptors.addAll(Arrays.asList(dtoDescriptors));
             }
+            LOG.fine("getProcessors returns " + dtoProcessorDescriptors.size());
             return dtoProcessorDescriptors.toArray(new DtoProcessorDescriptor[dtoProcessorDescriptors.size()]);
         } catch (ProductionException e) {
             throw convert(e);
@@ -221,16 +287,17 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoAggregatorDescriptor[] getAggregators(String filterString) throws BackendServiceException {
         try {
-            List<DtoAggregatorDescriptor> dtoAggregatorDescriptors = new ArrayList<DtoAggregatorDescriptor>();
+            List<DtoAggregatorDescriptor> dtoAggregatorDescriptors = new ArrayList<>();
             final BundleFilter filter = BundleFilter.fromString(filterString);
             String userName = getUserName();
             filter.withTheUser(userName);
 
-            final BundleDescriptor[] bundleDescriptors = productionService.getBundles(userName, filter);
+            final BundleDescriptor[] bundleDescriptors = serviceContainer.getProductionService().getBundles(userName, filter);
             for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
                 DtoAggregatorDescriptor[] dtoDescriptors = getDtoAggregatorDescriptors(bundleDescriptor);
                 dtoAggregatorDescriptors.addAll(Arrays.asList(dtoDescriptors));
             }
+            LOG.fine("getAggregators returns " + dtoAggregatorDescriptors.size());
             return dtoAggregatorDescriptors.toArray(new DtoAggregatorDescriptor[dtoAggregatorDescriptors.size()]);
         } catch (ProductionException e) {
             throw convert(e);
@@ -241,7 +308,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoMaskDescriptor[] getMasks() throws BackendServiceException {
         try {
             String userName = getUserName();
-            final MaskDescriptor[] maskDescriptors = productionService.getMasks(userName);
+            final MaskDescriptor[] maskDescriptors = serviceContainer.getProductionService().getMasks(userName);
             return getDtoMaskDescriptors(maskDescriptors);
         } catch (ProductionException e) {
             throw convert(e);
@@ -266,31 +333,31 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
             for (int i = 0; i < processorDescriptors.length; i++) {
                 dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(),
-                                            bundleDescriptor.getBundleVersion(),
-                                            bundleDescriptor.getBundleLocation(),
-                                            bundleDescriptor.getOwner(),
-                                            processorDescriptors[i]);
+                        bundleDescriptor.getBundleVersion(),
+                        bundleDescriptor.getBundleLocation(),
+                        bundleDescriptor.getOwner(),
+                        processorDescriptors[i]);
             }
             return dtoDescriptors;
         } else {
             return new DtoProcessorDescriptor[]{
                     new DtoProcessorDescriptor(null,
-                                               BundleFilter.DUMMY_PROCESSOR_NAME,
-                                               "",
-                                               "",
-                                               bundleDescriptor.getBundleName(),
-                                               bundleDescriptor.getBundleVersion(),
-                                               bundleDescriptor.getBundleLocation(),
-                                               "",
-                                               null,
-                                               null,
-                                               DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
-                                               null,
-                                               null,
-                                               null,
-                                               null,
-                                               null,
-                                               null)
+                            BundleFilter.DUMMY_PROCESSOR_NAME,
+                            "",
+                            "",
+                            bundleDescriptor.getBundleName(),
+                            bundleDescriptor.getBundleVersion(),
+                            bundleDescriptor.getBundleLocation(),
+                            "",
+                            null,
+                            null,
+                            DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null)
             };
         }
     }
@@ -301,10 +368,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             DtoAggregatorDescriptor[] dtoDescriptors = new DtoAggregatorDescriptor[aggregatorDescriptors.length];
             for (int i = 0; i < aggregatorDescriptors.length; i++) {
                 dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(),
-                                            bundleDescriptor.getBundleVersion(),
-                                            bundleDescriptor.getBundleLocation(),
-                                            bundleDescriptor.getOwner(),
-                                            aggregatorDescriptors[i]);
+                        bundleDescriptor.getBundleVersion(),
+                        bundleDescriptor.getBundleLocation(),
+                        bundleDescriptor.getOwner(),
+                        aggregatorDescriptors[i]);
             }
             return dtoDescriptors;
         } else {
@@ -316,8 +383,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoProduction[] getProductions(String filter) throws BackendServiceException {
         boolean currentUserFilter = (PARAM_NAME_CURRENT_USER_ONLY + "=true").equals(filter);
         try {
-            Production[] productions = productionService.getProductions(filter);
-            ArrayList<DtoProduction> dtoProductions = new ArrayList<DtoProduction>(productions.length);
+            Production[] productions = serviceContainer.getProductionService().getProductions(filter);
+            ArrayList<DtoProduction> dtoProductions = new ArrayList<>(productions.length);
             for (Production production : productions) {
                 if (currentUserFilter) {
                     if (getUserName().equalsIgnoreCase(production.getProductionRequest().getUserName())) {
@@ -327,6 +394,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     dtoProductions.add(convert(production));
                 }
             }
+            LOG.fine("getProductions returns " + dtoProductions.size());
             return dtoProductions.toArray(new DtoProduction[dtoProductions.size()]);
         } catch (ProductionException e) {
             throw convert(e);
@@ -336,9 +404,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoProductionRequest getProductionRequest(String productionId) throws BackendServiceException {
         try {
-            Production production = productionService.getProduction(productionId);
+            Production production = serviceContainer.getProductionService().getProduction(productionId);
             if (production != null) {
-                return convert(production.getProductionRequest());
+                return convert(production.getId(), production.getProductionRequest());
             } else {
                 return null;
             }
@@ -348,10 +416,37 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public DtoProductionResponse orderProduction(DtoProductionRequest productionRequest) throws
+    public DtoProductionResponse orderProduction(DtoProductionRequest dtoProductionRequest) throws
             BackendServiceException {
         try {
-            ProductionResponse productionResponse = productionService.orderProduction(convert(productionRequest));
+            ProductionRequest productionRequest = convert(dtoProductionRequest);
+            HadoopJobHook hook = null;
+            Map<String, String> config = backendConfig.getConfigMap();
+            if ("debug".equals(config.get("calvalus.crypt.auth"))) {
+                String publicKey = config.get("calvalus.crypt.calvalus-public-key");
+                String privateKey = config.get("calvalus.crypt.debug-private-key");
+                String certificate = config.get("calvalus.crypt.debug-certificate");
+                hook = new DebugTokenGenerator(publicKey, privateKey, certificate, getUserName());
+            } else if ("saml".equals(config.get("calvalus.crypt.auth"))) {
+                try {
+                    HttpSession session = getThreadLocalRequest().getSession();
+                    AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
+                    Document samlToken = (Document) assertion.getPrincipal().getAttributes().get("rawSamlToken");
+                    samlToken = fixRootNode(samlToken);
+                    String saml = getStringFromDoc(samlToken);
+                    String publicKey = config.get("calvalus.crypt.calvalus-public-key");
+                    hook = new TokenGenerator(publicKey, saml);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    LOG.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
+            HttpSession session = getThreadLocalRequest().getSession();
+            Object requestSizeLimit = session.getAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT);
+            if (requestSizeLimit != null) {
+                productionRequest.setParameter(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, (String) requestSizeLimit);
+            }
+            ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(productionRequest, hook);
             return convert(productionResponse);
         } catch (ProductionException e) {
             throw convert(e);
@@ -359,9 +454,64 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public void saveRequest(DtoProductionRequest dtoProductionRequest) throws BackendServiceException {
+        String userName = getUserName();
+        ProductionRequest productionRequest = convert(dtoProductionRequest);
+        WpsXmlRequestConverter xmlRequestConverter = new WpsXmlRequestConverter(productionRequest);
+        try {
+            String fileName = createRequestId(dtoProductionRequest.getProductionType());
+            String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + fileName);
+            try (OutputStream out = new BufferedOutputStream(serviceContainer.getFileSystemService().addFile(userName, userPath), 64 * 1024)) {
+                out.write(xmlRequestConverter.toXml().getBytes());
+            }
+        } catch (IOException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public void deleteRequest(String requestId) throws BackendServiceException {
+        String userName = getUserName();
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + requestId + REQUEST_FILE_EXTENSION);
+        try {
+            serviceContainer.getFileSystemService().removeFile(userName, userPath);
+        } catch (IOException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public DtoProductionRequest[] listRequests() throws BackendServiceException {
+        String userName = getUserName();
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request/.*" + REQUEST_FILE_EXTENSION);
+        try {
+            FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+            String[] requestFilePaths = fileSystemService.globPaths(userName, Collections.singletonList(userPath));
+
+            List<DtoProductionRequest> requests = new ArrayList<>();
+            for (String requestFilePath : requestFilePaths) {
+                try (InputStream is = fileSystemService.openFile(userName, requestFilePath)) {
+                    Reader reader = new InputStreamReader(is);
+                    ProductionRequest productionRequest = new WpsProductionRequestConverter(reader).loadProductionRequest(userName);
+                    String requestId = extractRequestId(requestFilePath);
+                    requests.add(convert(requestId, productionRequest));
+                }
+            }
+            return requests.toArray(new DtoProductionRequest[requests.size()]);
+        } catch (IOException | JDOMException e) {
+            throw convert(e);
+        }
+    }
+
+    private String extractRequestId(String requestFilePath) {
+        String[] paths = requestFilePath.split("/");
+        return paths[paths.length - 1].replace(REQUEST_FILE_EXTENSION, "");
+    }
+
+    @Override
     public void cancelProductions(String[] productionIds) throws BackendServiceException {
         try {
-            productionService.cancelProductions(productionIds);
+            serviceContainer.getProductionService().cancelProductions(productionIds);
         } catch (ProductionException e) {
             throw convert(e);
         }
@@ -370,7 +520,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public void deleteProductions(String[] productionIds) throws BackendServiceException {
         try {
-            productionService.deleteProductions(productionIds);
+            serviceContainer.getProductionService().deleteProductions(productionIds);
         } catch (ProductionException e) {
             throw convert(e);
         }
@@ -379,7 +529,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public void stageProductions(String[] productionIds) throws BackendServiceException {
         try {
-            productionService.stageProductions(productionIds);
+            serviceContainer.getProductionService().stageProductions(productionIds);
         } catch (ProductionException e) {
             throw convert(e);
         }
@@ -388,7 +538,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public void scpProduction(final String productionId, final String remotePath) throws BackendServiceException {
         try {
-            productionService.scpProduction(productionId, remotePath);
+            serviceContainer.getProductionService().scpProduction(productionId, remotePath);
         } catch (ProductionException e) {
             throw convert(e);
         }
@@ -397,17 +547,22 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public String[] listUserFiles(String dirPath) throws BackendServiceException {
         try {
-            return productionService.listUserFiles(getUserName(), dirPath);
-        } catch (ProductionException e) {
+            String userName = getUserName();
+            List<String> pathPatterns = Collections.singletonList(AbstractFileSystemService.getUserGlob(userName, dirPath));
+            return serviceContainer.getFileSystemService().globPaths(userName, pathPatterns);
+        } catch (IOException e) {
             throw convert(e);
         }
     }
 
+
     @Override
     public String[] listSystemFiles(String dirPath) throws BackendServiceException {
         try {
-            return productionService.listSystemFiles(getUserName(), dirPath);
-        } catch (ProductionException e) {
+            String userName = getUserName();
+            List<String> pathPatterns = Collections.singletonList(dirPath + "/.*");
+            return serviceContainer.getFileSystemService().globPaths(userName, pathPatterns);
+        } catch (IOException e) {
             throw convert(e);
         }
     }
@@ -415,66 +570,82 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public boolean removeUserFile(String filePath) throws BackendServiceException {
         try {
-            return productionService.removeUserFile(getUserName(), filePath);
-        } catch (ProductionException e) {
+            String userName = getUserName();
+            String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
+            return serviceContainer.getFileSystemService().removeFile(userName, userPath);
+        } catch (IOException e) {
             throw convert(e);
         }
     }
 
     @Override
+    public boolean removeUserFiles(String... filePaths) throws BackendServiceException {
+        boolean deleted = true;
+        for (String filePath : filePaths) {
+            deleted = deleted && removeUserFile(filePath);
+        }
+        return deleted;
+    }
+
+    @Override
     public boolean removeUserDirectory(String filePath) throws BackendServiceException {
         try {
-            return productionService.removeUserDirectory(getUserName(), filePath);
-        } catch (ProductionException e) {
+            String userName = getUserName();
+            String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
+            return serviceContainer.getFileSystemService().removeDirectory(userName, userPath);
+        } catch (IOException e) {
             throw convert(e);
         }
     }
 
     @Override
     public String checkUserRecordSource(String filePath) throws BackendServiceException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(getUserName());
         try {
-            String url = productionService.getQualifiedPath(getUserName(), filePath);
-            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
-            Iterable<Record> records = recordSource.getRecords();
-            int numRecords = 0;
-            double latMin = +Double.MAX_VALUE;
-            double latMax = -Double.MAX_VALUE;
-            double lonMin = +Double.MAX_VALUE;
-            double lonMax = -Double.MAX_VALUE;
-            long timeMin = Long.MAX_VALUE;
-            long timeMax = Long.MIN_VALUE;
+            return remoteUser.doAs((PrivilegedExceptionAction<String>) () -> {
+                String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
+                RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+                RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
+                Iterable<Record> records = recordSource.getRecords();
+                int numRecords = 0;
+                double latMin = +Double.MAX_VALUE;
+                double latMax = -Double.MAX_VALUE;
+                double lonMin = +Double.MAX_VALUE;
+                double lonMax = -Double.MAX_VALUE;
+                long timeMin = Long.MAX_VALUE;
+                long timeMax = Long.MIN_VALUE;
 
-            for (Record record : records) {
-                GeoPos location = record.getLocation();
-                if (location != null && location.isValid()) {
-                    numRecords++;
-                    latMin = Math.min(latMin, location.getLat());
-                    latMax = Math.max(latMax, location.getLat());
-                    lonMin = Math.min(lonMin, location.getLon());
-                    lonMax = Math.max(lonMax, location.getLon());
+                for (Record record : records) {
+                    GeoPos location = record.getLocation();
+                    if (location != null && location.isValid()) {
+                        numRecords++;
+                        latMin = Math.min(latMin, location.getLat());
+                        latMax = Math.max(latMax, location.getLat());
+                        lonMin = Math.min(lonMin, location.getLon());
+                        lonMax = Math.max(lonMax, location.getLon());
+                    }
+                    Date time = record.getTime();
+                    if (time != null) {
+                        timeMin = Math.min(timeMin, time.getTime());
+                        timeMax = Math.max(timeMax, time.getTime());
+                    }
                 }
-                Date time = record.getTime();
-                if (time != null) {
-                    timeMin = Math.min(timeMin, time.getTime());
-                    timeMax = Math.max(timeMax, time.getTime());
+                String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
+                        recordSource.getTimeAndLocationColumnDescription(),
+                        numRecords);
+                if (numRecords > 0) {
+                    reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
+                            latMin, latMax, lonMin, lonMax);
                 }
-            }
-            String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
-                                             recordSource.getTimeAndLocationColumnDescription(),
-                                             numRecords);
-            if (numRecords > 0) {
-                reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
-                                           latMin, latMax, lonMin, lonMax);
-            }
-            if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
-                reportMsg += String.format("Time range: [%s, %s]\n",
-                                           CCSDS_FORMAT.format(new Date(timeMin)),
-                                           CCSDS_FORMAT.format(new Date(timeMax)));
-            } else {
-                reportMsg += "No time information given.\n";
-            }
-            return reportMsg.replace("\n", "<br>");
+                if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
+                    reportMsg += String.format("Time range: [%s, %s]\n",
+                            CCSDS_FORMAT.format(new Date(timeMin)),
+                            CCSDS_FORMAT.format(new Date(timeMax)));
+                } else {
+                    reportMsg += "No time information given.\n";
+                }
+                return reportMsg.replace("\n", "<br>");
+            });
         } catch (Exception e) {
             throw convert(e);
         }
@@ -482,28 +653,36 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public float[] listUserRecordSource(String filePath) throws BackendServiceException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(getUserName());
         try {
-            String url = productionService.getQualifiedPath(getUserName(), filePath);
-            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
-            Iterable<Record> records = recordSource.getRecords();
-            List<GeoPos> geoPoses = new ArrayList<GeoPos>();
-            for (Record record : records) {
-                GeoPos location = record.getLocation();
-                if (location != null && location.isValid()) {
-                    geoPoses.add(location);
+            return remoteUser.doAs((PrivilegedExceptionAction<float[]>) () -> {
+                String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
+                RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+                RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
+                Iterable<Record> records = recordSource.getRecords();
+                List<GeoPos> geoPoses = new ArrayList<>();
+                for (Record record : records) {
+                    GeoPos location = record.getLocation();
+                    if (location != null && location.isValid()) {
+                        geoPoses.add(location);
+                    }
                 }
-            }
-            float[] latLons = new float[geoPoses.size() * 2];
-            int i = 0;
-            for (GeoPos geoPos : geoPoses) {
-                latLons[i++] = (float)geoPos.lat;
-                latLons[i++] = (float)geoPos.lon;
-            }
-            return latLons;
+                float[] latLons = new float[geoPoses.size() * 2];
+                int i = 0;
+                for (GeoPos geoPos : geoPoses) {
+                    latLons[i++] = (float) geoPos.lat;
+                    latLons[i++] = (float) geoPos.lon;
+                }
+                return latLons;
+            });
         } catch (Exception e) {
             throw convert(e);
         }
+    }
+
+    private String createRequestId(String productionType) {
+        DateFormat dateFormat = DateUtils.createDateFormat("yyyyMMdd_HHmmssSSS");
+        return dateFormat.format(new Date()) + "_" + productionType + REQUEST_FILE_EXTENSION;
     }
 
     private String[] convert(String[] strings) {
@@ -516,46 +695,46 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private DtoProductSet convert(ProductSet productSet) {
         return new DtoProductSet(productSet.getProductType(),
-                                 productSet.getName(),
-                                 productSet.getPath(),
-                                 productSet.getMinDate(),
-                                 productSet.getMaxDate(),
-                                 productSet.getRegionName(),
-                                 productSet.getRegionWKT(),
-                                 productSet.getBandNames(),
-                                 productSet.getGeoInventory());
+                productSet.getName(),
+                productSet.getPath(),
+                productSet.getMinDate(),
+                productSet.getMaxDate(),
+                productSet.getRegionName(),
+                productSet.getRegionWKT(),
+                productSet.getBandNames(),
+                productSet.getGeoInventory());
     }
 
     private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
-                                          processorDescriptor.getProcessorName(),
-                                          processorDescriptor.getProcessorVersion(),
-                                          processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
-                                          bundleName,
-                                          bundleVersion,
-                                          bundlePath,
-                                          owner,
-                                          processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
-                                          convert(processorDescriptor.getInputProductTypes()),
-                                          convert(processorDescriptor.getProcessorCategory()),
-                                          processorDescriptor.getOutputProductType(),
-                                          convert(processorDescriptor.getOutputFormats()),
-                                          processorDescriptor.getFormatting() != null ? processorDescriptor.getFormatting().toString() : "OPTIONAL",
-                                          processorDescriptor.getMaskExpression(),
-                                          convert(processorDescriptor.getOutputVariables()),
-                                          convert(processorDescriptor.getParameterDescriptors()));
+                processorDescriptor.getProcessorName(),
+                processorDescriptor.getProcessorVersion(),
+                processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
+                bundleName,
+                bundleVersion,
+                bundlePath,
+                owner,
+                processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
+                convert(processorDescriptor.getInputProductTypes()),
+                convert(processorDescriptor.getProcessorCategory()),
+                processorDescriptor.getOutputProductType(),
+                convert(processorDescriptor.getOutputFormats()),
+                processorDescriptor.getFormatting() != null ? processorDescriptor.getFormatting().toString() : "OPTIONAL",
+                processorDescriptor.getMaskExpression(),
+                convert(processorDescriptor.getOutputVariables()),
+                convert(processorDescriptor.getParameterDescriptors()));
     }
 
     private DtoAggregatorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,
                                             AggregatorDescriptor aggregatorDescriptor) {
         return new DtoAggregatorDescriptor(aggregatorDescriptor.getAggregator(),
-                                           bundleName,
-                                           bundleVersion,
-                                           bundlePath,
-                                           owner,
-                                           aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "",
-                                           convert(aggregatorDescriptor.getParameterDescriptors()));
+                bundleName,
+                bundleVersion,
+                bundlePath,
+                owner,
+                aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "",
+                convert(aggregatorDescriptor.getParameterDescriptors()));
     }
 
     private DtoProcessorDescriptor.DtoProcessorCategory convert(ProcessorDescriptor.ProcessorCategory processorCategory) {
@@ -574,12 +753,27 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         for (int i = 0; i < parameterDescriptors.length; i++) {
             ProcessorDescriptor.ParameterDescriptor parameterDescriptor = parameterDescriptors[i];
             dtoParameterDescriptors[i] = new DtoParameterDescriptor(parameterDescriptor.getName(),
-                                                                    parameterDescriptor.getType(),
-                                                                    parameterDescriptor.getDescription(),
-                                                                    parameterDescriptor.getDefaultValue(),
-                                                                    convert(parameterDescriptor.getValueSet()));
+                    parameterDescriptor.getType(),
+                    parameterDescriptor.getDescription(),
+                    parameterDescriptor.getDefaultValue(),
+                    convert(parameterDescriptor.getValueSet()),
+                    convert(parameterDescriptor.getValueRange()));
         }
         return dtoParameterDescriptors;
+    }
+
+    private DtoValueRange convert(String valueRangeAsText) {
+        if (valueRangeAsText == null || valueRangeAsText.isEmpty()) {
+            return null;
+        } else {
+            try {
+                ValueRange vr = ValueRange.parseValueRange(valueRangeAsText);
+                return new DtoValueRange(vr.getMin(), vr.getMax(), vr.isMinIncluded(), vr.isMaxIncluded());
+            } catch (IllegalArgumentException iae) {
+                log("Error while parsing 'valueRange' expression: " + valueRangeAsText, iae);
+                return null;
+            }
+        }
     }
 
     private DtoProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {
@@ -590,8 +784,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         for (int i = 0; i < outputVariables.length; i++) {
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
             processorVariables[i] = new DtoProcessorVariable(outputVariable.getName(),
-                                                             outputVariable.getDefaultAggregator(),
-                                                             outputVariable.getDefaultWeightCoeff());
+                    outputVariable.getDefaultAggregator(),
+                    outputVariable.getDefaultWeightCoeff());
         }
         return processorVariables;
     }
@@ -609,19 +803,21 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             additionalStagingPaths = null;
         }
         return new DtoProduction(production.getId(),
-                                 production.getName(),
-                                 productionRequest.getUserName(),
-                                 production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
-                                 backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
-                                 convert(additionalStagingPaths),
-                                 production.isAutoStaging(),
-                                 convert(production.getProcessingStatus(), production.getWorkflow()),
-                                 convert(production.getStagingStatus()));
+                production.getName(),
+                productionRequest.getUserName(),
+                productionRequest.getProductionType(),
+                production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
+                backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
+                convert(additionalStagingPaths),
+                production.isAutoStaging(),
+                convert(production.getProcessingStatus(), production.getWorkflow()),
+                convert(production.getStagingStatus()));
     }
 
-    private DtoProductionRequest convert(ProductionRequest productionRequest) {
-        return new DtoProductionRequest(productionRequest.getProductionType(),
-                                        productionRequest.getParameters());
+    private DtoProductionRequest convert(String requestId, ProductionRequest productionRequest) {
+        return new DtoProductionRequest(requestId,
+                productionRequest.getProductionType(),
+                productionRequest.getParameters());
     }
 
     private DtoProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {
@@ -635,15 +831,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             processingSeconds = (int) ((stopTime.getTime() - startTime.getTime()) / 1000);
         }
         return new DtoProcessStatus(DtoProcessState.valueOf(status.getState().name()),
-                                    status.getMessage(),
-                                    status.getProgress(),
-                                    processingSeconds);
+                status.getMessage(),
+                status.getProgress(),
+                processingSeconds);
     }
 
     private DtoProcessStatus convert(ProcessStatus status) {
         return new DtoProcessStatus(DtoProcessState.valueOf(status.getState().name()),
-                                    status.getMessage(),
-                                    status.getProgress());
+                status.getMessage(),
+                status.getProgress());
     }
 
     private DtoProductionResponse convert(ProductionResponse productionResponse) {
@@ -652,8 +848,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private ProductionRequest convert(DtoProductionRequest gwtProductionRequest) {
         return new ProductionRequest(gwtProductionRequest.getProductionType(),
-                                     getUserName(),
-                                     gwtProductionRequest.getProductionParameters());
+                getUserName(),
+                gwtProductionRequest.getProductionParameters());
     }
 
     private BackendServiceException convert(Exception e) {
@@ -691,12 +887,12 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         try {
             Class<?> productionServiceFactoryClass = Class.forName(
                     backendConfig.getProductionServiceFactoryClassName());
-            ProductionServiceFactory productionServiceFactory = (ProductionServiceFactory) productionServiceFactoryClass.newInstance();
-            productionService = productionServiceFactory.create(backendConfig.getConfigMap(),
-                                                                backendConfig.getLocalAppDataDir(),
-                                                                backendConfig.getLocalStagingDir());
+            ServiceContainerFactory serviceContainerFactory = (ServiceContainerFactory) productionServiceFactoryClass.newInstance();
+            serviceContainer = serviceContainerFactory.create(backendConfig.getConfigMap(),
+                    backendConfig.getLocalAppDataDir(),
+                    backendConfig.getLocalStagingDir());
             // Make the production servlet accessible by other servlets:
-            getServletContext().setAttribute("productionService", productionService);
+            getServletContext().setAttribute("serviceContainer", serviceContainer);
         } catch (Exception e) {
             throw new ServletException(e);
         }
@@ -713,11 +909,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private void updateProductionStatuses() {
-        final ProductionService productionService = this.productionService;
+        final ProductionService productionService = this.serviceContainer.getProductionService();
         if (productionService != null) {
-            synchronized (this) {
-                productionService.updateStatuses(getUserName());
-            }
+            productionService.updateStatuses(getUserName());
         }
     }
 
@@ -725,7 +919,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return getUserName(getThreadLocalRequest());
     }
 
-    public static String getUserName(HttpServletRequest request) {
+    static String getUserName(HttpServletRequest request) {
         if (request != null) {
             Principal userPrincipal = request.getUserPrincipal();
             if (userPrincipal != null) {
@@ -739,31 +933,160 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return "anonymous";
     }
 
-    public boolean isUserInRole(String role) {
-        return getThreadLocalRequest().isUserInRole(role) &&
-               // and the portal is either generic or destined to this user role ...
-               (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
-                backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() == 0 ||
-                Arrays.asList(backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ")).contains(role));
-    }
-
     @Override
     public DtoCalvalusConfig getCalvalusConfig() {
-        backendConfig.getConfigMap().put("user", getUserName());
-        String[] configuredRoles;
-        if (backendConfig.getConfigMap().containsKey("calvalus.portal.userRole")
-            && backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() > 0) {
-            configuredRoles = backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ");
-        } else {
-            configuredRoles = new String[] { "calvalus" };
+        List<String> samlRoles = new ArrayList<>();
+        Map<String, String> userSpecificConfig = new HashMap<>(backendConfig.getConfigMap());
+        if ("saml".equals(userSpecificConfig.get("calvalus.crypt.auth"))) {
+            try {
+                HttpSession session = getThreadLocalRequest().getSession();
+                AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
+                Document samlToken = (Document) assertion.getPrincipal().getAttributes().get("rawSamlToken");
+                samlToken = fixRootNode(samlToken);
+                samlRoles = getGroupMemberships(samlToken);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                LOG.log(Level.SEVERE, e.getMessage(), e);
+            }
         }
+        userSpecificConfig.put("user", getUserName());
+        String[] configuredRoles;
+        String roleParameter = userSpecificConfig.get(USER_ROLE);
+        if (roleParameter != null && roleParameter.trim().length() > 0) {
+            configuredRoles = roleParameter.trim().split(" ");
+        } else {
+            configuredRoles = new String[]{"calvalus"};
+        }
+
         List<String> accu = new ArrayList<>();
         for (String role : configuredRoles) {
-            if (getThreadLocalRequest().isUserInRole(role)) {
+            boolean noRolesConfigured = roleParameter == null;
+            if (noRolesConfigured || samlRoles.contains(role) || getThreadLocalRequest().isUserInRole(role)) {
                 accu.add(role);
             }
         }
-        backendConfig.getConfigMap().put("roles", accu.toString());
-        return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
+
+        userSpecificConfig.put("roles", accu.toString());
+
+        String defaultSizeLimit = userSpecificConfig.get(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT);
+        int requestSizeLimit = 0;
+        if (defaultSizeLimit != null) {
+            try {
+                requestSizeLimit = Integer.parseInt(defaultSizeLimit);
+            } catch (NumberFormatException e) {
+                LOG.log(Level.WARNING, "Illegal value for property '" + JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "': " + defaultSizeLimit, e);
+            }
+        }
+        for (String role : accu) {
+            String key = JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "." + role;
+            String roleRequestSizeLimit = userSpecificConfig.get(key);
+            if (roleRequestSizeLimit != null) {
+                int limit;
+                try {
+                    limit = Integer.parseInt(roleRequestSizeLimit);
+                    if (limit == 0) {
+                        requestSizeLimit = 0;
+                        break;
+                    }
+                    if (requestSizeLimit < limit) {
+                        requestSizeLimit = limit;
+                    }
+                } catch (NumberFormatException e) {
+                    LOG.log(Level.WARNING, "Illegal value for property '" + key + "': " + roleRequestSizeLimit, e);
+                }
+            }
+        }
+
+        //userSpecificConfig.put(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+
+        HttpSession session = getThreadLocalRequest().getSession();
+        session.setAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+
+        LOG.info("Roles of user '" + getUserName() + "': " + Arrays.toString(accu.toArray(new String[0])));
+        LOG.info("requestSizeLimit of user '" + getUserName() + "': " + requestSizeLimit);
+
+        return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), userSpecificConfig);
     }
+
+    static Document fixRootNode(Document samlToken) throws org.jdom2.JDOMException {
+        DOMBuilder builder = new DOMBuilder();
+        org.jdom2.Document jDomDoc = builder.build(samlToken);
+        Element assertionElement = jDomDoc.getRootElement().getChildren().get(0);
+        jDomDoc.detachRootElement();
+        assertionElement.detach();
+        jDomDoc.setRootElement(assertionElement);
+        DOMOutputter outputter = new DOMOutputter();
+        return outputter.output(jDomDoc);
+    }
+
+    static List<String> getGroupMemberships(Document samlToken) throws XPathExpressionException {
+        List<String> groupMemberships = new ArrayList<>();
+        XPathFactory xPathfactory = XPathFactory.newInstance();
+        XPath xpath = xPathfactory.newXPath();
+        String expression =
+                "/*[local-name()='Assertion']" +
+                        "/*[local-name()='AttributeStatement']" +
+                        "/*[local-name()='Attribute'][@Name=\"memberOf\"]" +
+                        "/*[local-name()='AttributeValue']";
+        XPathExpression expr = xpath.compile(expression);
+        NodeList nodeList = (NodeList) expr.evaluate(samlToken, XPathConstants.NODESET);
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node item = nodeList.item(i);
+            groupMemberships.add(item.getTextContent().split(",")[0].split("=")[1]);
+        }
+        return groupMemberships;
+    }
+
+
+    @Override
+    public String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength) {
+        SimpleDateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd");
+        Date start = null;
+        Date end = null;
+        try {
+            start = dateFormat.parse(minDate);
+            end = dateFormat.parse(maxDate);
+        } catch (ParseException e) {
+            log("Failed to parse date.", e);
+            return new String[0][];
+        }
+        List<DateRange> dateRanges = DateRangeCalculator.fromMinMax(start, end, steppingPeriodLength, compositingPeriodLength);
+        String[][] periods = new String[dateRanges.size()][2];
+        for (int i = 0; i < dateRanges.size(); i++) {
+            DateRange dateRange = dateRanges.get(i);
+            periods[i][0] = dateFormat.format(dateRange.getStartDate());
+            periods[i][1] = dateFormat.format(dateRange.getStopDate());
+        }
+        return periods;
+    }
+
+    @Override
+    public DtoRegionDataInfo loadRegionDataInfo(String filePath) throws BackendServiceException {
+        try {
+            String userName = getUserName();
+            String url = serviceContainer.getFileSystemService().getQualifiedPath(userName, filePath);
+            String[][] data = serviceContainer.getProductionService().loadRegionDataInfo(userName, url);
+            String[][] values = Arrays.copyOfRange(data, 1, data.length);
+            String[] header = data[0];
+            return new DtoRegionDataInfo(header, values);
+        } catch (IOException e) {
+            throw convert(e);
+        }
+    }
+
+    private String getStringFromDoc(Document doc) {
+        try {
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.transform(domSource, result);
+            writer.flush();
+            return writer.toString();
+        } catch (TransformerException ex) {
+            throw new IllegalArgumentException("Unable to parse SAML token", ex);
+        }
+    }
+
 }

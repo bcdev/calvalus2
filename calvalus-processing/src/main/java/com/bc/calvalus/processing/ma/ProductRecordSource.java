@@ -6,7 +6,6 @@ import org.esa.snap.core.datamodel.Product;
 
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 
@@ -26,9 +25,8 @@ public class ProductRecordSource implements RecordSource {
     public static final String PIXEL_LON_ATT_NAME = "pixel_lon";
     public static final String PIXEL_TIME_ATT_NAME = "pixel_time";
     public static final String PIXEL_MASK_ATT_NAME = "pixel_mask";
-
+    
     private final Iterable<PixelPosProvider.PixelPosRecord> pixelPosRecords;
-    private final boolean empty;
     private final PixelExtractor pixelExtractor;
 
     public ProductRecordSource(Product product,
@@ -49,16 +47,7 @@ public class ProductRecordSource implements RecordSource {
         }
 
         this.pixelPosRecords = pixelPosRecords;
-
-        boolean shallApplyTimeCriterion = shallApplyTimeCriterion(config);
-        System.out.println("shallApplyTimeCriterion = " + shallApplyTimeCriterion);
-
-        boolean canApplyTimeCriterion = canApplyTimeCriterion(referenceRecordHeader);
-        System.out.println("canApplyTimeCriterion = " + canApplyTimeCriterion);
-
-        this.empty = shallApplyTimeCriterion && !canApplyTimeCriterion;
-
-        pixelExtractor = new PixelExtractor(referenceRecordHeader,
+        this.pixelExtractor = new PixelExtractor(referenceRecordHeader,
                                             product,
                                             config.getMacroPixelSize(),
                                             config.getOnlyExtractComplete(),
@@ -79,10 +68,6 @@ public class ProductRecordSource implements RecordSource {
      */
     @Override
     public Iterable<Record> getRecords() throws Exception {
-        if (empty) {
-            return Collections.emptyList();
-        }
-
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {
@@ -95,16 +80,6 @@ public class ProductRecordSource implements RecordSource {
     public String getTimeAndLocationColumnDescription() {
         return "SNAP product format";
     }
-
-    private static boolean shallApplyTimeCriterion(MAConfig config) {
-        Double maxTimeDifference = config.getMaxTimeDifference();
-        return maxTimeDifference != null && maxTimeDifference > 0;
-    }
-
-    private static boolean canApplyTimeCriterion(Header referenceHeader) {
-        return referenceHeader.hasTime();
-    }
-
 
     private abstract class OutputRecordGenerator<T> extends RecordIterator {
 

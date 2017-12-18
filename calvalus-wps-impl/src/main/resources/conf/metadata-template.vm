@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+<feed xmlns="http://www.w3.org/2005/Atom">
     <title type="text">Urban TEP catalogue entry</title>
-    <id>$jobUrl</id>
-    <updated>$jobFinishTime</updated>
-    <link rel="profile" href="http://www.opengis.net/spec/owc-atom/1.0/req/core" title="This file is compliant with version 1.0 of OGC Context"/>
+    <subtitle type="text"/>
+    <generator>Urban TEP BC Processing Center</generator>
     <entry>
-        <id>$productOutputDir</id>
+        <id>$productionName/$productOutputDir</id>
         <title type="text">$productionName</title>
-        <content type="text">$processName of $inputDatasetName</content>
         <author>
             <name>Brockmann Consult GmbH</name>
         </author>
         <publisher xmlns="http://purl.org/dc/elements/1.1/">ESA Urban TEP</publisher>
+        <published>$jobFinishTime</published>
         <updated>$jobFinishTime</updated>
-        <parentIdentifier xmlns="http://purl.org/dc/elements/1.1/">$stagingDir</parentIdentifier>
-        <where xmlns="http://www.georss.org/georss/10" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <link href="$collectionUrl" rel="alternate" type="text/html"/>
+        #foreach( $product in $productList )
+            <link href="$product.productUrl" title="$product.productFileName" rel="enclosure" type="$product.productMimeType" length="$product.productFileSize"/>
+        #end
+        <where xmlns="http://www.georss.org/georss/10">
             <Polygon xmlns="http://www.opengis.net/gml">
                 <exterior>
                     <LinearRing>
@@ -24,75 +26,96 @@
             </Polygon>
         </where>
         <date xmlns="http://purl.org/dc/elements/1.1/">$startDate/$stopDate</date>
-        <link rel="enclosure" href="$collectionUrl" title="$productionName"/>
-        <EarthObservation xmlns="http://www.opengis.net/sar/2.1" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-            <boundedBy xmlns="http://www.opengis.net/gml/3.2" xsi:nil="true"/>
-            <phenomenonTime xmlns="http://www.opengis.net/om/2.0">
-                <TimePeriod xmlns="http://www.opengis.net/gml/3.2">
-                    <beginPosition>$startDate</beginPosition>
-                    <endPosition>$stopDate</endPosition>
-                </TimePeriod>
-            </phenomenonTime>
-            <observedProperty xmlns="http://www.opengis.net/om/2.0" xsi:nil="true"/>
-            <metaDataProperty xmlns="http://www.opengis.net/eop/2.1">
-                <EarthObservationMetaData>
-                    <identifier>$productOutputDir</identifier>
-                    <parentIdentifier>$stagingDir</parentIdentifier>
-                    <productType>GUF</productType>
-                    <processing>
-                        <ProcessingInformation>
-                            <processingCenter>Brockmann Consult GmbH</processingCenter>
-                            <processingDate>$jobFinishTime</processingDate>
-                            <method>$processName Processing</method>
-                            <processorName>$processName</processorName>
-                            <processorVersion>$processorVersion</processorVersion>
-                            <processingLevel>$productionType</processingLevel>
-                            <nativeProductFormat>$outputFormat</nativeProductFormat>
-                        </ProcessingInformation>
-                    </processing>
-                </EarthObservationMetaData>
-            </metaDataProperty>
-            <result xmlns="http://www.opengis.net/om/2.0">
-                <EarthObservationResult xmlns="http://www.opengis.net/eop/2.1">
-                    <boundedBy xmlns="http://www.opengis.net/gml/3.2" xsi:nil="true"/>
+        <box xmlns="http://www.georss.org/georss">$regionBox</box>
+        #foreach( $productUrl in $quickLookProductUrlList )
+            <offering xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/png">
+                <content href="$productUrl" type="image/png" />
+            </offering>
+        #end
+        <opt:EarthObservation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                              xsi:schemaLocation="http://www.opengis.net/opt/2.0 omeo/1.0.0/opt.xsd"
+                              xmlns:xlink="http://www.w3.org/1999/xlink"
+                              xmlns:gml="http://www.opengis.net/gml/3.2"
+                              xmlns:eop="http://www.opengis.net/eop/2.0"
+                              xmlns:opt="http://www.opengis.net/opt/2.0"
+                              xmlns:ows="http://www.opengis.net/ows/2.0"
+                              xmlns:om="http://www.opengis.net/om/2.0"
+                              gml:id="x0">
+            <om:phenomenonTime>
+                <gml:TimePeriod gml:id="x1">
+                    <gml:beginPosition>$startDate</gml:beginPosition>
+                    <gml:endPosition>$stopDate</gml:endPosition>
+                </gml:TimePeriod>
+            </om:phenomenonTime>
+            <om:resultTime>
+                <gml:TimeInstant gml:id="x1b">
+                    <gml:timePosition>$jobFinishTime</gml:timePosition>
+                </gml:TimeInstant>
+            </om:resultTime>
+
+            <om:procedure/>
+
+            <om:observedProperty nilReason="inapplicable"/>
+
+            <om:featureOfInterest>
+                <eop:Footprint gml:id="x3">
+                    <eop:multiExtentOf>
+                        <gml:MultiSurface gml:id="x4">
+                            <gml:surfaceMembers>
+                                <gml:Polygon gml:id="x5">
+                                    <gml:exterior>
+                                        <gml:LinearRing>
+                                            <gml:posList count="5" srsDimension="2">$regionWkt</gml:posList>
+                                        </gml:LinearRing>
+                                    </gml:exterior>
+                                </gml:Polygon>
+                            </gml:surfaceMembers>
+                        </gml:MultiSurface>
+                    </eop:multiExtentOf>
+                </eop:Footprint>
+            </om:featureOfInterest>
+
+            <om:result>
+                <opt:EarthObservationResult gml:id="eor_2">
                     #foreach( $product in $productList )
-                        <product>
-                            <ProductInformation>
-                                <fileName>
-                                    <d7p1:ServiceReference d7p1:type="simple"
-                                                           d7p2:href="$product.productUrl"
-                                                           d7p2:title="simple"
-                                                           xmlns="http://www.opengis.net/ows/2.0"
-                                                           xmlns:d7p1="http://www.opengis.net/ows/2.0"
-                                                           xmlns:d7p2="http://www.w3.org/1999/xlink">
-                                        <d7p1:Identifier>$product.productFileName</d7p1:Identifier>
-                                        <d7p1:Format>$product.productFileFormat</d7p1:Format>
-                                    </d7p1:ServiceReference>
-                                </fileName>
-                                <size>$product.productFileSize</size>
-                            </ProductInformation>
-                        </product>
+                        <eop:product>
+                            <eop:ProductInformation>
+                                <eop:fileName>
+                                    <ows:ServiceReference ows:type="simple"
+                                                          xlink:href="$product.productUrl"
+                                                          xlink:title="$product.productFileName">
+                                        <ows:Identifier>result_data</ows:Identifier>
+                                        <ows:Format>$product.productMimeType</ows:Format>
+                                        <ows:RequestMessage/>
+                                    </ows:ServiceReference>
+                                </eop:fileName>
+                                <eop:size uom="Bytes">$product.productFileSize</eop:size>
+                            </eop:ProductInformation>
+                        </eop:product>
                     #end
-                </EarthObservationResult>
-            </result>
-            <featureOfInterest xmlns="http://www.opengis.net/om/2.0">
-                <Footprint xmlns="http://www.opengis.net/eop/2.1">
-                    <boundedBy xmlns="http://www.opengis.net/gml/3.2" xsi:nil="true"/>
-                    <multiExtentOf>
-                        <MultiSurface xmlns="http://www.opengis.net/gml/3.2">
-                            <surfaceMembers>
-                                <Polygon>
-                                    <exterior>
-                                        <LinearRing>
-                                            <posList count="5" srsDimension="2">${regionWkt}</posList>
-                                        </LinearRing>
-                                    </exterior>
-                                </Polygon>
-                            </surfaceMembers>
-                        </MultiSurface>
-                    </multiExtentOf>
-                </Footprint>
-            </featureOfInterest>
-        </EarthObservation>
+                </opt:EarthObservationResult>
+            </om:result>
+
+            <eop:metaDataProperty>
+                <eop:EarthObservationMetaData>
+                    <eop:identifier>$productionName/$productOutputDir</eop:identifier>
+                    <eop:parentIdentifier>$processName of $inputDatasetName</eop:parentIdentifier>
+                    <eop:acquisitionType>NOMINAL</eop:acquisitionType>
+                    <eop:productType>$processName</eop:productType>
+                    <eop:status>ACQUIRED</eop:status>
+                    <eop:processing>
+                        <eop:ProcessingInformation>
+                            <eop:method>$processName Processing</eop:method>
+                            <eop:nativeProductFormat>$outputFormat</eop:nativeProductFormat>
+                            <eop:processingCenter>Brockmann Consult GmbH</eop:processingCenter>
+                            <eop:processingDate>$jobFinishTime</eop:processingDate>
+                            <eop:processingLevel>$productionType</eop:processingLevel>
+                            <eop:processorName>$processorId</eop:processorName>
+                            <eop:processorVersion>$processorVersion</eop:processorVersion>
+                        </eop:ProcessingInformation>
+                    </eop:processing>
+                </eop:EarthObservationMetaData>
+            </eop:metaDataProperty>
+        </opt:EarthObservation>
     </entry>
 </feed>

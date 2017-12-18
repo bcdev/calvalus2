@@ -1,9 +1,11 @@
 package com.bc.calvalus.production.cli;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.production.ProductionRequest;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.Reader;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,10 @@ public class YamlProductionRequestConverter {
                 Object value = entry.getValue();
                 if (value instanceof String) {
                     parameterMap.put(key, ((String) value).trim());
+                } else if (value instanceof Boolean || value instanceof Number) {
+                    parameterMap.put(key, value.toString());
+                } else if (value instanceof Date) {
+                    parameterMap.put(key, DateRange.DATE_FORMAT.format(value));
                 } else if (value instanceof String[]) {
                     parameterMap.put(key, arrayToString((String[]) value));
                 } else if (value instanceof List) {
@@ -39,8 +45,9 @@ public class YamlProductionRequestConverter {
                 } else if (value == null) {
                     parameterMap.put(key, "");
                 } else {
-                    System.out.println("value = " + value);
-                    System.out.println("value.class = " + value.getClass());
+                    String msg = String.format("unsupported value type %s for key '%s' with value '%s'", 
+                                               value.getClass().getName(), key, value);
+                    throw new IllegalArgumentException(msg);
                 }
             }
         }

@@ -76,8 +76,8 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.get(jobConfig);
+        final Configuration conf = context.getConfiguration();
+        final MAConfig maConfig = MAConfig.get(conf);
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
@@ -89,7 +89,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Empty products").increment(1);
                 return;
             }
-            RecordSource recordSource = getReferenceRecordSource(maConfig);
+            RecordSource recordSource = getReferenceRecordSource(maConfig, conf);
             handleProduct(product, recordSource, context);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Used products").increment(1);
         } catch (Exception e) {
@@ -238,10 +238,10 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         return "UTM Zone " + zoneIndex + (south ? ", South" : "");
     }
 
-    private RecordSource getReferenceRecordSource(MAConfig maConfig) {
+    private RecordSource getReferenceRecordSource(MAConfig maConfig, Configuration conf) {
         final RecordSource referenceRecordSource;
         try {
-            referenceRecordSource = maConfig.createRecordSource();
+            referenceRecordSource = maConfig.createRecordSource(conf);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -17,13 +17,14 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -36,8 +37,6 @@ import java.awt.image.RenderedImage;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -50,19 +49,6 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
 
-    static {
-        try {
-            // Make "hdfs:" a recognised URL protocol
-            URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
-        } catch (Throwable e) {
-            // ignore as it is most likely already set
-            String msg = String.format("Cannot set URLStreamHandlerFactory (message: '%s'). " +
-                                       "This may not be a problem because it is most likely already set.",
-                                       e.getMessage());
-            LOGGER.fine(msg);
-        }
-    }
-
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
@@ -71,10 +57,21 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
-                String productName = FileUtils.getFilenameWithoutExtension(processorAdapter.getInputPath().getName());
-                Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
+                final String inputFileName = processorAdapter.getInputPath().getName();
+                final String productName = FileUtils.getFilenameWithoutExtension(inputFileName);
+                final Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
                 for (Quicklooks.QLConfig config : configs) {
-                    String imageFileName = productName + "_" + config.getBandName();
+                    final String imageFileName;
+                    if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+                            && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+                        if (configs.length == 1) {
+                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
+                        } else {
+                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
+                        }
+                    } else {
+                        imageFileName = productName + "_" + config.getBandName();
+                    }
                     createQuicklook(product, imageFileName, context, config);
                 }
             }
@@ -85,9 +82,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     }
 
     public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
-                                       Quicklooks.QLConfig config) {
-        try {
-            RenderedImage quicklookImage = QuicklookGenerator.createImage(context, product, config);
+                                       Quicklooks.QLConfig config) throws IOException, InterruptedException {
+//        try {
+            RenderedImage quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
                 OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
@@ -97,13 +94,13 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                     outputStream.close();
                 }
             }
-        } catch (Exception e) {
-            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
-            LOGGER.log(Level.WARNING, msg, e);
-        }
+//        } catch (Exception e) {
+//            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
+//            LOGGER.log(Level.WARNING, msg, e);
+//        }
     }
 
-    private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws Exception {
+    private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
         Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
         final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
         return new BufferedOutputStream(fsDataOutputStream);

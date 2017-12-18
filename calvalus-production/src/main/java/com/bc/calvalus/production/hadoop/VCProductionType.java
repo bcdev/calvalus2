@@ -17,7 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ma.MAConfig;
@@ -44,14 +44,14 @@ public class VCProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new VCProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new VCProductionType(fileSystemService, processing, staging);
         }
     }
 
-    VCProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    VCProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                      StagingService stagingService) {
-        super("VC", inventoryService, processingService, stagingService);
+        super("VC", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -138,12 +138,5 @@ public class VCProductionType extends HadoopProductionType {
         if (processorBundles.length() > 0) {
             processorBundles.append(",");
         }
-    }
-
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
     }
 }

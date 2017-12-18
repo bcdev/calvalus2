@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
@@ -26,6 +27,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -39,22 +41,38 @@ public class PixelPosProvider {
 
     private final Product product;
     private final PixelTimeProvider pixelTimeProvider;
-    private final long maxTimeDifference; // Note: time in ms (NOT h)
+    private final TimeRangeProvider timeRangeProvider;
     private final long productStartTime;
     private final long productEndTime;
     // todo make this a parameter
     private final int allowedPixelDisplacement;
 
 
-    public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
-                            boolean hasReferenceTime) {
+    public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider,
+                            String maxTimeDifference, boolean hasReferenceTime) {
         this.product = product;
+        if (product.getSceneGeoCoding() == null) {
+            throw new NullPointerException("product has no geo-coding");
+        }
         this.pixelTimeProvider = pixelTimeProvider;
 
         if (maxTimeDifference != null && hasReferenceTime) {
-            this.maxTimeDifference = Math.round(maxTimeDifference * 60 * 60 * 1000); // h to ms
+            if (maxTimeDifference.trim().endsWith("d")) {
+                String trimmed = maxTimeDifference.trim();
+                String daysAsString = trimmed.substring(0, trimmed.length() - 1);
+                int days = Integer.parseInt(daysAsString);
+                this.timeRangeProvider = new CalDayTimeRangeProvider(days);
+            } else {
+                double timeDifferenceHours = Double.parseDouble(maxTimeDifference);
+                if (timeDifferenceHours > 0) {
+                    long timeDifferenceMS = Math.round(timeDifferenceHours * 60 * 60 * 1000); // h to ms
+                    this.timeRangeProvider = new DefaultTimeRangeProvider(timeDifferenceMS);
+                } else {
+                    this.timeRangeProvider = null;
+                }
+            }
         } else {
-            this.maxTimeDifference = 0L;
+            this.timeRangeProvider = null;
         }
         if (testTime()) {
             long endTime = product.getEndTime().getAsDate().getTime();
@@ -70,6 +88,10 @@ public class PixelPosProvider {
             productStartTime = productEndTime = 0L;
         }
         allowedPixelDisplacement = 5;
+        
+        LOG.info("pixelTimeProvider = " + this.pixelTimeProvider);
+        LOG.info("timeRangeProvider = " + this.timeRangeProvider);
+        
     }
 
     /**
@@ -114,7 +136,7 @@ public class PixelPosProvider {
     }
 
     private boolean testTime() {
-        return maxTimeDifference > 0 && pixelTimeProvider != null;
+        return timeRangeProvider != null && pixelTimeProvider != null;
     }
 
     private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
@@ -139,20 +161,20 @@ public class PixelPosProvider {
         return null;
     }
 
-    private long getMinReferenceTime(Record referenceRecord) {
+    long getMinReferenceTime(Record referenceRecord) {
         Date time = referenceRecord.getTime();
         if (time == null) {
             throw new IllegalArgumentException("Point record has no time information.");
         }
-        return time.getTime() - maxTimeDifference;
+        return timeRangeProvider.getMinReferenceTime(referenceRecord);
     }
 
-    private long getMaxReferenceTime(Record referenceRecord) {
+    long getMaxReferenceTime(Record referenceRecord) {
         Date time = referenceRecord.getTime();
         if (time == null) {
             throw new IllegalArgumentException("Point record has no time information.");
         }
-        return time.getTime() + maxTimeDifference;
+        return timeRangeProvider.getMaxReferenceTime(referenceRecord);
     }
 
     private List<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
@@ -228,7 +250,7 @@ public class PixelPosProvider {
         PixelPosRecord(PixelPos pixelPos, Record record, long eoTime) {
             this.record = record;
             this.pixelPos = pixelPos;
-            this.referenceTime = record.getTime() != null ? record.getTime().getTime(): -1;
+            this.referenceTime = record.getTime() != null ? record.getTime().getTime() : -1;
             this.eoTime = eoTime;
         }
 
@@ -259,11 +281,80 @@ public class PixelPosProvider {
         @Override
         public String toString() {
             return "PixelPosRecord{" +
-                   "pixelPos=" + pixelPos +
-                   ", record=" + record +
-                   ", referenceTime=" + referenceTime +
-                   ", eoTime=" + eoTime +
-                   '}';
+                    "pixelPos=" + pixelPos +
+                    ", record=" + record +
+                    ", referenceTime=" + referenceTime +
+                    ", eoTime=" + eoTime +
+                    '}';
+        }
+    }
+
+    interface TimeRangeProvider {
+        long getMinReferenceTime(Record referenceRecord);
+
+        long getMaxReferenceTime(Record referenceRecord);
+    }
+
+    static class DefaultTimeRangeProvider implements TimeRangeProvider {
+
+        private final long timeDifferenceMS; // Note: time in ms (NOT h)
+
+        DefaultTimeRangeProvider(long timeDifferenceMS) {
+            this.timeDifferenceMS = timeDifferenceMS;
+        }
+
+        @Override
+        public long getMinReferenceTime(Record referenceRecord) {
+            return referenceRecord.getTime().getTime() - timeDifferenceMS;
+        }
+
+        @Override
+        public long getMaxReferenceTime(Record referenceRecord) {
+            return referenceRecord.getTime().getTime() + timeDifferenceMS;
+        }
+
+        @Override
+        public String toString() {
+            return "DefaultTimeRangeProvider{timeDifferenceMS=" + timeDifferenceMS + "}";
+        }
+    }
+
+    static class CalDayTimeRangeProvider implements TimeRangeProvider {
+
+        private final Calendar utc = DateUtils.createCalendar();
+        private static final long DAY_IN_MS = 24 * 60 * 60 * 1000L;
+        private static final long HOUR_IN_MS = 60 * 60 * 1000L;
+
+        private final long timeDifferenceMS;
+
+        CalDayTimeRangeProvider(int days) {
+            this.timeDifferenceMS = (days + 1) * DAY_IN_MS;
+        }
+
+        @Override
+        public long getMinReferenceTime(Record referenceRecord) {
+            long utcShift = getUtcShift(referenceRecord);
+            // screw to beginning of calendar day, or of previous day in case maxTD is -2 * ...
+            return referenceRecord.getTime().getTime() - utcShift + DAY_IN_MS - timeDifferenceMS;
+        }
+
+        @Override
+        public long getMaxReferenceTime(Record referenceRecord) {
+            long utcShift = getUtcShift(referenceRecord);
+            // screw to beginning of next calendar day, or of day after in case maxTD is -2 * ...
+            return referenceRecord.getTime().getTime() - utcShift + timeDifferenceMS;
+        }
+
+        private long getUtcShift(Record referenceRecord) {
+            Date time = referenceRecord.getTime();
+            double lon = referenceRecord.getLocation().getLon();
+            utc.setTimeInMillis(time.getTime() + (long) (lon * 24 / 360 * HOUR_IN_MS));
+            return utc.get(Calendar.HOUR_OF_DAY) * HOUR_IN_MS + utc.getTimeInMillis() % HOUR_IN_MS;
+        }
+
+        @Override
+        public String toString() {
+            return "CalDayTimeRangeProvider{timeDifferenceMS=" + timeDifferenceMS + "}";
         }
     }
 }

@@ -90,12 +90,12 @@ public class ProductInventoryEntryTest {
 
         assertEquals("2000-01-01-00-00-00.000000\t2000-01-01-00-00-00.000000\t45\t0\t45\tfoo", entry.toCSVString());
 
-        ProductData.UTC startTime = ProductData.UTC.parse("02-Jul-2001 13:10:11.1234");
+        ProductData.UTC startTime = ProductData.UTC.parse("02-Jul-1990 13:10:11.1234");
         product.setStartTime(startTime);
         ProductData.UTC endTime = ProductData.UTC.parse("02-Jul-2001 13:12:14.5678");
         product.setEndTime(endTime);
         entry = ProductInventoryEntry.createForGoodProduct(product, "bar");
 
-        assertEquals("2001-07-02-13-10-11.123400\t2001-07-02-13-12-14.567800\t45\t0\t45\tbar", entry.toCSVString());
+        assertEquals("1990-07-02-13-10-11.123400\t2001-07-02-13-12-14.567800\t45\t0\t45\tbar", entry.toCSVString());
     }
 }

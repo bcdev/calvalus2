@@ -28,15 +28,19 @@ import java.util.Date;
 public class PixelTimeProvider {
 
     private final double startMJD;
-    private final double deltaMJD;
+    private final double deltaMjdPerLine;
 
     public static PixelTimeProvider create(Product product) {
-        final ProductData.UTC startTime = product.getStartTime();
-        final ProductData.UTC endTime = product.getEndTime();
-        final int rasterHeight = product.getSceneRasterHeight();
+        ProductData.UTC startTime = product.getStartTime();
+        ProductData.UTC endTime = product.getEndTime();
+        int rasterHeight = product.getSceneRasterHeight();
+        return create(startTime, endTime, rasterHeight);
+    }
+    
+    public static PixelTimeProvider create(ProductData.UTC startTime, ProductData.UTC endTime, int rasterHeight) {
         if (startTime != null && endTime != null && rasterHeight > 1) {
-            return new PixelTimeProvider(startTime.getMJD(),
-                                         (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1));
+            double deltaMJD = (endTime.getMJD() - startTime.getMJD()) / (rasterHeight - 1);
+            return new PixelTimeProvider(startTime.getMJD(), deltaMJD);
         } else {
             return null;
         }
@@ -44,7 +48,7 @@ public class PixelTimeProvider {
 
     private PixelTimeProvider(double startMJD, double deltaMJD) {
         this.startMJD = startMJD;
-        this.deltaMJD = deltaMJD;
+        this.deltaMjdPerLine = deltaMJD;
     }
 
     public Date getTime(PixelPos pixelPos) {
@@ -52,6 +56,14 @@ public class PixelTimeProvider {
     }
 
     private ProductData.UTC getUTC(PixelPos pixelPos) {
-        return new ProductData.UTC(startMJD + Math.floor(pixelPos.y) * deltaMJD);
+        return new ProductData.UTC(startMJD + Math.floor(pixelPos.y) * deltaMjdPerLine);
+    }
+
+    @Override
+    public String toString() {
+        return "PixelTimeProvider{" +
+                "startMJD=" + new ProductData.UTC(startMJD).format() +
+                ", deltaMjdPerLine=" + deltaMjdPerLine +
+                '}';
     }
 }

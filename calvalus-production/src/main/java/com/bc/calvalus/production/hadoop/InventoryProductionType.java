@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.productinventory.ProductInventoryWorkflowItem;
@@ -28,6 +28,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
 
@@ -43,14 +44,14 @@ public class InventoryProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new InventoryProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new InventoryProductionType(fileSystemService, processing, staging);
         }
     }
 
-    InventoryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    InventoryProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                    StagingService stagingService) {
-        super("Inventory", inventoryService, processingService, stagingService);
+        super("Inventory", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -92,12 +93,16 @@ public class InventoryProductionType extends HadoopProductionType {
         processorProductionRequest.configureProcessor(jobConfig);
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        //jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        setInputLocationParameters(productionRequest, jobConfig);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
+        Geometry regionGeom = productionRequest.getRegionGeometry(null);
+        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeom != null ? regionGeom.toString() : "");
 
         return new ProductInventoryWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName, jobConfig);

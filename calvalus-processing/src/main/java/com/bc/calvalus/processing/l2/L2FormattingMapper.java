@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
@@ -38,8 +39,12 @@ import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A mapper which converts L2 products from the
@@ -157,12 +162,22 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         LOG.info("Creating quicklooks.");
 
         List<Quicklooks.QLConfig> qlConfigList = getValidQlConfigs(jobConfig);
-        if (qlConfigList.size() == 1) {
-            QLMapper.createQuicklook(targetProduct, productName, context, qlConfigList.get(0));
-        } else {
-            for (Quicklooks.QLConfig qlConfig : qlConfigList) {
-                String imageFileName = productName + "_" + qlConfig.getBandName();
+        for (Quicklooks.QLConfig qlConfig : qlConfigList) {
+            String imageFileName;
+//            if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+//                    && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+//                imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+//            } else {
+                imageFileName = productName;
+//            }
+            if (qlConfigList.size() > 1) {
+                imageFileName = imageFileName + "_" + qlConfig.getBandName();
+            }
+            try {
                 QLMapper.createQuicklook(targetProduct, imageFileName, context, qlConfig);
+            } catch (Exception e) {
+                String msg = String.format("Could not create quicklook image '%s'.", qlConfig.getBandName());
+                LOG.log(Level.WARNING, msg, e);
             }
         }
         LOG.info("Finished creating quicklooks.");
@@ -257,14 +272,35 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         }
     }
 
-    private static String getProductName(Configuration jobConfig, String fileName) {
+    public static String getProductName(Configuration jobConfig, String fileName) {
         String regex = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REGEX, null);
         String replacement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, null);
-        String newProductName = FileUtils.getFilenameWithoutExtension(fileName);
-        if (regex != null && replacement != null) {
-            newProductName = getNewProductName(newProductName, regex, replacement);
+        String dateElement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DATE_ELEMENT, null);
+        String dateFormat = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DATE_FORMAT, null);
+        try {
+            String newProductName = FileUtils.getFilenameWithoutExtension(fileName);
+            if (regex != null && replacement != null) {
+                //newProductName = getNewProductName(newProductName, regex, replacement);
+                Matcher m = Pattern.compile(regex).matcher(newProductName);
+                newProductName = m.replaceAll(replacement);
+                if (dateElement != null && dateFormat != null) {
+                    final String dateString = m.replaceAll(dateElement);
+                    
+                    final DateFormat df1 = DateUtils.createDateFormat(dateFormat);
+                    final DateFormat df2 = DateUtils.createDateFormat(newProductName);
+                    final Date date = df1.parse(dateString);
+                    newProductName = df2.format(date);
+                }
+            }
+            return newProductName;
+        } catch (Exception e) {
+            if (dateElement == null || dateFormat == null) {
+                throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex + " by " + replacement);
+            } else {
+                throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex +
+                                                   " date ele " + dateElement + " date format " + dateFormat + " by " + replacement);
+            }
         }
-        return newProductName;
     }
 
     static String getNewProductName(String productName, String regex, String replacement) {

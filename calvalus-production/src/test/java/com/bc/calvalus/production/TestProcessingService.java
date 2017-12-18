@@ -73,4 +73,9 @@ public class TestProcessingService implements ProcessingService<String> {
     public boolean isClosed() {
         return closed;
     }
+
+    @Override
+    public String[][] loadRegionDataInfo(String username, String url) throws IOException {
+        return new String[0][];
+    }
 }

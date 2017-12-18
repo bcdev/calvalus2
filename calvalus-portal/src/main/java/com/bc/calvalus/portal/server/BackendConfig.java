@@ -29,21 +29,28 @@ public class BackendConfig {
     private static final String DEFAULT_PARAM_VALUE_CONFIG_FILE = "config/calvalus.properties";
 
     private final File localContextDir;
-    private final String productionServiceFactoryClassName;
-    private final String stagingPath;
-    private final String uploadPath;
-    private final Map<String, String> configMap;
+    private String productionServiceFactoryClassName;
+    private String stagingPath;
+    private String uploadPath;
+    private Map<String, String> configMap;
 
     public BackendConfig(ServletContext servletContext) throws ServletException {
-        Map<String, String> configMap = loadConfig(servletContext);
+        String realPath = servletContext.getRealPath(".");
+        localContextDir = realPath != null ? new File(realPath) : null;
 
-        this.configMap = configMap;
-        this.localContextDir = new File(servletContext.getRealPath("."));
+        configMap = loadConfig(servletContext);
+
+        FileWatcher fileWatcher = new FileWatcher(getConfigFile(servletContext));
+        fileWatcher.addListener(() -> {
+            configMap = loadConfig(servletContext);
+            servletContext.log("Reloaded properties.");
+        });
+        fileWatcher.start();
 
         // Init mandatory parameters - absence is not acceptable.
-        this.productionServiceFactoryClassName = getProperty("calvalus.portal.productionServiceFactory.class");
-        this.stagingPath = getProperty("calvalus.portal.staging.path");
-        this.uploadPath = getProperty("calvalus.portal.upload.path");
+        productionServiceFactoryClassName = getProperty("calvalus.portal.productionServiceFactory.class");
+        stagingPath = getProperty("calvalus.portal.staging.path");
+        uploadPath = getProperty("calvalus.portal.upload.path");
     }
 
     public Map<String, String> getConfigMap() {

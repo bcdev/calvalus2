@@ -2,7 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
@@ -35,21 +35,21 @@ public class TAProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new TAProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new TAProductionType(fileSystemService, processing, staging);
         }
     }
 
-    TAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    TAProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                             StagingService stagingService) {
-        super("TA", inventoryService, processingService, stagingService);
+        super("TA", fileSystemService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         // extract request parameters
-        final List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, L3ProductionType.MONTHLY);
+        final List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, "1m");
         if (dateRanges.size() == 0) {
             throw new ProductionException("Time range is zero");
         }
@@ -104,7 +104,7 @@ public class TAProductionType extends HadoopProductionType {
         // return production of workflow
         return new Production(productionId,
                               productionName,
-                              null, // no dedicated output directory
+                              taOutputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,

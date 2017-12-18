@@ -9,9 +9,8 @@
 
         <g:VerticalPanel spacing="4">
 
-            <g:HTMLPanel width="100%">
-                <h3>Level-3 Parameters</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                <g:InlineLabel styleName="{style.panelTitleText}">Level-3 Parameters</g:InlineLabel>
             </g:HTMLPanel>
 
             <cell:CellTable ui:field='variableCellTable' width="100%"/>

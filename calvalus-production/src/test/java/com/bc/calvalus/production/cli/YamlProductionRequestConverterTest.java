@@ -27,6 +27,8 @@ public class YamlProductionRequestConverterTest {
 
         assertTrue(parameters.containsKey("calvalus.processor.package"));
         assertEquals("beam-meris-radiometry", parameters.get("calvalus.processor.package"));
+        assertTrue(parameters.containsKey("calvalus.processor.version"));
+        assertEquals("1.0", parameters.get("calvalus.processor.version"));
 
         assertTrue(parameters.containsKey("calvalus.input"));
 
@@ -55,6 +57,9 @@ public class YamlProductionRequestConverterTest {
         assertNotNull(parameters.get("calvalus.plainText.parameter"));
         String expectedPlainText = "<parameters>\nThis is a multiline\nTextfield\n</parameters>";
         assertEquals(expectedPlainText, parameters.get("calvalus.plainText.parameter"));
+        
+        assertEquals("true", parameters.get("copyInput"));
+        assertEquals("2017-10-01", parameters.get("minDate"));
+        assertEquals("2017-12-31", parameters.get("maxDate"));
     }
-
 }

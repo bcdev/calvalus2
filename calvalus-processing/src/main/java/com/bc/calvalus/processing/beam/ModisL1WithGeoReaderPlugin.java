@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -99,7 +100,13 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
             Object input = getInput();
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
-                File localFile = CalvalusProductIO.copyFileToLocal(pathConfig.getPath(), pathConfig.getConfiguration());
+                File localFile;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    Configuration conf = pathConfig.getConfiguration();
+                    localFile = CalvalusProductIO.copyFileToLocal(pathConfig.getPath(), conf);
+                }                
                 copyModisGeoFile(pathConfig);
                 return ProductIO.readProduct(localFile);
             } else {
@@ -113,7 +120,7 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
             String doy = filename.substring(5, 8);
             String granule = filename.substring(0, 14);
 
-            Calendar calendar = ProductData.UTC.createCalendar();
+            Calendar calendar = DateUtils.createCalendar();
             calendar.set(Calendar.YEAR, Integer.parseInt(year));
             calendar.set(Calendar.DAY_OF_YEAR, Integer.parseInt(doy));
             Date productDay = calendar.getTime();
@@ -123,7 +130,7 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
                 throw new IllegalStateException("ModisL1WithGeoReaderPlugin NOT enabled");
             }
             for (String auxGeoPath : auxGeoPathes) {
-                DateFormat dateFormat = ProductData.UTC.createDateFormat(auxGeoPath);
+                DateFormat dateFormat = DateUtils.createDateFormat(auxGeoPath);
                 String geoGlob = dateFormat.format(productDay) + granule + ".GEO*";
 
                 Path globPath = new Path(geoGlob);

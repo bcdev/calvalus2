@@ -155,6 +155,7 @@ public class SqlProductionStoreTest {
         assertEquals("pid1", production1.getId());
         assertEquals("pname1", production1.getName());
         assertEquals("home/ewa/tmp6455", production1.getOutputPath());
+        assertArrayEquals(new String[]{"data1", "data2"}, production1.getIntermediateDataPath());
         assertEquals("/out/spath1", production1.getStagingPath());
         assertArrayEquals(new Object[]{"job1", "job2"}, production1.getJobIds());
         assertEquals(new ProcessStatus(ProcessState.SCHEDULED, 0.0F, "Under way"), production1.getProcessingStatus());
@@ -180,7 +181,9 @@ public class SqlProductionStoreTest {
     }
 
     private static Production createProduction1() {
-        Production production = new Production("pid1", "pname1", "home/ewa/tmp6455", "/out/spath1", true,
+        Production production = new Production("pid1", "pname1", "home/ewa/tmp6455",
+                                               new String[]{"data1", "data2"},
+                                               "/out/spath1", true,
                                                new ProductionRequest("X", "eva", "a", "1"),
                                                new ProxyWorkflow(new TestProcessingService(),
                                                                  new Object[]{"job1", "job2"},

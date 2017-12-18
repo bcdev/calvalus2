@@ -22,17 +22,19 @@ import java.util.Map;
  */
 public abstract class OrderProductionView extends PortalView {
 
+    static final String INPUT_FILES_PANEL = "inputFilesPanel";
+
     protected OrderProductionView(PortalContext portalContext) {
         super(portalContext);
     }
 
     /**
-     * Called by {@link #orderProduction} and {@link #checkRequest()}.
+     * Called by {@link #orderProduction} and {@link #checkRequest()} and {@link #saveRequest()}.
      *
      * @return The production request.
      */
     protected DtoProductionRequest getProductionRequest() {
-        return new DtoProductionRequest(getProductionType(), getProductionParameters());
+        return new DtoProductionRequest("", getProductionType(), getProductionParameters());
     }
 
     /**
@@ -50,6 +52,24 @@ public abstract class OrderProductionView extends PortalView {
     protected abstract Map<String, String> getProductionParameters();
 
     /**
+     *
+     * @return true, if the parameters of this view can be restored
+     */
+    public boolean isRestoringRequestPossible() {
+        return false;
+    }
+
+    /**
+     * Sets the view to the given parameters.
+     *
+     * The default implementation does nothing.
+     *
+     * @param parameters A map with the parameters.
+     */
+    public void setProductionParameters(Map<String, String> parameters) {
+    }
+
+    /**
      * Called by {@link #orderProduction}.
      *
      * @return true, if the form is valid.
@@ -63,6 +83,7 @@ public abstract class OrderProductionView extends PortalView {
     protected void onOrderProductionSuccess() {
         getPortal().showView(ManageProductionsView.ID);
     }
+
 
     /**
      * Called by {@link #orderProduction}.
@@ -124,6 +145,22 @@ public abstract class OrderProductionView extends PortalView {
         }
     }
 
+    protected void saveRequest() {
+        AsyncCallback<Void> callback = new AsyncCallback<Void>() {
+
+            @Override
+            public void onSuccess(Void result) {
+                Dialog.info("Save Request", "Request successfully saved.");
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.info("Save Request", "Failed to safe request:\n" + caught.getMessage());
+            }
+        };
+        getPortal().getBackendService().saveRequest(getProductionRequest(), callback);
+    }
+
     protected HorizontalPanel createOrderPanel() {
         Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
@@ -139,9 +176,19 @@ public abstract class OrderProductionView extends PortalView {
             }
         });
 
+        Button saveButton = new Button("Save Request");
+        saveButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                saveRequest();
+            }
+        });
+
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(4);
         buttonPanel.add(checkButton);
+        if (isRestoringRequestPossible()) {
+            buttonPanel.add(saveButton);
+        }
         buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();

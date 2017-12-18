@@ -16,12 +16,16 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new Match-Up production.
@@ -29,10 +33,12 @@ import java.util.HashMap;
  * @author Norman
  */
 public class OrderMAProductionView extends OrderProductionView {
+
     public static final String ID = OrderMAProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
+    private ProductsFromCatalogueForm productsFromCatalogueForm;
     private L2ConfigForm l2ConfigForm;
     private MAConfigForm maConfigForm;
     private OutputParametersForm outputParametersForm;
@@ -43,12 +49,11 @@ public class OrderMAProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -57,16 +62,38 @@ public class OrderMAProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
+            productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
+                @Override
+                public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                    return new InputSelectionCallback();
+                }
+
+                @Override
+                public void onClearSelectionClick() {
+                    productsFromCatalogueForm.removeSelections();
+                    productSetSelectionForm.removeSelections();
+                    productSetFilterForm.removeSelections();
+                }
+            });
+        }
+
         maConfigForm = new MAConfigForm(portalContext);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
+        if (productsFromCatalogueForm != null) {
+            panel.add(productsFromCatalogueForm);
+        }
         panel.add(l2ConfigForm);
         panel.add(maConfigForm);
         panel.add(outputParametersForm);
@@ -98,8 +125,14 @@ public class OrderMAProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override
@@ -107,8 +140,12 @@ public class OrderMAProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
+            if (productsFromCatalogueForm != null) {
+                productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            }
             l2ConfigForm.validateForm();
             maConfigForm.validateForm();
+
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -121,11 +158,47 @@ public class OrderMAProductionView extends OrderProductionView {
     protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
+        parameters.putAll(productSetFilterForm.getValueMap());
+        if (productsFromCatalogueForm != null) {
+            parameters.putAll(productsFromCatalogueForm.getValueMap());
+        }
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
-        parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        if (productsFromCatalogueForm != null) {
+            productsFromCatalogueForm.setValues(parameters);
+        }
+        l2ConfigForm.setValues(parameters);
+        maConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
+            productsFromCatalogueForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
     }
 }

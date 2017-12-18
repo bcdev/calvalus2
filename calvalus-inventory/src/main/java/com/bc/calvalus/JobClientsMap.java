@@ -16,6 +16,8 @@
 
 package com.bc.calvalus;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.inventory.hadoop.CalvalusShFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -28,18 +30,37 @@ import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Logger;
 
 /**
  * Creates a JobClient for a given User
  */
 public class JobClientsMap {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+     // 10 minutes in milliseconds
+    private static final long CACHE_RETENTION = 10 * 60 * 1000;
+
     private final JobConf jobConfTemplate;
-    private final Map<String, JobClient> jobClients;
+    private final Map<String, CacheEntry> jobClientsCache = new HashMap<>();
+    private final Timer cacheCleaner;
+    private final Map<String, FileSystem> fileSystemMap = new HashMap<>();
+    private boolean withExternalAccessControl;
 
     public JobClientsMap(JobConf jobConf) {
         this.jobConfTemplate = jobConf;
-        jobClients = new HashMap<>();
+        withExternalAccessControl = Boolean.getBoolean("calvalus.accesscontrol.external");
+        // TODO there should be one Timer for a process that is used for all timer tasks
+        this.cacheCleaner = new Timer("jobClientsCacheCleaner", true);
+        TimerTask bundlesQueryCleanTask = new TimerTask() {
+            @Override
+            public void run() {
+                removeUnusedEntries();
+            }
+        };
+        this.cacheCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, CACHE_RETENTION, CACHE_RETENTION);
     }
 
     public Configuration getConfiguration() {
@@ -47,38 +68,124 @@ public class JobClientsMap {
     }
 
     public synchronized JobClient getJobClient(String userName) throws IOException {
-        if (jobClients.get(userName) == null) {
+        if (jobClientsCache.get(userName) == null) {
             System.out.println("CREATING new JobClient for: " + userName);
+            if ("anonymous".equals(userName)) {
+                new Exception("Where is anonymous created=").printStackTrace();
+            }
             UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
+            JobClient jobClient = null;
             try {
-                JobClient jobClient = remoteUser.doAs(new PrivilegedExceptionAction<JobClient>() {
-                    @Override
-                    public JobClient run() throws Exception {
-                        JobConf jobConfClone = new JobConf(jobConfTemplate);
-                        return new JobClient(jobConfClone);
-                    }
-                });
-                jobClients.put(userName, jobClient);
+                jobClient = remoteUser.doAs((PrivilegedExceptionAction<JobClient>) () -> new JobClient(new JobConf(jobConfTemplate)));
+            } catch (InterruptedException e) {
+                throw new IOException(e);   
+            }
+            CacheEntry cacheEntry = new CacheEntry(jobClient);
+            jobClientsCache.put(userName, cacheEntry);
+            if (withExternalAccessControl) {
+                CalvalusShFileSystem.createOrRegister(userName, cacheEntry, fileSystemMap);
+            }
+            return jobClient;
+        }
+        return jobClientsCache.get(userName).getJobClient();
+    }
+
+    public FileSystem getFileSystem(String username) throws IOException {
+        FileSystem fileSystem;
+        if (withExternalAccessControl) {
+            fileSystem = fileSystemMap.get(username);
+            if (fileSystem == null) {
+                getJobClient(username);
+                fileSystem = fileSystemMap.get(username);
+            }
+        } else {
+            fileSystem = getJobClient(username).getFs();
+        }
+        //LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        return fileSystem;
+    }
+
+    public FileSystem getFileSystem(String username, String path) throws IOException {
+        FileSystem fileSystem;
+        if (withExternalAccessControl) {
+            fileSystem = fileSystemMap.get(username);
+            if (fileSystem == null) {
+                getJobClient(username);
+                fileSystem = fileSystemMap.get(username);
+            }
+        } else {
+            URI uri = new Path(path).toUri();
+            try {
+                fileSystem = FileSystem.get(uri, jobConfTemplate, username);
             } catch (InterruptedException e) {
                 throw new IOException(e);
             }
         }
-        return jobClients.get(userName);
+        //LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        return fileSystem;
     }
 
-    public FileSystem getFileSystem(String userName, String path) throws IOException {
-        URI uri = new Path(path).toUri();
-        try {
-            return FileSystem.get(uri, jobConfTemplate, userName);
-        } catch (InterruptedException e) {
-            throw new IOException(e);
+    public FileSystem getFileSystem(String username, Configuration conf, Path path) throws IOException {
+        FileSystem fileSystem;
+        if (withExternalAccessControl) {
+            fileSystem = fileSystemMap.get(username);
+            if (fileSystem == null) {
+                getJobClient(username);
+                fileSystem = fileSystemMap.get(username);
+            }
+        } else {
+            try {
+                fileSystem = FileSystem.get(path.toUri(), conf, username);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
         }
+        //LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        return fileSystem;
     }
 
-    public void close() throws IOException {
-        for (JobClient jobClient : jobClients.values()) {
-            jobClient.close();
+    public synchronized void close() throws IOException {
+        cacheCleaner.cancel();
+        for (CacheEntry cacheEntry : jobClientsCache.values()) {
+            cacheEntry.jobClient.close();
         }
-        jobClients.clear();
+        jobClientsCache.clear();
+        fileSystemMap.clear();
+    }
+
+    /**
+     * We remove JobClients after being unused for 10 minutes.
+     * Inside it contains a "org.apache.hadoop.mapred.ClientCache" that has a forever growing cache.
+     */
+    private synchronized void removeUnusedEntries() {
+        long now = System.currentTimeMillis();
+        long clearIfOlder = now - CACHE_RETENTION;
+        if (withExternalAccessControl) {
+            fileSystemMap.values().removeIf(fileSystem -> ((fileSystem instanceof CalvalusShFileSystem)
+                    && ((CalvalusShFileSystem) fileSystem).getCacheEntry().accessTime < clearIfOlder));
+        }
+        jobClientsCache.values().removeIf(cacheEntry -> cacheEntry.accessTime < clearIfOlder);
+    }
+
+    public static class CacheEntry  {
+        private final JobClient jobClient;
+        private long accessTime;
+
+        public CacheEntry(JobClient jobClient) {
+            this.jobClient = jobClient;
+            accessTime = System.currentTimeMillis();
+        }
+
+        JobClient getJobClient() {
+            accessTime = System.currentTimeMillis();
+            return jobClient;
+        }
+
+        public JobClient getJobClientInternal() {
+            return jobClient;
+        }
+        public void setAccessTime() {
+            accessTime = System.currentTimeMillis();
+        }
     }
 }

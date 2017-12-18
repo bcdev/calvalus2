@@ -87,7 +87,7 @@ public class DirectoryFileInputFormat extends FileInputFormat {
             FileStatus[] matches = fs.globStatus(p, inputFilter);
             if (matches != null && matches.length > 0) {
                 for (FileStatus globStat : matches) {
-                    if (globStat.isDir()) {
+                    if (globStat.isDirectory()) {
                         Collections.addAll(result, fs.listStatus(globStat.getPath(), inputFilter));
                     } else {
                         result.add(globStat);

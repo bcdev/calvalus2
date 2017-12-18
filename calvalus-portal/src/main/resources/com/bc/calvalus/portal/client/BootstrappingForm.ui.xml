@@ -7,9 +7,8 @@
     <g:VerticalPanel spacing="5" width="100%">
 
         <g:VerticalPanel spacing="16">
-            <g:HTMLPanel width="62em">
-                <h3>Bootstrapping Configuration</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="62em">
+                <g:InlineLabel styleName="{style.panelTitleText}">Bootstrapping Configuration</g:InlineLabel>
             </g:HTMLPanel>
 
             <g:HorizontalPanel spacing="2">
@@ -21,6 +20,7 @@
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addBootstrapSourceButton' text="Add"/>
                         <g:Button ui:field='removeBootstrapSourceButton' text="Remove"/>
+                        <g:Button ui:field='removeAllBootstrapSourceButton' text="Remove All"/>
                     </g:HorizontalPanel>
                 </g:VerticalPanel>
 
@@ -35,9 +35,8 @@
 
         <g:VerticalPanel spacing="16">
 
-            <g:HTMLPanel width="62em">
-                <h3>Output Parameters</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="62em">
+                <g:InlineLabel styleName="{style.panelTitleText}">Output Parameters</g:InlineLabel>
             </g:HTMLPanel>
 
             <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">

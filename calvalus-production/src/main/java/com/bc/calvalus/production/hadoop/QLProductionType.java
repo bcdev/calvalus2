@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.QLWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -28,6 +28,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
 
@@ -43,14 +44,14 @@ public class QLProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new QLProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new QLProductionType(fileSystemService, processing, staging);
         }
     }
 
-    QLProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    QLProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                             StagingService stagingService) {
-        super("QL", inventoryService, processingService, stagingService);
+        super("QL", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -94,9 +95,11 @@ public class QLProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();
+        Geometry geometry = productionRequest.getRegionGeometry(null);
         setInputLocationParameters(productionRequest, jobConfig);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
+        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometry != null ? geometry.toString() : "");
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);

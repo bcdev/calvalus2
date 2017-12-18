@@ -1,18 +1,19 @@
 package com.bc.calvalus.production;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
+
 import com.bc.calvalus.commons.DateRange;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import org.junit.Test;
+import org.junit.*;
 
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class ProductionRequestTest {
 
@@ -176,6 +177,29 @@ public class ProductionRequestTest {
         Point defaultGeometry = new GeometryFactory().createPoint(new Coordinate(1, 2));
         regionGeometry = req.getRegionGeometry(defaultGeometry);
         assertSame(defaultGeometry, regionGeometry);
+    }
+
+    @Test
+    public void testGetStagingDirectoryWithoutRemoteUser() throws Exception {
+        ProductionRequest request = new ProductionRequest("L2Plus", "systemUser");
+
+        assertThat(request.getStagingDirectory("product-00"), equalTo("systemUser/product-00"));
+    }
+
+    @Test
+    public void testGetStagingDirectoryWhenRemoteUserIsSystemUser() throws Exception {
+        ProductionRequest request = new ProductionRequest("L2Plus", "systemUser",
+                                                          "calvalus.wps.remote.user", "systemUser");
+
+        assertThat(request.getStagingDirectory("product-00"), equalTo("systemUser/product-00"));
+    }
+
+    @Test
+    public void testGetStagingDirectoryWithRemoteUser() throws Exception {
+        ProductionRequest request = new ProductionRequest("L2Plus", "systemUser",
+                                                          "calvalus.wps.remote.user", "remoteUser");
+
+        assertThat(request.getStagingDirectory("product-00"), equalTo("systemUser/remoteUser/product-00"));
     }
 
     @Test

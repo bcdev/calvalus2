@@ -1,0 +1,52 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
+
+    <g:HorizontalPanel width="100%">
+
+        <g:VerticalPanel spacing="5" height="30em" width="100%">
+            <g:HTMLPanel width="100%">
+                <h3>User Request on Calvalus</h3>
+                <hr/>
+            </g:HTMLPanel>
+            <g:ListBox ui:field="requestList" width="20em"  visibleItemCount="25"/>
+            <g:HTMLPanel>
+                <table style="width: 100%;">
+                    <tr>
+                        <td width="20%" align="left">
+                            <g:Button ui:field='removeButton' text="Remove"/>
+                        </td>
+                        <td width="20%" align="left">
+                            <g:Button ui:field='editButton' text="Edit"/>
+                        </td>
+
+                        <!--
+                        <td width="20%" align="left">
+                            <g:Button ui:field='uploadButton' text="Upload"/>
+                        </td>
+
+                        <td width="60%" align="right">
+                            <g:Anchor ui:field="showHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
+                        </td>
+                        -->
+
+                    </tr>
+                </table>
+            </g:HTMLPanel>
+        </g:VerticalPanel>
+
+        <g:VerticalPanel spacing="5" height="44em" width="100%">
+            <g:HTMLPanel width="100%">
+                <h3>Parameters given in the request</h3>
+                <hr/>
+            </g:HTMLPanel>
+            <g:ScrollPanel>
+                <g:FlexTable ui:field="requestParameterTable" width="50em"/>
+            </g:ScrollPanel>
+        </g:VerticalPanel>
+
+    </g:HorizontalPanel>
+
+</ui:UiBinder>

@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.GeometryWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -42,14 +42,14 @@ public class GeometryProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new GeometryProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new GeometryProductionType(fileSystemService, processing, staging);
         }
     }
 
-    GeometryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    GeometryProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                   StagingService stagingService) {
-        super("Geometry", inventoryService, processingService, stagingService);
+        super("Geometry", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class GeometryProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("Geometries ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
-        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 1);
+        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, "1");
 
         Workflow workflow = new Workflow.Parallel();
         for (int i = 0; i < dateRanges.size(); i++) {

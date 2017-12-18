@@ -66,9 +66,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final long mapperStartTime = now();
 
-        final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.get(jobConfig);
-        final Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        final Configuration conf = context.getConfiguration();
+        final MAConfig maConfig = MAConfig.get(conf);
+        final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
@@ -93,7 +93,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                    context.getTaskAttemptID(), inputProduct.getName(), productOpenTime / 1E3));
 
             t0 = now();
-            RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+            RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry, conf);
             Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
@@ -107,7 +107,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
 
             Area pixelArea = PixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
-            System.out.println("pixelArea.isEmpty = " + pixelArea.isEmpty());
+            LOG.info("pixelArea.isEmpty = " + pixelArea.isEmpty());
 
             long referencePixelTime = (now() - t0);
             LOG.info(String.format("tested reference records, found %s matches, took %s sec",
@@ -116,6 +116,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             if (!pixelArea.isEmpty()) {
                 t0 = now();
                 if (!pullProcessing) {
+                    // prepare call to external processor
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
                     Rectangle maRectangle = pixelArea.getBounds();
@@ -145,11 +146,14 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 extractionPM.beginTask("Extraction", pixelPosRecords.size() * 2);
                 ProductRecordSource productRecordSource;
                 Iterable<Record> extractedRecordSource;
+                boolean useInputPixelPos = conf.getBoolean(JobConfigNames.CALVALUS_MA_USE_INPUT_PIXEL_POS, false);
+                LOG.info("useInputPixelPos = " + useInputPixelPos);
                 try {
                     AffineTransform transform = processorAdapter.getInput2OutputTransform();
-                    if (transform == null) {
+                    if (!useInputPixelPos || transform == null) {
+                        LOG.info("Retrieving pixel positions from processed product");
                         transform = new AffineTransform();
-                        referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+                        referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry, conf);
                         pixelPosProvider = new PixelPosProvider(processedProduct,
                                                                 PixelTimeProvider.create(processedProduct),
                                                                 maConfig.getMaxTimeDifference(),
@@ -226,10 +230,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     }
 
-    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
+    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry, Configuration conf) {
         final RecordSource referenceRecordSource;
         try {
-            referenceRecordSource = maConfig.createRecordSource();
+            referenceRecordSource = maConfig.createRecordSource(conf);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

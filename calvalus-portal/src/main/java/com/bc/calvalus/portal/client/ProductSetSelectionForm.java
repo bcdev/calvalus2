@@ -3,9 +3,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -79,38 +77,93 @@ public class ProductSetSelectionForm extends Composite {
 
         callback = new UpdateProductSetsCallback();
 
-        productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                updateDetailsView();
-            }
-        });
+        productSetListBox.addChangeHandler(event -> updateDetailsView());
 
-        ValueChangeHandler<Boolean> valueChangeHandler = new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                updateProductSetsListBox();
-            }
-        };
+        ValueChangeHandler<Boolean> valueChangeHandler = booleanValueChangeEvent -> updateProductSetsListBox();
         predefinedProductSets.addValueChangeHandler(valueChangeHandler);
         userProductionProductSets.addValueChangeHandler(valueChangeHandler);
         allProductionProductSets.addValueChangeHandler(valueChangeHandler);
-        userProductionProductSets.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                if (portal.withPortalFeature("otherSets")) {
-                    allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
-                }
-            }
-        });
 
-        //if (! portal.withPortalFeature("otherSets")) {
-        allProductionProductSets.setEnabled(false);
-        //}
+        allProductionProductSets.setEnabled(portal.withPortalFeature("otherSets"));
         updateListBox(portal.getProductSets());
         updateDetailsView();
 
         HelpSystem.addClickHandler(showProductSetSelectionHelp, "productSetSelection");
+    }
+
+    public void addChangeHandler(final ProductSetChangeHandler productSetChangeHandler) {
+        productSetListBox.addChangeHandler(changeEvent -> productSetChangeHandler.onProductSetChanged(getSelectedProductSet()));
+    }
+
+    public DtoProductSet getSelectedProductSet() {
+        int selectedIndex = productSetListBox.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            return currentProductSets[selectedIndex];
+        } else {
+            return null;
+        }
+    }
+
+    public void validateForm() throws ValidationException {
+        DtoProductSet productSet = getSelectedProductSet();
+        boolean productSetValid = productSet != null;
+        if (!productSetValid) {
+            throw new ValidationException(productSetListBox, "An input product set must be selected.");
+        }
+    }
+
+    // do not remove the static modifier even though suggested by IntelliJ
+    // https://stackoverflow.com/a/21930980/2676893
+    public static interface ProductSetChangeHandler {
+
+        void onProductSetChanged(DtoProductSet productSet);
+
+    }
+
+    public Map<String, String> getValueMap() {
+        Map<String, String> parameters = new HashMap<>();
+        DtoProductSet selectedProductSet = getSelectedProductSet();
+        if (selectedProductSet.getGeoInventory() != null) {
+            parameters.put("geoInventory", selectedProductSet.getGeoInventory());
+        } else {
+            parameters.put("inputPath", selectedProductSet.getPath());
+        }
+        parameters.put("collectionName", selectedProductSet.getName());
+        return parameters;
+    }
+
+    public void setValues(Map<String, String> parameters) {
+        String collectionName = parameters.get("collectionName");
+        String geoInventory = parameters.get("geoInventory");
+        String inputPath = parameters.get("inputPath");
+
+        int newSelectionIndex = 0;
+        for (int i = 0; i < currentProductSets.length; i++) {
+            DtoProductSet productSet = currentProductSets[i];
+            if (collectionName != null && productSet.getName().equalsIgnoreCase(collectionName)) {
+                newSelectionIndex = i;
+                break;
+            }
+            if ((geoInventory != null &&
+                 productSet.getGeoInventory() != null &&
+                 geoInventory.equals(productSet.getGeoInventory()))
+                || (inputPath != null &&
+                    productSet.getPath() != null &&
+                    inputPath.equals(productSet.getPath()))) {
+                newSelectionIndex = i;
+                break;
+            }
+        }
+        // TODO handle error
+        if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
+            productSetListBox.setSelectedIndex(newSelectionIndex);
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
+        }
+    }
+
+    void removeSelections() {
+        Map<String, String> emptyInputSelectionMap = new HashMap<>();
+        setValues(emptyInputSelectionMap);
     }
 
     private void updateProductSetsListBox() {
@@ -138,7 +191,7 @@ public class ProductSetSelectionForm extends Composite {
     private void updateListBox(DtoProductSet[] newProductSets) {
         DtoProductSet[] filteredProductSets = newProductSets;
         if (productSetFilter != null) {
-            ArrayList<DtoProductSet> filtered = new ArrayList<DtoProductSet>(newProductSets.length);
+            ArrayList<DtoProductSet> filtered = new ArrayList<>(newProductSets.length);
             for (DtoProductSet productSet : newProductSets) {
                 if (productSetFilter.accept(productSet)) {
                     filtered.add(productSet);
@@ -164,7 +217,9 @@ public class ProductSetSelectionForm extends Composite {
                 productSetChanged = false;
             }
         }
-        productSetListBox.setSelectedIndex(newSelectionIndex);
+        if (productSetListBox.getItemCount() > 0) {
+            productSetListBox.setSelectedIndex(newSelectionIndex);
+        }
         if (productSetChanged) {
             DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
         }
@@ -201,47 +256,6 @@ public class ProductSetSelectionForm extends Composite {
         }
     }
 
-    public void addChangeHandler(final ChangeHandler changeHandler) {
-        productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent changeEvent) {
-                changeHandler.onProductSetChanged(getSelectedProductSet());
-            }
-        });
-    }
-
-    public DtoProductSet getSelectedProductSet() {
-        int selectedIndex = productSetListBox.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            return currentProductSets[selectedIndex];
-        } else {
-            return null;
-        }
-    }
-
-    public void validateForm() throws ValidationException {
-        DtoProductSet productSet = getSelectedProductSet();
-        boolean productSetValid = productSet != null;
-        if (!productSetValid) {
-            throw new ValidationException(productSetListBox, "An input product set must be selected.");
-        }
-    }
-
-    public static interface ChangeHandler {
-
-        void onProductSetChanged(DtoProductSet productSet);
-    }
-
-    public Map<String, String> getValueMap() {
-        Map<String, String> parameters = new HashMap<String, String>();
-        DtoProductSet selectedProductSet = getSelectedProductSet();
-        if (selectedProductSet.getGeoInventory() != null) {
-            parameters.put("geoInventory", selectedProductSet.getGeoInventory());
-        } else {
-            parameters.put("inputPath", selectedProductSet.getPath());
-        }
-        return parameters;
-    }
 
     private class UpdateProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
 

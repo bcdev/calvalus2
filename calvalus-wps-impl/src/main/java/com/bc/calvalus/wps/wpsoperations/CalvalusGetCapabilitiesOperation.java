@@ -1,9 +1,12 @@
 package com.bc.calvalus.wps.wpsoperations;
 
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
+import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.AddressType;
 import com.bc.wps.api.schema.Capabilities;
@@ -27,35 +30,41 @@ import com.bc.wps.api.schema.TelephoneType;
 import com.bc.wps.api.utils.CapabilitiesBuilder;
 import com.bc.wps.api.utils.WpsTypeConverter;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.apache.commons.io.IOUtils;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
-import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author hans
  */
-public class CalvalusGetCapabilitiesOperation {
+public class CalvalusGetCapabilitiesOperation extends WpsOperation {
 
-    private WpsRequestContext context;
-
-    public CalvalusGetCapabilitiesOperation(WpsRequestContext context) {
-        this.context = context;
+    public CalvalusGetCapabilitiesOperation(WpsRequestContext context) throws IOException {
+        super(context);
     }
 
-    public Capabilities getCapabilities() throws ProcessesNotAvailableException, JAXBException {
-        List<IWpsProcess> processes = getProcesses();
-
+    public Capabilities getCapabilities()
+                throws BindingException, IOException, URISyntaxException, WpsProcessorNotFoundException {
+        CalvalusLogger.getLogger().info("GetCapabilities for user " + this.calvalusFacade.getRemoteUserName());
         return CapabilitiesBuilder.create()
                     .withOperationsMetadata(getOperationsMetadata())
                     .withServiceIdentification(getServiceIdentification())
                     .withServiceProvider(getServiceProvider())
-                    .withProcessOfferings(getProcessOfferings(processes))
+                    .withProcessOfferings(getProcessOfferings())
                     .withLanguages(getLanguages())
                     .build();
     }
 
-    protected OperationsMetadata getOperationsMetadata() {
+    OperationsMetadata getOperationsMetadata() {
         OperationsMetadata operationsMetadata = new OperationsMetadata();
 
         Operation getCapabilitiesOperation = new Operation();
@@ -86,27 +95,7 @@ public class CalvalusGetCapabilitiesOperation {
         return operationsMetadata;
     }
 
-    private DCP getPostDcp(String serviceUrl) {
-        DCP executeDcp = new DCP();
-        HTTP executeHttp = new HTTP();
-        RequestMethodType executeRequestMethod = new RequestMethodType();
-        executeRequestMethod.setHref(serviceUrl);
-        executeHttp.setPost(executeRequestMethod);
-        executeDcp.setHTTP(executeHttp);
-        return executeDcp;
-    }
-
-    private DCP getGetDcp(String serviceUrl) {
-        DCP describeProcessDcp = new DCP();
-        HTTP describeProcessHttp = new HTTP();
-        RequestMethodType describeProcessRequestMethod = new RequestMethodType();
-        describeProcessRequestMethod.setHref(serviceUrl);
-        describeProcessHttp.setGet(describeProcessRequestMethod);
-        describeProcessDcp.setHTTP(describeProcessHttp);
-        return describeProcessDcp;
-    }
-
-    protected ServiceProvider getServiceProvider() {
+    ServiceProvider getServiceProvider() {
         ServiceProvider serviceProvider = new ServiceProvider();
         serviceProvider.setProviderName(PropertiesWrapper.get("company.name"));
 
@@ -148,22 +137,19 @@ public class CalvalusGetCapabilitiesOperation {
         return serviceProvider;
     }
 
-    protected ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
+    ProcessOfferings getProcessOfferings()
+                throws BindingException, IOException, URISyntaxException, WpsProcessorNotFoundException {
         ProcessOfferings processOfferings = new ProcessOfferings();
-        for (IWpsProcess process : processList) {
-            ProcessBriefType singleProcessor = new ProcessBriefType();
-
-            singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
-            singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
-            singleProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(process.getAbstractText()));
-            singleProcessor.setProcessVersion(process.getVersion());
-
-            processOfferings.getProcess().add(singleProcessor);
+        List<ProcessBriefType> calvalusProcesses = getCalvalusProcesses();
+        processOfferings.getProcess().addAll(calvalusProcesses);
+        List<ProcessBriefType> localProcesses = getLocalProcesses();
+        if (!localProcesses.isEmpty()) {
+            processOfferings.getProcess().addAll(localProcesses);
         }
         return processOfferings;
     }
 
-    protected ServiceIdentification getServiceIdentification() {
+    ServiceIdentification getServiceIdentification() {
         ServiceIdentification serviceIdentification = new ServiceIdentification();
         LanguageStringType title = new LanguageStringType();
         title.setValue(PropertiesWrapper.get("wps.service.id"));
@@ -181,7 +167,7 @@ public class CalvalusGetCapabilitiesOperation {
         return serviceIdentification;
     }
 
-    protected Languages getLanguages() {
+    Languages getLanguages() {
         Languages languages = new Languages();
 
         Languages.Default defaultLanguage = new Languages.Default();
@@ -195,12 +181,70 @@ public class CalvalusGetCapabilitiesOperation {
         return languages;
     }
 
-    private List<IWpsProcess> getProcesses() throws ProcessesNotAvailableException {
-        try {
-            CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-            return calvalusFacade.getProcessors();
-        } catch (IOException | ProductionException exception) {
-            throw new ProcessesNotAvailableException("Unable to retrieve available processors", exception);
+    private DCP getPostDcp(String serviceUrl) {
+        DCP executeDcp = new DCP();
+        HTTP executeHttp = new HTTP();
+        RequestMethodType executeRequestMethod = new RequestMethodType();
+        executeRequestMethod.setHref(serviceUrl);
+        executeHttp.setPost(executeRequestMethod);
+        executeDcp.setHTTP(executeHttp);
+        return executeDcp;
+    }
+
+    private DCP getGetDcp(String serviceUrl) {
+        DCP describeProcessDcp = new DCP();
+        HTTP describeProcessHttp = new HTTP();
+        RequestMethodType describeProcessRequestMethod = new RequestMethodType();
+        describeProcessRequestMethod.setHref(serviceUrl);
+        describeProcessHttp.setGet(describeProcessRequestMethod);
+        describeProcessDcp.setHTTP(describeProcessHttp);
+        return describeProcessDcp;
+    }
+
+    private List<ProcessBriefType> getLocalProcesses() throws URISyntaxException, IOException, BindingException {
+        List<ProcessBriefType> localProcessList = new ArrayList<>();
+        URL descriptorDirUrl = this.getClass().getResource("/local-process-descriptor");
+        if (descriptorDirUrl == null) {
+            return localProcessList;
         }
+        URI descriptorDirUri = descriptorDirUrl.toURI();
+        File descriptorDirectory = Paths.get(descriptorDirUri).toFile();
+        File[] descriptorFiles = descriptorDirectory.listFiles();
+        if (descriptorFiles != null) {
+            for (File descriptorFile : descriptorFiles) {
+                FileInputStream fileInputStream = new FileInputStream(descriptorFile);
+                String bundleDescriptorXml = IOUtils.toString(fileInputStream);
+                ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
+                BundleDescriptor bundleDescriptor = new BundleDescriptor();
+                parameterBlockConverter.convertXmlToObject(bundleDescriptorXml, bundleDescriptor);
+                ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
+
+                for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                    WpsProcess process = new CalvalusProcessor(bundleDescriptor, processorDescriptor);
+                    ProcessBriefType localSubsetProcessor = new ProcessBriefType();
+                    localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
+                    localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
+                    localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(
+                                process.getAbstractText() == null ? process.getTitle() : process.getAbstractText()));
+                    localSubsetProcessor.setProcessVersion(process.getVersion());
+                    localProcessList.add(localSubsetProcessor);
+                }
+            }
+        }
+        return localProcessList;
+    }
+
+    private List<ProcessBriefType> getCalvalusProcesses() throws WpsProcessorNotFoundException {
+        List<WpsProcess> processList = calvalusFacade.getProcessors();
+        ProcessOfferings processOfferings = new ProcessOfferings();
+        for (WpsProcess process : processList) {
+            ProcessBriefType singleProcessor = new ProcessBriefType();
+            singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
+            singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
+            singleProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(process.getAbstractText()));
+            singleProcessor.setProcessVersion(process.getVersion());
+            processOfferings.getProcess().add(singleProcessor);
+        }
+        return processOfferings.getProcess();
     }
 }

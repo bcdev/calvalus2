@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -43,8 +44,8 @@ import java.util.regex.Pattern;
 
 
 /**
- * A reader for handing Sentinel-2 data on calvalus.
- * It unzips the products and open from the local file.
+ * A reader for handling Sentinel-2 data on calvalus.
+ * It unzips the products and opens from the local file.
  */
 public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
@@ -58,7 +59,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
-            if (filename.matches("^S2.*_PRD_MSI.*")) {
+            if (filename.matches("^S2.*_MSIL1C.*")) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -97,7 +98,10 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     static class Sentinel2CalvalusReader extends AbstractProductReader {
 
-        private static final Pattern NAME_TIME_PATTERN = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
+        //S2A_OPER_PRD_MSIL1C_PDMC_20161201T211507_R108_V20161201T103412_20161201T103412
+        private static final Pattern NAME_TIME_PATTERN1 = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
+        //S2A_MSIL1C_20161212T100412_N0204_R122_T33UVT_20161212T100409
+        private static final Pattern NAME_TIME_PATTERN2 = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
 
         Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
@@ -110,27 +114,34 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(pathConfig.getPath(), configuration);
+                File localFile = null;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
-                // find *SAF*xml file
-                File productXML = null;
-                for (File file : unzippedFiles) {
-                    if (file.getName().matches(".*MTD_SAF.*xml$")) {
-                        productXML = file;
-                        break;
+                    // find *MTD*xml file in top directory
+                    for (File file : unzippedFiles) {
+                        if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
+                            File parentFile = file.getParentFile();
+                            if (parentFile != null && parentFile.getName().endsWith(".SAFE")) {
+                                localFile = file;
+                                break;
+                            }
+                        }
                     }
+                    if (localFile == null) {
+                        throw new IllegalFileFormatException("input has no MTD_SAF file.");
+                    }
+                    CalvalusLogger.getLogger().info("productXML file = " + localFile);
                 }
-                if (productXML == null) {
-                    throw new IllegalFileFormatException("input has no MTD_SAF file.");
-                }
-                System.out.println("productXML file = " + productXML);
-
-                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
-                System.out.println("inputFormat = " + inputFormat);
+                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_20M);
+                CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
-                product = readProduct(productXML, "SENTINEL-2-MSI-MultiRes");
+                product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
+                File productFileLocation = product.getFileLocation();
                 if (product.getStartTime() == null && product.getEndTime() == null) {
-                    setTimeFromFilename(product, productXML.getName());
+                    setTimeFromFilename(product, localFile.getName());
                 }
                 if (!inputFormat.equals(FORMAT_MULTI)) {
                     product.setProductReader(this);
@@ -146,6 +157,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                         throw new IllegalArgumentException(msg);
                     }
                     product = GPF.createProduct("Resample", params, product);
+                    product.setFileLocation(productFileLocation);
                 }
                 return product;
             } else {
@@ -154,49 +166,50 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         }
 
         static void setTimeFromFilename(Product product, String filename) {
-            Matcher matcher = NAME_TIME_PATTERN.matcher(filename);
+            Matcher matcher = ("_MSIL1C_".equals(filename.substring(3,11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
             if (matcher.matches()) {
                 try {
                     ProductData.UTC start = ProductData.UTC.parse(matcher.group(1), DATE_FORMAT_PATTERN);
                     ProductData.UTC end = ProductData.UTC.parse(matcher.group(2), DATE_FORMAT_PATTERN);
                     product.setStartTime(start);
                     product.setEndTime(end);
-                    System.out.println("updating time: start = " + start.format() + "  end = " + end.format());
+                    CalvalusLogger.getLogger().info("updating time: start = " + start.format() + "  end = " + end.format());
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
             }
         }
 
-        private Product readProduct(File xmlFile, String formatPrefix) throws IOException {
-            ProductReaderPlugIn productReaderPlugin = findProductReaderPlugin(xmlFile, formatPrefix);
-            return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
-        }
-
-        private ProductReaderPlugIn findProductReaderPlugin(File xmlFile, String formatPrefix) throws IOException {
-            ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
-            Iterator<ProductReaderPlugIn> allReaderPlugIns = registry.getAllReaderPlugIns();
-            while (allReaderPlugIns.hasNext()) {
-                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
-                String[] formatNames = readerPlugIn.getFormatNames();
-                for (String formatName : formatNames) {
-                    if (formatName.startsWith(formatPrefix)) {
-                        DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
-                        if (decodeQualification == DecodeQualification.INTENDED) {
-                            System.out.println("formatName = " + formatName);
-                            return readerPlugIn;
-                        }
-                    }
-                }
-            }
-            String msg = String.format("No reader found with format prefix: '%s'", formatPrefix);
-            throw new IllegalFileFormatException(msg);
-        }
 
         @Override
         protected void readBandRasterDataImpl(int i, int i2, int i3, int i4, int i5, int i6, Band band, int i7, int i8, int i9, int i10, ProductData productData, ProgressMonitor progressMonitor) throws IOException {
             throw new IllegalStateException("Should not be called");
         }
+    }
+    
+    static Product readProduct(File xmlFile, String formatPrefix) throws IOException {
+        ProductReaderPlugIn productReaderPlugin = findWithFormatPrefix(xmlFile, formatPrefix);
+        return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
+    }
+
+    static ProductReaderPlugIn findWithFormatPrefix(File xmlFile, String formatPrefix) throws IOException {
+        ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
+        Iterator<ProductReaderPlugIn> allReaderPlugIns = registry.getAllReaderPlugIns();
+        while (allReaderPlugIns.hasNext()) {
+            ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
+            String[] formatNames = readerPlugIn.getFormatNames();
+            for (String formatName : formatNames) {
+                if (formatName.startsWith(formatPrefix)) {
+                    DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
+                    if (decodeQualification == DecodeQualification.INTENDED) {
+                        CalvalusLogger.getLogger().info("formatName = " + formatName);
+                        return readerPlugIn;
+                    }
+                }
+            }
+        }
+        String msg = String.format("No reader found with format prefix: '%s'", formatPrefix);
+        throw new IllegalFileFormatException(msg);
     }
 }
 

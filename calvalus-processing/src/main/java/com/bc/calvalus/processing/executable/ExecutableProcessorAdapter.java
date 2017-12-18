@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.executable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
@@ -34,6 +35,7 @@ import org.esa.snap.core.datamodel.Product;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.*;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -63,6 +65,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public void prepareProcessing() throws IOException {
+        super.prepareProcessing();
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
@@ -93,11 +96,13 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
-
+            
+            getLogger().info("prepare: " + executable + " " + inputPath.toString()+ " " + outputPath.toString());
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
             Process process = Runtime.getRuntime().exec(cmdArray);
             String processLogName = executable + "-prepare";
@@ -121,7 +126,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
 
         Path inputPath = getInputPath();
         File inputFile = getInputFile();
@@ -137,7 +142,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
 
         outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
-        return outputFilesNames.length;
+        return outputFilesNames.length > 0;
     }
 
     public File getCurrentWorkingDir() {
@@ -193,11 +198,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
-
         velocityContext.put("productRectangle", productRectangle);
-
         velocityContext.put("outputPath", getOutputDirectoryPath());
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         if (velocityProps != null) {
             for (Map.Entry<String, String> entry : velocityProps.entrySet()) {
@@ -211,6 +215,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
         scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
+        getLogger().info("process: " + executable + " " + inputFile.getCanonicalPath());
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
         Process process = Runtime.getRuntime().exec(cmdArray);
         String processLogName = executable + "-process";
@@ -285,11 +290,13 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Path outputPath = getOutputDirectoryPath();
         velocityContext.put("outputPath", outputPath);
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
+            getLogger().info("finalize: " + executable + " " + Arrays.toString(outputFilesNames) + " " + outputPath.toString());
             String[] cmdArray = new String[outputFilesNames.length + 2];
             cmdArray[0] = "./finalize";
             System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);

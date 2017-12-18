@@ -28,6 +28,7 @@ import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,8 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
 
 /**
  * Demo view that lets users submit a new L3 production.
@@ -130,7 +129,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.addRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0);
+                updateRemoveVariableButtonEnablement();
             }
         });
 
@@ -138,26 +137,25 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.removeSelectedRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0);
+                updateRemoveVariableButtonEnablement();
             }
         });
-        removeVariableButton.setEnabled(false);
+        updateRemoveVariableButtonEnablement();
 
         addAggregatorButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.addRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0);
-            }
+                updateRemoveAggregatorButtonEnablement();            }
         });
 
         removeAggregatorButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.removeSelectedRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0);
-            }
+                updateRemoveAggregatorButtonEnablement();            }
         });
+        updateRemoveAggregatorButtonEnablement();
 
         variableTable.addValueChangeHandler(new ValueChangeHandler<L3VariableTable.ConfiguredVariable>() {
             @Override
@@ -165,13 +163,25 @@ public class L3ConfigForm extends Composite {
                 updateAvailableVariables();
             }
         });
+        variableTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                updateRemoveVariableButtonEnablement();                 
+            }
+        });
+        aggregatorTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                updateRemoveAggregatorButtonEnablement();                 
+            }
+        });
+        
         ValueChangeHandler<Integer> periodCountUpdater = new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
                 updatePeriodCount();
             }
         };
-
         steppingPeriodLength.setValue(10);
         steppingPeriodLength.addValueChangeHandler(periodCountUpdater);
 
@@ -192,7 +202,8 @@ public class L3ConfigForm extends Composite {
         });
         compositingType.addItem(COMPOSITING_TYPE_BINNING);
         compositingType.addItem(COMPOSITING_TYPE_MOSAICKING);
-        compositingType.addItem(COMPOSITING_TYPE_EPSG_3067);
+        // disblaed until fully supported
+//        compositingType.addItem(COMPOSITING_TYPE_EPSG_3067);
         compositingType.setSelectedIndex(0);
 
         targetWidth.setEnabled(false);
@@ -202,7 +213,15 @@ public class L3ConfigForm extends Composite {
 
         HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
     }
+    
+    private void updateRemoveAggregatorButtonEnablement() {
+        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
+    }
 
+    private void updateRemoveVariableButtonEnablement() {
+        removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+    }
+    
     private List<DtoAggregatorDescriptor> retrieveAggregatorDescriptors(PortalContext portalContext, String[] filterAggregatorNamesArray) {
         List<DtoAggregatorDescriptor> allAvailable = new ArrayList<DtoAggregatorDescriptor>();
         if (true) {
@@ -239,7 +258,7 @@ public class L3ConfigForm extends Composite {
 
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
-            periodCount.setValue(getPeriodCount(minDate,
+            periodCount.setValue(L3ConfigUtils.getPeriodCount(minDate,
                                                 maxDate,
                                                 steppingPeriodLength.getValue(),
                                                 compositingPeriodLength.getValue()));
@@ -261,7 +280,7 @@ public class L3ConfigForm extends Composite {
     }
 
     private void updateTargetSize() {
-        int[] targetSize = getTargetSizeEstimation(regionBounds, resolution.getValue());
+        int[] targetSize = L3ConfigUtils.getTargetSizeEstimation(regionBounds, resolution.getValue());
         targetWidth.setValue(targetSize[0]);
         targetHeight.setValue(targetSize[1]);
     }
@@ -289,8 +308,10 @@ public class L3ConfigForm extends Composite {
                 defaultValidMask = defaultMaskExpression;
             }
         } else {
-            String[] bandNames = productSet.getBandNames();
-            Collections.addAll(l3InputVarNames, bandNames);
+            if (productSet != null) {
+                String[] bandNames = productSet.getBandNames();
+                Collections.addAll(l3InputVarNames, bandNames);
+            }
         }
         updateAvailableVariables();
         if (aggregatorTable.getAggregatorList().size() == 0) {
@@ -421,17 +442,13 @@ public class L3ConfigForm extends Composite {
         parameters.put("variables.count", vIndex + "");
 
         List<L3VariableTable.ConfiguredVariable> variableList = variableTable.getVariableList();
-        int eIndex = 0;
         for (int i = 0; i < variableList.size(); i++) {
             L3VariableTable.ConfiguredVariable variable = variableList.get(i);
-            if (!variable.getExpression().isEmpty()) {
-                parameters.put("expression." + i + ".variable", variable.getName());
-                parameters.put("expression." + i + ".expression", variable.getExpression());
-                eIndex++;
-            }
+            parameters.put("expression." + i + ".variable", variable.getName());
+            parameters.put("expression." + i + ".expression", variable.getExpression());
         }
-        if (eIndex > 0) {
-            parameters.put("expression.count", eIndex + "");
+        if (variableList.size() > 0) {
+            parameters.put("expression.count", variableList.size() + "");
         }
 
         parameters.put("maskExpr", maskExpr.getText());
@@ -459,5 +476,63 @@ public class L3ConfigForm extends Composite {
     private String getCompositingType() {
         int index = compositingType.getSelectedIndex();
         return compositingType.getValue(index);
+    }
+
+    public void setValues(Map<String, String> parameters) {
+        String maskExprValue = parameters.get("maskExpr");
+        if (maskExprValue != null) {
+            maskExpr.setValue(maskExprValue);
+        }
+        String periodLengthValue = parameters.get("periodLength");
+        if (periodLengthValue != null) {
+            steppingPeriodLength.setValue(Integer.valueOf(periodLengthValue), true);
+        }
+        String compositingPeriodLengthValue = parameters.get("compositingPeriodLength");
+        if (compositingPeriodLengthValue != null) {
+            compositingPeriodLength.setValue(Integer.valueOf(compositingPeriodLengthValue), true);
+        }
+        String compositingTypeValue = parameters.get("compositingType");
+        for (int i = 0; i < compositingType.getItemCount(); i++) {
+            if (compositingType.getValue(i).equals(compositingTypeValue)) {
+                compositingType.setSelectedIndex(i);
+                break;
+            }
+        }
+        // TODO handle failure
+        String resolutionValue = parameters.getOrDefault("resolution", "9.28");
+        resolution.setValue(Double.valueOf(resolutionValue), true);
+        String superSamplingValue = parameters.getOrDefault("superSampling", "1");
+        superSampling.setValue(Integer.valueOf(superSamplingValue), true);
+
+        variableTable.getVariableList().clear();
+        String eCountValue = parameters.get("expression.count");
+        if (eCountValue != null) {
+            int numExpr = Integer.valueOf(eCountValue);
+            for (int i = 0; i < numExpr; i++) {
+                String vName = parameters.get("expression." + i + ".variable");
+                String vExpr = parameters.getOrDefault("expression." + i + ".expression", "");
+                if (vName != null) {
+                    variableTable.addRow(vName, vExpr);
+                }
+            }
+        }
+
+        aggregatorTable.getAggregatorList().clear();
+        String vCountValue = parameters.get("variables.count");
+        if (vCountValue != null) {
+            int numAggs = Integer.valueOf(vCountValue);
+
+            for (int vIndex = 0; vIndex < numAggs; vIndex++) {
+                String aggName = parameters.get("variables." + vIndex + ".aggregator");
+                int paramCount = Integer.valueOf(parameters.get("variables." + vIndex + ".parameter.count"));
+                String[] names = new String[paramCount];
+                String[] values = new String[paramCount];
+                for (int pIndex = 0; pIndex < paramCount; pIndex++) {
+                    names[pIndex] = parameters.get("variables." + vIndex + ".parameter." + pIndex + ".name");
+                    values[pIndex] = parameters.get("variables." + vIndex + ".parameter." + pIndex + ".value");
+                }
+                aggregatorTable.addRow(aggName, names, values);
+            }
+        }
     }
 }

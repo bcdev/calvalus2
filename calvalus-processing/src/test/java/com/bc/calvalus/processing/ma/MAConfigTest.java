@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.ma;
 
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.Iterator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 /**
  * The configuration for the match-up processing.
@@ -41,7 +43,7 @@ public class MAConfigTest {
         assertEquals(null, maConfig.getRecordSourceUrl());
         assertEquals(1.5, maConfig.getFilteredMeanCoeff(), 1E-6);
         assertEquals(5, maConfig.getMacroPixelSize());
-        assertEquals(3.0, maConfig.getMaxTimeDifference(), 1E-6);
+        assertEquals("3.0", maConfig.getMaxTimeDifference());
         assertEquals(null, maConfig.getGoodPixelExpression());
         assertEquals(null, maConfig.getGoodRecordExpression());
         assertEquals("dd-MMM-yyyy HH:mm:ss", maConfig.getOutputTimeFormat());
@@ -67,7 +69,7 @@ public class MAConfigTest {
     public void testCreateRecordSource() throws Exception {
         MAConfig maConfig = new MAConfig();
         maConfig.setRecordSourceSpiClassName(TestRecordSourceSpi.class.getName());
-        RecordSource recordSource = maConfig.createRecordSource();
+        RecordSource recordSource = maConfig.createRecordSource(new Configuration());
         assertNotNull(recordSource);
         assertNotNull(recordSource.getRecords());
         Iterator<Record> recordIterator = recordSource.getRecords().iterator();
@@ -76,4 +78,24 @@ public class MAConfigTest {
         assertNotNull(record);
     }
 
+    @Test
+    public void testIsMaxTimeDifferenceValid() throws Exception {
+        assertTrue(MAConfig.isMaxTimeDifferenceValid(null));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid(""));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid(" "));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("0"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("0.0"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("1"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("1.2"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid(" 1.2 "));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("-0"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("0d"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("1d"));
+        assertTrue(MAConfig.isMaxTimeDifferenceValid("2d"));
+        assertFalse(MAConfig.isMaxTimeDifferenceValid("0.0d"));
+        assertFalse(MAConfig.isMaxTimeDifferenceValid("-1d"));
+        assertFalse(MAConfig.isMaxTimeDifferenceValid("-1"));
+        assertFalse(MAConfig.isMaxTimeDifferenceValid("-2"));
+        assertFalse(MAConfig.isMaxTimeDifferenceValid("1w"));
+    }
 }

@@ -79,7 +79,7 @@ public class RegionPersistence {
 
     private Properties loadDefaultRegions() throws IOException {
         InputStream stream = getClass().getResourceAsStream("regions.properties");
-        Properties systemRegions = loadRegions(new InputStreamReader(stream));
+        Properties systemRegions = loadRegions(new BufferedReader(new InputStreamReader(stream)));
 
         File additionalSystemRegionFile = getRegionFile("SYSTEM");
         if (additionalSystemRegionFile.exists()) {

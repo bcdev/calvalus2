@@ -1,9 +1,17 @@
 package com.bc.calvalus.wps.utils;
 
 
+import com.bc.calvalus.wps.accounting.Account;
+import com.bc.calvalus.wps.accounting.AccountBuilder;
+import com.bc.calvalus.wps.accounting.Compound;
+import com.bc.calvalus.wps.accounting.CompoundBuilder;
+import com.bc.calvalus.wps.accounting.UsageStatisticT2;
+import com.bc.calvalus.wps.accounting.UsageStatisticT2Builder;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.exceptions.WpsRuntimeException;
+import com.bc.wps.api.schema.ComplexDataType;
 import com.bc.wps.api.schema.DataInputsType;
+import com.bc.wps.api.schema.DataType;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.ExceptionReport;
 import com.bc.wps.api.schema.ExceptionType;
@@ -143,17 +151,69 @@ public class CalvalusExecuteResponseConverter {
         return executeResponse;
     }
 
+    public ExecuteResponse getQuotationResponse(String username, String remoteRef, DataInputsType dataInputs) {
+        StatusType statusType = new StatusType();
+        GregorianCalendar stopTimeGregorian = new GregorianCalendar();
+        stopTimeGregorian.setTime(new Date());
+        XMLGregorianCalendar stopTimeXmlGregorian = this.getXmlGregorianCalendar(stopTimeGregorian);
+        statusType.setCreationTime(stopTimeXmlGregorian);
+        statusType.setProcessSucceeded("The request has been quoted successfully.");
+        this.executeResponse.setStatus(statusType);
+        ExecuteResponse.ProcessOutputs quoteJson = this.getQuoteProcessOutputs(username, remoteRef, dataInputs);
+        this.executeResponse.setProcessOutputs(quoteJson);
+        return this.executeResponse;
+    }
+
+    private ExecuteResponse.ProcessOutputs getQuoteProcessOutputs(String username, String remoteRef, DataInputsType dataInputs) {
+        ExecuteResponse.ProcessOutputs processOutputs = new ExecuteResponse.ProcessOutputs();
+        OutputDataType output = new OutputDataType();
+        output.setIdentifier(WpsTypeConverter.str2CodeType("QUOTATION"));
+        output.setTitle(WpsTypeConverter.str2LanguageStringType("Job Quotation"));
+        DataType quoteData = new DataType();
+        ComplexDataType quoteComplexData = new ComplexDataType();
+        quoteComplexData.setMimeType("application/json");
+        String quoteJsonString = getQuoteJsonString(username, remoteRef, dataInputs);
+        quoteComplexData.getContent().add(quoteJsonString);
+        quoteData.setComplexData(quoteComplexData);
+        output.setData(quoteData);
+        processOutputs.getOutput().add(output);
+        return processOutputs;
+    }
+
+    private String getQuoteJsonString(String username, String remoteRef, DataInputsType dataInputs) {
+        Account account = AccountBuilder.create().
+                withPlatform("Brockmann Consult GmbH Processing Center").
+                withUsername(username).
+                withRef(remoteRef).build();
+        Compound compound = CompoundBuilder.create().
+                withId("any-id").
+                withName("processName").
+                withType("processType").build();
+        UsageStatisticT2 usageStatistic = UsageStatisticT2Builder.create().
+                withJobId(remoteRef).
+                withAccount(account).
+                withCompound(compound).
+                withCpuMilliSeconds(PropertiesWrapper.getLong("wps.reporting.initial.CPU_MILLISECONDS", 1L)).
+                withMemoryBytes(PropertiesWrapper.getLong("wps.reporting.initial.PHYSICAL_MEMORY_BYTES", 1L)).
+                withInstanceNumber(PropertiesWrapper.getLong("wps.reporting.initial.PROC_INSTANCE", 1L)).
+                withVolumeBytes(PropertiesWrapper.getLong("wps.reporting.initial.BYTE_READ", 1L) + PropertiesWrapper.getLong("wps.reporting.initial.BYTE_WRITTEN", 1L)).
+                withStatus("QUOTATION").build();
+        return usageStatistic.getAsJson();
+    }
+
     private ExecuteResponse.ProcessOutputs getProcessOutputs(List<String> resultUrls) {
         ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
 
         for (String productionResultUrl : resultUrls) {
-            String identifier = "productionResults";
-            String title = "Production results";
+            String identifier = "production_result";
+            String title = "Production result";
             String abstractText = "This is the URL link to the production result";
-            if(productionResultUrl.endsWith("-metadata")){
-                identifier = "resultMetadataFile";
-                title = "Result metadata file";
-                abstractText = "This is the URL link to the result metadata file";
+            String mimeType = "application/octet-stream";
+            if (productionResultUrl.endsWith("-metadata")) {
+                identifier = "result_metadata";
+                title = "Metadata OWS context XML";
+                abstractText = "The URL to the result metadata file";
+                mimeType = "application/atom+xml";
             }
             OutputDataType url = new OutputDataType();
             url.setIdentifier(WpsTypeConverter.str2CodeType(identifier));
@@ -161,7 +221,7 @@ public class CalvalusExecuteResponseConverter {
             url.setAbstract(WpsTypeConverter.str2LanguageStringType(abstractText));
             OutputReferenceType urlLink = new OutputReferenceType();
             urlLink.setHref(productionResultUrl);
-            urlLink.setMimeType("application/octet-stream");
+            urlLink.setMimeType(mimeType);
             url.setReference(urlLink);
 
             productUrl.getOutput().add(url);

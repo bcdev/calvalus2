@@ -22,7 +22,7 @@ import java.util.Map;
 public class BootstrappingForm extends Composite {
 
     private static final int DEFAULT_NUMBER_OF_ITERATIONS = 10000;
-    private final UserManagedFiles userManagedContent;
+    private final ManagedFiles managedFiles;
 
     interface TheUiBinder extends UiBinder<Widget, BootstrappingForm> {
 
@@ -36,6 +36,8 @@ public class BootstrappingForm extends Composite {
     Button addBootstrapSourceButton;
     @UiField
     Button removeBootstrapSourceButton;
+    @UiField
+    Button removeAllBootstrapSourceButton;
 
     @UiField(provided = true)
     L2ConfigForm l2ConfigForm;
@@ -55,14 +57,15 @@ public class BootstrappingForm extends Composite {
         final String fileExtension = ".csv";
         final String baseDir = "bootstrapping";
         HTML description = new HTML("The supported file types are TAB-separated CSV (<b>*" + fileExtension + "</b>) matchup files.<br/>");
-        userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
-                                                  bootstrapSources,
-                                                  baseDir,
-                                                  "matchup",
-                                                  description);
-        addBootstrapSourceButton.addClickHandler(userManagedContent.getAddAction());
-        removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
-        userManagedContent.updateList();
+        managedFiles = new ManagedFiles(portalContext.getBackendService(),
+                                        bootstrapSources,
+                                        baseDir,
+                                        "matchup",
+                                        description);
+        managedFiles.setAddButton(addBootstrapSourceButton);
+        managedFiles.setRemoveButton(removeBootstrapSourceButton);
+        managedFiles.setRemoveAllButton(removeAllBootstrapSourceButton);
+        managedFiles.updateUserFiles(true);
 
         //TODO filter bootstrap processor(s) in all other views
     }
@@ -73,7 +76,7 @@ public class BootstrappingForm extends Composite {
             throw new ValidationException(numberOfIterations, "Number of Iterations must be > 0");
         }
 
-        if (userManagedContent.getSelectedFilePath().isEmpty()) {
+        if (managedFiles.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(bootstrapSources, "Bootstrap source must be given.");
         }
         l2ConfigForm.validateForm();
@@ -84,7 +87,7 @@ public class BootstrappingForm extends Composite {
         parameters.putAll(l2ConfigForm.getValueMap());
 
         parameters.put(BootstrappingWorkflowItem.NUM_ITERATIONS_PROPERTY, numberOfIterations.getValue().toString());
-        parameters.put(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY, userManagedContent.getSelectedFilePath());
+        parameters.put(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY, managedFiles.getSelectedFilePath());
         if (!productionName.getValue().isEmpty()) {
             parameters.put("productionName", productionName.getValue());
         }

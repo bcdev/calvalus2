@@ -39,7 +39,6 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
-
     <!-- Backend servlet -->
 
     <servlet>
@@ -68,6 +67,16 @@
         <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
     </servlet>
 
+    <servlet>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.InjectInputSelectionServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.ContextRetrievalServiceImpl</servlet-class>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>stagingServlet</servlet-name>
         <url-pattern>/staging/*</url-pattern>
@@ -90,6 +99,14 @@
         <servlet-name>downloadServlet</servlet-name>
         <url-pattern>/calvalus/download</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <url-pattern>/injectInputSelection</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <url-pattern>/calvalus/retrieve</url-pattern>
+    </servlet-mapping>
 
     <!-- You can set the default session timeout (in minutes) for all newly   -->
     <!-- created sessions by modifying the value below.                       -->
@@ -102,13 +119,12 @@
         <welcome-file>about.jsp</welcome-file>
     </welcome-file-list>
 
-
-    <!-- Poor men's security and user management. Go edit $CATALINA_HOME/conf/tomcat-users.xml -->
     <security-constraint>
         <display-name>Calvalus Protected</display-name>
         <web-resource-collection>
             <web-resource-name>calvalus-protected</web-resource-name>
             <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/insert</url-pattern>
             <url-pattern>/calvalus.jsp</url-pattern>
             <url-pattern>/staging</url-pattern>
             <url-pattern>/staging/*</url-pattern>
@@ -118,6 +134,7 @@
             <url-pattern>/calvalus/backend/*</url-pattern>
             <url-pattern>/calvalus/upload/*</url-pattern>
             <url-pattern>/calvalus/download/*</url-pattern>
+            <url-pattern>/processors.jsp</url-pattern>
             <url-pattern>/pub</url-pattern>
             <url-pattern>/pub/</url-pattern>
             <url-pattern>/pub/docs</url-pattern>
@@ -128,6 +145,21 @@
             <!-- Anyone with one of the listed roles may access this area -->
             <role-name>calvalus</role-name>
             <role-name>coastcolour</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <display-name>Calvalus Upload</display-name>
+        <web-resource-collection>
+            <web-resource-name>calvalus-upload</web-resource-name>
+            <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/calvalus.jsp</url-pattern>
+            <url-pattern>/calvalus/upload</url-pattern>
+            <url-pattern>/calvalus/upload/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <!-- Anyone with one of the listed roles may access this area -->
+            <role-name>calwps</role-name>
         </auth-constraint>
     </security-constraint>
 
@@ -144,7 +176,12 @@
     <!-- Security roles referenced by this web application -->
     <security-role>
         <role-name>calvalus</role-name>
+    </security-role>
+    <security-role>
         <role-name>coastcolour</role-name>
+    </security-role>
+    <security-role>
+        <role-name>calwps</role-name>
     </security-role>
 
 </web-app>

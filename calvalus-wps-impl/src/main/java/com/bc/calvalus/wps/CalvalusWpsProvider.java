@@ -3,11 +3,15 @@ package com.bc.calvalus.wps;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
+import com.bc.calvalus.wps.exceptions.WpsProductionException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetCapabilitiesOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetStatusOperation;
+import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServiceInstance;
 import com.bc.wps.api.exceptions.WpsServiceException;
@@ -17,8 +21,8 @@ import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.ProcessDescriptionType;
 import com.bc.wps.utilities.WpsLogger;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Timer;
 import java.util.logging.Level;
@@ -33,10 +37,10 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
 
     @Override
     public Capabilities getCapabilities(WpsRequestContext wpsRequestContext) throws WpsServiceException {
-        CalvalusGetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsRequestContext);
         try {
+            CalvalusGetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsRequestContext);
             return getCapabilitiesOperation.getCapabilities();
-        } catch (ProcessesNotAvailableException | JAXBException exception) {
+        } catch (WpsProcessorNotFoundException | IOException | URISyntaxException | BindingException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetCapabilities operation successfully", exception);
             throw new WpsServiceException(exception);
         }
@@ -44,21 +48,23 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
 
     @Override
     public List<ProcessDescriptionType> describeProcess(WpsRequestContext wpsRequestContext, String processId) throws WpsServiceException {
-        CalvalusDescribeProcessOperation describeProcessOperation = new CalvalusDescribeProcessOperation(wpsRequestContext);
         try {
+            CalvalusDescribeProcessOperation describeProcessOperation = new CalvalusDescribeProcessOperation(wpsRequestContext);
             return describeProcessOperation.getProcesses(processId);
-        } catch (ProcessesNotAvailableException exception) {
+        } catch (WpsProcessorNotFoundException | IOException exception) {
             logger.log(Level.SEVERE, "Unable to perform DescribeProcess operation successfully", exception);
             throw new WpsServiceException(exception);
         }
     }
 
     @Override
-    public ExecuteResponse doExecute(WpsRequestContext wpsRequestContext, Execute execute) throws WpsServiceException {
-        CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(wpsRequestContext);
+    public ExecuteResponse doExecute(WpsRequestContext wpsRequestContext, Execute executeRequest) throws WpsServiceException {
         try {
-            return executeOperation.execute(execute);
-        } catch (IOException | InterruptedException | ProductionException | InvalidProcessorIdException | JAXBException exception) {
+            String processId = executeRequest.getIdentifier().getValue();
+            CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(processId, wpsRequestContext);
+            return executeOperation.execute(executeRequest);
+        } catch (IOException | ProductionException | WpsProductionException |
+                    WpsResultProductException | InvalidProcessorIdException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
             throw new WpsServiceException(exception);
         }
@@ -66,8 +72,13 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
 
     @Override
     public ExecuteResponse getStatus(WpsRequestContext wpsRequestContext, String jobId) throws WpsServiceException {
-        CalvalusGetStatusOperation getStatusOperation = new CalvalusGetStatusOperation(wpsRequestContext);
-        return getStatusOperation.getStatus(jobId);
+        try {
+            CalvalusGetStatusOperation getStatusOperation = new CalvalusGetStatusOperation(wpsRequestContext);
+            return getStatusOperation.getStatus(jobId);
+        } catch (IOException | InvalidProcessorIdException | SqlStoreException exception) {
+            logger.log(Level.SEVERE, "Unable to perform GetStatus operation successfully", exception);
+            throw new WpsServiceException(exception);
+        }
     }
 
     @Override

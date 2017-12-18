@@ -32,7 +32,6 @@
     <set-property name="gwt.logging.logLevel" value="INFO"/>
     <set-property name="gwt.logging.enabled" value="TRUE"/>
     <set-property name="gwt.logging.consoleHandler" value="ENABLED"/>
-    <set-property name="gwt.logging.popupHandler" value="DISABLED" /><!-- LoggingPopup -->
     <set-property name="gwt.logging.simpleRemoteHandler" value="DISABLED" />
 
 </module>

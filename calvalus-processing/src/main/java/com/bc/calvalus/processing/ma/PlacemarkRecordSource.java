@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.dataio.placemark.PlacemarkIO;
@@ -7,6 +8,7 @@ import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PinDescriptor;
 import org.esa.snap.core.datamodel.Placemark;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -67,17 +69,10 @@ public class PlacemarkRecordSource implements RecordSource {
     public static class Spi extends RecordSourceSpi {
 
         @Override
-        public RecordSource createRecordSource(String url) throws Exception {
-            InputStream inputStream;
-            if (url.startsWith("hdfs:")) {
-                final Configuration conf = new Configuration();
-                final Path path = new Path(url);
-                inputStream = path.getFileSystem(conf).open(path);
-            } else {
-                inputStream = new URL(url).openStream();
-            }
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            return new PlacemarkRecordSource(inputStreamReader);
+        public RecordSource createRecordSource(String url, Configuration conf) throws Exception {
+            InputStream inputStream = HadoopProcessingService.openUrlAsStream(url, conf);
+            Reader reader = new BufferedReader(new InputStreamReader(inputStream));
+            return new PlacemarkRecordSource(reader);
         }
 
         @Override

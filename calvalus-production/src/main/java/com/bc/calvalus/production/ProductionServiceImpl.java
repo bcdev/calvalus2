@@ -1,35 +1,30 @@
 package com.bc.calvalus.production;
 
 
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.*;
 import com.bc.calvalus.commons.shared.BundleFilter;
-import com.bc.calvalus.inventory.InventoryService;
-import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -42,15 +37,15 @@ import java.util.regex.Pattern;
  * To use it, specify the servlet init-parameter 'calvalus.portal.backendService.class'
  * (context.xml or web.xml)
  */
-public class ProductionServiceImpl implements ProductionService {
+public class ProductionServiceImpl extends Observable implements ProductionService {
 
-    public static enum Action {
+    public enum Action {
         CANCEL,
         DELETE,
         RESTART,// todo - implement restart (nf)
     }
 
-    private final InventoryService inventoryService;
+    private final FileSystemService fileSystemService;
     private final ProcessingService processingService;
     private final StagingService stagingService;
     private final ProductionType[] productionTypes;
@@ -61,12 +56,12 @@ public class ProductionServiceImpl implements ProductionService {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-    public ProductionServiceImpl(InventoryService inventoryService,
+    public ProductionServiceImpl(FileSystemService fileSystemService,
                                  ProcessingService processingService,
                                  StagingService stagingService,
                                  ProductionStore productionStore,
                                  ProductionType... productionTypes) throws ProductionException {
-        this.inventoryService = inventoryService;
+        this.fileSystemService = fileSystemService;
         this.productionStore = productionStore;
         this.processingService = processingService;
         this.stagingService = stagingService;
@@ -74,15 +69,6 @@ public class ProductionServiceImpl implements ProductionService {
         this.productionActionMap = new HashMap<String, Action>();
         this.productionStagingsMap = new HashMap<String, Staging>();
         this.logger = CalvalusLogger.getLogger();
-    }
-
-    @Override
-    public ProductSet[] getProductSets(String userName, String filter) throws ProductionException {
-        try {
-            return inventoryService.getProductSets(userName, filter);
-        } catch (Exception e) {
-            throw new ProductionException(e);
-        }
     }
 
     @Override
@@ -115,6 +101,11 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
+        return orderProduction(productionRequest, null);
+    }
+
+    @Override
+    public ProductionResponse orderProduction(ProductionRequest productionRequest, HadoopJobHook jobHook) throws ProductionException {
         String user = productionRequest.getUserName();
         String type = productionRequest.getProductionType();
         logger.info("orderProduction: " + type + " (for " + user + ")");
@@ -129,14 +120,31 @@ public class ProductionServiceImpl implements ProductionService {
             Production production;
             try {
                 ProductionType productionType = findProductionType(productionRequest);
-                production = productionType.createProduction(productionRequest);
-                production.getWorkflow().submit();
+                UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(user);
+                production = remoteUser.doAs((PrivilegedExceptionAction<Production>) () ->
+                    productionType.createProduction(productionRequest)
+                );
+                WorkflowItem workflow = production.getWorkflow();
+                if (jobHook != null) {
+                    injectJobHook(jobHook, workflow);
+                }
+                workflow.submit();
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, t.getMessage(), t);
                 throw new ProductionException(String.format("Failed to submit production: %s", t.getMessage()), t);
             }
             productionStore.addProduction(production);
             return new ProductionResponse(production);
+        }
+    }
+
+    private static void injectJobHook(HadoopJobHook jobHook, WorkflowItem workflowItem)  {
+        if (workflowItem instanceof HadoopWorkflowItem) {
+            HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
+            hadoopWorkflowItem.setJobHook(jobHook);
+        }
+        for (WorkflowItem item : workflowItem.getItems()) {
+            injectJobHook(jobHook, item);
         }
     }
 
@@ -244,7 +252,7 @@ public class ProductionServiceImpl implements ProductionService {
         requestProductionKill(productionIds, Action.DELETE);
     }
 
-    private void requestProductionKill(String[] productionIds, Action action) throws ProductionException {
+    private synchronized void requestProductionKill(String[] productionIds, Action action) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             Production production = productionStore.getProduction(productionId);
@@ -290,7 +298,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public void updateStatuses(String username) {
+    public synchronized void updateStatuses(String username) {
         try {
             processingService.updateStatuses(username);
         } catch (Exception e) {
@@ -354,84 +362,6 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    @Override
-    public String[] listUserFiles(String userName, String dirPath) throws ProductionException {
-        try {
-            String glob = getUserGlob(userName, dirPath);
-            return inventoryService.globPaths(userName, Arrays.asList(glob));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public String[] listSystemFiles(String userName, String glob) throws ProductionException {
-        try {
-            return inventoryService.globPaths(userName, Arrays.asList(glob + "/.*"));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public OutputStream addUserFile(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.addFile(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public boolean removeUserFile(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.removeFile(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public boolean removeUserDirectory(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.removeDirectory(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public String getQualifiedUserPath(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.getQualifiedPath(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public String getQualifiedPath(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.getQualifiedPath(userName, path);
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    private String getUserGlob(String userName, String dirPath) {
-        return getUserPath(userName, dirPath) + "/.*";
-    }
-
-    private String getUserPath(String userName, String dirPath) {
-        String path;
-        if (dirPath.isEmpty() || "/".equals(dirPath)) {
-            path = String.format("home/%s", userName.toLowerCase());
-        } else {
-            path = String.format("home/%s/%s", userName.toLowerCase(), dirPath);
-        }
-        return path;
-    }
-
     private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {
         for (ProductionType productionType : productionTypes) {
             if (productionType.getName().equals(productionRequest.getProductionType())) {
@@ -451,7 +381,12 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.removeProduction(production.getId());
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
-        deleteWorkflowOutput(production.getWorkflow());
+
+        String userName = production.getProductionRequest().getUserName();
+        deleteOutput(production.getOutputPath(), userName);
+        for (String dir : production.getIntermediateDataPath()) {
+            deleteOutput(dir, userName);
+        }
         try {
             stagingService.deleteTree(production.getStagingPath());
         } catch (IOException e) {
@@ -460,21 +395,25 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    private void deleteWorkflowOutput(WorkflowItem workflowItem) {
-        if (workflowItem instanceof HadoopWorkflowItem) {
-            HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
-            String outputDir = hadoopWorkflowItem.getOutputDir();
-            try {
-                String userName = hadoopWorkflowItem.getUserName();
-                FileSystem fileSystem = hadoopWorkflowItem.getProcessingService().getFileSystem(userName, outputDir);
-                JobUtils.clearDir(outputDir, fileSystem);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Failed to delete output dir " + outputDir, e);
-            }
-        } else {
-            for (WorkflowItem item : workflowItem.getItems()) {
-                deleteWorkflowOutput(item);
-            }
+    private void deleteOutput(String outputDir, String userName) {
+        if (outputDir == null  || outputDir.isEmpty()) {
+            return;
         }
+        try {
+            fileSystemService.removeDirectory(userName, outputDir);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to delete output dir " + outputDir, e);
+        }
+    }
+
+    // TODO: race condition! implement Observable without "changed"
+    @Override
+    public synchronized void setChanged() {
+        super.setChanged();
+    }
+
+    @Override
+    public String[][] loadRegionDataInfo(String username, String url) throws IOException {
+        return processingService.loadRegionDataInfo(username, url);
     }
 }

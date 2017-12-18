@@ -49,7 +49,7 @@ public class MAWorkflowItemTest {
         jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
         MAWorkflowItem maWorkflowItem = new MAWorkflowItem(processingService, "testuser", jobName, jobConfig);
 
-        Job job = new Job(jobConfig);
+        Job job = Job.getInstance(jobConfig);
         maWorkflowItem.configureJob(job);
 
         assertSame(MAMapper.class, job.getMapperClass());

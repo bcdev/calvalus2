@@ -43,15 +43,13 @@ import org.esa.snap.core.image.VirtualBandOpImage;
 import org.esa.snap.core.util.DateTimeUtils;
 import org.esa.snap.core.util.ImageUtils;
 
-import javax.imageio.stream.ImageOutputStream;
-import javax.imageio.stream.MemoryCacheImageOutputStream;
+import javax.imageio.stream.ImageOutputStreamImpl;
 import javax.media.jai.CachedTile;
 import javax.media.jai.JAI;
 import javax.media.jai.TileCache;
 import java.awt.*;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -318,13 +316,9 @@ public class StreamingProductWriter extends AbstractProductWriter {
     }
 
     private static void writeProductData(SequenceFile.Writer writer, String key, ProductData productData) throws IOException {
-        int capacity = productData.getNumElems() * productData.getElemSize();
-        InternalByteArrayOutputStream byteArrayOutputStream = new InternalByteArrayOutputStream(capacity);
-        ImageOutputStream cacheImageOutputStream = new MemoryCacheImageOutputStream(byteArrayOutputStream);
-        productData.writeTo(cacheImageOutputStream);
-        cacheImageOutputStream.flush();
-        byte[] buf = byteArrayOutputStream.getInternalBuffer();
-        writer.append(new Text(key), new ByteArrayWritable(buf));
+        final byte[] buffer = new byte[productData.getNumElems() * productData.getElemSize()];
+        productData.writeTo(new ByteArrayBackedImageOutputStream(buffer));
+        writer.append(new Text(key), new ByteArrayWritable(buffer));
     }
 
     private static void updateIndex(Map<String, Long> indexMap, String key, long position) {
@@ -354,13 +348,37 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
     }
 
-    private static class InternalByteArrayOutputStream extends ByteArrayOutputStream {
-        private InternalByteArrayOutputStream(int capacity) {
-            super(capacity);
+    /**
+     * An ImageOutputStream that is backed by a byte array. 
+     */
+    private static class ByteArrayBackedImageOutputStream extends ImageOutputStreamImpl {
+        
+        private final byte[] buffer;
+
+        private ByteArrayBackedImageOutputStream(byte[] buffer) {
+            this.buffer = buffer;
         }
 
-        private byte[] getInternalBuffer() {
-            return buf;
+        @Override
+        public void write(int b) throws IOException {
+            buffer[(int) streamPos] = (byte) b;
+            streamPos++;
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            System.arraycopy(b, off, buffer, (int) streamPos, len);
+            streamPos += len;
+        }
+
+        @Override
+        public int read() throws IOException {
+            throw new IllegalStateException("reading not supported by this implementation");
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            throw new IllegalStateException("reading not supported by this implementation");
         }
     }
 

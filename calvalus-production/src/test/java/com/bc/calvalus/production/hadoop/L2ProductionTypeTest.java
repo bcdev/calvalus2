@@ -31,7 +31,7 @@ import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.TestInventoryService;
+import com.bc.calvalus.production.TestFileSystemService;
 import com.bc.calvalus.production.TestStagingService;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
@@ -66,7 +66,7 @@ public class L2ProductionTypeTest {
                 return new MaskDescriptor[0];
             }
         };
-        productionType = new L2ProductionType(new TestInventoryService(), processingService, new TestStagingService());
+        productionType = new L2ProductionType(new TestFileSystemService(), processingService, new TestStagingService());
     }
 
     @Test

@@ -85,10 +85,12 @@ public class OutputParametersForm extends Composite {
 
     @UiField
     IntegerBox allowedFailure;
+    @UiField
+    ListBox requestQueue;
 
     static int radioGroupId;
 
-    public OutputParametersForm() {
+    public OutputParametersForm(PortalContext portalContext) {
         initWidget(uiBinder.createAndBindUi(this));
 
         radioGroupId++;
@@ -117,6 +119,7 @@ public class OutputParametersForm extends Composite {
         });
         setTailoringComponentsEnabled(false);
         allowedFailure.setValue(0);
+        setSelectableQueues(portalContext.getRequestQueues());
     }
 
     public void showFormatSelectionPanel(boolean show) {
@@ -167,7 +170,10 @@ public class OutputParametersForm extends Composite {
             parameters.put("productionName", prodName);
         }
         if (processingFormatUser.getValue()) {
-            parameters.put("outputFormat", getOutputFormat());
+            String outputFormat = getOutputFormat();
+            if (outputFormat != null) {
+                parameters.put("outputFormat", outputFormat);
+            }
             parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
         } else {
             parameters.put("outputFormat", "SEQ");
@@ -182,6 +188,11 @@ public class OutputParametersForm extends Composite {
             parameters.put("outputBandList", createBandListString());
         }
         parameters.put("calvalus.hadoop.mapreduce.map.failures.maxpercent", allowedFailure.getValue().toString());
+        String queueName = getRequestQueue();
+        if (queueName != null) {
+            parameters.put("calvalus.hadoop.mapreduce.job.queuename", queueName);
+        }
+
         return parameters;
     }
 
@@ -199,6 +210,50 @@ public class OutputParametersForm extends Composite {
         return sb.toString();
     }
 
+    public void setValues(Map<String, String> parameters) {
+        String productionNameValue = parameters.get("productionName");
+        if (productionNameValue != null) {
+            productionName.setValue(productionNameValue);
+        }
+        String outputFormatValue = parameters.get("outputFormat");
+        if (outputFormatValue != null) {
+            if (outputFormatValue.equals("SEQ")) {
+                autoStaging.setValue(false);
+                processingFormatCluster.setValue(true, true);
+            } else {
+                outputFormat.setSelectedIndex(0);
+                for (int i = 0; i < outputFormat.getItemCount(); i++) {
+                    if (outputFormat.getItemText(i).equals(outputFormatValue)) {
+                        outputFormat.setSelectedIndex(i);
+                        break;
+                    }
+                }
+                processingFormatUser.setValue(true, true);
+            }
+        } else {
+            outputFormat.setSelectedIndex(0);
+            processingFormatUser.setValue(true, true);
+        }
+        String autoStagingValue = parameters.get("autoStaging");
+        if (autoStagingValue != null) {
+            autoStaging.setValue(Boolean.valueOf(autoStagingValue));
+        }
+        String allowedFailureValue = parameters.get("calvalus.hadoop.mapreduce.map.failures.maxpercent");
+        if (allowedFailureValue != null) {
+            allowedFailure.setValue(Integer.valueOf(allowedFailureValue));
+        }
+        String queueName = parameters.get("calvalus.hadoop.mapreduce.job.queuename");
+        requestQueue.setSelectedIndex(0);
+        if (queueName != null) {
+            for (int i = 0; i < requestQueue.getItemCount(); ++i) {
+                if (requestQueue.getItemText(i).equals(queueName)) {
+                    requestQueue.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+    }
+
     public void setAvailableOutputFormats(String... formatNames) {
         int selectedIndex = outputFormat.getSelectedIndex();
         outputFormat.clear();
@@ -209,6 +264,25 @@ public class OutputParametersForm extends Composite {
             outputFormat.setSelectedIndex(selectedIndex);
         } else {
             outputFormat.setSelectedIndex(0);
+        }
+    }
+
+    public void setSelectableQueues(String... queueNames) {
+        String selectedQueue = getRequestQueue();
+        requestQueue.clear();
+        for (String queueName : queueNames) {
+            requestQueue.addItem(queueName);
+        }
+        if (requestQueue.getItemCount() > 0) {
+            requestQueue.setSelectedIndex(0);
+        }
+        if (selectedQueue != null) {
+            for (int i = 0; i < requestQueue.getItemCount(); ++i) {
+                if (requestQueue.getItemText(i).equals(selectedQueue)) {
+                    requestQueue.setSelectedIndex(i);
+                    break;
+                }
+            }
         }
     }
 
@@ -231,7 +305,20 @@ public class OutputParametersForm extends Composite {
 
     private String getOutputFormat() {
         int index = outputFormat.getSelectedIndex();
-        return outputFormat.getValue(index);
+        if (index > -1) {
+            return outputFormat.getValue(index);
+        } else {
+            return null;
+        }
+    }
+
+    private String getRequestQueue() {
+        int index = requestQueue.getSelectedIndex();
+        if (index < 0) {
+            return null;
+        } else {
+            return requestQueue.getValue(index);
+        }
     }
 
     private String getProductionName() {

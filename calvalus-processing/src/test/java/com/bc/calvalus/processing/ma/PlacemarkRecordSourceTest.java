@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -26,7 +27,7 @@ public class PlacemarkRecordSourceTest {
         RecordSourceSpi spi = RecordSourceSpi.getForClassName("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
         assertNotNull(spi);
         String url = getClass().getResource("CEOS_AERONET.placemark").toURI().toString();
-        RecordSource recordSource = spi.createRecordSource(url);
+        RecordSource recordSource = spi.createRecordSource(url, new Configuration());
         assertNotNull(recordSource);
         assert78(recordSource);
     }

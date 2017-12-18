@@ -88,7 +88,7 @@ public class MAConfig implements XmlConvertible {
      * The default value is {@code 3.0} hours.
      */
     @Parameter(defaultValue = "3.0")
-    private Double maxTimeDifference;
+    private String maxTimeDifference;
 
     /**
      * The band maths expression that identifies the "good" pixels in the macro pixel.
@@ -221,7 +221,7 @@ public class MAConfig implements XmlConvertible {
         }
     }
 
-    public RecordSource createRecordSource() throws Exception {
+    public RecordSource createRecordSource(Configuration conf) throws Exception {
         String className = getRecordSourceSpiClassName();
         RecordSourceSpi service;
         if (className != null) {
@@ -230,7 +230,7 @@ public class MAConfig implements XmlConvertible {
             service = RecordSourceSpi.getForUrl(getRecordSourceUrl());
         }
         if (service != null) {
-            return service.createRecordSource(getRecordSourceUrl());
+            return service.createRecordSource(getRecordSourceUrl(), conf);
         } else {
             if (className != null) {
                 throw new IllegalStateException("record source reader service " + className + " of point data file not found");
@@ -246,7 +246,7 @@ public class MAConfig implements XmlConvertible {
                     }
                 }
                 throw new IllegalArgumentException("no record source reader found for filename extension of " + getRecordSourceUrl()
-                                                   + " point data file (one of " + supportedExtensions + " expected)");
+                                                           + " point data file (one of " + supportedExtensions + " expected)");
             }
         }
     }
@@ -299,11 +299,11 @@ public class MAConfig implements XmlConvertible {
         this.macroPixelSize = macroPixelSize;
     }
 
-    public Double getMaxTimeDifference() {
+    public String getMaxTimeDifference() {
         return maxTimeDifference;
     }
 
-    public void setMaxTimeDifference(Double maxTimeDifference) {
+    public void setMaxTimeDifference(String maxTimeDifference) {
         this.maxTimeDifference = maxTimeDifference;
     }
 
@@ -361,5 +361,27 @@ public class MAConfig implements XmlConvertible {
 
     public void setOnlyExtractComplete(boolean onlyExtractComplete) {
         this.onlyExtractComplete = onlyExtractComplete;
+    }
+
+    public static boolean isMaxTimeDifferenceValid(String maxTimeDifference) {
+        if (maxTimeDifference == null || maxTimeDifference.trim().isEmpty()) {
+            return true;
+        }
+        maxTimeDifference = maxTimeDifference.trim();
+        if (maxTimeDifference.endsWith("d") && maxTimeDifference.length() >= 2) {
+            String daysAsString = maxTimeDifference.substring(0, maxTimeDifference.length() - 1);
+            try {
+                int days = Integer.parseInt(daysAsString);
+                return days >= 0;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+        } else {
+            try {
+                return Double.parseDouble(maxTimeDifference) >= 0;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+        }
     }
 }

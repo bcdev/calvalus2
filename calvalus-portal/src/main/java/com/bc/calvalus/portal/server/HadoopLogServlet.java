@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.store.ProxyWorkflow;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -41,6 +41,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.owasp.esapi.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -67,6 +68,8 @@ import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
  */
 public class HadoopLogServlet extends HttpServlet {
 
+    private boolean withExternalAccessControl;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
@@ -79,9 +82,10 @@ public class HadoopLogServlet extends HttpServlet {
             showErrorPage("Missing query parameter 'productionId'", resp);
             return;
         }
-        ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
+        ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
+        withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean("calvalus.accesscontrol.external", false);
         try {
-            Production production = productionService.getProduction(productionId);
+            Production production = serviceContainer.getProductionService().getProduction(productionId);
             final String userName = getUserName(req).toLowerCase();
             ProcessState processState = production.getProcessingStatus().getState();
             WorkflowItem workflow = production.getWorkflow();
@@ -158,7 +162,12 @@ public class HadoopLogServlet extends HttpServlet {
                         // TODO in case of status == failed --> check if task has really failed.
 //                        displayTaskLogs(event.getTaskAttemptId(), event.getTaskTrackerHttp(), resp);
 
-                        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
+                        UserGroupInformation remoteUser;
+                        if (withExternalAccessControl) {
+                            remoteUser = UserGroupInformation.createRemoteUser("yarn");
+                        } else {
+                            remoteUser = UserGroupInformation.createRemoteUser(userName);
+                        }
                         try {
                             remoteUser.doAs(new PrivilegedExceptionAction<Integer>() {
                                 @Override

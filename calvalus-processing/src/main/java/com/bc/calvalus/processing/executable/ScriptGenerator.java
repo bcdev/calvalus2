@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.velocity.VelocityContext;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -121,7 +122,7 @@ public class ScriptGenerator {
         for (String scriptFile : scriptFiles) {
             Path scriptFilePath = new Path(scriptFile);
             InputStream inputStream = scriptFilePath.getFileSystem(conf).open(scriptFilePath);
-            Reader reader = new InputStreamReader(inputStream);
+            Reader reader = new BufferedReader(new InputStreamReader(inputStream));
             addResource(new ReaderResource(scriptFile, reader));
         }
     }

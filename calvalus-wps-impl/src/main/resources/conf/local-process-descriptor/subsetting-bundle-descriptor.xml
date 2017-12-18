@@ -1,0 +1,16 @@
+<bundleDescriptor>
+    <bundleName>urbantep-local</bundleName>
+    <bundleVersion>1.0</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <processorName>Urban TEP local subsetting</processorName>
+            <processorVersion>1.0</processorVersion>
+            <executableName>Subset</executableName>
+            <descriptionHtml><![CDATA[Subsetting of small areas for selected datasets]]></descriptionHtml>
+            <outputFormats>GeoTIFF,NetCDF4-BEAM</outputFormats>
+            <inputProductTypes>URBAN_FOOTPRINT</inputProductTypes>
+            <outputProductType>URBAN_FOOTPRINT</outputProductType>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>

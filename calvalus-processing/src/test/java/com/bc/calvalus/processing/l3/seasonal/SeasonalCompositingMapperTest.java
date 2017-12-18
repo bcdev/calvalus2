@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
@@ -7,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,16 +18,16 @@ import static org.junit.Assert.assertEquals;
  */
 public class SeasonalCompositingMapperTest {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     @Test
     public void testNextWeek() throws Exception {
         Date d = DATE_FORMAT.parse("2012-01-01");
-        GregorianCalendar start = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        Calendar start = DateUtils.createCalendar();
         start.setTime(DATE_FORMAT.parse("2012-01-01"));
-        GregorianCalendar stop = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        Calendar stop = DateUtils.createCalendar();
         stop.setTime(DATE_FORMAT.parse("2012-12-31"));
-        GregorianCalendar c = new GregorianCalendar();
+        GregorianCalendar c = DateUtils.createCalendar();
         c.setTime(d);
         assertEquals(0, c.get(Calendar.MONTH)) ;
         assertEquals(1, c.get(Calendar.DAY_OF_MONTH)) ;
@@ -39,7 +39,7 @@ public class SeasonalCompositingMapperTest {
             } else {
                 assertEquals(7, l);
             }
-            d = SeasonalCompositingMapper.nextWeek(d, start, stop);
+            d = SeasonalCompositingMapper.nextWeek(d, start, stop, 7);
             c.setTime(d);
         }
         assertEquals("2013-01-01", DATE_FORMAT.format(d));

@@ -16,7 +16,9 @@
 
 package com.bc.calvalus.processing;
 
+import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import org.apache.hadoop.fs.Path;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -34,6 +36,12 @@ public class ProcessorAdapterTest {
         assertNull(ProcessorAdapter.getDatePart(new Path("09/MER.N1")));
         assertNull(ProcessorAdapter.getDatePart(new Path("/MER.N1")));
         assertNull(ProcessorAdapter.getDatePart(new Path("MER.N1")));
+    }
+
+    @Ignore
+    @Test
+    public void testShallowCopyPatches() throws Exception {
+        ProcessorAdapter.shallowCopyPatches("/home/boe/tmp/caltest");
     }
 
 }

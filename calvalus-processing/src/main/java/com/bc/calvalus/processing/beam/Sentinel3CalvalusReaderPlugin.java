@@ -16,6 +16,8 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.dataio.AbstractProductReader;
@@ -40,18 +42,21 @@ import java.util.Locale;
  */
 public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
 
-    private static final String FORMAT_NAME = "CALVALUS-SENTINEL-3";
+    private static final String FORMAT_NAME_S3 = "CALVALUS-SENTINEL-3";
+    private static final String FORMAT_NAME_SLSTRL1B_500m = "CALVALUS-SENTINEL-3-SLSTRL1B_500m";
+    private static final String FORMAT_NAME_SLSTRL1B_1km = "CALVALUS-SENTINEL-3-SLSTRL1B-1km";
+    
     private static final String[] FILENAME_PATTERNS = {
             // Sentinel-3 products
-            "^S3.?_(OL_1_E[FR]R|OL_2_(L[FR]R|W[FR]R)|SL_1_RBT|SL_2_(LST|WCT|WST)|SY_1_SYN|SY_2_(VGP|SYN)|SY_[23]_VG1)_.*.zip",
+            "^S3.?_(OL_1_E[FR]R|OL_2_(L[FR]R|W[FR]R)|SL_1_RBT|SL_2_(LST|WCT|WST)|SY_1_SYN|SY_2_(VGP|SYN)|SY_[23]_VG1)_.*",
             // MERIS Level 1 in Sentinel-3 product format
-            "^ENV_ME_1_(F|R)R(G|P).*.zip",
+            "^ENV_ME_1_(F|R)R(G|P).*",
             // MERIS Level 2 in Sentinel-3 product format
-            "^ENV_ME_2_(F|R)R(G|P).*.zip",
+            "^ENV_ME_2_(F|R)R(G|P).*",
             // Sentinel-3 SLSTR L1B products in 1km resolution
-            "^S3.?_SL_1_RBT_.*.zip",
+            "^S3.?_SL_1_RBT_.*",
             // Sentinel-3 SLSTR L1B products in 500 m resolution
-            "^S3.?_SL_1_RBT_.*.zip"
+            "^S3.?_SL_1_RBT_.*"
     };
 
     @Override
@@ -80,7 +85,7 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{FORMAT_NAME};
+        return new String[]{FORMAT_NAME_S3, FORMAT_NAME_SLSTRL1B_500m, FORMAT_NAME_SLSTRL1B_1km};
     }
 
     @Override
@@ -110,7 +115,7 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(pathConfig.getPath(), configuration);
+                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
                 // find manifest file
                 File productManifest = null;
@@ -126,8 +131,16 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
                 if (productManifest == null) {
                     throw new IllegalFileFormatException("input has no mainfest file.");
                 }
-
-                return ProductIO.readProduct(productManifest);
+                
+                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT);
+                CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
+                if (inputFormat != null && inputFormat.equals(FORMAT_NAME_SLSTRL1B_500m)) {
+                    return ProductIO.readProduct(productManifest, "Sen3_SLSTRL1B_500m");
+                } else if (inputFormat != null && inputFormat.equals(FORMAT_NAME_SLSTRL1B_1km)) {
+                    return ProductIO.readProduct(productManifest, "Sen3_SLSTRL1B_1km");
+                } else {
+                    return ProductIO.readProduct(productManifest);
+                }
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }

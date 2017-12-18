@@ -18,12 +18,7 @@ package com.bc.calvalus.commons;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * This class represents a data range.
@@ -31,6 +26,7 @@ import java.util.TimeZone;
 public class DateRange {
 
     public static final DateRange OPEN_RANGE = new DateRange(null, null);
+    public static final DateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     private static final String SEPARATOR = ":";
     private static final String CLOSING_BRACKET = "]";
@@ -54,9 +50,8 @@ public class DateRange {
 
     @Override
     public String toString() {
-        final DateFormat dateFormat = createDateFormat();
-        String startString = startDate != null ? dateFormat.format(startDate) : "null";
-        String stopString = stopDate != null ? dateFormat.format(stopDate) : "null";
+        String startString = startDate != null ? DATE_FORMAT.format(startDate) : "null";
+        String stopString = stopDate != null ? DATE_FORMAT.format(stopDate) : "null";
         return OPENING_BRACKET + startString + SEPARATOR + stopString + CLOSING_BRACKET;
     }
 
@@ -71,15 +66,8 @@ public class DateRange {
         if (date.equals("null")) {
             return null;
         } else {
-            final DateFormat dateFormat = createDateFormat();
+            final DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd");
             return dateFormat.parse(date);
         }
-    }
-
-    static DateFormat createDateFormat() {
-        final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-        final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        dateFormat.setCalendar(calendar);
-        return dateFormat;
     }
 }
