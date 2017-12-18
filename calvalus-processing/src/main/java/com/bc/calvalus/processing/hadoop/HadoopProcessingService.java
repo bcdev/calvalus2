@@ -21,7 +21,6 @@ import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
-import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobIdFormat;
@@ -58,7 +57,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,13 +110,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 synchronized (bundleQueryCache) {
                     long now = System.currentTimeMillis();
                     long clearIfOlder = now - CACHE_RETENTION;
-                    Iterator<BundleQueryCacheEntry> iterator = bundleQueryCache.iterator();
-                    while (iterator.hasNext()) {
-                        BundleQueryCacheEntry cacheEntry = iterator.next();
-                        if (cacheEntry.time < clearIfOlder) {
-                            iterator.remove();
-                        }
-                    }
+                    bundleQueryCache.removeIf(cacheEntry -> cacheEntry.time < clearIfOlder);
                 }
 
             }
@@ -135,33 +127,33 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         long t1 = System.currentTimeMillis();
         try {
             String bundleFilterString = filter.toString();
+            Future<BundleDescriptor[]> bundleFuture = null;
             synchronized (bundleQueryCache) {
                 for (BundleQueryCacheEntry entry : bundleQueryCache) {
                     if (entry.bundleFilter.equals(bundleFilterString) && entry.userName.equals(username)) {
-                        try {
-                            logger.fine("HadoopProcessingService.getBundles cacheHIT");
-                            return entry.bundles.get();
-                        } catch (InterruptedException | ExecutionException e) {
-                            logger.warning(e.getMessage());
-                        }
+                        logger.fine("HadoopProcessingService.getBundles cacheHIT");
+                        bundleFuture = entry.bundles;
+                        break;
                     }
                 }
-                Future<BundleDescriptor[]> future = executorService.submit(new Callable<BundleDescriptor[]>() {
-                    @Override
-                    public BundleDescriptor[] call() throws Exception {
-                        return HadoopProcessingService.this.getBundleDescriptorsImpl(username, filter);
-                    }
-                });
-                bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, future));
-                try {
+                if (bundleFuture == null) {
                     logger.fine("HadoopProcessingService.getBundles cacheMISS");
-                    return future.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
-                    logger.warning(e.getMessage());
+                    bundleFuture = executorService.submit(new Callable<BundleDescriptor[]>() {
+                        @Override
+                        public BundleDescriptor[] call() throws Exception {
+                            return HadoopProcessingService.this.getBundleDescriptorsImpl(username, filter);
+                        }
+                    });
+                    bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, bundleFuture));
                 }
             }
-            throw new IOException("Failed to load BundleDescriptor");
+            try {
+                return bundleFuture.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+                logger.warning(e.getMessage());
+                throw new IOException("Failed to load BundleDescriptor", e);
+            }
         } finally {
             long t2 = System.currentTimeMillis();
             long delta = t2 - t1;
