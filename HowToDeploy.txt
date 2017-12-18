@@ -86,6 +86,8 @@ java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distributio
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-SNAPSHOT-mz
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-SNAPSHOT-mz
 
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall snap-SNAPSHOT-mz
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-snap/target/snap-bundle/snap-all.jar snap-SNAPSHOT-mz
 
 java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-SNAPSHOT-mz --beam beam-SNAPSHOT-mz test.xml
 
