@@ -23,6 +23,9 @@ import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.runtime.Config;
 
 import javax.media.jai.JAI;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -44,8 +47,7 @@ public class GpfUtils {
     }
 
     public static void initGpf(Configuration configuration, Class aClass) {
-        final long maxMemory = Runtime.getRuntime().maxMemory() / OneMiB;
-        LOG.info(String.format("Java Virtual Machine max memory is %d MiB", maxMemory));
+        reportJvmMemory();
         initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
@@ -67,5 +69,23 @@ public class GpfUtils {
                 System.setProperty(propertyName, propertyValue);
             }
         }
+    }
+
+    private static void reportJvmMemory() {
+        LOG.info("------------------ JVM Memory -----------------");
+        LOG.info("Runtime max: " + mb(Runtime.getRuntime().maxMemory()));
+        MemoryMXBean m = ManagementFactory.getMemoryMXBean();
+
+        LOG.info("Non-heap: " + mb(m.getNonHeapMemoryUsage().getMax()));
+        LOG.info("Heap: " + mb(m.getHeapMemoryUsage().getMax()));
+
+        for (MemoryPoolMXBean mp : ManagementFactory.getMemoryPoolMXBeans()) {
+            LOG.info(String.format("Pool: %s (type %s) = %s", mp.getName(), mp.getType(), mb(mp.getUsage().getMax())));
+        }
+        LOG.info("-----------------------------------------------");
+    }
+
+    static String mb(long memBytes) {
+        return String.format("%.2f MiB", (double) memBytes / OneMiB);
     }
 }
