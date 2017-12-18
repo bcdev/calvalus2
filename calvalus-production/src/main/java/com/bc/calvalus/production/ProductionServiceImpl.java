@@ -252,7 +252,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
         requestProductionKill(productionIds, Action.DELETE);
     }
 
-    private void requestProductionKill(String[] productionIds, Action action) throws ProductionException {
+    private synchronized void requestProductionKill(String[] productionIds, Action action) throws ProductionException {
         int count = 0;
         for (String productionId : productionIds) {
             Production production = productionStore.getProduction(productionId);
@@ -298,7 +298,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     }
 
     @Override
-    public void updateStatuses(String username) {
+    public synchronized void updateStatuses(String username) {
         try {
             processingService.updateStatuses(username);
         } catch (Exception e) {
