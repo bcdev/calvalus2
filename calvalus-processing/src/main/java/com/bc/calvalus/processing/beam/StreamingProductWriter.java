@@ -123,9 +123,9 @@ public class StreamingProductWriter extends AbstractProductWriter {
     }
 
     public static void writeProductInTiles(Configuration configuration,
-                                            ProgressMonitor pm,
-                                            Product product,
-                                            Path path) throws IOException {
+                                           ProgressMonitor pm,
+                                           Product product,
+                                           Path path) throws IOException {
         PathConfiguration output = new PathConfiguration(path, configuration);
         writeProductInTiles(product, output, StreamingProductPlugin.FORMAT_NAME, pm);
     }
@@ -157,7 +157,6 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
         if (!bandsToWrite.isEmpty()) {
             int sceneHeight = product.getSceneRasterHeight();
-            pm.beginTask("Writing bands of product '" + product.getName() + "'...", bandsToWrite.size() * sceneHeight);
 
             if (allBandsSameSize(bandsToWrite)) {
                 CalvalusLogger.getLogger().info("Writing bands of the same size");
@@ -186,8 +185,8 @@ public class StreamingProductWriter extends AbstractProductWriter {
     }
 
     private static void writeDifferentSizedBands(Product product, ProgressMonitor pm, ProductWriter productWriter, List<Band> bandsToWrite) throws IOException {
+        pm.beginTask("Writing bands of product '" + product.getName() + "'...", bandsToWrite.size());
         try {
-
             int x = 0;
             int sliceIndex = 0;
             int[] bandTileHeights = new int[bandsToWrite.size()];
@@ -219,8 +218,8 @@ public class StreamingProductWriter extends AbstractProductWriter {
                         tile.getDataElements(x, y, w, h, productData.getElems());
                     }
                     productWriter.writeBandRasterData(band, x, y, w, h, productData, ProgressMonitor.NULL);
-                    pm.worked(h);
                 }
+                pm.worked(1);
             }
         } finally {
             pm.done();
@@ -233,6 +232,10 @@ public class StreamingProductWriter extends AbstractProductWriter {
         Dimension tileSize = product.getPreferredTileSize();
         final int tileHeight = tileSize.height;
         final int tileWidth = tileSize.width;
+
+        pm.beginTask("Writing bands of product '" + product.getName() + "'...", bandsToWrite.size() * sceneHeight * sceneWidth);
+        LOG.info("writing tile: sceneHeight=" + sceneHeight + " tileHeight=" + tileHeight + " tilesY=" + (sceneHeight / tileHeight));
+        LOG.info("writing tile: sceneWidth=" + sceneWidth + " tileWidth=" + tileWidth + " tilesX=" + (sceneWidth / tileWidth));
         try {
             int h = tileHeight;
             for (int y = 0; y < sceneHeight; y += tileHeight) {
@@ -245,6 +248,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
                         w = sceneWidth - x;
                     }
 
+                    LOG.info("writing tile: rect=" + "[x=" + x + ",y=" + y + ",width=" + w + ",height=" + h + "]");
                     for (Band band : bandsToWrite) {
                         Rectangle rectangle = new Rectangle(x, y, w, h);
                         Raster tile = band.getSourceImage().getData(rectangle);
@@ -259,7 +263,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
                             tile.getDataElements(x, y, w, h, productData.getElems());
                         }
                         productWriter.writeBandRasterData(band, x, y, w, h, productData, ProgressMonitor.NULL);
-                        pm.worked(h);
+                        pm.worked(w * h);
                     }
                 }
             }
@@ -292,17 +296,17 @@ public class StreamingProductWriter extends AbstractProductWriter {
         SequenceFile.Metadata metadata = createMetadata(product);
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
         return SequenceFile.createWriter(fileSystem,
-                configuration,
-                outputPath,
-                Text.class,
-                ByteArrayWritable.class,
-                1024 * 1024, //buffersize,
-                fileSystem.getDefaultReplication(),
-                fileSystem.getDefaultBlockSize(),
-                SequenceFile.CompressionType.NONE,
-                null, // new DefaultCodec(),
-                progressable,
-                metadata);
+                                         configuration,
+                                         outputPath,
+                                         Text.class,
+                                         ByteArrayWritable.class,
+                                         1024 * 1024, //buffersize,
+                                         fileSystem.getDefaultReplication(),
+                                         fileSystem.getDefaultBlockSize(),
+                                         SequenceFile.CompressionType.NONE,
+                                         null, // new DefaultCodec(),
+                                         progressable,
+                                         metadata);
     }
 
     private static void writeTiePointData(Product product, SequenceFile.Writer writer, Map<String, Long> indexMap) throws IOException {
@@ -349,10 +353,10 @@ public class StreamingProductWriter extends AbstractProductWriter {
     }
 
     /**
-     * An ImageOutputStream that is backed by a byte array. 
+     * An ImageOutputStream that is backed by a byte array.
      */
     private static class ByteArrayBackedImageOutputStream extends ImageOutputStreamImpl {
-        
+
         private final byte[] buffer;
 
         private ByteArrayBackedImageOutputStream(byte[] buffer) {
