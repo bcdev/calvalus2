@@ -42,7 +42,7 @@ import java.util.Locale;
 public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
 
     private static final String FORMAT_15M = "CALVALUS-Landsat-15M";
-    private static final String FORMAT_30M = "CALVALUS-Landsat-30M";
+    public static final String FORMAT_30M = "CALVALUS-Landsat-30M";
     private static final String FORMAT_MULTI = "CALVALUS-Landsat";
 
     private static final String COLLECTION_FILENAME_REGEX = "L[COTEM]\\d{2}_L1\\w{2}_\\d{3}\\d{3}_\\d{8}_\\d{8}_\\d{2}_(T1|T2|RT)";
@@ -52,7 +52,7 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
     private static final String L8_FILENAME_REGEX = "L[OTC]8\\d{13}\\w{3}\\d{2}";
     private static final String COMPR_FILENAME_REGEX = "\\.(tar\\.gz|tgz|tar\\.bz|tbz|tar\\.bz2|tbz2|zip|ZIP)";
 
-    private static final String[] FILENAME_PATTERNS = {
+    public static final String[] FILENAME_PATTERNS = {
             L4_FILENAME_REGEX + COMPR_FILENAME_REGEX,
             L5_FILENAME_REGEX + COMPR_FILENAME_REGEX,
             L7_FILENAME_REGEX + COMPR_FILENAME_REGEX,
