@@ -19,6 +19,9 @@ package com.bc.calvalus.processing.executable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin;
+import com.bc.calvalus.processing.beam.PathConfiguration;
+import com.bc.calvalus.processing.beam.Sentinel2CalvalusReaderPlugin;
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
@@ -229,10 +232,31 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return keywordHandler;
     }
 
+    private boolean isSentinel2(String filename) {
+        return filename.matches("^S2.*_MSIL1C.*") ||
+                    filename.matches("^S2A.*_MSIL2A.*");
+    }
+
+    private boolean isLandsat(String filename) {
+        for (String pattern : LandsatCalvalusReaderPlugin.FILENAME_PATTERNS) {
+            if (filename.matches(pattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Product openProcessedProduct() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
-            Product product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            Product product;
+            if (isSentinel2(outputFilesNames[0])) {
+                product = CalvalusProductIO.readProduct(new PathConfiguration(new Path(cwd.toString(), outputFilesNames[0]), getConfiguration()), Sentinel2CalvalusReaderPlugin.FORMAT_20M);
+            } else if (isLandsat(outputFilesNames[0])) {
+                product = CalvalusProductIO.readProduct(new PathConfiguration(new Path(cwd.toString(), outputFilesNames[0]), getConfiguration()), LandsatCalvalusReaderPlugin.FORMAT_30M);
+            } else {
+                product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            }
             getLogger().info(String.format("Opened product width = %d height = %d",
                                            product.getSceneRasterWidth(),
                                            product.getSceneRasterHeight()));

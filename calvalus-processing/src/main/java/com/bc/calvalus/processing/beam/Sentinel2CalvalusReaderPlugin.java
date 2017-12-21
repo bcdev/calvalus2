@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
 public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     private static final String FORMAT_10M = "CALVALUS-SENTINEL-2-MSI-10M";
-    private static final String FORMAT_20M = "CALVALUS-SENTINEL-2-MSI-20M";
+    public static final String FORMAT_20M = "CALVALUS-SENTINEL-2-MSI-20M";
     private static final String FORMAT_60M = "CALVALUS-SENTINEL-2-MSI-60M";
     private static final String FORMAT_MULTI = "CALVALUS-SENTINEL-2-MSI-MultiRes";
 
