@@ -34,11 +34,13 @@ import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -233,8 +235,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     private boolean isSentinel2(String filename) {
-        return filename.matches("^S2.*_MSIL1C.*") ||
-                    filename.matches("^S2A.*_MSIL2A.*");
+        return filename.matches("^S2._MSIL1C.*") ||
+                    filename.matches("^S2._MSIL2A.*");
     }
 
     private boolean isLandsat(String filename) {
@@ -249,13 +251,18 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public Product openProcessedProduct() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
-            Product product;
+            Product product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            File productFileLocation = product.getFileLocation();
             if (isSentinel2(outputFilesNames[0])) {
-                product = CalvalusProductIO.readProduct(new PathConfiguration(new Path(cwd.toString(), outputFilesNames[0]), getConfiguration()), Sentinel2CalvalusReaderPlugin.FORMAT_20M);
+                Map<String, Object> params = new HashMap<>();
+                params.put("referenceBand", "B5");
+                product = GPF.createProduct("Resample", params, product);
+                product.setFileLocation(productFileLocation);
             } else if (isLandsat(outputFilesNames[0])) {
-                product = CalvalusProductIO.readProduct(new PathConfiguration(new Path(cwd.toString(), outputFilesNames[0]), getConfiguration()), LandsatCalvalusReaderPlugin.FORMAT_30M);
-            } else {
-                product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+                Map<String, Object> params = new HashMap<>();
+                params.put("referenceBand", "red");
+                product = GPF.createProduct("Resample", params, product);
+                product.setFileLocation(productFileLocation);
             }
             getLogger().info(String.format("Opened product width = %d height = %d",
                                            product.getSceneRasterWidth(),
