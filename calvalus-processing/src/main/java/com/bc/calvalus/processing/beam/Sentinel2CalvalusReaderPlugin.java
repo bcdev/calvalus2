@@ -35,6 +35,7 @@ import org.esa.snap.core.util.io.SnapFileFilter;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
 
 /**
  * A reader for handling Sentinel-2 data on calvalus.
+ * Support L1C and L2A (from Sen2Cor)
  * It unzips the products and opens from the local file.
  */
 public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
@@ -59,7 +61,8 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
-            if (filename.matches("^S2.*_MSIL1C.*")) {
+            if (filename.matches("^S2.*_MSIL1C.*") ||
+                    filename.matches("^S2.*_MSIL2A.*")) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -83,12 +86,12 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String[] getDefaultFileExtensions() {
-        return new String[]{".none"};
+        return new String[]{".zip"};
     }
 
     @Override
     public String getDescription(Locale locale) {
-        return "Sentinel-2 L1C on Calvalus";
+        return "Sentinel-2 L1C & L2A on Calvalus";
     }
 
     @Override
@@ -99,9 +102,10 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
     static class Sentinel2CalvalusReader extends AbstractProductReader {
 
         //S2A_OPER_PRD_MSIL1C_PDMC_20161201T211507_R108_V20161201T103412_20161201T103412
-        private static final Pattern NAME_TIME_PATTERN1 = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
+        private static final Pattern NAME_TIME_PATTERN = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
         //S2A_MSIL1C_20161212T100412_N0204_R122_T33UVT_20161212T100409
-        private static final Pattern NAME_TIME_PATTERN2 = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
+        private static final Pattern NAME_TIME_PATTERN_L1C = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
+        private static final Pattern NAME_TIME_PATTERN_L2A = Pattern.compile("S2._MSIL2A_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
 
         Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
@@ -139,6 +143,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
+                CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 File productFileLocation = product.getFileLocation();
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, localFile.getName());
@@ -166,7 +171,16 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         }
 
         static void setTimeFromFilename(Product product, String filename) {
-            Matcher matcher = ("_MSIL1C_".equals(filename.substring(3,11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
+            Pattern pattern;
+            String productType = filename.substring(3, 11);
+            if ("_MSIL1C_".equals(productType)) {
+                pattern = NAME_TIME_PATTERN_L1C;
+            } else if ("_MSIL2A_".equals(productType)) {
+                pattern = NAME_TIME_PATTERN_L2A;
+            } else {
+                pattern = NAME_TIME_PATTERN;
+            }
+            Matcher matcher = pattern.matcher(filename);
             if (matcher.matches()) {
                 try {
                     ProductData.UTC start = ProductData.UTC.parse(matcher.group(1), DATE_FORMAT_PATTERN);

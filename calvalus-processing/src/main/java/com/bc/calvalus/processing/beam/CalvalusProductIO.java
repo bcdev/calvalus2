@@ -101,7 +101,6 @@ public class CalvalusProductIO {
             }
         }
         if (product == null) {
-            logAllAvailableProductReaders();
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();
@@ -134,6 +133,7 @@ public class CalvalusProductIO {
         return product;
     }
 
+    // currently not used
     private static void logAllAvailableProductReaders() {
         LOG.severe("No reader found. Available plugin classes:");
         List<String> readerNames = new ArrayList<>();
