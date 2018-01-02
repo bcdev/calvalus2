@@ -1,6 +1,8 @@
 package com.bc.calvalus.reporting.urban;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.reporting.common.Report;
+import com.bc.calvalus.reporting.common.State;
 import com.bc.calvalus.reporting.urban.account.Account;
 import com.bc.calvalus.reporting.urban.account.Any;
 import com.bc.calvalus.reporting.urban.account.Compound;

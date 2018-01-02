@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting.urban;
+package com.bc.calvalus.reporting.common;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.jcraft.jsch.ChannelExec;
@@ -19,15 +19,16 @@ import java.util.logging.Logger;
  * @author Martin Boettcher
  */
 public class WpsConnection {
-    static final Logger LOGGER = CalvalusLogger.getLogger();
-    private final UrbanTepReporting reporter;
-    JSch jsch = new JSch();
-    ChannelExec channel = null;
-    Session session = null;
-    BufferedReader in = null;
-    String cursor;
 
-    WpsConnection(UrbanTepReporting reporter) {
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
+    private final Reporter reporter;
+    private JSch jsch = new JSch();
+    private ChannelExec channel = null;
+    private Session session = null;
+    private BufferedReader in = null;
+    private String cursor;
+
+    public WpsConnection(Reporter reporter) {
         this.reporter = reporter;
         JSch.setConfig("StrictHostKeyChecking", "no");
         JSch.setConfig("HashKnownHosts", "yes");
@@ -36,7 +37,7 @@ public class WpsConnection {
     /**
      * Runs forever in main thread of application after initialisation
      */
-    void run() {
+    public void run() {
         cursor = reporter.getConfig().getProperty("reporting.wps.cursor");
         while (true) {
             try {
@@ -49,12 +50,14 @@ public class WpsConnection {
                     handleLine(line);
                 }
             } catch (Exception e) {
-                LOGGER.warning("connection to WPS reports at " + reporter.getConfig().getProperty("reporting.wps.host") + " failed: " + e.getMessage() + " - sleeping ...");
+                LOGGER.warning("connection to WPS reports at " + reporter.getConfig().getProperty(
+                            "reporting.wps.host") + " failed: " + e.getMessage() + " - sleeping ...");
                 disconnect();
                 // sleeps for one minute before retrying after failure
                 try {
                     Thread.currentThread().wait(60 * 1000);
-                } catch (InterruptedException ignore) {}
+                } catch (InterruptedException ignore) {
+                }
                 drainTimer();
                 LOGGER.info("queue drained and renewed");
             }
@@ -88,10 +91,13 @@ public class WpsConnection {
 
     void connect() throws JSchException, IOException {
         jsch.addIdentity(reporter.getConfig().getProperty("reporting.wps.keypath"));
-        session = jsch.getSession(reporter.getConfig().getProperty("reporting.wps.user"), reporter.getConfig().getProperty("reporting.wps.host"), 22);
+        session = jsch.getSession(reporter.getConfig().getProperty("reporting.wps.user"),
+                                  reporter.getConfig().getProperty("reporting.wps.host"), 22);
         session.connect();
         channel = (ChannelExec) session.openChannel("exec");
-        channel.setCommand(String.format("tail -%sf %s", reporter.getConfig().getProperty("reporting.wps.backlog", "100"), reporter.getConfig().getProperty("reporting.wps.report")));
+        channel.setCommand(
+                    String.format("tail -%sf %s", reporter.getConfig().getProperty("reporting.wps.backlog", "100"),
+                                  reporter.getConfig().getProperty("reporting.wps.report")));
         channel.connect();
         in = new BufferedReader(new InputStreamReader(channel.getInputStream(), "utf-8"));
     }
@@ -118,7 +124,8 @@ public class WpsConnection {
         reporter.getTimer().shutdownNow();
         try {
             reporter.getTimer().awaitTermination(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {}
+        } catch (InterruptedException ignored) {
+        }
         reporter.getStatusHandler().running.clear();
         reporter.getStatusHandler().failed.clear();
         reporter.setTimer(new ScheduledThreadPoolExecutor(1));

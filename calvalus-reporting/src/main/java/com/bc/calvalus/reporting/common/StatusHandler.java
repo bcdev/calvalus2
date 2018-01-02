@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting.urban;
+package com.bc.calvalus.reporting.common;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 
@@ -20,23 +20,24 @@ import java.util.logging.Logger;
  * @author Martin Boettcher
  */
 public class StatusHandler {
+
     static final Logger LOGGER = CalvalusLogger.getLogger();
-    private final UrbanTepReporting reporter;
-    private final Map<String,String> reportMap = new HashMap<>();
+    private final Reporter reporter;
+    private final Map<String, String> reportMap = new HashMap<>();
     private BufferedWriter reportWriter;
     private File statusFile = null;
     private String historyDate = null;
 
-    List<String> running = new ArrayList<>();
-    List<String> failed = new ArrayList<>();
+    public List<String> running = new ArrayList<>();
+    public List<String> failed = new ArrayList<>();
     int preexisting = 0;
 
-    StatusHandler(UrbanTepReporting reporter) {
+    public StatusHandler(Reporter reporter) {
         this.reporter = reporter;
     }
 
-    void initReport() throws IOException {
-        File reportFile = new File(reporter.getConfig().getProperty("name", "urbantep") + ".report");
+    public void initReport() throws IOException {
+        File reportFile = new File(reporter.getConfig().getProperty("name", reporter.getName()) + ".report");
         try {
             if (reportFile.exists()) {
                 try (BufferedReader in = new BufferedReader(new FileReader(reportFile))) {
@@ -87,7 +88,8 @@ public class StatusHandler {
         try {
             reportWriter.append(job).append("\t").append(finishingTime).append("\n").flush();
         } catch (IOException e) {
-            LOGGER.warning("failed writing instance log " + reporter.getConfig().getProperty("name", "urbantep") + ".report: " + e.getMessage());
+            LOGGER.warning("failed writing instance log " + reporter.getConfig().getProperty("name",
+                                                                                             reporter.getName()) + ".report: " + e.getMessage());
         }
         reportMap.put(job, finishingTime);
         running.remove(job + "\t" + finishingTime);
@@ -96,18 +98,20 @@ public class StatusHandler {
 
     private void writeStatus() {
         if (statusFile == null) {
-            statusFile = new File(reporter.getConfig().getProperty("name", "urbantep") + ".status");
+            statusFile = new File(reporter.getConfig().getProperty("name", reporter.getName()) + ".status");
         }
         try {
             try (BufferedWriter out = new BufferedWriter(new FileWriter(statusFile))) {
                 // 1 jobs, 1 running, 0 reported, 0 failed, 77 pre-existing since 2017-04-01T00:00:00
                 // 10 jobs, 0 running, 10 reported, 0 failed, 10 pre-existing since start of service
-                out.append(String.valueOf(reportMap.entrySet().size() - preexisting + running.size() + failed.size())).append(" jobs, ").
-                        append(String.valueOf(running.size())).append(" running, ").
-                        append(String.valueOf(reportMap.entrySet().size() - preexisting)).append(" reported, ").
-                        append(String.valueOf(failed.size())).append(" failed, ").
-                        append(String.valueOf(preexisting)).append(" pre-existing since ").
-                        append(historyDate).append("\n");
+                out.append(String.valueOf(
+                            reportMap.entrySet().size() - preexisting + running.size() + failed.size())).append(
+                            " jobs, ").
+                            append(String.valueOf(running.size())).append(" running, ").
+                            append(String.valueOf(reportMap.entrySet().size() - preexisting)).append(" reported, ").
+                            append(String.valueOf(failed.size())).append(" failed, ").
+                            append(String.valueOf(preexisting)).append(" pre-existing since ").
+                            append(historyDate).append("\n");
                 for (String name : failed) {
                     out.append("f ").append(name).append("\n");
                 }
@@ -116,7 +120,8 @@ public class StatusHandler {
                 }
             }
         } catch (IOException e) {
-            LOGGER.warning("failed writing instance log " + reporter.getConfig().getProperty("name", "urbantep") + ".status: " + e.getMessage());
+            LOGGER.warning("failed writing instance log " + reporter.getConfig().getProperty("name",
+                                                                                             reporter.getName()) + ".status: " + e.getMessage());
         }
     }
 }

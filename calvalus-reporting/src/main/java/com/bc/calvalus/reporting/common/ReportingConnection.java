@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting.urban;
+package com.bc.calvalus.reporting.common;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
@@ -17,15 +17,16 @@ import java.util.logging.Logger;
  * @author Martin Boettcher
  */
 public class ReportingConnection {
-    static final Logger LOGGER = CalvalusLogger.getLogger();
-    private Gson gson = new Gson();
-    private UrbanTepReporting reporter;
 
-    ReportingConnection(UrbanTepReporting reporter) {
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
+    private Gson gson = new Gson();
+    private Reporter reporter;
+
+    public ReportingConnection(Reporter reporter) {
         this.reporter = reporter;
     }
 
-    void retrieve(Report report) {
+    public void retrieve(Report report) {
         String url = String.format("%s/job/%s/%s",
                                    reporter.getConfig().getProperty("reporting.calvalus.url"),
                                    report.job,
