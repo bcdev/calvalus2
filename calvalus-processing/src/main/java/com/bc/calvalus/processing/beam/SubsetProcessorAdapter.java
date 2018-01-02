@@ -171,6 +171,7 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         getLogger().info(String.format("Created Subset product width = %d height = %d",
                 subsetProduct.getSceneRasterWidth(),
                 subsetProduct.getSceneRasterHeight()));
+        CalvalusProductIO.printProductOnStdout(subsetProduct, "subset");
         return subsetProduct;
     }
 }

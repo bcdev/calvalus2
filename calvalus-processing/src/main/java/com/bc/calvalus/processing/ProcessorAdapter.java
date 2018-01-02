@@ -405,13 +405,16 @@ public abstract class ProcessorAdapter {
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         if (inputFile != null) {
+            Product product;
             if (inputFormat != null) {
                 LOG.info(String.format("openInputProduct: inputFile  = %s inputFormat  = %s", inputFile, inputFormat));
-                return ProductIO.readProduct(inputFile, inputFormat);
+                product = ProductIO.readProduct(inputFile, inputFormat);
             } else {
                 LOG.info(String.format("openInputProduct: inputFile  = %s", inputFile));
-                return ProductIO.readProduct(inputFile);
+                product = ProductIO.readProduct(inputFile);
             }
+            CalvalusProductIO.printProductOnStdout(product, "opened from local file");
+            return product;
         } else {
             LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
             Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);

@@ -35,7 +35,6 @@ import org.esa.snap.core.util.io.SnapFileFilter;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
@@ -143,12 +142,12 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
-                CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 File productFileLocation = product.getFileLocation();
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, localFile.getName());
                 }
                 if (!inputFormat.equals(FORMAT_MULTI)) {
+                    CalvalusProductIO.printProductOnStdout(product, "raw S2 product");
                     product.setProductReader(this);
                     Map<String, Object> params = new HashMap<>();
                     if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {

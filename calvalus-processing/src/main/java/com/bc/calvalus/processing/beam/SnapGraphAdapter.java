@@ -27,7 +27,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
-import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.MetadataAttribute;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
@@ -64,12 +63,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -150,17 +144,10 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     private void logGraphState() {
-        for (NodeContext nodeContext : graphContext.getInitNodeContextDeque()) {
-            Node node = nodeContext.getNode();
-            System.out.println("Node = " + node.getId() + " Operator = " + nodeContext.getOperator().getClass().getSimpleName());
-            Product p = nodeContext.getTargetProduct();
-            System.out.println("Product: " + p.getName());
-            System.out.println("Bands:");
-            Band[] bands = p.getBands();
-            for (Band band : bands) {
-                System.out.println("     " + band.toString());
-            }
-            System.out.println();
+        for (Iterator<NodeContext> iterator = graphContext.getInitNodeContextDeque().descendingIterator(); iterator.hasNext(); ) {
+            NodeContext nodeContext = iterator.next();
+            CalvalusProductIO.printProductOnStdout(nodeContext.getTargetProduct(),
+                                                   "computed by node " + nodeContext.getNode().getId());
         }
     }
 
