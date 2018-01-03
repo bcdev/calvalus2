@@ -2,6 +2,11 @@ package com.bc.calvalus.reporting.restservice.ws;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -11,10 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 
 /**
@@ -77,9 +78,9 @@ class ReportGenerator {
     }
 
     String generateJsonUserSingleJob(List<UsageStatistic> usageStatistics) {
-        Map<String, String> report = getMultiJobJsonContents(usageStatistics);
+//        Map<String, String> report = getMultiJobJsonContents(usageStatistics);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(report);
+        return gson.toJson(usageStatistics);
     }
 
     String generatePdfMonthly(List<UsageStatistic> usageStatistics) throws IOException {

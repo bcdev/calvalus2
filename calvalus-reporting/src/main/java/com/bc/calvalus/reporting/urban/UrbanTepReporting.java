@@ -48,7 +48,7 @@ public class UrbanTepReporting implements Reporter {
         case NOT_YET_RETRIEVED:
             getStatusHandler().setRunning(report.job, report.creationTime);
         case NEW:
-            getReportingConnection().retrieve(report);
+            getReportingConnection().retrieveSingle(report);
             break;
         case NOT_YET_ACCOUNTED:
             getStatusHandler().setRunning(report.job, report.creationTime);

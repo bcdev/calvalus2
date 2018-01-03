@@ -1,13 +1,21 @@
 package com.bc.calvalus.reporting.code.sender;
 
-import com.bc.calvalus.reporting.code.reader.JobDetail;
+import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
+import com.google.gson.Gson;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Locale;
 
 /**
  * @author muhammad.bc.
  */
 public class ProcessedMessage {
+
+    private static final String ISO_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private SimpleDateFormat dateFormat = new SimpleDateFormat(ISO_FORMAT_STRING, Locale.ENGLISH);
+
     private static final String PRODUCT_PROCESSED_MESSAGE = "ProductProcessedMessage";
     private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
     private static final String VERSION = "1.0";
@@ -19,22 +27,22 @@ public class ProcessedMessage {
     private final String userName;
     private final String inProducts;
     private final String inCollection;
-    private final int inProductsNumber;
-    private final long inProductsSize;
+    private final long inProductsNumber;
+    private final double inProductsSize;
     private final String processingCenter;
-    private final int configuredCpuCoresPerTask;
-    private final long cpuCoreHours;
+    private final long configuredCpuCoresPerTask;
+    private final double cpuCoreHours;
     private final String processorName;
-    private final long configuredRamPerTask;
-    private final long ramHours;
+    private final double configuredRamPerTask;
+    private final double ramHours;
     private final String processingWorkflow;
     private final long duration;
     private final String processingStatus;
     private final String outProducts;
-    private final int outProductsNumber;
+    private final long outProductsNumber;
     private final String outCollection;
     private final String outProductsLocation;
-    private final long outProductsSize;
+    private final double outProductsSize;
 
     private String messageType;
     private String serviceId;
@@ -43,28 +51,28 @@ public class ProcessedMessage {
     private String version;
 
     public ProcessedMessage(
-            String requestId,
-            String jobName,
-            String jobSubmissionTime,
-            String userName,
-            String inProducts,
-            String inCollection,
-            int inProductsNumber,
-            int inProductsSize,
-            String processingCenter,
-            int configuredCpuCoresPerTask,
-            long cpuCoreHours,
-            String processorName,
-            long configuredRamPerTask,
-            long ramHours,
-            String processingWorkflow,
-            long duration,
-            String processingStatus,
-            String outProducts,
-            int outProductsNumber,
-            String outCollection,
-            String outProductsLocation,
-            long outProductsSize) {
+                String requestId,
+                String jobName,
+                String jobSubmissionTime,
+                String userName,
+                String inProducts,
+                String inCollection,
+                long inProductsNumber,
+                double inProductsSize,
+                String processingCenter,
+                long configuredCpuCoresPerTask,
+                double cpuCoreHours,
+                String processorName,
+                double configuredRamPerTask,
+                double ramHours,
+                String processingWorkflow,
+                long duration,
+                String processingStatus,
+                String outProducts,
+                long outProductsNumber,
+                String outCollection,
+                String outProductsLocation,
+                double outProductsSize) {
 
         defaultProductMessage();
 
@@ -92,31 +100,44 @@ public class ProcessedMessage {
         this.outProductsSize = outProductsSize;
     }
 
-    public ProcessedMessage(JobDetail jobDetail) {
+    public ProcessedMessage(CalvalusReport jobDetail) {
         defaultProductMessage();
 
         this.requestId = jobDetail.getJobId();
-        this.jobName = ""; //TODO: use the right information
-        this.jobSubmissionTime = jobDetail.getStartTime();
+        this.jobName = jobDetail.getJobName();
+        this.jobSubmissionTime = convertMillisToIsoString(jobDetail.getStartTime());
         this.userName = jobDetail.getUser();
-        this.inProducts = ""; //TODO: use the right information
-        this.inCollection = jobDetail.getInProductType();
-        this.inProductsNumber = 0; //TODO: use the right information
-        this.inProductsSize = Integer.parseInt(jobDetail.getFileBytesRead());
+        this.inProducts = jobDetail.getInputPath();
+        this.inCollection = ""; //TODO: get the right information in the usage statistics
+        this.inProductsNumber = jobDetail.getMapsCompleted();
+        this.inProductsSize = getGbFromBytes(jobDetail.getFileBytesRead());
         this.processingCenter = "Calvalus";
-        this.configuredCpuCoresPerTask = 0; //TODO: use the right information
-        this.cpuCoreHours = 0; //TODO: use the right information
-        this.processorName = jobDetail.getDataProcessorUsed();
-        this.configuredRamPerTask = 0; //TODO: use the right information
-        this.ramHours = 0; //TODO: use the right information
-        this.processingWorkflow = jobDetail.getWorkflowType();
-        this.duration = Long.parseLong(getCalculateDuration(jobDetail.getStartTime(), jobDetail.getFinishTime()));
+        this.configuredCpuCoresPerTask = 0; //TODO: get the right information in the usage statistics
+        this.cpuCoreHours = jobDetail.getCpuMilliseconds() / 3600.0;
+        this.processorName = ""; //TODO: get the right information in the usage statistics
+        this.configuredRamPerTask = 0; //TODO: get the right information in the usage statistics
+        this.ramHours = calculateRamHours(jobDetail.getMbMillisMapTotal(), jobDetail.getMbMillisReduceTotal());
+        this.processingWorkflow = ""; //TODO: get the right information in the usage statistics
+        this.duration = jobDetail.getStartTime() - jobDetail.getFinishTime();
         this.processingStatus = jobDetail.getState();
-        this.outProducts = ""; //TODO: use the right information
-        this.outProductsNumber = 0; //TODO: use the right information
-        this.outCollection = ""; //TODO: use the right information
-        this.outProductsLocation = ""; //TODO: use the right information
-        this.outProductsSize = Long.parseLong(jobDetail.getFileBytesWritten());
+        this.outProducts = ""; //TODO: get the right information in the usage statistics
+        this.outProductsNumber = jobDetail.getReducesCompleted();
+        this.outCollection = ""; //TODO: get the right information in the usage statistics
+        this.outProductsLocation = ""; //TODO: get the right information in the usage statistics
+        this.outProductsSize = getGbFromBytes(jobDetail.getFileBytesWritten());
+    }
+
+    private double getGbFromBytes(long fileBytesRead) {
+        return fileBytesRead / (1024.0 * 1024.0 * 1024.0);
+    }
+
+    private String convertMillisToIsoString(long timeMillis) {
+        Date date = new Date(timeMillis);
+        return dateFormat.format(date);
+    }
+
+    private double calculateRamHours(long mbMillisMapTotal, long mbMillisReduceTotal) {
+        return (mbMillisMapTotal + mbMillisReduceTotal) / (1024 * 3600);
     }
 
     public String getRequestId() {
@@ -143,11 +164,11 @@ public class ProcessedMessage {
         return inCollection;
     }
 
-    public int getInProductsNumber() {
+    public long getInProductsNumber() {
         return inProductsNumber;
     }
 
-    public long getInProductsSize() {
+    public double getInProductsSize() {
         return inProductsSize;
     }
 
@@ -155,11 +176,11 @@ public class ProcessedMessage {
         return processingCenter;
     }
 
-    public int getConfiguredCpuCoresPerTask() {
+    public long getConfiguredCpuCoresPerTask() {
         return configuredCpuCoresPerTask;
     }
 
-    public long getCpuCoreHours() {
+    public double getCpuCoreHours() {
         return cpuCoreHours;
     }
 
@@ -167,11 +188,11 @@ public class ProcessedMessage {
         return processorName;
     }
 
-    public long getConfiguredRamPerTask() {
+    public double getConfiguredRamPerTask() {
         return configuredRamPerTask;
     }
 
-    public long getRamHours() {
+    public double getRamHours() {
         return ramHours;
     }
 
@@ -191,7 +212,7 @@ public class ProcessedMessage {
         return outProducts;
     }
 
-    public int getOutProductsNumber() {
+    public long getOutProductsNumber() {
         return outProductsNumber;
     }
 
@@ -203,8 +224,12 @@ public class ProcessedMessage {
         return outProductsLocation;
     }
 
-    public long getOutProductsSize() {
+    public double getOutProductsSize() {
         return outProductsSize;
+    }
+
+    public String toJson() {
+        return new Gson().toJson(this);
     }
 
     private void defaultProductMessage() {
@@ -213,11 +238,5 @@ public class ProcessedMessage {
         this.serviceHost = SERVICE_HOST;
         this.messageTime = LocalDateTime.now().toString();
         this.version = VERSION;
-    }
-
-    private String getCalculateDuration(String startTime, String finishTime) {
-        long startT = Long.parseLong(startTime);
-        long finishT = Long.parseLong(finishTime);
-        return Long.toString(finishT - startT);
     }
 }

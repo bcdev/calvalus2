@@ -5,15 +5,16 @@ import com.bc.calvalus.reporting.restservice.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author muhammad.bc.
@@ -33,7 +34,7 @@ public class CodeDeService {
     @Produces(MediaType.TEXT_PLAIN)
     public String getSingleJobReportTxt(@PathParam("startDateTime") String startDateTime, @PathParam("stopDateTime") String stopDateTime) {
         try {
-            List<UsageStatistic> allJobsBetween = jsonExtractor.getAllJobsBetween(startDateTime, stopDateTime);
+            List<UsageStatistic> allJobsBetween = jsonExtractor.getAllUsageStatisticsBetween(startDateTime, stopDateTime);
             return generatorJobDetails(allJobsBetween);
         } catch (IOException exception) {
             return getErrorResponse(exception);
