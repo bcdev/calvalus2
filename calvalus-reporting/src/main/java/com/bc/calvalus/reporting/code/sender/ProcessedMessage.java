@@ -13,9 +13,6 @@ import java.util.Locale;
  */
 public class ProcessedMessage {
 
-    private static final String ISO_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private SimpleDateFormat dateFormat = new SimpleDateFormat(ISO_FORMAT_STRING, Locale.ENGLISH);
-
     private static final String PRODUCT_PROCESSED_MESSAGE = "ProductProcessedMessage";
     private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
     private static final String VERSION = "1.0";
@@ -36,7 +33,7 @@ public class ProcessedMessage {
     private final double configuredRamPerTask;
     private final double ramHours;
     private final String processingWorkflow;
-    private final long duration;
+    private final double duration;
     private final String processingStatus;
     private final String outProducts;
     private final long outProductsNumber;
@@ -100,31 +97,32 @@ public class ProcessedMessage {
         this.outProductsSize = outProductsSize;
     }
 
-    public ProcessedMessage(CalvalusReport jobDetail) {
+    public ProcessedMessage(CalvalusReport calvalusReport) {
         defaultProductMessage();
 
-        this.requestId = jobDetail.getJobId();
-        this.jobName = jobDetail.getJobName();
-        this.jobSubmissionTime = convertMillisToIsoString(jobDetail.getStartTime());
-        this.userName = jobDetail.getUser();
-        this.inProducts = jobDetail.getInputPath();
+        this.requestId = calvalusReport.getJobId();
+        this.jobName = calvalusReport.getJobName();
+        this.jobSubmissionTime = convertMillisToIsoString(calvalusReport.getStartTime());
+        this.userName = calvalusReport.getUser();
+        this.inProducts = calvalusReport.getInputPath();
         this.inCollection = ""; //TODO: get the right information in the usage statistics
-        this.inProductsNumber = jobDetail.getMapsCompleted();
-        this.inProductsSize = getGbFromBytes(jobDetail.getFileBytesRead());
+        this.inProductsNumber = calvalusReport.getMapsCompleted();
+        this.inProductsSize = getGbFromBytes(calvalusReport.getFileBytesRead());
         this.processingCenter = "Calvalus";
         this.configuredCpuCoresPerTask = 0; //TODO: get the right information in the usage statistics
-        this.cpuCoreHours = jobDetail.getCpuMilliseconds() / 3600.0;
+        this.cpuCoreHours = calvalusReport.getCpuMilliseconds() / (3600.0 * 1000.0);
         this.processorName = ""; //TODO: get the right information in the usage statistics
         this.configuredRamPerTask = 0; //TODO: get the right information in the usage statistics
-        this.ramHours = calculateRamHours(jobDetail.getMbMillisMapTotal(), jobDetail.getMbMillisReduceTotal());
+        this.ramHours = calculateRamHours(calvalusReport.getMbMillisMapTotal(),
+                                          calvalusReport.getMbMillisReduceTotal());
         this.processingWorkflow = ""; //TODO: get the right information in the usage statistics
-        this.duration = jobDetail.getStartTime() - jobDetail.getFinishTime();
-        this.processingStatus = jobDetail.getState();
+        this.duration = (calvalusReport.getFinishTime() - calvalusReport.getStartTime()) / 1000.0;
+        this.processingStatus = calvalusReport.getState();
         this.outProducts = ""; //TODO: get the right information in the usage statistics
-        this.outProductsNumber = jobDetail.getReducesCompleted();
+        this.outProductsNumber = calvalusReport.getReducesCompleted();
         this.outCollection = ""; //TODO: get the right information in the usage statistics
         this.outProductsLocation = ""; //TODO: get the right information in the usage statistics
-        this.outProductsSize = getGbFromBytes(jobDetail.getFileBytesWritten());
+        this.outProductsSize = getGbFromBytes(calvalusReport.getFileBytesWritten());
     }
 
     private double getGbFromBytes(long fileBytesRead) {
@@ -133,11 +131,12 @@ public class ProcessedMessage {
 
     private String convertMillisToIsoString(long timeMillis) {
         Date date = new Date(timeMillis);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
         return dateFormat.format(date);
     }
 
     private double calculateRamHours(long mbMillisMapTotal, long mbMillisReduceTotal) {
-        return (mbMillisMapTotal + mbMillisReduceTotal) / (1024 * 3600);
+        return (mbMillisMapTotal + mbMillisReduceTotal) / (1024.0 * 3600.0 * 1000.0);
     }
 
     public String getRequestId() {
@@ -200,7 +199,7 @@ public class ProcessedMessage {
         return processingWorkflow;
     }
 
-    public long getDuration() {
+    public double getDuration() {
         return duration;
     }
 

@@ -26,6 +26,7 @@ public class ReportingConnection {
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    private static final int DELAY_SECONDS = 300;
     private Gson gson = new Gson();
     private Reporter reporter;
     private String cursor;
@@ -84,11 +85,16 @@ public class ReportingConnection {
                                    reporter.getConfig().getProperty("reporting.calvalus.url"),
                                    cursor);
         while (true) {
-            LOGGER.info("connecting to Reporting server at " + reporter.getConfig().getProperty(
-                        "reporting.calvalus.url"));
             LOGGER.info("retrieving new records from Reporting server " + reporter.getConfig().getProperty(
                         "reporting.calvalus.url"));
             Invocation.Builder builder = ClientBuilder.newClient().target(url).request();
+            Response response = builder.accept(MediaType.APPLICATION_JSON_TYPE).get();
+            int status = response.getStatus();
+            if (status < 200 || status >= 300) {
+                LOGGER.warning(
+                            "failed to retrieve new records from '" + url + "'. Retrying in " + DELAY_SECONDS + "seconds.");
+                return;
+            }
             String resources = builder.get(String.class);
             Gson gson = new Gson();
             UsageStatistic[] usageStatistics = gson.fromJson(resources, UsageStatistic[].class);
@@ -121,21 +127,9 @@ public class ReportingConnection {
             }
 
             try {
-                Thread.currentThread().wait(60 * 1000);
+                Thread.sleep(DELAY_SECONDS * 1000);
             } catch (InterruptedException ignored) {
             }
-//            } catch (Exception e) {
-//                LOGGER.warning("connection to WPS reports at " + reporter.getConfig().getProperty(
-//                            "reporting.wps.host") + " failed: " + e.getMessage() + " - sleeping ...");
-//                disconnect();
-//                // sleeps for one minute before retrying after failure
-//                try {
-//                    Thread.currentThread().wait(60 * 1000);
-//                } catch (InterruptedException ignore) {
-//                }
-//                drainTimer();
-//                LOGGER.info("queue drained and renewed");
-//            }
         }
     }
 }

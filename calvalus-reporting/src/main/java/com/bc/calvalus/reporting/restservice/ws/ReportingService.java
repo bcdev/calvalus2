@@ -204,11 +204,8 @@ public class ReportingService {
     public String getFromDate(@PathParam("date_start") String startDate) {
         try {
             List<UsageStatistic> usageStatisticsSince = jsonExtractor.getUsageStatisticsSince(startDate);
-            if (usageStatisticsSince.size() <= 0) {
-                throw new JobNotFoundException("No job found after " + startDate);
-            }
             return new Gson().toJson(usageStatisticsSince);
-        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+        } catch (IOException | DatabaseFileNotFoundException exception) {
             return getErrorResponse(exception);
         }
     }

@@ -19,6 +19,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -47,10 +50,20 @@ public class AccountingJmsConnection {
         ProcessedMessage processedMessage = createProcessedMessage(report);
         String messageJson = processedMessage.toJson();
         LOGGER.info("sending report " + report.usageStatistics.getJobId());
-        File file = new File(reporter.getConfig().getProperty("reporting.code.reportsdir"),
-                             String.format("account-message-%s.json", report.job));
+        Path reportsDirPath = Paths.get(reporter.getConfig().getProperty("reporting.code.reportsdir"));
+        if (!Files.exists(reportsDirPath)) {
+            try {
+                Files.createDirectory(reportsDirPath);
+            } catch (IOException e) {
+                LOGGER.warning("unable to create reporting directory '" + reportsDirPath + "'");
+                report.state = State.NOT_YET_ACCOUNTED;
+                reporter.getStatusHandler().setFailed(report.job, report.creationTime);
+                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                return;
+            }
+        }
+        File file = new File(reportsDirPath.toFile(), String.format("account-message-%s.json", report.job));
         try (FileWriter fileWriter = new FileWriter(file)) {
-            LOGGER.info("before appending to filewriter");
             fileWriter.append(messageJson).append('\n');
         } catch (IOException e) {
             LOGGER.warning("Writing report " + report.job + " to file failed: " + e.getMessage());
