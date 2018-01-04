@@ -14,6 +14,7 @@
                 <include>collector.sh</include>
                 <include>urbantep.sh</include>
                 <include>code.sh</include>
+                <include>jmssender.sh</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
