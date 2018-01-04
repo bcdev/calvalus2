@@ -21,6 +21,9 @@ import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -36,10 +39,11 @@ import java.util.logging.Logger;
  */
 public class AccountingConnection {
 
-    static final Logger LOGGER = CalvalusLogger.getLogger();
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
     private final UrbanTepReporting reporter;
     private Client urbantepWebClient = null;
-    static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
     static {
         TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
@@ -51,7 +55,19 @@ public class AccountingConnection {
     void send(Report report) {
         Message message = createMessage(report);
         String messageJson = message.toJson();
-        File file = new File(reporter.getConfig().getProperty("reporting.urbantep.reportsdir"), String.format("account-message-%s.json", report.job));
+        Path reportsDirPath = Paths.get(reporter.getConfig().getProperty("reporting.urbantep.reportsdir"));
+        if (!Files.exists(reportsDirPath)) {
+            try {
+                Files.createDirectory(reportsDirPath);
+            } catch (IOException e) {
+                LOGGER.warning("unable to create reporting directory '" + reportsDirPath + "'");
+                report.state = State.NOT_YET_ACCOUNTED;
+                reporter.getStatusHandler().setFailed(report.job, report.creationTime);
+                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                return;
+            }
+        }
+        File file = new File(reportsDirPath.toFile(), report.job);
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.append(messageJson).append('\n');
         } catch (IOException e) {
