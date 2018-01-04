@@ -9,6 +9,7 @@ public class CalvalusReport {
     private String jobId;
     private String user;
     private String queue;
+    private long submitTime;
     private long startTime;
     private long finishTime;
     private String state;
@@ -18,7 +19,11 @@ public class CalvalusReport {
     private String jobName;
     private String remoteRef;
     private String processType;
+    private String workflowType;
     private String inputPath;
+    private String inProductType;
+    private String configuredCpuCores;
+    private String configuredRam;
 
     private int mapsCompleted;
     private int totalMaps;
@@ -32,10 +37,11 @@ public class CalvalusReport {
     private long vCoresMillisTotal;
     private long cpuMilliseconds;
 
-    public CalvalusReport(String jobId, String user, String queue, long startTime, long finishTime, String state, String outputDir, String remoteUser, String jobName, String remoteRef, String processType, String inputPath, int mapsCompleted, int totalMaps, int reducesCompleted, long fileBytesRead, long fileBytesWritten, long hdfsBytesRead, long hdfsBytesWritten, long mbMillisMapTotal, long mbMillisReduceTotal, long vCoresMillisTotal, long cpuMilliseconds) {
+    public CalvalusReport(String jobId, String user, String queue, long submitTime, long startTime, long finishTime, String state, String outputDir, String remoteUser, String jobName, String remoteRef, String processType, String workflowType, String inputPath, String inProductType, String configuredCpuCores, String configuredRam, int mapsCompleted, int totalMaps, int reducesCompleted, long fileBytesRead, long fileBytesWritten, long hdfsBytesRead, long hdfsBytesWritten, long mbMillisMapTotal, long mbMillisReduceTotal, long vCoresMillisTotal, long cpuMilliseconds) {
         this.jobId = jobId;
         this.user = user;
         this.queue = queue;
+        this.submitTime = submitTime;
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.state = state;
@@ -44,7 +50,11 @@ public class CalvalusReport {
         this.jobName = jobName;
         this.remoteRef = remoteRef;
         this.processType = processType;
+        this.workflowType = workflowType;
         this.inputPath = inputPath;
+        this.inProductType = inProductType;
+        this.configuredCpuCores = configuredCpuCores;
+        this.configuredRam = configuredRam;
         this.mapsCompleted = mapsCompleted;
         this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
@@ -76,6 +86,10 @@ public class CalvalusReport {
 
     public String getQueue() {
         return queue;
+    }
+
+    public long getSubmitTime() {
+        return submitTime;
     }
 
     public long getStartTime() {
@@ -110,8 +124,24 @@ public class CalvalusReport {
         return processType;
     }
 
+    public String getWorkflowType() {
+        return workflowType;
+    }
+
     public String getInputPath() {
         return inputPath;
+    }
+
+    public String getInProductType() {
+        return inProductType;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
     }
 
     public int getMapsCompleted() {

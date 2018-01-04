@@ -8,6 +8,7 @@ public class UsageStatistic {
     private String jobId;
     private String user;
     private String queue;
+    private long submitTime;
     private long startTime;
     private long finishTime;
     private String state;
@@ -17,7 +18,11 @@ public class UsageStatistic {
     private String jobName;
     private String remoteRef;
     private String processType;
+    private String workflowType;
     private String inputPath;
+    private String inProductType;
+    private String configuredCpuCores;
+    private String configuredRam;
 
     private int mapsCompleted;
     private int totalMaps;
@@ -34,6 +39,7 @@ public class UsageStatistic {
     public UsageStatistic(String jobId,
                           String user,
                           String queue,
+                          long submitTime,
                           long startTime,
                           long finishTime,
                           String state,
@@ -42,8 +48,13 @@ public class UsageStatistic {
                           String jobName,
                           String remoteRef,
                           String processType,
+                          String workflowType,
                           String inputPath,
+                          String inProductType,
+                          String configuredCpuCores,
+                          String configuredRam,
                           int mapsCompleted,
+                          int totalMaps,
                           int reducesCompleted,
                           long fileBytesRead,
                           long fileBytesWritten,
@@ -56,6 +67,7 @@ public class UsageStatistic {
         this.jobId = jobId;
         this.user = user;
         this.queue = queue;
+        this.submitTime = submitTime;
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.state = state;
@@ -64,7 +76,11 @@ public class UsageStatistic {
         this.jobName = jobName;
         this.remoteRef = remoteRef;
         this.processType = processType;
+        this.workflowType = workflowType;
         this.inputPath = inputPath;
+        this.inProductType = inProductType;
+        this.configuredCpuCores = configuredCpuCores;
+        this.configuredRam = configuredRam;
         this.mapsCompleted = mapsCompleted;
         this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
@@ -88,6 +104,10 @@ public class UsageStatistic {
 
     public String getQueue() {
         return queue;
+    }
+
+    public long getSubmitTime() {
+        return submitTime;
     }
 
     public long getStartTime() {
@@ -126,8 +146,24 @@ public class UsageStatistic {
         return processType;
     }
 
+    public String getWorkflowType() {
+        return workflowType;
+    }
+
     public String getInputPath() {
         return inputPath;
+    }
+
+    public String getInProductType() {
+        return inProductType;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
     }
 
     public int getMapsCompleted() {

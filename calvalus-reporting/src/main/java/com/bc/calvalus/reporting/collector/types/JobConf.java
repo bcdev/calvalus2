@@ -21,7 +21,10 @@ import javax.xml.bind.annotation.XmlType;
         "processType",
         "workflowType",
         "dataProcessorUsed",
-        "inProductType"
+        "inProductType",
+        "outputDir",
+        "configuredCpuCores",
+        "configuredRam"
 })
 @XmlRootElement(name = "conf")
 public class JobConf {
@@ -44,6 +47,12 @@ public class JobConf {
     private String dataProcessorUsed;
     @XmlElement(required = true)
     private String inProductType;
+    @XmlElement(required = true)
+    private String outputDir;
+    @XmlElement(required = true)
+    private String configuredCpuCores;
+    @XmlElement(required = true)
+    private String configuredRam;
 
     public String getInProductType() {
         return inProductType;
@@ -117,4 +126,27 @@ public class JobConf {
         this.path = value;
     }
 
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(String outputDir) {
+        this.outputDir = outputDir;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public void setConfiguredCpuCores(String configuredCpuCores) {
+        this.configuredCpuCores = configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
+    }
+
+    public void setConfiguredRam(String configuredRam) {
+        this.configuredRam = configuredRam;
+    }
 }

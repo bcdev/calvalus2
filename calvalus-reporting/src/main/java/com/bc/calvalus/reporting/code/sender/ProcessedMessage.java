@@ -3,6 +3,8 @@ package com.bc.calvalus.reporting.code.sender;
 import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
 import com.google.gson.Gson;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -16,13 +18,12 @@ public class ProcessedMessage {
     private static final String PRODUCT_PROCESSED_MESSAGE = "ProductProcessedMessage";
     private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
     private static final String VERSION = "1.0";
-    private static final String SERVICE_HOST = "cd-processing";
+    private static final String SERVICE_HOST = "processing";
 
     private final String requestId;
     private final String jobName;
     private final String jobSubmissionTime;
     private final String userName;
-    private final String inProducts;
     private final String inCollection;
     private final long inProductsNumber;
     private final double inProductsSize;
@@ -35,7 +36,6 @@ public class ProcessedMessage {
     private final String processingWorkflow;
     private final double duration;
     private final String processingStatus;
-    private final String outProducts;
     private final long outProductsNumber;
     private final String outCollection;
     private final String outProductsLocation;
@@ -52,7 +52,6 @@ public class ProcessedMessage {
                 String jobName,
                 String jobSubmissionTime,
                 String userName,
-                String inProducts,
                 String inCollection,
                 long inProductsNumber,
                 double inProductsSize,
@@ -65,7 +64,6 @@ public class ProcessedMessage {
                 String processingWorkflow,
                 long duration,
                 String processingStatus,
-                String outProducts,
                 long outProductsNumber,
                 String outCollection,
                 String outProductsLocation,
@@ -77,7 +75,6 @@ public class ProcessedMessage {
         this.jobName = jobName;
         this.jobSubmissionTime = jobSubmissionTime;
         this.userName = userName;
-        this.inProducts = inProducts;
         this.inCollection = inCollection;
         this.inProductsNumber = inProductsNumber;
         this.inProductsSize = inProductsSize;
@@ -90,7 +87,6 @@ public class ProcessedMessage {
         this.processingWorkflow = processingWorkflow;
         this.duration = duration;
         this.processingStatus = processingStatus;
-        this.outProducts = outProducts;
         this.outProductsNumber = outProductsNumber;
         this.outCollection = outCollection;
         this.outProductsLocation = outProductsLocation;
@@ -102,27 +98,34 @@ public class ProcessedMessage {
 
         this.requestId = calvalusReport.getJobId();
         this.jobName = calvalusReport.getJobName();
-        this.jobSubmissionTime = convertMillisToIsoString(calvalusReport.getStartTime());
+        this.jobSubmissionTime = convertMillisToIsoString(calvalusReport.getSubmitTime());
         this.userName = calvalusReport.getUser();
-        this.inProducts = calvalusReport.getInputPath();
-        this.inCollection = ""; //TODO: get the right information in the usage statistics
-        this.inProductsNumber = calvalusReport.getMapsCompleted();
-        this.inProductsSize = getGbFromBytes(calvalusReport.getFileBytesRead());
+        this.inCollection = calvalusReport.getInProductType();
+        this.inProductsNumber = calvalusReport.getTotalMaps();
+        this.inProductsSize = getGbFromBytes(calvalusReport.getFileBytesRead() + calvalusReport.getHdfsBytesRead());
         this.processingCenter = "Calvalus";
-        this.configuredCpuCoresPerTask = 0; //TODO: get the right information in the usage statistics
+        this.configuredCpuCoresPerTask = parseLong(calvalusReport.getConfiguredCpuCores());
         this.cpuCoreHours = calvalusReport.getCpuMilliseconds() / (3600.0 * 1000.0);
-        this.processorName = ""; //TODO: get the right information in the usage statistics
-        this.configuredRamPerTask = 0; //TODO: get the right information in the usage statistics
+        this.processorName = calvalusReport.getProcessType();
+        this.configuredRamPerTask = parseLong(calvalusReport.getConfiguredRam()) / 1024.0;
         this.ramHours = calculateRamHours(calvalusReport.getMbMillisMapTotal(),
                                           calvalusReport.getMbMillisReduceTotal());
-        this.processingWorkflow = ""; //TODO: get the right information in the usage statistics
+        this.processingWorkflow = calvalusReport.getWorkflowType();
         this.duration = (calvalusReport.getFinishTime() - calvalusReport.getStartTime()) / 1000.0;
         this.processingStatus = calvalusReport.getState();
-        this.outProducts = ""; //TODO: get the right information in the usage statistics
-        this.outProductsNumber = calvalusReport.getReducesCompleted();
-        this.outCollection = ""; //TODO: get the right information in the usage statistics
-        this.outProductsLocation = ""; //TODO: get the right information in the usage statistics
-        this.outProductsSize = getGbFromBytes(calvalusReport.getFileBytesWritten());
+        this.outProductsNumber = calvalusReport.getReducesCompleted() > 0 ? calvalusReport.getReducesCompleted() : calvalusReport.getMapsCompleted();
+        this.outCollection = calvalusReport.getJobName();
+        this.outProductsLocation = calvalusReport.getOutputDir();
+        this.outProductsSize = getGbFromBytes(
+                    calvalusReport.getFileBytesWritten() + calvalusReport.getHdfsBytesWritten());
+    }
+
+    private long parseLong(String valueString) {
+        try {
+            return Long.parseLong(valueString);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     private double getGbFromBytes(long fileBytesRead) {
@@ -153,10 +156,6 @@ public class ProcessedMessage {
 
     public String getUserName() {
         return userName;
-    }
-
-    public String getInProducts() {
-        return inProducts;
     }
 
     public String getInCollection() {
@@ -207,10 +206,6 @@ public class ProcessedMessage {
         return processingStatus;
     }
 
-    public String getOutProducts() {
-        return outProducts;
-    }
-
     public long getOutProductsNumber() {
         return outProductsNumber;
     }
@@ -234,8 +229,16 @@ public class ProcessedMessage {
     private void defaultProductMessage() {
         this.messageType = PRODUCT_PROCESSED_MESSAGE;
         this.serviceId = CODE_DE_PROCESSING_SERVICE;
-        this.serviceHost = SERVICE_HOST;
+        this.serviceHost = getHostName();
         this.messageTime = LocalDateTime.now().toString();
         this.version = VERSION;
+    }
+
+    private String getHostName() {
+        try {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            return SERVICE_HOST;
+        }
     }
 }

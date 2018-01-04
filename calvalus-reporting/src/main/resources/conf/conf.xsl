@@ -49,6 +49,18 @@
                     </dataProcessorUsed>
                 </xsl:if>
 
+                <xsl:if test="name='mapreduce.map.cpu.vcores'">
+                    <configuredCpuCores>
+                        <xsl:value-of select="value"/>
+                    </configuredCpuCores>
+                </xsl:if>
+
+                <xsl:if test="name='mapreduce.map.memory.mb'">
+                    <configuredRam>
+                        <xsl:value-of select="value"/>
+                    </configuredRam>
+                </xsl:if>
+
                 <xsl:choose>
                     <xsl:when test="name='calvalus.input.pathPatterns'">
                         <inProductType>

@@ -14,6 +14,7 @@ public class JobDetailType {
     private String state;
     private String jobId;
     private String jobName;
+    private String submitTime;
     private String startTime;
     private String inputPath;
     private String finishTime;
@@ -35,6 +36,9 @@ public class JobDetailType {
     private String workflowType;
     private String inProductType;
     private String dataProcessorUsed;
+    private String outputDir;
+    private String configuredCpuCores;
+    private String configuredRam;
 
     public String getJobId() {
         return jobId;
@@ -46,6 +50,10 @@ public class JobDetailType {
 
     public String getQueue() {
         return queue;
+    }
+
+    public String getSubmitTime() {
+        return submitTime;
     }
 
     public String getStartTime() {
@@ -140,6 +148,18 @@ public class JobDetailType {
         return dataProcessorUsed;
     }
 
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
+    }
+
     // use for test only
     public void setJobId(String jobId) {
         this.jobId = jobId;
@@ -155,6 +175,7 @@ public class JobDetailType {
         this.queue = job.getQueue();
         this.state = job.getState();
         this.totalMaps = job.getMapsTotal();
+        this.submitTime = job.getSubmitTime();
         this.startTime = job.getStartTime();
         this.finishTime = job.getFinishTime();
         this.mapsCompleted = job.getMapsCompleted();
@@ -171,6 +192,9 @@ public class JobDetailType {
         this.workflowType = conf.getWorkflowType();
         this.inProductType = conf.getInProductType();
         this.dataProcessorUsed = conf.getDataProcessorUsed();
+        this.outputDir = conf.getOutputDir();
+        this.configuredCpuCores = conf.getConfiguredCpuCores();
+        this.configuredRam = conf.getConfiguredRam();
     }
 
     public void setCounterInfo(JobCounters jobCounters) {
