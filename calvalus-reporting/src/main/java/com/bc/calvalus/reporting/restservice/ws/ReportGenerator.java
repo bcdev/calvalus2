@@ -72,13 +72,11 @@ class ReportGenerator {
     }
 
     String generateJsonSingleJob(UsageStatistic usageStatistic) {
-//        Map<String, String> report = getSingleJobJsonContents(usageStatistic);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(usageStatistic);
     }
 
     String generateJsonUserSingleJob(List<UsageStatistic> usageStatistics) {
-//        Map<String, String> report = getMultiJobJsonContents(usageStatistics);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(usageStatistics);
     }

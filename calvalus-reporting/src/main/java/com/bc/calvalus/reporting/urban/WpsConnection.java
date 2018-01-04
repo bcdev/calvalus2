@@ -1,6 +1,8 @@
-package com.bc.calvalus.reporting.common;
+package com.bc.calvalus.reporting.urban;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.reporting.common.Report;
+import com.bc.calvalus.reporting.common.Reporter;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -28,7 +30,7 @@ public class WpsConnection {
     private BufferedReader in = null;
     private String cursor;
 
-    public WpsConnection(Reporter reporter) {
+    WpsConnection(Reporter reporter) {
         this.reporter = reporter;
         JSch.setConfig("StrictHostKeyChecking", "no");
         JSch.setConfig("HashKnownHosts", "yes");
@@ -64,7 +66,7 @@ public class WpsConnection {
         }
     }
 
-    void handleLine(String line) {
+    private void handleLine(String line) {
         if (line.startsWith("#")) {
             return;
         }
@@ -89,7 +91,7 @@ public class WpsConnection {
         }
     }
 
-    void connect() throws JSchException, IOException {
+    private void connect() throws JSchException, IOException {
         jsch.addIdentity(reporter.getConfig().getProperty("reporting.wps.keypath"));
         session = jsch.getSession(reporter.getConfig().getProperty("reporting.wps.user"),
                                   reporter.getConfig().getProperty("reporting.wps.host"), 22);

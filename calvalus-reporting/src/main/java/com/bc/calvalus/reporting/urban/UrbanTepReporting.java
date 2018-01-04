@@ -5,7 +5,6 @@ import com.bc.calvalus.reporting.common.Report;
 import com.bc.calvalus.reporting.common.Reporter;
 import com.bc.calvalus.reporting.common.ReportingConnection;
 import com.bc.calvalus.reporting.common.StatusHandler;
-import com.bc.calvalus.reporting.common.WpsConnection;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -19,7 +18,7 @@ import java.util.logging.Logger;
  */
 public class UrbanTepReporting implements Reporter {
 
-    static final Logger LOGGER = CalvalusLogger.getLogger();
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
     private final String configPath;
     private final Properties config = new Properties();
     private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
@@ -28,7 +27,7 @@ public class UrbanTepReporting implements Reporter {
     private WpsConnection wpsConnection = new WpsConnection(this);
     private StatusHandler statusHandler = new StatusHandler(this);
 
-    public UrbanTepReporting(String configPath) {
+    private UrbanTepReporting(String configPath) {
         this.configPath = configPath;
     }
 
@@ -75,14 +74,6 @@ public class UrbanTepReporting implements Reporter {
         this.timer = timer;
     }
 
-    public ReportingConnection getReportingConnection() {
-        return reportingConnection;
-    }
-
-    public AccountingConnection getAccountingConnection() {
-        return accountingConnection;
-    }
-
     public static void main(String[] args) {
         try {
             new UrbanTepReporting(args.length > 0 ? args[0] : "etc/urbantep.properties").run();
@@ -92,13 +83,21 @@ public class UrbanTepReporting implements Reporter {
         }
     }
 
-    public void run() throws Exception {
+    private ReportingConnection getReportingConnection() {
+        return reportingConnection;
+    }
+
+    private AccountingConnection getAccountingConnection() {
+        return accountingConnection;
+    }
+
+    private void run() throws Exception {
         initConfiguration();
         statusHandler.initReport();
         wpsConnection.run();
     }
 
-    void initConfiguration() throws IOException {
+    private void initConfiguration() throws IOException {
         try {
             try (Reader in = new FileReader(configPath)) {
                 config.load(in);

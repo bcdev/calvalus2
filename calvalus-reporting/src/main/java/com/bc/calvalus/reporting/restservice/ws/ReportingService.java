@@ -54,7 +54,7 @@ public class ReportingService {
                 throw new JobNotFoundException("Jobs not found for user '" + user + "'");
             }
             return reportGenerator.generateJsonUserSingleJob(singleUserStatistics);
-        } catch (IOException | JobNotFoundException exception) {
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
             return getErrorResponse(exception);
         }
     }
@@ -66,10 +66,10 @@ public class ReportingService {
         try {
             Map<String, List<UsageStatistic>> allUserStatistics = jsonExtractor.getAllUserUsageStatistic("2017-02-10");
             if (allUserStatistics.size() < 1) {
-                throw new JobNotFoundException("No job found for any user ");
+                throw new JobNotFoundException("No job found for any users");
             }
             return reportGenerator.generateJsonAllUserJobSummary(allUserStatistics);
-        } catch (IOException | JobNotFoundException exception) {
+        } catch (IOException | JobNotFoundException |DatabaseFileNotFoundException exception) {
             return getErrorResponse(exception);
         }
     }
@@ -86,8 +86,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 
@@ -103,8 +103,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 
@@ -123,8 +123,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 
@@ -140,8 +140,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 
@@ -158,8 +158,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonAllUserJobSummary(allUsersStartEndDateStatistic);
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 
@@ -176,8 +176,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonUsageBetween(allUsersStartEndDateStatistic, "jobsInDate");
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 
@@ -193,8 +193,8 @@ public class ReportingService {
                 throw new JobNotFoundException("No job found for any user ");
             }
             return reportGenerator.generateJsonUsageBetween(usageBetween, "jobsInQueue");
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
+        } catch (IOException | JobNotFoundException | DatabaseFileNotFoundException exception) {
+            return getErrorResponse(exception);
         }
     }
 

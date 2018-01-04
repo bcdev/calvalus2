@@ -5,7 +5,6 @@ import com.bc.calvalus.reporting.code.sender.ProcessedMessage;
 import com.bc.calvalus.reporting.common.Report;
 import com.bc.calvalus.reporting.common.State;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.jetbrains.annotations.NotNull;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -25,6 +24,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -47,7 +47,7 @@ public class AccountingJmsConnection {
     }
 
     void send(Report report) {
-        ProcessedMessage processedMessage = createProcessedMessage(report);
+        ProcessedMessage processedMessage = new ProcessedMessage(report.usageStatistics);
         String messageJson = processedMessage.toJson();
         LOGGER.info("sending report " + report.usageStatistics.getJobId());
         Path reportsDirPath = Paths.get(reporter.getConfig().getProperty("reporting.code.reportsdir"));
@@ -79,25 +79,25 @@ public class AccountingJmsConnection {
             reporter.getStatusHandler().setHandled(report.job, report.creationTime);
             return;
         }
-//        try {
-//            if (jmsProducer == null) {
-//                createJmsProducer();
-//            }
-//            sendMessage(messageJson);
-//            LOGGER.info("report " + report.job + " sent to CODE accounting.");
-//            report.state = State.ACCOUNTED;
-//            reporter.getStatusHandler().setHandled(report.job, report.creationTime);
-//        } catch (JMSException e) {
-//            LOGGER.log(Level.SEVERE, "Unable to initialize JMS Producer", e);
-//        } catch (URISyntaxException e) {
-//            LOGGER.log(Level.SEVERE, "Invalid ActiveMQ URI", e);
-//        } catch (RuntimeException e) {
-//            LOGGER.warning("Sending report " + report.job + " to accounting failed: " + e.getMessage());
-//            e.printStackTrace();
-//            report.state = State.NOT_YET_ACCOUNTED;
-//            reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-//            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
-//        }
+        try {
+            if (jmsProducer == null) {
+                createJmsProducer();
+            }
+            sendMessage(messageJson);
+            LOGGER.info("report " + report.job + " sent to CODE accounting.");
+            report.state = State.ACCOUNTED;
+            reporter.getStatusHandler().setHandled(report.job, report.creationTime);
+        } catch (JMSException e) {
+            LOGGER.log(Level.SEVERE, "Unable to initialize JMS Producer", e);
+        } catch (URISyntaxException e) {
+            LOGGER.log(Level.SEVERE, "Invalid ActiveMQ URI", e);
+        } catch (RuntimeException e) {
+            LOGGER.warning("Sending report " + report.job + " to accounting failed: " + e.getMessage());
+            e.printStackTrace();
+            report.state = State.NOT_YET_ACCOUNTED;
+            reporter.getStatusHandler().setFailed(report.job, report.creationTime);
+            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+        }
     }
 
     private void createJmsProducer() throws URISyntaxException, JMSException {
@@ -114,10 +114,5 @@ public class AccountingJmsConnection {
     private void sendMessage(String messageJson) throws JMSException {
         TextMessage textMessage = jmsSession.createTextMessage(messageJson);
         jmsProducer.send(textMessage);
-    }
-
-    @NotNull
-    private ProcessedMessage createProcessedMessage(Report report) {
-        return new ProcessedMessage(report.usageStatistics);
     }
 }
