@@ -149,8 +149,12 @@ public class ReportingConnection {
             String reportContent = new String(Files.readAllBytes(reportFilePath));
             String[] reportContentLines = reportContent.split("\n");
             String reportContentLastLine = reportContentLines[reportContentLines.length - 1];
-            cursor = reportContentLastLine.split("\t")[1];
-            LOGGER.info("cursor updated to " + cursor);
+            String latestDateTime = reportContentLastLine.split("\t")[1];
+            if (cursor != null && cursor.equalsIgnoreCase(latestDateTime)) {
+                return;
+            }
+            cursor = latestDateTime;
+            LOGGER.info("cursor updated to " + this.cursor);
         } catch (IOException exception) {
             LOGGER.log(Level.WARNING, "Unable to read report file '" + reportFileName + "'.", exception);
         }

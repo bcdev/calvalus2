@@ -1,3 +1,3 @@
 #!/bin/bash
 
-exec java -cp "$CALVALUS_INST/lib/calvalus-reporting.jar:$CALVALUS_INST/etc" com.bc.calvalus.reporting.code.CodeReporting
+exec java -cp "$REPORTING_INST/lib/calvalus-reporting.jar:$REPORTING_INST/etc" com.bc.calvalus.reporting.code.CodeReporting

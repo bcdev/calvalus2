@@ -19,6 +19,7 @@ public class JmsClient {
 
     private Session jmsSession;
     private MessageProducer jmsProducer;
+    private Connection connection;
 
     public JmsClient(String messageConsumerUrl, String queueName)
                 throws URISyntaxException, JMSException {
@@ -30,11 +31,17 @@ public class JmsClient {
         jmsProducer.send(textMessage);
     }
 
+    public void closeConnection() throws JMSException {
+        if(connection != null){
+            connection.close();
+        }
+    }
+
     private void initJmsProducer(String messageConsumerUrl, String queueName)
                 throws URISyntaxException, JMSException {
         URI uri = new URI(messageConsumerUrl);
         ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(uri);
-        Connection connection = activeMQConnectionFactory.createConnection();
+        connection = activeMQConnectionFactory.createConnection();
         connection.start();
         jmsSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = jmsSession.createQueue(queueName);
