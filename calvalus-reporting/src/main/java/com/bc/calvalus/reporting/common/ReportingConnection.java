@@ -9,12 +9,17 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -33,6 +38,7 @@ public class ReportingConnection {
 
     public ReportingConnection(Reporter reporter) {
         this.reporter = reporter;
+        cursor = reporter.getConfig().getProperty("reporting.cursor");
     }
 
     public void retrieveSingle(Report report) {
@@ -80,7 +86,7 @@ public class ReportingConnection {
     }
 
     public void pollReportingServer() {
-        cursor = reporter.getConfig().getProperty("reporting.cursor");
+        updateCursor();
         String url = String.format("%s/date/%s",
                                    reporter.getConfig().getProperty("reporting.calvalus.url"),
                                    cursor);
@@ -130,6 +136,24 @@ public class ReportingConnection {
                 Thread.sleep(DELAY_SECONDS * 1000);
             } catch (InterruptedException ignored) {
             }
+        }
+    }
+
+    private void updateCursor() {
+        String reportFileName = reporter.getConfig().getProperty("name", reporter.getName() + ".report");
+        Path reportFilePath = Paths.get(reportFileName);
+        if (!Files.exists(reportFilePath)) {
+            LOGGER.log(Level.WARNING, "Report file '" + reportFileName + "' not available.");
+            return;
+        }
+        try {
+            String reportContent = new String(Files.readAllBytes(reportFilePath));
+            String[] reportContentLines = reportContent.split("\n");
+            String reportContentLastLine = reportContentLines[reportContentLines.length - 1];
+            cursor = reportContentLastLine.split("\t")[1];
+            LOGGER.info("cursor updated to " + cursor);
+        } catch (IOException exception) {
+            LOGGER.log(Level.WARNING, "Unable to read report file '" + reportFileName + "'.", exception);
         }
     }
 }
