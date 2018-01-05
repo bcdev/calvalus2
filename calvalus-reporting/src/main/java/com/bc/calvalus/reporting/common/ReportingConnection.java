@@ -86,13 +86,12 @@ public class ReportingConnection {
     }
 
     public void pollReportingServer() {
-        updateCursor();
-        String url = String.format("%s/date/%s",
-                                   reporter.getConfig().getProperty("reporting.calvalus.url"),
-                                   cursor);
         while (true) {
-            LOGGER.info("retrieving new records from Reporting server " + reporter.getConfig().getProperty(
-                        "reporting.calvalus.url"));
+            updateCursor();
+            String url = String.format("%s/date/%s",
+                                       reporter.getConfig().getProperty("reporting.calvalus.url"),
+                                       cursor);
+            LOGGER.info("retrieving new records from Reporting server " + url);
             Invocation.Builder builder = ClientBuilder.newClient().target(url).request();
             Response response = builder.accept(MediaType.APPLICATION_JSON_TYPE).get();
             int status = response.getStatus();
