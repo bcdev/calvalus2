@@ -18,7 +18,7 @@ public class JmsSender {
             System.exit(-1);
         }
         String messageConsumerUrl = args[0];
-        String queueName = args[0];
+        String queueName = args[1];
         String accountingFilePath = args[2];
         JmsClient jmsClient = null;
         try {
