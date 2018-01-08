@@ -61,8 +61,8 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
-            if (filename.matches("^S2._MSIL1C.*") ||
-                    filename.matches("^S2._MSIL2A.*")) {
+            if (filename.matches("^S2.*_MSIL1C.*") ||
+                    filename.matches("^S2.*_MSIL2A.*")) {
                 return DecodeQualification.INTENDED;
             }
         }
