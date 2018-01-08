@@ -234,8 +234,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     private boolean isSentinel2(String filename) {
-        return filename.matches("^S2._MSIL1C.*") ||
-                    filename.matches("^S2._MSIL2A.*");
+        return filename.matches("^S2.*_MSIL1C.*") ||
+                    filename.matches("^S2.*_MSIL2A.*");
     }
 
     private boolean isLandsat(String filename) {
