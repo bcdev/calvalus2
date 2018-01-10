@@ -27,14 +27,20 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
@@ -133,6 +139,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (inputFile == null) {
             inputFile = CalvalusProductIO.copyFileToLocal(inputPath, getConfiguration());
             setInputFile(inputFile);
+        }
+        if (getMapContext().getInputSplit() instanceof FileSplit) {
+            FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
+            getMapContext().getCounter("Direct File System Counters", "FILE_SPLIT_BYTES_READ").setValue(fileSplit.getLength());
         }
         Rectangle productRect = null;
         Rectangle inputRectangle = getInputRectangle();
