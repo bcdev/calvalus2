@@ -1,7 +1,6 @@
 package com.bc.calvalus.reporting.collector.types;
 
 
-import java.time.Instant;
 import java.util.List;
 
 /**
@@ -16,11 +15,13 @@ public class JobDetailType {
     private String jobName;
     private String submitTime;
     private String startTime;
-    private String inputPath;
     private String finishTime;
+    private String inputPath;
     private String mapsCompleted;
     private String reducesCompleted;
     private String fileBytesRead;
+    private String inputFileBytesRead;
+    private String fileSplitBytesRead;
     private String fileBytesWritten;
     private String hdfsBytesRead;
     private String hdfsBytesWritten;
@@ -82,6 +83,14 @@ public class JobDetailType {
 
     public String getFileBytesRead() {
         return fileBytesRead;
+    }
+
+    public String getInputFileBytesRead() {
+        return inputFileBytesRead;
+    }
+
+    public String getFileSplitBytesRead() {
+        return fileSplitBytesRead;
     }
 
     public String getFileBytesWritten() {
@@ -223,11 +232,10 @@ public class JobDetailType {
             mbMillisReduceTotal = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("CPU_MILLISECONDS")) {
             cpuMilliseconds = jobCounter.getTotalCounterValue().toString();
+        } else if (counterTypeName.equalsIgnoreCase("INPUT_FILE_BYTES_READ")) {
+            inputFileBytesRead = jobCounter.getTotalCounterValue().toString();
+        } else if (counterTypeName.equalsIgnoreCase("FILE_SPLIT_BYTES_READ")) {
+            fileSplitBytesRead = jobCounter.getTotalCounterValue().toString();
         }
-    }
-
-    private Instant getDateTimeInstance(String finishTime) {
-        long epochMilli = Long.parseLong(finishTime);
-        return Instant.ofEpochMilli(epochMilli);
     }
 }

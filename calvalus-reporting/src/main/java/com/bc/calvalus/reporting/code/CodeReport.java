@@ -1,8 +1,15 @@
-package com.bc.calvalus.reporting.code.sender;
+package com.bc.calvalus.reporting.code;
 
 import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -13,7 +20,7 @@ import java.util.Locale;
 /**
  * @author muhammad.bc.
  */
-public class ProcessedMessage {
+public class CodeReport {
 
     private static final String PRODUCT_PROCESSED_MESSAGE = "ProductProcessedMessage";
     private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
@@ -47,7 +54,7 @@ public class ProcessedMessage {
     private String messageTime;
     private String version;
 
-    public ProcessedMessage(
+    CodeReport(
                 String requestId,
                 String jobName,
                 String jobSubmissionTime,
@@ -62,7 +69,7 @@ public class ProcessedMessage {
                 double configuredRamPerTask,
                 double ramHours,
                 String processingWorkflow,
-                long duration,
+                double duration,
                 String processingStatus,
                 long outProductsNumber,
                 String outCollection,
@@ -93,7 +100,7 @@ public class ProcessedMessage {
         this.outProductsSize = outProductsSize;
     }
 
-    public ProcessedMessage(CalvalusReport calvalusReport) {
+    CodeReport(CalvalusReport calvalusReport) {
         defaultProductMessage();
 
         this.requestId = calvalusReport.getJobId();
@@ -102,7 +109,9 @@ public class ProcessedMessage {
         this.userName = calvalusReport.getUser();
         this.inCollection = calvalusReport.getInProductType();
         this.inProductsNumber = calvalusReport.getTotalMaps();
-        this.inProductsSize = getGbFromBytes(calvalusReport.getFileBytesRead() + calvalusReport.getHdfsBytesRead());
+        this.inProductsSize = getFileBytesRead(calvalusReport.getFileBytesRead(),
+                                               calvalusReport.getInputFileBytesRead(),
+                                               calvalusReport.getFileSplitBytesRead());
         this.processingCenter = "Calvalus";
         this.configuredCpuCoresPerTask = parseLong(calvalusReport.getConfiguredCpuCores());
         this.cpuCoreHours = calvalusReport.getCpuMilliseconds() / (3600.0 * 1000.0);
@@ -116,8 +125,17 @@ public class ProcessedMessage {
         this.outProductsNumber = calvalusReport.getReducesCompleted() > 0 ? calvalusReport.getReducesCompleted() : calvalusReport.getMapsCompleted();
         this.outCollection = calvalusReport.getJobName();
         this.outProductsLocation = calvalusReport.getOutputDir();
-        this.outProductsSize = getGbFromBytes(
-                    calvalusReport.getFileBytesWritten() + calvalusReport.getHdfsBytesWritten());
+        this.outProductsSize = getGbFromBytes(calvalusReport.getFileBytesWritten());
+    }
+
+    private double getFileBytesRead(long fileBytesRead, long inputFileBytesRead, long fileSplitBytesRead) {
+        if (fileSplitBytesRead > 0) {
+            return getGbFromBytes(fileBytesRead + fileSplitBytesRead);
+        } else if (inputFileBytesRead > 0) {
+            return getGbFromBytes(fileBytesRead + inputFileBytesRead);
+        } else {
+            return getGbFromBytes(fileBytesRead);
+        }
     }
 
     private long parseLong(String valueString) {
@@ -223,7 +241,15 @@ public class ProcessedMessage {
     }
 
     public String toJson() {
-        return new Gson().toJson(this);
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder = gsonBuilder.registerTypeAdapter(Double.class, new JsonSerializer<Double>() {
+            @Override
+            public JsonElement serialize(Double src, Type typeOfSrc, JsonSerializationContext context) {
+                return new JsonPrimitive((new BigDecimal(src)).setScale(6, BigDecimal.ROUND_HALF_UP));
+            }
+        });
+        Gson gson = gsonBuilder.setPrettyPrinting().create();
+        return gson.toJson(this);
     }
 
     private void defaultProductMessage() {

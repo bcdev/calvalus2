@@ -33,6 +33,8 @@ public class NullUsageStatistic extends UsageStatistic {
               0,
               0,
               0,
+              0,
+              0,
               0);
     }
 }

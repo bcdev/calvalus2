@@ -15,8 +15,8 @@ public class CalvalusReport {
     private String state;
 
     private String outputDir;
-    private String remoteUser;
     private String jobName;
+    private String remoteUser;
     private String remoteRef;
     private String processType;
     private String workflowType;
@@ -29,6 +29,8 @@ public class CalvalusReport {
     private int totalMaps;
     private int reducesCompleted;
     private long fileBytesRead;
+    private long inputFileBytesRead;
+    private long fileSplitBytesRead;
     private long fileBytesWritten;
     private long hdfsBytesRead;
     private long hdfsBytesWritten;
@@ -37,7 +39,36 @@ public class CalvalusReport {
     private long vCoresMillisTotal;
     private long cpuMilliseconds;
 
-    public CalvalusReport(String jobId, String user, String queue, long submitTime, long startTime, long finishTime, String state, String outputDir, String remoteUser, String jobName, String remoteRef, String processType, String workflowType, String inputPath, String inProductType, String configuredCpuCores, String configuredRam, int mapsCompleted, int totalMaps, int reducesCompleted, long fileBytesRead, long fileBytesWritten, long hdfsBytesRead, long hdfsBytesWritten, long mbMillisMapTotal, long mbMillisReduceTotal, long vCoresMillisTotal, long cpuMilliseconds) {
+    public CalvalusReport(String jobId,
+                          String user,
+                          String queue,
+                          long submitTime,
+                          long startTime,
+                          long finishTime,
+                          String state,
+                          String outputDir,
+                          String jobName,
+                          String remoteUser,
+                          String remoteRef,
+                          String processType,
+                          String workflowType,
+                          String inputPath,
+                          String inProductType,
+                          String configuredCpuCores,
+                          String configuredRam,
+                          int mapsCompleted,
+                          int totalMaps,
+                          int reducesCompleted,
+                          long fileBytesRead,
+                          long inputFileBytesRead,
+                          long fileSplitBytesRead,
+                          long fileBytesWritten,
+                          long hdfsBytesRead,
+                          long hdfsBytesWritten,
+                          long mbMillisMapTotal,
+                          long mbMillisReduceTotal,
+                          long vCoresMillisTotal,
+                          long cpuMilliseconds) {
         this.jobId = jobId;
         this.user = user;
         this.queue = queue;
@@ -46,8 +77,8 @@ public class CalvalusReport {
         this.finishTime = finishTime;
         this.state = state;
         this.outputDir = outputDir;
-        this.remoteUser = remoteUser;
         this.jobName = jobName;
+        this.remoteUser = remoteUser;
         this.remoteRef = remoteRef;
         this.processType = processType;
         this.workflowType = workflowType;
@@ -59,6 +90,8 @@ public class CalvalusReport {
         this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
         this.fileBytesRead = fileBytesRead;
+        this.inputFileBytesRead = inputFileBytesRead;
+        this.fileSplitBytesRead = fileSplitBytesRead;
         this.fileBytesWritten = fileBytesWritten;
         this.hdfsBytesRead = hdfsBytesRead;
         this.hdfsBytesWritten = hdfsBytesWritten;
@@ -104,16 +137,16 @@ public class CalvalusReport {
         return state;
     }
 
+    public String getJobName() {
+        return jobName;
+    }
+
     public String getOutputDir() {
         return outputDir;
     }
 
     public String getRemoteUser() {
         return remoteUser;
-    }
-
-    public String getJobName() {
-        return jobName;
     }
 
     public String getRemoteRef() {
@@ -158,6 +191,14 @@ public class CalvalusReport {
 
     public long getFileBytesRead() {
         return fileBytesRead;
+    }
+
+    public long getInputFileBytesRead() {
+        return inputFileBytesRead;
+    }
+
+    public long getFileSplitBytesRead() {
+        return fileSplitBytesRead;
     }
 
     public long getHdfsBytesRead() {

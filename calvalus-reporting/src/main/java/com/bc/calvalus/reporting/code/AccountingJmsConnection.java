@@ -1,7 +1,6 @@
 package com.bc.calvalus.reporting.code;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.reporting.code.sender.ProcessedMessage;
 import com.bc.calvalus.reporting.common.Report;
 import com.bc.calvalus.reporting.common.State;
 
@@ -38,8 +37,8 @@ public class AccountingJmsConnection {
     }
 
     void send(Report report) {
-        ProcessedMessage processedMessage = new ProcessedMessage(report.usageStatistics);
-        String messageJson = processedMessage.toJson();
+        CodeReport codeReport = new CodeReport(report.usageStatistics);
+        String messageJson = codeReport.toJson();
         LOGGER.info("sending report " + report.usageStatistics.getJobId());
         Path reportsDirPath = Paths.get(reporter.getConfig().getProperty("reporting.code.reportsdir"));
         if (!Files.exists(reportsDirPath)) {

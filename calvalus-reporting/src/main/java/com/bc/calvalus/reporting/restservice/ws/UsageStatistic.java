@@ -28,6 +28,8 @@ public class UsageStatistic {
     private int totalMaps;
     private int reducesCompleted;
     private long fileBytesRead;
+    private long inputFileBytesRead;
+    private long fileSplitBytesRead;
     private long fileBytesWritten;
     private long hdfsBytesRead;
     private long hdfsBytesWritten;
@@ -57,6 +59,8 @@ public class UsageStatistic {
                           int totalMaps,
                           int reducesCompleted,
                           long fileBytesRead,
+                          long inputFileBytesRead,
+                          long fileSplitBytesRead,
                           long fileBytesWritten,
                           long hdfsBytesRead,
                           long hdfsBytesWritten,
@@ -85,6 +89,8 @@ public class UsageStatistic {
         this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
         this.fileBytesRead = fileBytesRead;
+        this.inputFileBytesRead = inputFileBytesRead;
+        this.fileSplitBytesRead = fileSplitBytesRead;
         this.fileBytesWritten = fileBytesWritten;
         this.hdfsBytesRead = hdfsBytesRead;
         this.hdfsBytesWritten = hdfsBytesWritten;
@@ -176,6 +182,14 @@ public class UsageStatistic {
 
     public long getFileBytesRead() {
         return fileBytesRead;
+    }
+
+    public long getInputFileBytesRead() {
+        return inputFileBytesRead;
+    }
+
+    public long getFileSplitBytesRead() {
+        return fileSplitBytesRead;
     }
 
     public long getFileBytesWritten() {
