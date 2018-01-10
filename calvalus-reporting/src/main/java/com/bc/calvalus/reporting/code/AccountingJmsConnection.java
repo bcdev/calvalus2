@@ -4,19 +4,11 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.reporting.code.sender.ProcessedMessage;
 import com.bc.calvalus.reporting.common.Report;
 import com.bc.calvalus.reporting.common.State;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,8 +26,7 @@ public class AccountingJmsConnection {
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
     private final CodeReporting reporter;
-    private Session jmsSession;
-    private MessageProducer jmsProducer = null;
+    private JmsClient jmsClient;
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     static {
@@ -80,10 +71,11 @@ public class AccountingJmsConnection {
             return;
         }
         try {
-            if (jmsProducer == null) {
-                createJmsProducer();
+            if (jmsClient == null) {
+                jmsClient = new JmsClient(reporter.getConfig().getProperty("message.consumer.url"),
+                                          reporter.getConfig().getProperty("queue.name"));
             }
-            sendMessage(messageJson);
+            jmsClient.sendMessage(messageJson);
             LOGGER.info("report " + report.job + " sent to CODE accounting.");
             report.state = State.ACCOUNTED;
             reporter.getStatusHandler().setHandled(report.job, report.creationTime);
@@ -100,19 +92,11 @@ public class AccountingJmsConnection {
         }
     }
 
-    private void createJmsProducer() throws URISyntaxException, JMSException {
-        URI uri = new URI(reporter.getConfig().getProperty("message.consumer.url"));
-        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(uri);
-        Connection connection = activeMQConnectionFactory.createConnection();
-        connection.start();
-        jmsSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = jmsSession.createQueue(reporter.getConfig().getProperty("queue.name"));
-        jmsProducer = jmsSession.createProducer(destination);
-        jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
-
-    private void sendMessage(String messageJson) throws JMSException {
-        TextMessage textMessage = jmsSession.createTextMessage(messageJson);
-        jmsProducer.send(textMessage);
+    void close() {
+        try {
+            jmsClient.closeConnection();
+        } catch (JMSException exception) {
+            LOGGER.log(Level.WARNING, "Unable to close JMS connection", exception);
+        }
     }
 }
