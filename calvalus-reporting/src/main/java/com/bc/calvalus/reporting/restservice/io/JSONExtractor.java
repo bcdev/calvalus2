@@ -137,8 +137,8 @@ public class JSONExtractor {
         return usageWithDate;
     }
 
-    public Map<String, List<UsageStatistic>> getAllQueueUsageBetween(String startDate, String endDate) throws
-                                                                                                       IOException {
+    public Map<String, List<UsageStatistic>> getAllQueueUsageBetween(String startDate, String endDate)
+                throws IOException {
         Predicate<Long> predicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = loadStatisticBetweenDate(startDate, endDate);
         List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(
@@ -149,13 +149,6 @@ public class JSONExtractor {
                     filterQueue(queue, usageStatisticList)
         ));
         return groupUserUsageStatistic;
-    }
-
-    public List<UsageStatistic> getAllUsageStatisticsBetween(String startDate, String endDate) throws IOException {
-        Predicate<Long> predicate = filterDateTimeIntervals(startDate, endDate);
-        List<UsageStatistic> allStatistics = getAllStatistics(PropertiesWrapper.get("reporting.folder.path"));
-        return allStatistics.stream().filter(
-                    p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
     }
 
     public UsageStatistic getSingleStatistic(String jobId, String date)
@@ -181,8 +174,8 @@ public class JSONExtractor {
         return singleUserStatistics;
     }
 
-    public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate) throws
-                                                                                                         IOException {
+    public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate)
+                throws IOException {
         Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = loadStatisticBetweenDate(startDate, endDate);
         return getSingleUserRangeStatistic(rangePredicate, user, allStatistics);
@@ -446,16 +439,6 @@ public class JSONExtractor {
         return aLong -> {
             Instant end = LocalDate.parse(endDate).atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
             Instant start = LocalDate.parse(startDate).atStartOfDay().toInstant(ZoneOffset.UTC);
-            Instant instant = new Date(aLong).toInstant();
-            return instant.isAfter(start) && instant.isBefore(end);
-        };
-    }
-
-    @NotNull
-    private Predicate<Long> filterDateTimeIntervals(final String startDate, final String endDate) {
-        return aLong -> {
-            Instant end = LocalDateTime.parse(endDate).toInstant(ZoneOffset.UTC);
-            Instant start = LocalDateTime.parse(startDate).toInstant(ZoneOffset.UTC);
             Instant instant = new Date(aLong).toInstant();
             return instant.isAfter(start) && instant.isBefore(end);
         };

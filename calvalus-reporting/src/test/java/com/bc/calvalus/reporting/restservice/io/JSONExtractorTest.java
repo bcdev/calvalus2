@@ -29,7 +29,7 @@ public class JSONExtractorTest {
 
     @Before
     public void setUp() throws Exception {
-        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
+        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
         jsonExtractor = new JSONExtractor();
     }
 

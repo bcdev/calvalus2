@@ -3,13 +3,7 @@ package com.bc.calvalus.reporting.restservice.ws;
 import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,8 +19,7 @@ import java.util.concurrent.TimeUnit;
 class ReportGenerator {
 
     private static final int KILO_BYTES = 1024;
-    private static final int MILI_SECONDS = 1000;
-
+    private static final int MILLISECONDS = 1000;
 
     String generateJsonAllUserJobSummary(Map<String, List<UsageStatistic>> allUserStatisticsMap) {
         List<Map<String, String>> multiJobJsonContentsPerUserMap = new ArrayList<>();
@@ -34,7 +27,7 @@ class ReportGenerator {
             Map<String, String> multiJobJsonContentsPerUser = getMultiJobJsonContents(usageStatisticsList);
             multiJobJsonContentsPerUserMap.add(multiJobJsonContentsPerUser);
         });
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(multiJobJsonContentsPerUserMap);
     }
 
@@ -49,18 +42,6 @@ class ReportGenerator {
         });
         Gson gson = new Gson();
         return gson.toJson(multiJobJsonContentsPerUserMap);
-    }
-
-    String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
-        PDDocument document = new PDDocument();
-        PDPage page = new PDPage();
-        document.addPage(page);
-        List<String> reportContents = getSingleJobReportContents(usageStatistic);
-        writeToPdfPage(document, page, reportContents);
-        File reportPdf = new File(usageStatistic.getJobId() + ".pdf");
-        document.save(reportPdf);
-        document.close();
-        return reportPdf.getAbsolutePath();
     }
 
     String generateTextSingleJob(UsageStatistic usageStatistic) {
@@ -80,70 +61,6 @@ class ReportGenerator {
     String generateJsonUserSingleJob(List<UsageStatistic> usageStatistics) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(usageStatistics);
-    }
-
-    String generatePdfMonthly(List<UsageStatistic> usageStatistics) throws IOException {
-        PDDocument document = new PDDocument();
-        PDPage summaryPage = new PDPage();
-        document.addPage(summaryPage);
-        List<String> multiJobReportContents = getMultiJobReportContents(usageStatistics);
-        writeToPdfPage(document, summaryPage, multiJobReportContents);
-        for (UsageStatistic usageStatistic : usageStatistics) {
-            PDPage singleJobPage = new PDPage();
-            document.addPage(singleJobPage);
-            List<String> singleJobReportContents = getSingleJobReportContents(usageStatistic);
-            writeToPdfPage(document, singleJobPage, singleJobReportContents);
-        }
-        File reportPdf = new File("monthly.pdf");
-        document.save(reportPdf);
-        document.close();
-        return reportPdf.getAbsolutePath();
-    }
-
-    String generateTextMonthly(List<UsageStatistic> usageStatistics) {
-        StringBuilder stringBuilder = new StringBuilder();
-        List<String> report = getMultiJobReportContents(usageStatistics);
-        for (String line : report) {
-            stringBuilder.append(line).append("\n");
-        }
-        return stringBuilder.toString();
-    }
-
-    private void writeToPdfPage(PDDocument document, PDPage page, List<String> reports) throws IOException {
-        try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false)) {
-            contentStream.beginText();
-            contentStream.setFont(PDType1Font.COURIER, 12);
-            contentStream.newLineAtOffset(25, 750);
-            for (String reportLine : reports) {
-                contentStream.showText(reportLine);
-                contentStream.newLineAtOffset(0, -15);
-            }
-            contentStream.endText();
-        }
-    }
-
-    private Map<String, String> getSingleJobJsonContents(UsageStatistic usageStatistic) {
-        Map<String, String> jobReportJson = new HashMap<>();
-        String startTime = getFormattedTime(usageStatistic.getStartTime());
-        String finishTime = getFormattedTime(usageStatistic.getFinishTime());
-        String totalTime = getElapsedTime(usageStatistic.getTotalTime());
-        String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES));
-        String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES));
-        String totalCpuTime = getElapsedTime(usageStatistic.getCpuMilliseconds());
-        String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisMapTotal() + usageStatistic.getMbMillisReduceTotal()) / MILI_SECONDS);
-        String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (MILI_SECONDS));
-        jobReportJson.put("jobId", usageStatistic.getJobId());
-        jobReportJson.put("project", usageStatistic.getQueue());
-        jobReportJson.put("startTime", startTime);
-        jobReportJson.put("finishTime", finishTime);
-        jobReportJson.put("totalTime", totalTime);
-        jobReportJson.put("status", usageStatistic.getState());
-        jobReportJson.put("totalFileWritingMb", totalFileWriting);
-        jobReportJson.put("totalFileReadingMb", totalFileReading);
-        jobReportJson.put("totalCpuTime", totalCpuTime);
-        jobReportJson.put("totalMemoryUsedMbs", totalMemoryUsed);
-        jobReportJson.put("totalVcoresUsed", vCoresUsed);
-        return jobReportJson;
     }
 
     private List<String> getSingleJobReportContents(UsageStatistic usageStatistic) {
@@ -189,8 +106,8 @@ class ReportGenerator {
             totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);
             totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES);
             totalCpuTime += usageStatistic.getCpuMilliseconds();
-            totalMemoryUsed += (usageStatistic.getMbMillisMapTotal() + usageStatistic.getMbMillisReduceTotal()) / (MILI_SECONDS);
-            totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (MILI_SECONDS);
+            totalMemoryUsed += (usageStatistic.getMbMillisMapTotal() + usageStatistic.getMbMillisReduceTotal()) / (MILLISECONDS);
+            totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (MILLISECONDS);
         }
         int jobNumbers = usageStatistics.size();
         jobReportJson.put("user", usageStatistics.get(0).getUser()); // TODO(hans-permana, 20170116): should generate the report per user
@@ -209,47 +126,6 @@ class ReportGenerator {
         jobReportJson.put("diskUsageprice", String.valueOf(diskPrice));
         jobReportJson.put("totalPrice", String.valueOf(cpuPrice + memoryPrice + diskPrice));
         return jobReportJson;
-    }
-
-    private List<String> getMultiJobReportContents(List<UsageStatistic> usageStatistics) {
-        List<String> jobReport = new ArrayList<>();
-        long totalFileWriting = 0;
-        long totalFileReading = 0;
-        long totalCpuTime = 0;
-        long totalMemoryUsed = 0;
-        long totalVCoresUsed = 0;
-        for (UsageStatistic usageStatistic : usageStatistics) {
-            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);
-            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES);
-            totalCpuTime += usageStatistic.getCpuMilliseconds();
-            totalMemoryUsed += (usageStatistic.getMbMillisMapTotal() + usageStatistic.getMbMillisReduceTotal()) / (1000);
-            totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (1000);
-        }
-        int jobNumbers = usageStatistics.size();
-        jobReport.add("Usage statistic for user $USER in $MONTH $YEAR"); // TODO(hans-permana, 20170116): should generate the report per user
-        jobReport.add("");
-        jobReport.add("Jobs processed : " + jobNumbers);
-        jobReport.add("Total file writing (MB) : " + getFormattedNumber(totalFileWriting));
-        jobReport.add("Total file reading (MB) : " + getFormattedNumber(totalFileReading));
-        jobReport.add("Total CPU time spent : " + getElapsedTime(totalCpuTime));
-        jobReport.add("Total Memory used (MB s) :  " + getFormattedNumber(totalMemoryUsed));
-        jobReport.add("Total vCores used (vCore s) :  " + getFormattedNumber(totalVCoresUsed));
-        jobReport.add("");
-        jobReport.add("");
-        jobReport.add("Price breakdown");
-        jobReport.add("");
-        double cpuPrice = PriceCalculator.getCpuPrice(totalVCoresUsed);
-        double memoryPrice = PriceCalculator.getMemoryPrice(totalMemoryUsed);
-        double diskPrice = PriceCalculator.getDiskPrice(totalFileWriting + totalFileReading);
-        jobReport.add("CPU usage price = (Total vCores used) x € 0.0013 = € " +
-                              cpuPrice);
-        jobReport.add("Memory usage price = (Total Memory used) x € 0.00022 = € " +
-                              memoryPrice);
-        jobReport.add("Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € " +
-                              diskPrice);
-        jobReport.add("");
-        jobReport.add("Total = € " + (cpuPrice + memoryPrice + diskPrice));
-        return jobReport;
     }
 
     private String getFormattedNumber(long number) {

@@ -1,13 +1,13 @@
 package com.bc.calvalus.reporting.restservice.io;
 
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.runner.*;
+import org.junit.runner.notification.*;
+import org.junit.runners.*;
+import org.junit.runners.model.*;
+
 import java.io.IOException;
 import java.nio.file.Paths;
-import org.junit.runner.Description;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
 
 /**
  * @author muhammad.bc.
@@ -31,7 +31,7 @@ public class LoadProperties extends BlockJUnit4ClassRunner {
         if (!executeConnection) {
             System.out.println("Absolute file path to resource/log-file. Set VM param '-D" + CALVALUS_LOG_EXECUTE_TEST + "=true' to enable.");
         }
-        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
+        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
         String filePath = PropertiesWrapper.get("reporting.folder.path");
         boolean exists = Paths.get(filePath).toFile().exists();
         if (!exists) {
