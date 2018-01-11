@@ -1,7 +1,7 @@
 package com.bc.calvalus.reporting.restservice.code;
 
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.calvalus.reporting.restservice.io.JSONExtractor;
-import com.bc.calvalus.reporting.restservice.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

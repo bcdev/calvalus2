@@ -1,7 +1,5 @@
 package com.bc.calvalus.reporting.common;
 
-import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
-
 /**
  * TODO add API doc
  *
@@ -15,7 +13,7 @@ public class Report implements Runnable {
     public String requestId;
     public String requestStatus;
     public String uri;
-    public CalvalusReport usageStatistics;
+    public UsageStatistic usageStatistic;
     private Reporter reporter;
 
     public Report(Reporter reporter, String job, String creationTime, String name, String requestId, String requestStatus, String uri) {

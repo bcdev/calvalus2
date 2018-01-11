@@ -1,9 +1,9 @@
-package com.bc.calvalus.reporting.urban.reporting;
+package com.bc.calvalus.reporting.common;
 
 /**
  * @author muhammad.bc.
  */
-public class CalvalusReport {
+public class UsageStatistic {
 
 
     private String jobId;
@@ -39,7 +39,7 @@ public class CalvalusReport {
     private long vCoresMillisTotal;
     private long cpuMilliseconds;
 
-    public CalvalusReport(String jobId,
+    public UsageStatistic(String jobId,
                           String user,
                           String queue,
                           long submitTime,
@@ -101,14 +101,6 @@ public class CalvalusReport {
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
-    public long getCpuMilliseconds() {
-        return cpuMilliseconds;
-    }
-
-    public long getFileBytesWritten() {
-        return fileBytesWritten;
-    }
-
     public String getJobId() {
         return jobId;
     }
@@ -133,16 +125,20 @@ public class CalvalusReport {
         return finishTime;
     }
 
+    public long getTotalTime() {
+        return finishTime - startTime;
+    }
+
     public String getState() {
         return state;
     }
 
-    public String getJobName() {
-        return jobName;
-    }
-
     public String getOutputDir() {
         return outputDir;
+    }
+
+    public String getJobName() {
+        return jobName;
     }
 
     public String getRemoteUser() {
@@ -201,6 +197,10 @@ public class CalvalusReport {
         return fileSplitBytesRead;
     }
 
+    public long getFileBytesWritten() {
+        return fileBytesWritten;
+    }
+
     public long getHdfsBytesRead() {
         return hdfsBytesRead;
     }
@@ -219,5 +219,9 @@ public class CalvalusReport {
 
     public long getvCoresMillisTotal() {
         return vCoresMillisTotal;
+    }
+
+    public long getCpuMilliseconds() {
+        return cpuMilliseconds;
     }
 }

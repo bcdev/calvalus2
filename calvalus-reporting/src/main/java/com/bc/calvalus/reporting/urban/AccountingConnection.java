@@ -119,25 +119,25 @@ public class AccountingConnection {
     @NotNull
     private Message createMessage(Report report) {
         Account account = new Account(reporter.getConfig().getProperty("reporting.urbantep.subsystem"),
-                                      report.usageStatistics.getUser().replace("tep_", ""),
-                                      report.usageStatistics.getRemoteRef());
+                                      report.usageStatistic.getUser().replace("tep_", ""),
+                                      report.usageStatistic.getRemoteRef());
         Compound compound = new Compound(report.requestId,
-                                         report.usageStatistics.getJobName(),
-                                         report.usageStatistics.getProcessType(),
+                                         report.usageStatistic.getJobName(),
+                                         report.usageStatistic.getProcessType(),
                                          new Any(report.uri));
         List<Quantity> quantityList = Arrays.asList(
-                new Quantity("CPU_MILLISECONDS", report.usageStatistics.getCpuMilliseconds()),
-                new Quantity("PHYSICAL_MEMORY_BYTES", report.usageStatistics.getCpuMilliseconds() == 0 ? (report.usageStatistics.getMbMillisMapTotal() + report.usageStatistics.getMbMillisReduceTotal()) * 1024 * 1024 : (report.usageStatistics.getMbMillisMapTotal() + report.usageStatistics.getMbMillisReduceTotal()) / report.usageStatistics.getCpuMilliseconds() * 1024 * 1024),
-                new Quantity("BYTE_READ", report.usageStatistics.getHdfsBytesRead()),
-                new Quantity("BYTE_WRITTEN", report.usageStatistics.getHdfsBytesWritten()),
-                new Quantity("PROC_INSTANCE", (long) report.usageStatistics.getMapsCompleted() + report.usageStatistics.getReducesCompleted()),
+                new Quantity("CPU_MILLISECONDS", report.usageStatistic.getCpuMilliseconds()),
+                new Quantity("PHYSICAL_MEMORY_BYTES", report.usageStatistic.getCpuMilliseconds() == 0 ? (report.usageStatistic.getMbMillisMapTotal() + report.usageStatistic.getMbMillisReduceTotal()) * 1024 * 1024 : (report.usageStatistic.getMbMillisMapTotal() + report.usageStatistic.getMbMillisReduceTotal()) / report.usageStatistic.getCpuMilliseconds() * 1024 * 1024),
+                new Quantity("BYTE_READ", report.usageStatistic.getHdfsBytesRead()),
+                new Quantity("BYTE_WRITTEN", report.usageStatistic.getHdfsBytesWritten()),
+                new Quantity("PROC_INSTANCE", (long) report.usageStatistic.getMapsCompleted() + report.usageStatistic.getReducesCompleted()),
                 new Quantity("NUM_REQ", 1));
-        return new Message(report.usageStatistics.getJobId(),
+        return new Message(report.usageStatistic.getJobId(),
                                       account,
                                       compound,
                                       quantityList,
                                       reporter.getConfig().getProperty("reporting.urbantep.origin"),
-                                      TIME_FORMAT.format(new Date(report.usageStatistics.getFinishTime())),
-                                      "SUCCEEDED".equals(report.usageStatistics.getState()) ? "NOMINAL" : "DEGRADED");
+                                      TIME_FORMAT.format(new Date(report.usageStatistic.getFinishTime())),
+                           "SUCCEEDED".equals(report.usageStatistic.getState()) ? "NOMINAL" : "DEGRADED");
     }
 }

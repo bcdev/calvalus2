@@ -1,8 +1,8 @@
 package com.bc.calvalus.reporting.common;
 
+import static com.bc.calvalus.reporting.common.NullUsageStatistic.NOT_FOUND_STRING_IDENTIFIER;
+
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.reporting.restservice.ws.UsageStatistic;
-import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
 import com.google.gson.Gson;
 
 import javax.ws.rs.client.ClientBuilder;
@@ -66,8 +66,8 @@ public class ReportingConnection {
                 reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
                 return;
             }
-            report.usageStatistics = gson.fromJson(resources, CalvalusReport.class);
-            if (report.usageStatistics.getJobId().equalsIgnoreCase("not-found")) {
+            report.usageStatistic = gson.fromJson(resources, UsageStatistic.class);
+            if (report.usageStatistic.getJobId().equalsIgnoreCase("not-found")) {
                 LOGGER.info("retrieving resources " + url + " ... not yet available - re-scheduling ...");
                 report.state = State.NOT_YET_RETRIEVED;
                 reporter.getStatusHandler().setFailed(report.job, report.creationTime);
@@ -111,23 +111,25 @@ public class ReportingConnection {
                 }
             });
             for (UsageStatistic usageStatistic : usageStatistics) {
-                LOGGER.info(String.format("%s\t%s", usageStatistic.getJobId(), usageStatistic.getFinishTime()));
-                Report report = new Report(reporter,
-                                           usageStatistic.getJobId(),
-                                           TIME_FORMAT.format(new Date(usageStatistic.getFinishTime())),
-                                           usageStatistic.getJobName(),
-                                           usageStatistic.getJobId(),
-                                           usageStatistic.getState(),
-                                           ""
-                );
-                if (reporter.getStatusHandler().isHandled(report.job)) {
-                    LOGGER.info("skipping " + report.job);
-                } else if (cursor != null && report.creationTime.compareTo(cursor) < 0) {
-                    LOGGER.info("skipping " + report.job + " with " + report.creationTime + " before cursor " + cursor);
-                } else {
-                    LOGGER.info("record " + report.job + " received");
-                    reporter.getTimer().execute(report);
-                    reporter.getStatusHandler().setRunning(report.job, report.creationTime);
+                if (!NOT_FOUND_STRING_IDENTIFIER.equalsIgnoreCase(usageStatistic.getJobId())) {
+                    LOGGER.info(String.format("%s\t%s", usageStatistic.getJobId(), usageStatistic.getFinishTime()));
+                    Report report = new Report(reporter,
+                                               usageStatistic.getJobId(),
+                                               TIME_FORMAT.format(new Date(usageStatistic.getFinishTime())),
+                                               usageStatistic.getJobName(),
+                                               usageStatistic.getJobId(),
+                                               usageStatistic.getState(),
+                                               ""
+                    );
+                    if (reporter.getStatusHandler().isHandled(report.job)) {
+                        LOGGER.info("skipping " + report.job);
+                    } else if (cursor != null && report.creationTime.compareTo(cursor) < 0) {
+                        LOGGER.info("skipping " + report.job + " with " + report.creationTime + " before cursor " + cursor);
+                    } else {
+                        LOGGER.info("record " + report.job + " received");
+                        reporter.getTimer().execute(report);
+                        reporter.getStatusHandler().setRunning(report.job, report.creationTime);
+                    }
                 }
             }
 

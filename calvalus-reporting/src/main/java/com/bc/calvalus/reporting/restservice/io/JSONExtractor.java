@@ -1,9 +1,9 @@
 package com.bc.calvalus.reporting.restservice.io;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.reporting.common.NullUsageStatistic;
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.calvalus.reporting.restservice.exceptions.DatabaseFileNotFoundException;
-import com.bc.calvalus.reporting.restservice.ws.NullUsageStatistic;
-import com.bc.calvalus.reporting.restservice.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

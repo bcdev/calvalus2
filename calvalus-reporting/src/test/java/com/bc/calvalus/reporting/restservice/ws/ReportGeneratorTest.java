@@ -1,17 +1,16 @@
 package com.bc.calvalus.reporting.restservice.ws;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
+
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.calvalus.reporting.restservice.io.JSONExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.*;
+
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author hans
@@ -31,7 +30,7 @@ public class ReportGeneratorTest {
 
     @Test
     public void canGenerateTextSingleJob() throws Exception {
-        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052","2017-01-10");
+        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052", "2017-01-10");
         reportGenerator = new ReportGenerator();
 
         assertThat(reportGenerator.generateTextSingleJob(usageStatistic), equalTo("Usage statistic for job 'job_1481485063251_20052'\n" +

@@ -1,6 +1,6 @@
 package com.bc.calvalus.reporting.code;
 
-import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -26,6 +26,7 @@ public class CodeReport {
     private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
     private static final String VERSION = "1.0";
     private static final String SERVICE_HOST = "processing";
+    private static final String CALVALUS_PROCESSING_CENTER = "Calvalus";
 
     private final String requestId;
     private final String jobName;
@@ -100,32 +101,32 @@ public class CodeReport {
         this.outProductsSize = outProductsSize;
     }
 
-    CodeReport(CalvalusReport calvalusReport) {
+    CodeReport(UsageStatistic usageStatistic) {
         defaultProductMessage();
 
-        this.requestId = calvalusReport.getJobId();
-        this.jobName = calvalusReport.getJobName();
-        this.jobSubmissionTime = convertMillisToIsoString(calvalusReport.getSubmitTime());
-        this.userName = calvalusReport.getUser();
-        this.inCollection = calvalusReport.getInProductType();
-        this.inProductsNumber = calvalusReport.getTotalMaps();
-        this.inProductsSize = getFileBytesRead(calvalusReport.getFileBytesRead(),
-                                               calvalusReport.getInputFileBytesRead(),
-                                               calvalusReport.getFileSplitBytesRead());
-        this.processingCenter = "Calvalus";
-        this.configuredCpuCoresPerTask = parseLong(calvalusReport.getConfiguredCpuCores());
-        this.cpuCoreHours = calvalusReport.getCpuMilliseconds() / (3600.0 * 1000.0);
-        this.processorName = calvalusReport.getProcessType();
-        this.configuredRamPerTask = parseLong(calvalusReport.getConfiguredRam()) / 1024.0;
-        this.ramHours = calculateRamHours(calvalusReport.getMbMillisMapTotal(),
-                                          calvalusReport.getMbMillisReduceTotal());
-        this.processingWorkflow = calvalusReport.getWorkflowType();
-        this.duration = (calvalusReport.getFinishTime() - calvalusReport.getStartTime()) / 1000.0;
-        this.processingStatus = calvalusReport.getState();
-        this.outProductsNumber = calvalusReport.getReducesCompleted() > 0 ? calvalusReport.getReducesCompleted() : calvalusReport.getMapsCompleted();
-        this.outCollection = calvalusReport.getJobName();
-        this.outProductsLocation = calvalusReport.getOutputDir();
-        this.outProductsSize = getGbFromBytes(calvalusReport.getFileBytesWritten());
+        this.requestId = usageStatistic.getJobId();
+        this.jobName = usageStatistic.getJobName();
+        this.jobSubmissionTime = convertMillisToIsoString(usageStatistic.getSubmitTime());
+        this.userName = usageStatistic.getUser();
+        this.inCollection = usageStatistic.getInProductType();
+        this.inProductsNumber = usageStatistic.getTotalMaps();
+        this.inProductsSize = getFileBytesRead(usageStatistic.getFileBytesRead(),
+                                               usageStatistic.getInputFileBytesRead(),
+                                               usageStatistic.getFileSplitBytesRead());
+        this.processingCenter = CALVALUS_PROCESSING_CENTER;
+        this.configuredCpuCoresPerTask = parseLong(usageStatistic.getConfiguredCpuCores());
+        this.cpuCoreHours = usageStatistic.getCpuMilliseconds() / (3600.0 * 1000.0);
+        this.processorName = usageStatistic.getProcessType();
+        this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / 1024.0;
+        this.ramHours = calculateRamHours(usageStatistic.getMbMillisMapTotal(),
+                                          usageStatistic.getMbMillisReduceTotal());
+        this.processingWorkflow = usageStatistic.getWorkflowType();
+        this.duration = (usageStatistic.getFinishTime() - usageStatistic.getStartTime()) / 1000.0;
+        this.processingStatus = usageStatistic.getState();
+        this.outProductsNumber = usageStatistic.getReducesCompleted() > 0 ? usageStatistic.getReducesCompleted() : usageStatistic.getMapsCompleted();
+        this.outCollection = usageStatistic.getJobName();
+        this.outProductsLocation = usageStatistic.getOutputDir();
+        this.outProductsSize = getGbFromBytes(usageStatistic.getFileBytesWritten());
     }
 
     private double getFileBytesRead(long fileBytesRead, long inputFileBytesRead, long fileSplitBytesRead) {

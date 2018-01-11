@@ -1,5 +1,6 @@
 package com.bc.calvalus.reporting.restservice.ws;
 
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.pdfbox.pdmodel.PDDocument;

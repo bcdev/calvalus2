@@ -1,5 +1,6 @@
 package com.bc.calvalus.reporting.restservice.ws;
 
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.calvalus.reporting.restservice.exceptions.DatabaseFileNotFoundException;
 import com.bc.calvalus.reporting.restservice.exceptions.JobNotFoundException;
 import com.bc.calvalus.reporting.restservice.io.JSONExtractor;

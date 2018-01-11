@@ -3,7 +3,7 @@ package com.bc.calvalus.reporting.code;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.bc.calvalus.reporting.urban.reporting.CalvalusReport;
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import org.junit.*;
 
 /**
@@ -13,7 +13,7 @@ public class CodeReportTest {
 
     @Test
     public void canParseCorrectly() {
-        CalvalusReport calvalusReport = new CalvalusReport("job-01",
+        UsageStatistic usageStatistic = new UsageStatistic("job-01",
                                                            "user",
                                                            "queue",
                                                            1514764800000L,
@@ -43,7 +43,7 @@ public class CodeReportTest {
                                                            0L,
                                                            1159308L,
                                                            59360L);
-        CodeReport codeReport = new CodeReport(calvalusReport);
+        CodeReport codeReport = new CodeReport(usageStatistic);
         assertThat(codeReport.toJson(), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
