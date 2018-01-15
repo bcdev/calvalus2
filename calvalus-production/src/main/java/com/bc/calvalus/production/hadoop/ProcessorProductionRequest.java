@@ -36,12 +36,14 @@ public class ProcessorProductionRequest {
     public static final String PROCESSOR_BUNDLES = "processorBundles";
     public static final String PROCESSOR_NAME = "processorName";
     public static final String PROCESSOR_PARAMETERS = "processorParameters";
+    public static final String OUTPUT_PRODUCT_TYPE = "outputProductType";
     private final String processorBundleName;
     private final String processorBundleVersion;
     private final String processorBundleLocation;
     private final String processorBundles;
     private final String processorName;
     private final String processorParameters;
+    private final String outputProductType;
     private final String userName;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
@@ -55,6 +57,7 @@ public class ProcessorProductionRequest {
         this.processorBundles = productionRequest.getString(PROCESSOR_BUNDLES, null);
         this.processorName = productionRequest.getString(PROCESSOR_NAME + parameterSuffix, null);
         this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS + parameterSuffix, "<parameters/>");
+        this.outputProductType = productionRequest.getString(OUTPUT_PRODUCT_TYPE + parameterSuffix, null);
         this.userName = productionRequest.getUserName();
     }
 
@@ -81,6 +84,9 @@ public class ProcessorProductionRequest {
         if (processorName != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, processorParameters);
+            if(outputProductType != null){
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_PRODUCT_TYPE + parameterSuffix, outputProductType);
+            }
         }
         String implicitProcessorBundle = getProcessorBundle();
         if (implicitProcessorBundle != null) {
