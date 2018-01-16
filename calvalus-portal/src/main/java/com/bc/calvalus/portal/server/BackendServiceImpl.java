@@ -67,6 +67,7 @@ import com.bc.calvalus.production.util.DebugTokenGenerator;
 import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.jasig.cas.client.validation.AssertionImpl;
@@ -422,6 +423,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             ProductionRequest productionRequest = convert(dtoProductionRequest);
             HadoopJobHook hook = null;
             Map<String, String> config = backendConfig.getConfigMap();
+            String systemName = config.get("calvalus.system.name");
+            if(StringUtils.isNotBlank(systemName)){
+                productionRequest.setParameter(JobConfigNames.CALVALUS_SYSTEM_NAME, systemName);
+            }
             if ("debug".equals(config.get("calvalus.crypt.auth"))) {
                 String publicKey = config.get("calvalus.crypt.calvalus-public-key");
                 String privateKey = config.get("calvalus.crypt.debug-private-key");
