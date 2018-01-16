@@ -35,7 +35,7 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.runtime.Engine;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
@@ -405,14 +405,17 @@ public abstract class ProcessorAdapter {
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         if (inputFile != null) {
+            Product product;
             getMapContext().getCounter("Direct File System Counters", "INPUT_FILE_BYTES_READ").setValue(inputFile.length());
             if (inputFormat != null) {
                 LOG.info(String.format("openInputProduct: inputFile  = %s inputFormat  = %s", inputFile, inputFormat));
-                return ProductIO.readProduct(inputFile, inputFormat);
+                product = ProductIO.readProduct(inputFile, inputFormat);
             } else {
                 LOG.info(String.format("openInputProduct: inputFile  = %s", inputFile));
-                return ProductIO.readProduct(inputFile);
+                product = ProductIO.readProduct(inputFile);
             }
+            CalvalusProductIO.printProductOnStdout(product, "opened from local file");
+            return product;
         } else {
             LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
             Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);

@@ -19,6 +19,9 @@ package com.bc.calvalus.processing.executable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin;
+import com.bc.calvalus.processing.beam.PathConfiguration;
+import com.bc.calvalus.processing.beam.Sentinel2CalvalusReaderPlugin;
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
@@ -30,8 +33,8 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -42,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -239,17 +243,40 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return keywordHandler;
     }
 
+    private boolean isSentinel2(String filename) {
+        return filename.matches("^S2.*_MSIL1C.*") ||
+                    filename.matches("^S2.*_MSIL2A.*");
+    }
+
+    private boolean isLandsat(String filename) {
+        for (String pattern : LandsatCalvalusReaderPlugin.FILENAME_PATTERNS) {
+            if (filename.matches(pattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Product openProcessedProduct() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
             Product product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            File productFileLocation = product.getFileLocation();
+            if (isSentinel2(outputFilesNames[0])) {
+                Map<String, Object> params = new HashMap<>();
+                params.put("referenceBand", "B5");
+                product = GPF.createProduct("Resample", params, product);
+                product.setFileLocation(productFileLocation);
+            } else if (isLandsat(outputFilesNames[0])) {
+                Map<String, Object> params = new HashMap<>();
+                params.put("referenceBand", "red");
+                product = GPF.createProduct("Resample", params, product);
+                product.setFileLocation(productFileLocation);
+            }
             getLogger().info(String.format("Opened product width = %d height = %d",
                                            product.getSceneRasterWidth(),
                                            product.getSceneRasterHeight()));
-            ProductReader productReader = product.getProductReader();
-            if (productReader != null) {
-                getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
-            }
+            CalvalusProductIO.printProductOnStdout(product, "executable output");
             if (hasInvalidStartAndStopTime(product)) {
                 getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time. Copying from input.");
                 // When processing with Polymere no time information is attached to the product.

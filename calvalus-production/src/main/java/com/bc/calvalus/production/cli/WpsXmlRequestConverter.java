@@ -1,6 +1,7 @@
 package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.production.ProductionRequest;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.util.Map;
 
@@ -58,7 +59,7 @@ public class WpsXmlRequestConverter {
                "      <ows:Identifier>" + key + "</ows:Identifier>\n" +
                "      <ows:Title/>\n" +
                "      <wps:Data>\n" +
-               "        <wps:LiteralData>" + value + "</wps:LiteralData>\n" +
+               "        <wps:LiteralData>" + StringEscapeUtils.escapeXml(value) + "</wps:LiteralData>\n" +
                "      </wps:Data>\n" +
                "    </wps:Input>\n";
     }

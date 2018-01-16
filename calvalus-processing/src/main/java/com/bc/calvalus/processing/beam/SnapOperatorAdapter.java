@@ -142,6 +142,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                 throw new IllegalArgumentException("Invalid operator parameters: " + e.getMessage(), e);
             }
             product = GPF.createProduct(operatorName, parameterMap, product);
+            CalvalusProductIO.printProductOnStdout(product, "computed by operator " + operatorName);
         }
         return product;
     }

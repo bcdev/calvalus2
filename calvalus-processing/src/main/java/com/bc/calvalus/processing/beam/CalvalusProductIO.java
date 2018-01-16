@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
@@ -25,9 +26,14 @@ import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.RasterDataNode;
+import org.esa.snap.core.datamodel.TiePointGrid;
+import org.esa.snap.core.datamodel.VirtualBand;
 import org.xeustechnologies.jtar.TarEntry;
 import org.xeustechnologies.jtar.TarInputStream;
 import ucar.unidata.io.bzip2.CBZip2InputStream;
@@ -83,7 +89,7 @@ public class CalvalusProductIO {
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
         long t1 = System.currentTimeMillis();
-        LOG.info(String.format("readProduct: path %s [%s]", pathConf.getPath(), inputFormat));
+        LOG.info(String.format("readProduct: %s [%s]", pathConf.getPath(), inputFormat));
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
             final Path path = pathConf.getPath();
@@ -111,25 +117,12 @@ public class CalvalusProductIO {
             LOG.info(String.format("readProduct: ...done. Product start time: %s; product end time: %s", product.getStartTime().format(), product.getEndTime().format()));
         }
         LOG.info(String.format("readProduct: Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
-        Dimension tiling = product.getPreferredTileSize();
-        if (tiling != null) {
-            LOG.info(String.format("readProduct: Tiling: width = %d height = %d", (int) tiling.getWidth(), (int) tiling.getHeight()));
-        } else {
-            LOG.info("readProduct: Tiling: NONE");
-        }
-        ProductReader productReader = product.getProductReader();
-        if (productReader != null) {
-            LOG.info(String.format("readProduct: ProductReader: %s", productReader.toString()));
-            LOG.info(String.format("readProduct: ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
-        }
-        GeoCoding geoCoding = product.getSceneGeoCoding();
-        if (geoCoding != null) {
-            LOG.info(String.format("readProduct: GeoCoding: %s", geoCoding.getClass().getSimpleName()));
-        } else {
-            LOG.warning("readProduct: GeoCoding: null");
+        if (product.getSceneGeoCoding() == null) {
+            LOG.warning("readProduct: GeoCoding: NULL");
         }
         long t2 = System.currentTimeMillis();
         LOG.info(String.format("readProduct: took %,d ms for %s", t2 - t1, path));
+        printProductOnStdout(product, "opened from " + pathConf.getPath());
         return product;
     }
 
@@ -333,5 +326,101 @@ public class CalvalusProductIO {
             }
         }
         return false;
+    }
+
+    public static void printProductOnStdout(Product p, String origin) {
+        System.out.println("-----------------------------------------------------------------------------------------");
+        System.out.println(origin);
+        if (p == null) {
+            System.out.println("product is NULL");
+            System.out.println("-----------------------------------------------------------------------------------------");
+            return;
+        }
+        Dimension preferredTileSize = p.getPreferredTileSize();
+        String productTileSize = "";
+        if (preferredTileSize != null) {
+            productTileSize = String.format("[%d,%d]", preferredTileSize.width, preferredTileSize.height);
+        }
+        System.out.printf("Product: %s (%d,%d)%s%n",
+                p.getName(),
+                p.getSceneRasterWidth(),
+                p.getSceneRasterHeight(),
+                productTileSize
+        );
+        ProductReader productReader = p.getProductReader();
+        if (productReader != null) {
+            System.out.printf("ProductReader: %s%n", productReader.toString());
+            ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
+            if (readerPlugIn != null) {
+                System.out.printf("ProductReaderPlugin: %s%n", readerPlugIn.toString());
+            }
+        }
+        File fileLocation = p.getFileLocation();
+        if (fileLocation != null) {
+            System.out.printf("FileLocation: %s%n", fileLocation);
+        }
+        GeoCoding geoCoding = p.getSceneGeoCoding();
+        if (geoCoding != null) {
+            System.out.printf("GeoCoding: %s%n", geoCoding.getClass().getSimpleName());
+        } else {
+            System.out.println("GeoCoding: NULL");
+        }
+        System.out.println("RasterDataNodes:");
+        List<RasterDataNode> rasterDataNodes = p.getRasterDataNodes();
+        for (RasterDataNode rdn : rasterDataNodes) {
+            String rdnTileSize = "";
+            if (rdn.isSourceImageSet()) {
+                MultiLevelImage image = rdn.getSourceImage();
+                rdnTileSize = String.format("[%d,%d]", image.getTileWidth(), image.getTileHeight());
+            }
+            String[] rasterDataNodeInfo = getRasterDataNodeInfo(rdn);
+            String rdnType = rasterDataNodeInfo[0];
+            String rdnDesc = "";
+            if (rasterDataNodeInfo.length == 2) {
+                rdnDesc = " {" + rasterDataNodeInfo[1] + "}";
+            }
+            System.out.printf("    %s %s:%s (%d,%d)%s%s%n",
+                              rdnType,
+                              rdn.getName(),
+                              ProductData.getTypeString(rdn.getDataType()),
+                              rdn.getRasterWidth(),
+                              rdn.getRasterHeight(),
+                              rdnTileSize,
+                              rdnDesc
+            );
+        }
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+    
+    private static String[] getRasterDataNodeInfo(RasterDataNode rdn) {
+        if (rdn instanceof VirtualBand) {
+            return new String[]{"V", ((VirtualBand) rdn).getExpression()};
+        } else if (rdn instanceof Mask) {
+            Mask mask = (Mask) rdn;
+            Mask.ImageType imageType = mask.getImageType();
+            String desc = imageType.getName();
+            if (imageType instanceof Mask.RangeType) {
+                desc += ": " + Mask.RangeType.getExpression(mask);
+            } else if (imageType instanceof Mask.BandMathsType) {
+                desc += ": " + Mask.BandMathsType.getExpression(mask);                
+            } else if (imageType instanceof Mask.VectorDataType) {
+                desc += ": vectorData=" + Mask.VectorDataType.getVectorData(mask).getName();                
+            }
+            return new String[]{"M", desc};
+        } else if (rdn instanceof TiePointGrid) {
+            return new String[]{"T"};
+        } else if (rdn instanceof Band) {
+            Band band = (Band) rdn;
+            if (band.isFlagBand()) {
+                String flags = String.join("|", band.getFlagCoding().getFlagNames());
+                return new String[]{"F", flags};
+            } else if (band.isIndexBand()) {
+                String indices = String.join("|", band.getIndexCoding().getIndexNames());
+                return new String[]{"I", indices};
+            }
+            return new String[]{"B"};
+        } else {
+            return new String[]{"R"};
+        }
     }
 }
