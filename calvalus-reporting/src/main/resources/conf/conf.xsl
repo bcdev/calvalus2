@@ -61,6 +61,24 @@
                     </configuredRam>
                 </xsl:if>
 
+                <xsl:if test="name='calvalus.input.collectionName'">
+                    <inputCollectionName>
+                        <xsl:value-of select="value"/>
+                    </inputCollectionName>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.system.name'">
+                    <systemName>
+                        <xsl:value-of select="value"/>
+                    </systemName>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.output.productType'">
+                    <outputType>
+                        <xsl:value-of select="value"/>
+                    </outputType>
+                </xsl:if>
+
                 <xsl:choose>
                     <xsl:when test="name='calvalus.input.pathPatterns'">
                         <inProductType>

@@ -19,6 +19,7 @@ import java.util.Locale;
 
 /**
  * @author muhammad.bc.
+ * @author hans
  */
 public class CodeReport {
 
@@ -32,9 +33,12 @@ public class CodeReport {
     private final String jobName;
     private final String jobSubmissionTime;
     private final String userName;
+    private final String inProducts;
+    private final String inProductsType;
     private final String inCollection;
     private final long inProductsNumber;
     private final double inProductsSize;
+    private final String requestSource;
     private final String processingCenter;
     private final long configuredCpuCoresPerTask;
     private final double cpuCoreHours;
@@ -45,6 +49,7 @@ public class CodeReport {
     private final double duration;
     private final String processingStatus;
     private final long outProductsNumber;
+    private final String outProductsType;
     private final String outCollection;
     private final String outProductsLocation;
     private final double outProductsSize;
@@ -60,9 +65,12 @@ public class CodeReport {
                 String jobName,
                 String jobSubmissionTime,
                 String userName,
+                String inProducts,
+                String inProductsType,
                 String inCollection,
                 long inProductsNumber,
                 double inProductsSize,
+                String requestSource,
                 String processingCenter,
                 long configuredCpuCoresPerTask,
                 double cpuCoreHours,
@@ -73,6 +81,7 @@ public class CodeReport {
                 double duration,
                 String processingStatus,
                 long outProductsNumber,
+                String outProductsType,
                 String outCollection,
                 String outProductsLocation,
                 double outProductsSize) {
@@ -83,9 +92,12 @@ public class CodeReport {
         this.jobName = jobName;
         this.jobSubmissionTime = jobSubmissionTime;
         this.userName = userName;
+        this.inProducts = inProducts;
+        this.inProductsType = inProductsType;
         this.inCollection = inCollection;
         this.inProductsNumber = inProductsNumber;
         this.inProductsSize = inProductsSize;
+        this.requestSource = requestSource;
         this.processingCenter = processingCenter;
         this.configuredCpuCoresPerTask = configuredCpuCoresPerTask;
         this.cpuCoreHours = cpuCoreHours;
@@ -96,6 +108,7 @@ public class CodeReport {
         this.duration = duration;
         this.processingStatus = processingStatus;
         this.outProductsNumber = outProductsNumber;
+        this.outProductsType = outProductsType;
         this.outCollection = outCollection;
         this.outProductsLocation = outProductsLocation;
         this.outProductsSize = outProductsSize;
@@ -108,11 +121,14 @@ public class CodeReport {
         this.jobName = usageStatistic.getJobName();
         this.jobSubmissionTime = convertMillisToIsoString(usageStatistic.getSubmitTime());
         this.userName = usageStatistic.getUser();
-        this.inCollection = usageStatistic.getInProductType();
+        this.inProducts = usageStatistic.getInputPath();
+        this.inProductsType = usageStatistic.getInProductType();
+        this.inCollection = usageStatistic.getCollectionName();
         this.inProductsNumber = usageStatistic.getTotalMaps();
         this.inProductsSize = getFileBytesRead(usageStatistic.getFileBytesRead(),
                                                usageStatistic.getInputFileBytesRead(),
                                                usageStatistic.getFileSplitBytesRead());
+        this.requestSource = usageStatistic.getSystemName();
         this.processingCenter = CALVALUS_PROCESSING_CENTER;
         this.configuredCpuCoresPerTask = parseLong(usageStatistic.getConfiguredCpuCores());
         this.cpuCoreHours = usageStatistic.getCpuMilliseconds() / (3600.0 * 1000.0);
@@ -124,6 +140,7 @@ public class CodeReport {
         this.duration = (usageStatistic.getFinishTime() - usageStatistic.getStartTime()) / 1000.0;
         this.processingStatus = usageStatistic.getState();
         this.outProductsNumber = usageStatistic.getReducesCompleted() > 0 ? usageStatistic.getReducesCompleted() : usageStatistic.getMapsCompleted();
+        this.outProductsType = usageStatistic.getOutputType();
         this.outCollection = usageStatistic.getJobName();
         this.outProductsLocation = usageStatistic.getOutputDir();
         this.outProductsSize = getGbFromBytes(usageStatistic.getFileBytesWritten());
@@ -177,8 +194,8 @@ public class CodeReport {
         return userName;
     }
 
-    public String getInCollection() {
-        return inCollection;
+    public String getInProductsType() {
+        return inProductsType;
     }
 
     public long getInProductsNumber() {

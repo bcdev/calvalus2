@@ -2,6 +2,7 @@ package com.bc.calvalus.reporting.common;
 
 /**
  * @author muhammad.bc.
+ * @author hans
  */
 public class UsageStatistic {
 
@@ -14,7 +15,6 @@ public class UsageStatistic {
     private long finishTime;
     private String state;
 
-    private String outputDir;
     private String jobName;
     private String remoteUser;
     private String remoteRef;
@@ -22,8 +22,12 @@ public class UsageStatistic {
     private String workflowType;
     private String inputPath;
     private String inProductType;
+    private String collectionName;
     private String configuredCpuCores;
     private String configuredRam;
+    private String systemName;
+    private String outputType;
+    private String outputDir;
 
     private int mapsCompleted;
     private int totalMaps;
@@ -46,7 +50,6 @@ public class UsageStatistic {
                           long startTime,
                           long finishTime,
                           String state,
-                          String outputDir,
                           String jobName,
                           String remoteUser,
                           String remoteRef,
@@ -54,8 +57,12 @@ public class UsageStatistic {
                           String workflowType,
                           String inputPath,
                           String inProductType,
+                          String collectionName,
                           String configuredCpuCores,
                           String configuredRam,
+                          String systemName,
+                          String outputType,
+                          String outputDir,
                           int mapsCompleted,
                           int totalMaps,
                           int reducesCompleted,
@@ -76,7 +83,6 @@ public class UsageStatistic {
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.state = state;
-        this.outputDir = outputDir;
         this.jobName = jobName;
         this.remoteUser = remoteUser;
         this.remoteRef = remoteRef;
@@ -84,8 +90,12 @@ public class UsageStatistic {
         this.workflowType = workflowType;
         this.inputPath = inputPath;
         this.inProductType = inProductType;
+        this.collectionName = collectionName;
         this.configuredCpuCores = configuredCpuCores;
         this.configuredRam = configuredRam;
+        this.systemName = systemName;
+        this.outputType = outputType;
+        this.outputDir = outputDir;
         this.mapsCompleted = mapsCompleted;
         this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
@@ -133,10 +143,6 @@ public class UsageStatistic {
         return state;
     }
 
-    public String getOutputDir() {
-        return outputDir;
-    }
-
     public String getJobName() {
         return jobName;
     }
@@ -165,12 +171,28 @@ public class UsageStatistic {
         return inProductType;
     }
 
+    public String getCollectionName() {
+        return collectionName;
+    }
+
     public String getConfiguredCpuCores() {
         return configuredCpuCores;
     }
 
     public String getConfiguredRam() {
         return configuredRam;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public String getOutputType() {
+        return outputType;
+    }
+
+    public String getOutputDir() {
+        return outputDir;
     }
 
     public int getMapsCompleted() {

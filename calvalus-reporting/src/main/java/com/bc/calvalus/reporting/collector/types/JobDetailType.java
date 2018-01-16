@@ -5,6 +5,7 @@ import java.util.List;
 
 /**
  * @author muhammad.bc.
+ * @author hans
  */
 public class JobDetailType {
 
@@ -40,6 +41,9 @@ public class JobDetailType {
     private String outputDir;
     private String configuredCpuCores;
     private String configuredRam;
+    private String collectionName;
+    private String systemName;
+    private String outputType;
 
     public String getJobId() {
         return jobId;
@@ -169,6 +173,18 @@ public class JobDetailType {
         return configuredRam;
     }
 
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public String getOutputType() {
+        return outputType;
+    }
+
     // use for test only
     public void setJobId(String jobId) {
         this.jobId = jobId;
@@ -192,7 +208,7 @@ public class JobDetailType {
     }
 
     public void setConfInfo(JobConf conf) {
-        this.inputPath = conf.getPath();
+        this.inputPath = conf.getConfXmlPath();
         this.jobName = conf.getJobName();
         this.wpsJobId = conf.getWpsJobId();
         this.remoteRef = conf.getRemoteRef();
@@ -204,6 +220,9 @@ public class JobDetailType {
         this.outputDir = conf.getOutputDir();
         this.configuredCpuCores = conf.getConfiguredCpuCores();
         this.configuredRam = conf.getConfiguredRam();
+        this.collectionName = conf.getInputCollectionName();
+        this.systemName = conf.getSystemName();
+        this.outputType = conf.getOutputType();
     }
 
     public void setCounterInfo(JobCounters jobCounters) {
