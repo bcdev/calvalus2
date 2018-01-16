@@ -24,6 +24,8 @@ public interface JobConfigNames {
     String CALVALUS_CALVALUS_BUNDLE = "calvalus.calvalus.bundle";
     String CALVALUS_SNAP_BUNDLE = "calvalus.snap.bundle";
 
+    String CALVALUS_SYSTEM_NAME = "calvalus.system.name";
+
     String CALVALUS_INPUT_DIR = "calvalus.input.dir";
     String CALVALUS_INPUT_PATH_PATTERNS = "calvalus.input.pathPatterns";
     String CALVALUS_INPUT_DATE_RANGES = "calvalus.input.dateRanges";
