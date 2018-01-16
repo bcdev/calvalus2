@@ -251,22 +251,24 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public Product openProcessedProduct() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
             Product product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            CalvalusProductIO.printProductOnStdout(product, "executable output");
             File productFileLocation = product.getFileLocation();
             if (isSentinel2(outputFilesNames[0])) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("referenceBand", "B5");
                 product = GPF.createProduct("Resample", params, product);
+                CalvalusProductIO.printProductOnStdout(product, "resampled");
                 product.setFileLocation(productFileLocation);
             } else if (isLandsat(outputFilesNames[0])) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("referenceBand", "red");
                 product = GPF.createProduct("Resample", params, product);
+                CalvalusProductIO.printProductOnStdout(product, "resampled");
                 product.setFileLocation(productFileLocation);
             }
             getLogger().info(String.format("Opened product width = %d height = %d",
                                            product.getSceneRasterWidth(),
                                            product.getSceneRasterHeight()));
-            CalvalusProductIO.printProductOnStdout(product, "executable output");
             if (hasInvalidStartAndStopTime(product)) {
                 getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time. Copying from input.");
                 // When processing with Polymere no time information is attached to the product.
