@@ -128,6 +128,9 @@ public abstract class HadoopProductionType implements ProductionType {
         if(productionRequestParameters.containsKey("collectionName")){
             conf.set(JobConfigNames.CALVALUS_INPUT_COLLECTION_NAME, productionRequest.getString("collectionName"));
         }
+        if(productionRequestParameters.containsKey("inputProductType")){
+            conf.set(JobConfigNames.CALVALUS_INPUT_PRODUCT_TYPE, productionRequest.getString("inputProductType"));
+        }
         if (productionRequestParameters.containsKey("inputTable")) {
             conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
         } else if (productionRequestParameters.containsKey("geoInventory")) {
