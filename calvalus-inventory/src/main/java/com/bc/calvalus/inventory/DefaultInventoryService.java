@@ -133,10 +133,8 @@ public class DefaultInventoryService implements InventoryService {
                 final FileStatus[] userDatasetsStatus = fileSystem.listStatus(userDirStatus.getPath());
                 for (FileStatus userDatasetStatus : userDatasetsStatus) {
                     try {
-                        final FileStatus[] fileStatuses = fileSystem.listStatus(new Path(userDatasetStatus.getPath(), ProductSetPersistable.FILENAME));
-                        if (fileStatuses.length == 1) {
-                            accu.add(fileStatuses[0].getPath());
-                        }
+                        final FileStatus fileStatuses = fileSystem.getFileStatus(new Path(userDatasetStatus.getPath(), ProductSetPersistable.FILENAME));
+                        accu.add(fileStatuses.getPath());
                     } catch (AccessControlException | FileNotFoundException ignore) {
                     }
                 }
