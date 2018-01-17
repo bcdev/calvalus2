@@ -67,6 +67,12 @@
                     </inputCollectionName>
                 </xsl:if>
 
+                <xsl:if test="name='calvalus.input.productType'">
+                    <inputType>
+                        <xsl:value-of select="value"/>
+                    </inputType>
+                </xsl:if>
+
                 <xsl:if test="name='calvalus.system.name'">
                     <systemName>
                         <xsl:value-of select="value"/>
@@ -81,14 +87,14 @@
 
                 <xsl:choose>
                     <xsl:when test="name='calvalus.input.pathPatterns'">
-                        <inProductType>
+                        <inputPath>
                             <xsl:value-of select="value"/>
-                        </inProductType>
+                        </inputPath>
                     </xsl:when>
-                    <xsl:when test="name='calvalus.input.collection'">
-                        <inProductType>
+                    <xsl:when test="name='calvalus.input.geoInventory'">
+                        <inputPath>
                             <xsl:value-of select="value"/>
-                        </inProductType>
+                        </inputPath>
                     </xsl:when>
                 </xsl:choose>
             </xsl:for-each>

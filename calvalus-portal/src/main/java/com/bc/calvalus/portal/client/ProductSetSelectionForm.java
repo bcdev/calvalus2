@@ -129,6 +129,7 @@ public class ProductSetSelectionForm extends Composite {
             parameters.put("inputPath", selectedProductSet.getPath());
         }
         parameters.put("collectionName", selectedProductSet.getName());
+        parameters.put("inputProductType", selectedProductSet.getProductType());
         return parameters;
     }
 

@@ -22,7 +22,8 @@ import javax.xml.bind.annotation.XmlType;
             "processType",
             "workflowType",
             "dataProcessorUsed",
-            "inProductType",
+            "inputPath",
+            "inputType",
             "inputCollectionName",
             "outputDir",
             "outputType",
@@ -50,7 +51,9 @@ public class JobConf {
     @XmlElement(required = true)
     private String dataProcessorUsed;
     @XmlElement(required = true)
-    private String inProductType;
+    private String inputPath;
+    @XmlElement(required = true)
+    private String inputType;
     @XmlElement(required = true)
     private String inputCollectionName;
     @XmlElement(required = true)
@@ -128,12 +131,20 @@ public class JobConf {
         this.dataProcessorUsed = dataProcessorUsed;
     }
 
-    public String getInProductType() {
-        return inProductType;
+    public String getInputPath() {
+        return inputPath;
     }
 
-    public void setInProductType(String inProductType) {
-        this.inProductType = inProductType;
+    public void setInputPath(String inputPath) {
+        this.inputPath = inputPath;
+    }
+
+    public String getInputType() {
+        return inputType;
+    }
+
+    public void setInputType(String inputType) {
+        this.inputType = inputType;
     }
 
     public String getInputCollectionName() {

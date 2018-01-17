@@ -17,7 +17,7 @@ public class JobDetailType {
     private String submitTime;
     private String startTime;
     private String finishTime;
-    private String inputPath;
+    private String confXmlPath;
     private String mapsCompleted;
     private String reducesCompleted;
     private String fileBytesRead;
@@ -36,6 +36,7 @@ public class JobDetailType {
     private String processType;
     private String wpsJobId;
     private String workflowType;
+    private String inputPath;
     private String inProductType;
     private String dataProcessorUsed;
     private String outputDir;
@@ -81,8 +82,8 @@ public class JobDetailType {
         return state;
     }
 
-    public String getInputPath() {
-        return inputPath;
+    public String getConfXmlPath() {
+        return confXmlPath;
     }
 
     public String getFileBytesRead() {
@@ -153,6 +154,10 @@ public class JobDetailType {
         return workflowType;
     }
 
+    public String getInputPath() {
+        return inputPath;
+    }
+
     public String getInProductType() {
         return inProductType;
     }
@@ -208,14 +213,15 @@ public class JobDetailType {
     }
 
     public void setConfInfo(JobConf conf) {
-        this.inputPath = conf.getConfXmlPath();
+        this.confXmlPath = conf.getConfXmlPath();
         this.jobName = conf.getJobName();
         this.wpsJobId = conf.getWpsJobId();
         this.remoteRef = conf.getRemoteRef();
         this.remoteUser = conf.getRemoteUser();
         this.processType = conf.getProcessType();
         this.workflowType = conf.getWorkflowType();
-        this.inProductType = conf.getInProductType();
+        this.inputPath = conf.getInputPath();
+        this.inProductType = conf.getInputType();
         this.dataProcessorUsed = conf.getDataProcessorUsed();
         this.outputDir = conf.getOutputDir();
         this.configuredCpuCores = conf.getConfiguredCpuCores();
