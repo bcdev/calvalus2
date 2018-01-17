@@ -72,8 +72,6 @@ public class OrderL2ProductionView extends OrderProductionView {
                 @Override
                 public void onClearSelectionClick() {
                     productsFromCatalogueForm.removeSelections();
-                    productSetSelectionForm.removeSelections();
-                    productSetFilterForm.removeSelections();
                 }
             });
         }

@@ -1,7 +1,6 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoInputSelection;
-import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -58,11 +57,12 @@ public class ProductsFromCatalogueForm extends Composite {
     }
 
     public void validateForm(String collectionNameSelected) throws ValidationException {
-        if (collectionName != null &&
-                !collectionNameSelected.equals(collectionName)) {
+        if (productIdentifiersCount > 0 &&
+            collectionName != null &&
+            !collectionNameSelected.equals(collectionName)) {
             throw new ValidationException(this,
                                           "The selected input files are not consistent with the selected input file set. " +
-                                                  "To change the input file set, please first clear the input files selection");
+                                          "To change the input file set, please first clear the input files selection");
         }
     }
 
@@ -75,7 +75,11 @@ public class ProductsFromCatalogueForm extends Composite {
 
     public void setValues(Map<String, String> parameters) {
         productIdentifiersString = parameters.get("productIdentifiers");
-        collectionName = parameters.get("collectionName");
+        if (productIdentifiersString != null && productIdentifiersString.length() > 0) {
+            collectionName = parameters.get("collectionName");
+        } else {
+            collectionName = null;
+        }
         updateProductListTextArea();
         updateFileCount();
     }
