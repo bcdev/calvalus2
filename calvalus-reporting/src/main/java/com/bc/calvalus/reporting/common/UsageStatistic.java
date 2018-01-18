@@ -19,6 +19,7 @@ public class UsageStatistic {
     private String remoteUser;
     private String remoteRef;
     private String processType;
+    private String mapClass;
     private String workflowType;
     private String inputPath;
     private String inProductType;
@@ -54,6 +55,7 @@ public class UsageStatistic {
                           String remoteUser,
                           String remoteRef,
                           String processType,
+                          String mapClass,
                           String workflowType,
                           String inputPath,
                           String inProductType,
@@ -87,6 +89,7 @@ public class UsageStatistic {
         this.remoteUser = remoteUser;
         this.remoteRef = remoteRef;
         this.processType = processType;
+        this.mapClass = mapClass;
         this.workflowType = workflowType;
         this.inputPath = inputPath;
         this.inProductType = inProductType;
@@ -157,6 +160,10 @@ public class UsageStatistic {
 
     public String getProcessType() {
         return processType;
+    }
+
+    public String getMapClass() {
+        return mapClass;
     }
 
     public String getWorkflowType() {

@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlType;
             "processType",
             "workflowType",
             "dataProcessorUsed",
+            "mapClass",
             "inputPath",
             "inputType",
             "inputCollectionName",
@@ -50,6 +51,8 @@ public class JobConf {
     private String workflowType;
     @XmlElement(required = true)
     private String dataProcessorUsed;
+    @XmlElement(required = true)
+    private String mapClass;
     @XmlElement(required = true)
     private String inputPath;
     @XmlElement(required = true)
@@ -129,6 +132,14 @@ public class JobConf {
 
     public void setDataProcessorUsed(String dataProcessorUsed) {
         this.dataProcessorUsed = dataProcessorUsed;
+    }
+
+    public String getMapClass() {
+        return mapClass;
+    }
+
+    public void setMapClass(String mapClass) {
+        this.mapClass = mapClass;
     }
 
     public String getInputPath() {

@@ -49,6 +49,12 @@
                     </dataProcessorUsed>
                 </xsl:if>
 
+                <xsl:if test="name='mapreduce.job.map.class'">
+                    <mapClass>
+                        <xsl:value-of select="value"/>
+                    </mapClass>
+                </xsl:if>
+
                 <xsl:if test="name='mapreduce.map.cpu.vcores'">
                     <configuredCpuCores>
                         <xsl:value-of select="value"/>

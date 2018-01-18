@@ -28,11 +28,15 @@ public class CodeReport {
     private static final String VERSION = "1.0";
     private static final String SERVICE_HOST = "processing";
     private static final String CALVALUS_PROCESSING_CENTER = "Calvalus";
+    private static final double KILO_BYTE = 1024.0;
+    private static final double SECONDS_PER_HOUR = 3600.0;
+    private static final double MILLIS_PER_SECOND = 1000.0;
 
     private final String requestId;
     private final String jobName;
     private final String jobSubmissionTime;
     private final String userName;
+    private final String queueName;
     private final String inProducts;
     private final String inProductsType;
     private final String inCollection;
@@ -54,17 +58,18 @@ public class CodeReport {
     private final String outProductsLocation;
     private final double outProductsSize;
 
-    private String messageType;
-    private String serviceId;
+    private String messageType = PRODUCT_PROCESSED_MESSAGE;
+    private String serviceId = CODE_DE_PROCESSING_SERVICE;
     private String serviceHost;
     private String messageTime;
-    private String version;
+    private String version = VERSION;
 
     CodeReport(
                 String requestId,
                 String jobName,
                 String jobSubmissionTime,
                 String userName,
+                String queueName,
                 String inProducts,
                 String inProductsType,
                 String inCollection,
@@ -86,12 +91,11 @@ public class CodeReport {
                 String outProductsLocation,
                 double outProductsSize) {
 
-        defaultProductMessage();
-
         this.requestId = requestId;
         this.jobName = jobName;
         this.jobSubmissionTime = jobSubmissionTime;
         this.userName = userName;
+        this.queueName = queueName;
         this.inProducts = inProducts;
         this.inProductsType = inProductsType;
         this.inCollection = inCollection;
@@ -112,15 +116,17 @@ public class CodeReport {
         this.outCollection = outCollection;
         this.outProductsLocation = outProductsLocation;
         this.outProductsSize = outProductsSize;
+
+        this.serviceHost = getHostName();
+        this.messageTime = LocalDateTime.now().toString();
     }
 
     CodeReport(UsageStatistic usageStatistic) {
-        defaultProductMessage();
-
         this.requestId = usageStatistic.getJobId();
         this.jobName = usageStatistic.getJobName();
         this.jobSubmissionTime = convertMillisToIsoString(usageStatistic.getSubmitTime());
         this.userName = usageStatistic.getUser();
+        this.queueName = usageStatistic.getQueue();
         this.inProducts = usageStatistic.getInputPath();
         this.inProductsType = usageStatistic.getInProductType();
         this.inCollection = usageStatistic.getCollectionName();
@@ -131,19 +137,36 @@ public class CodeReport {
         this.requestSource = usageStatistic.getSystemName();
         this.processingCenter = CALVALUS_PROCESSING_CENTER;
         this.configuredCpuCoresPerTask = parseLong(usageStatistic.getConfiguredCpuCores());
-        this.cpuCoreHours = usageStatistic.getCpuMilliseconds() / (3600.0 * 1000.0);
-        this.processorName = usageStatistic.getProcessType();
-        this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / 1024.0;
+        this.cpuCoreHours = usageStatistic.getCpuMilliseconds() / (SECONDS_PER_HOUR * MILLIS_PER_SECOND);
+        this.processorName = resolveProcessorName(usageStatistic.getProcessType(),
+                                                  usageStatistic.getMapClass(),
+                                                  usageStatistic.getWorkflowType());
+        this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / KILO_BYTE;
         this.ramHours = calculateRamHours(usageStatistic.getMbMillisMapTotal(),
                                           usageStatistic.getMbMillisReduceTotal());
         this.processingWorkflow = usageStatistic.getWorkflowType();
-        this.duration = (usageStatistic.getFinishTime() - usageStatistic.getStartTime()) / 1000.0;
+        this.duration = (usageStatistic.getFinishTime() - usageStatistic.getStartTime()) / MILLIS_PER_SECOND;
         this.processingStatus = usageStatistic.getState();
         this.outProductsNumber = usageStatistic.getReducesCompleted() > 0 ? usageStatistic.getReducesCompleted() : usageStatistic.getMapsCompleted();
         this.outProductsType = usageStatistic.getOutputType();
         this.outCollection = usageStatistic.getJobName();
         this.outProductsLocation = usageStatistic.getOutputDir();
         this.outProductsSize = getGbFromBytes(usageStatistic.getFileBytesWritten());
+
+        this.serviceHost = getHostName();
+        this.messageTime = LocalDateTime.now().toString();
+    }
+
+    private String resolveProcessorName(String processType, String mapClass, String workflowType) {
+        if (processType != null) {
+            return processType;
+        } else if (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains("l3.L3FormatterMapper")) {
+            return "Formatting";
+        } else if ("L3".equalsIgnoreCase(workflowType)) {
+            return "Aggregation";
+        } else {
+            return "None";
+        }
     }
 
     private double getFileBytesRead(long fileBytesRead, long inputFileBytesRead, long fileSplitBytesRead) {
@@ -165,7 +188,7 @@ public class CodeReport {
     }
 
     private double getGbFromBytes(long fileBytesRead) {
-        return fileBytesRead / (1024.0 * 1024.0 * 1024.0);
+        return fileBytesRead / (KILO_BYTE * KILO_BYTE * KILO_BYTE);
     }
 
     private String convertMillisToIsoString(long timeMillis) {
@@ -175,87 +198,7 @@ public class CodeReport {
     }
 
     private double calculateRamHours(long mbMillisMapTotal, long mbMillisReduceTotal) {
-        return (mbMillisMapTotal + mbMillisReduceTotal) / (1024.0 * 3600.0 * 1000.0);
-    }
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public String getJobName() {
-        return jobName;
-    }
-
-    public String getJobSubmissionTime() {
-        return jobSubmissionTime;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public String getInProductsType() {
-        return inProductsType;
-    }
-
-    public long getInProductsNumber() {
-        return inProductsNumber;
-    }
-
-    public double getInProductsSize() {
-        return inProductsSize;
-    }
-
-    public String getProcessingCenter() {
-        return processingCenter;
-    }
-
-    public long getConfiguredCpuCoresPerTask() {
-        return configuredCpuCoresPerTask;
-    }
-
-    public double getCpuCoreHours() {
-        return cpuCoreHours;
-    }
-
-    public String getProcessorName() {
-        return processorName;
-    }
-
-    public double getConfiguredRamPerTask() {
-        return configuredRamPerTask;
-    }
-
-    public double getRamHours() {
-        return ramHours;
-    }
-
-    public String getProcessingWorkflow() {
-        return processingWorkflow;
-    }
-
-    public double getDuration() {
-        return duration;
-    }
-
-    public String getProcessingStatus() {
-        return processingStatus;
-    }
-
-    public long getOutProductsNumber() {
-        return outProductsNumber;
-    }
-
-    public String getOutCollection() {
-        return outCollection;
-    }
-
-    public String getOutProductsLocation() {
-        return outProductsLocation;
-    }
-
-    public double getOutProductsSize() {
-        return outProductsSize;
+        return (mbMillisMapTotal + mbMillisReduceTotal) / (KILO_BYTE * SECONDS_PER_HOUR * MILLIS_PER_SECOND);
     }
 
     public String toJson() {
@@ -268,14 +211,6 @@ public class CodeReport {
         });
         Gson gson = gsonBuilder.setPrettyPrinting().create();
         return gson.toJson(this);
-    }
-
-    private void defaultProductMessage() {
-        this.messageType = PRODUCT_PROCESSED_MESSAGE;
-        this.serviceId = CODE_DE_PROCESSING_SERVICE;
-        this.serviceHost = getHostName();
-        this.messageTime = LocalDateTime.now().toString();
-        this.version = VERSION;
     }
 
     private String getHostName() {

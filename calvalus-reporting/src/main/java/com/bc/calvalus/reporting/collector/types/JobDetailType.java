@@ -34,6 +34,7 @@ public class JobDetailType {
     private String remoteUser;
     private String remoteRef;
     private String processType;
+    private String mapClass;
     private String wpsJobId;
     private String workflowType;
     private String inputPath;
@@ -146,6 +147,10 @@ public class JobDetailType {
         return processType;
     }
 
+    public String getMapClass() {
+        return mapClass;
+    }
+
     public String getWpsJobId() {
         return wpsJobId;
     }
@@ -219,6 +224,7 @@ public class JobDetailType {
         this.remoteRef = conf.getRemoteRef();
         this.remoteUser = conf.getRemoteUser();
         this.processType = conf.getProcessType();
+        this.mapClass = conf.getMapClass();
         this.workflowType = conf.getWorkflowType();
         this.inputPath = conf.getInputPath();
         this.inProductType = conf.getInputType();
