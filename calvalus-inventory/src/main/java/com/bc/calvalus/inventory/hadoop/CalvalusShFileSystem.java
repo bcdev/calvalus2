@@ -31,9 +31,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
-import org.apache.hadoop.security.AccessControlException;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -277,7 +277,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
         final String p = path.toUri().getPath();
         Process proc = callUnixCommand("cat", p);
         LOG.info("file " + p + " externally opened for reading");
-        return new DummyFSDataInputStream(proc.getInputStream()){
+        return new DummyFSDataInputStream(proc.getInputStream(), p, this){
             @Override
             public void close() throws IOException {
                 super.close();
@@ -394,7 +394,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     }
 
 
-    private Process callUnixCommand(String cmd, String... path) throws IOException {
+    Process callUnixCommand(String cmd, String... path) throws IOException {
         ProcessBuilder pb = path.length == 1
                 ? new ProcessBuilder(CALVALUS_SH_COMMAND, username, cmd, path[0])
                 : new ProcessBuilder(CALVALUS_SH_COMMAND, username, cmd, path[0], path[1]);
