@@ -16,6 +16,9 @@
 
 package com.bc.calvalus.portal.server;
 
+import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
+
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -41,9 +44,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.util.ConverterUtils;
-import org.owasp.esapi.User;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,8 +59,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
-
-import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
+import java.util.logging.Level;
 
 /**
  * Servlet to handle log file viewing for productions
@@ -71,7 +71,7 @@ public class HadoopLogServlet extends HttpServlet {
     private boolean withExternalAccessControl;
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         doGet(req, resp);
     }
 
@@ -83,12 +83,14 @@ public class HadoopLogServlet extends HttpServlet {
             return;
         }
         ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
-        withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean("calvalus.accesscontrol.external", false);
+        withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean(
+                    "calvalus.accesscontrol.external", false);
         try {
             Production production = serviceContainer.getProductionService().getProduction(productionId);
             final String userName = getUserName(req).toLowerCase();
             ProcessState processState = production.getProcessingStatus().getState();
             WorkflowItem workflow = production.getWorkflow();
+            CalvalusLogger.getLogger().log(Level.INFO, "processState = ", processState.toString());
             if (processState == ProcessState.ERROR) {
                 handleWorkFlow(workflow, ProcessState.ERROR, resp, TaskCompletionEvent.Status.FAILED, userName);
             } else if (processState == ProcessState.COMPLETED) {
@@ -101,7 +103,8 @@ public class HadoopLogServlet extends HttpServlet {
         }
     }
 
-    private void handleWorkFlow(WorkflowItem workflow, ProcessState processState, HttpServletResponse resp, TaskCompletionEvent.Status status, String userName) throws IOException {
+    private void handleWorkFlow(WorkflowItem workflow, ProcessState processState, HttpServletResponse resp,
+                                TaskCompletionEvent.Status status, String userName) throws IOException {
         WorkflowItem[] items = workflow.getItems();
         if (items.length == 0) {
             // the one and only item must be the failed one
@@ -116,7 +119,9 @@ public class HadoopLogServlet extends HttpServlet {
         }
     }
 
-    private void showLogFor(WorkflowItem workflowItem, HttpServletResponse resp, TaskCompletionEvent.Status status, String userName) throws IOException {
+    private void showLogFor(WorkflowItem workflowItem, HttpServletResponse resp, TaskCompletionEvent.Status status,
+                            String userName) throws IOException {
+        CalvalusLogger.getLogger().log(Level.INFO, "showing log with status " + status);
         if (workflowItem instanceof HadoopWorkflowItem) {
             HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
 
@@ -134,7 +139,8 @@ public class HadoopLogServlet extends HttpServlet {
         }
     }
 
-    private void showLogFor(HttpServletResponse resp, WorkflowItem hadoopWorkflowItem, JobClient jobClient, TaskCompletionEvent.Status status, String userName) throws IOException {
+    private void showLogFor(HttpServletResponse resp, WorkflowItem hadoopWorkflowItem, JobClient jobClient,
+                            TaskCompletionEvent.Status status, String userName) throws IOException {
         Object[] jobIds = hadoopWorkflowItem.getJobIds();
         if (jobIds.length != 1) {
             showErrorPage("found not one jobId, but:" + jobIds.length, resp);
@@ -145,58 +151,42 @@ public class HadoopLogServlet extends HttpServlet {
         try {
             RunningJob runningJob = jobClient.getJob(downgradeJobId);
             Configuration conf = jobClient.getConf();
+            CalvalusLogger.getLogger().log(Level.INFO, "runningJob = " + runningJob);
             if (runningJob == null) {
                 showErrorPage("No 'RunningJob' found for jobId: " + jobId, resp);
                 return;
             }
-            int eventCounter = 0;
-            while (true) {
-                TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
-                if (taskCompletionEvents.length == 0) {
-                    break;
-                }
-                eventCounter += taskCompletionEvents.length;
-                for (TaskCompletionEvent event : taskCompletionEvents) {
-                    if (event.getTaskStatus().equals(status)) {
-                        // TaskID taskID = event.getTaskAttemptId().getTaskID();
-                        // TODO in case of status == failed --> check if task has really failed.
-//                        displayTaskLogs(event.getTaskAttemptId(), event.getTaskTrackerHttp(), resp);
 
-                        UserGroupInformation remoteUser;
-                        if (withExternalAccessControl) {
-                            remoteUser = UserGroupInformation.createRemoteUser("yarn");
-                        } else {
-                            remoteUser = UserGroupInformation.createRemoteUser(userName);
-                        }
+            UserGroupInformation remoteUser;
+            if (withExternalAccessControl) {
+                remoteUser = UserGroupInformation.createRemoteUser("yarn");
+            } else {
+                remoteUser = UserGroupInformation.createRemoteUser(userName);
+            }
+            try {
+                remoteUser.doAs(new PrivilegedExceptionAction<Integer>() {
+                    @Override
+                    public Integer run() throws Exception {
+                        StringBuilder appSB = new StringBuilder("application");
+                        String appIdStr = jobId.appendTo(appSB).toString();
+
+                        ApplicationId appId = null;
                         try {
-                            remoteUser.doAs(new PrivilegedExceptionAction<Integer>() {
-                                @Override
-                                public Integer run() throws Exception {
-                                    String appOwner = userName;
-                                    StringBuilder appSB = new StringBuilder("application");
-                                    String appIdStr = jobId.appendTo(appSB).toString();
-
-                                    ApplicationId appId = null;
-                                    try {
-                                        appId = ConverterUtils.toApplicationId(appIdStr);
-                                    } catch (Exception e) {
-                                        System.err.println("Invalid ApplicationId specified: " + appIdStr);
-                                        return -1;
-                                    }
-                                    int resultCode = dumpAllContainersLogs(appId, appOwner, resp.getOutputStream(), conf);
-                                    if (resultCode != 0) {
-                                        showErrorPage("Failed to open Logfile.", resp);
-                                        return -1;
-                                    }
-                                    return 0;
-                                }
-                            });
-                        } catch (InterruptedException e) {
-                            throw new IOException(e);
+                            appId = ConverterUtils.toApplicationId(appIdStr);
+                        } catch (Exception e) {
+                            System.err.println("Invalid ApplicationId specified: " + appIdStr);
+                            return -1;
                         }
-                        return;
+                        int resultCode = dumpAllContainersLogs(appId, userName, resp.getOutputStream(), conf);
+                        if (resultCode != 0) {
+                            showErrorPage("Failed to open Logfile.", resp);
+                            return -1;
+                        }
+                        return 0;
                     }
-                }
+                });
+            } catch (InterruptedException e) {
+                throw new IOException(e);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -232,8 +222,7 @@ public class HadoopLogServlet extends HttpServlet {
     }
 
     private void copyIntoOutput(InputStream input, OutputStream outputStream) throws IOException {
-        BufferedOutputStream output = new BufferedOutputStream(outputStream, 4 * 1024 * 1024);
-        try {
+        try (BufferedOutputStream output = new BufferedOutputStream(outputStream, 4 * 1024 * 1024)) {
             byte[] buffer = new byte[1024 * 1024];
             int bytesRead, bytesWritten = 0;
             while ((bytesRead = input.read(buffer)) != -1) {
@@ -242,8 +231,6 @@ public class HadoopLogServlet extends HttpServlet {
             }
             output.flush();
             log(bytesWritten + " bytes sent");
-        } finally {
-            output.close();
         }
     }
 
@@ -266,29 +253,28 @@ public class HadoopLogServlet extends HttpServlet {
     }
 
 
-    public int dumpAllContainersLogs(ApplicationId appId, String appOwner,
-                                     OutputStream outputStream, Configuration conf) throws IOException {
+    private int dumpAllContainersLogs(ApplicationId appId, String appOwner,
+                                      OutputStream outputStream, Configuration conf) throws IOException {
         Path remoteRootLogDir = new Path(conf.get(
-                YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
-                YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
-        String user = appOwner;
+                    YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+                    YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
         String logDirSuffix = LogAggregationUtils.getRemoteNodeLogDirSuffix(conf);
         // TODO Change this to get a list of files from the LAS.
         Path remoteAppLogDir = LogAggregationUtils.getRemoteAppLogDir(
-                remoteRootLogDir, appId, user, logDirSuffix);
+                    remoteRootLogDir, appId, appOwner, logDirSuffix);
         RemoteIterator<FileStatus> nodeFiles;
         try {
             nodeFiles = FileContext.getFileContext(conf).listStatus(remoteAppLogDir);
         } catch (FileNotFoundException fnf) {
             System.out.println("Logs not available at " + remoteAppLogDir.toString());
             System.out
-                    .println("Log aggregation has not completed or is not enabled.");
+                        .println("Log aggregation has not completed or is not enabled.");
             return -1;
         }
         while (nodeFiles.hasNext()) {
             FileStatus thisNodeFile = nodeFiles.next();
             AggregatedLogFormat.LogReader reader = new AggregatedLogFormat.LogReader(
-                    conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
+                        conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
             try {
 
                 DataInputStream valueStream;
