@@ -16,6 +16,10 @@
 
 package com.bc.calvalus.processing.hadoop;
 
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
+
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
@@ -41,10 +45,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
-
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
 
 /**
  * A workflow item that corresponds to a single Hadoop job.
@@ -133,9 +133,6 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     }
 
     private String getDiagnosticFromFirstFailedTask() {
-        if (Boolean.getBoolean("calvalus.donotinquirediagnostics")) {
-            return "Diagnostics not available due to internal network restrictions.";
-        }
         org.apache.hadoop.mapred.JobID downgradeJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
         try {
             JobClient jobClient = processingService.getJobClient(userName);
