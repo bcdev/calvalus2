@@ -1,6 +1,5 @@
 package com.bc.calvalus.inventory.hadoop;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.ReadOption;
@@ -13,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
-import java.util.logging.Level;
 
 /**
  * Dummy implementation of a formally seekable stream to obey the Hadoop FileSystem interface.
@@ -146,38 +144,27 @@ public class DummyFSDataInputStream extends FSDataInputStream {
      */
     @Override
     public long skip(long n) throws IOException {
-        CalvalusLogger.getLogger().log(Level.INFO, "Start skip " + n +
-                                                   " with current position " +
-                                                   ((DummyCountingInputStream) this.in).getPos());
-
         long remaining = n;
         int nr;
 
         if (n <= 0) {
-            CalvalusLogger.getLogger().log(Level.INFO, "n = " + n);
             return 0;
         }
 
         int size = (int) Math.min(8192, remaining);
         byte[] skipBuffer = new byte[size];
         while (remaining > 0) {
-            CalvalusLogger.getLogger().log(Level.INFO, "Math.min(size, remaining) : " + Math.min(size, remaining));
-            CalvalusLogger.getLogger().log(Level.INFO, "remaining : " + remaining);
             nr = read(skipBuffer, 0, (int) Math.min(size, remaining));
-            CalvalusLogger.getLogger().log(Level.INFO, "nr : " + nr);
             if (nr < 0) {
                 break;
             }
             remaining -= nr;
-            CalvalusLogger.getLogger().log(Level.INFO, "remaining stream : " + remaining);
         }
         return n - remaining;
     }
 
     @Override
     public void seek(long desired) throws IOException {
-        CalvalusLogger.getLogger().log(Level.INFO, "Start seek " + desired + " with current position " +
-                                                   ((DummyCountingInputStream) this.in).getPos());
         DummyCountingInputStream in = (DummyCountingInputStream) this.in;
         long pos = in.getPos();
         if (desired >= pos) {
