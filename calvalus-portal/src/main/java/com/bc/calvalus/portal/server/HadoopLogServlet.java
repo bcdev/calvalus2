@@ -269,49 +269,51 @@ public class HadoopLogServlet extends HttpServlet {
                     .println("Log aggregation has not completed or is not enabled.");
             return -1;
         }
-        while (nodeFiles.hasNext()) {
-            FileStatus thisNodeFile = nodeFiles.next();
-            AggregatedLogFormat.LogReader reader = new AggregatedLogFormat.LogReader(
-                    conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
-            try (CountablePrintStream countablePrintStream = new CountablePrintStream(outputStream)) {
-                DataInputStream valueStream;
-                AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
-                valueStream = reader.next(key);
-
-                while (valueStream != null) {
-                    String containerString = "\n\nContainer: " + key + " on " + thisNodeFile.getPath().getName();
-                    countablePrintStream.println(containerString);
-                    countablePrintStream.println(StringUtils.repeat("=", containerString.length()));
-                    long logMaxSizeBytes;
-                    try {
-                        logMaxSizeBytes = Long.parseLong(backendConfig.getConfigMap().get("log.max.size.kb")) * KILO_BYTES;
-                    } catch (NumberFormatException exception) {
-                        logMaxSizeBytes = DEFAULT_LOG_MAX_SIZE * KILO_BYTES;
-                    }
-                    if (countablePrintStream.getCount() < logMaxSizeBytes) {
-                        while (true) {
-                            try {
-                                AggregatedLogFormat.LogReader.readAContainerLogsForALogType(valueStream, countablePrintStream);
-                            } catch (EOFException eof) {
-                                CalvalusLogger.getLogger().log(Level.INFO, "EOF. Accumulated size: " +
-                                        countablePrintStream.getCount());
-                                break;
-                            }
-                        }
-                    } else {
-                        String message = String.format("Log file contents have been omitted because it has already " +
-                                "reached the maximum limit of %d Bytes.", logMaxSizeBytes);
-                        countablePrintStream.println(StringUtils.repeat("-", message.length()));
-                        countablePrintStream.println(message);
-                        countablePrintStream.println(StringUtils.repeat("-", message.length()));
-                    }
-
-                    // Next container
-                    key = new AggregatedLogFormat.LogKey();
+        try (CountablePrintStream countablePrintStream = new CountablePrintStream(outputStream)) {
+            while (nodeFiles.hasNext()) {
+                FileStatus thisNodeFile = nodeFiles.next();
+                AggregatedLogFormat.LogReader reader = new AggregatedLogFormat.LogReader(
+                        conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
+                try {
+                    DataInputStream valueStream;
+                    AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
                     valueStream = reader.next(key);
+
+                    while (valueStream != null) {
+                        String containerString = "\n\nContainer: " + key + " on " + thisNodeFile.getPath().getName();
+                        countablePrintStream.println(containerString);
+                        countablePrintStream.println(StringUtils.repeat("=", containerString.length()));
+                        long logMaxSizeBytes;
+                        try {
+                            logMaxSizeBytes = Long.parseLong(backendConfig.getConfigMap().get("log.max.size.kb")) * KILO_BYTES;
+                        } catch (NumberFormatException exception) {
+                            logMaxSizeBytes = DEFAULT_LOG_MAX_SIZE * KILO_BYTES;
+                        }
+                        if (countablePrintStream.getCount() < logMaxSizeBytes) {
+                            while (true) {
+                                try {
+                                    AggregatedLogFormat.LogReader.readAContainerLogsForALogType(valueStream, countablePrintStream);
+                                } catch (EOFException eof) {
+                                    CalvalusLogger.getLogger().log(Level.INFO, "Finished reading a file. " +
+                                            "Accumulated size: " + countablePrintStream.getCount());
+                                    break;
+                                }
+                            }
+                        } else {
+                            String message = String.format("Log file contents have been omitted because it has already " +
+                                    "reached the maximum limit of %d Bytes.", logMaxSizeBytes);
+                            countablePrintStream.println(StringUtils.repeat("-", message.length()));
+                            countablePrintStream.println(message);
+                            countablePrintStream.println(StringUtils.repeat("-", message.length()));
+                        }
+
+                        // Next container
+                        key = new AggregatedLogFormat.LogKey();
+                        valueStream = reader.next(key);
+                    }
+                } finally {
+                    reader.close();
                 }
-            } finally {
-                reader.close();
             }
         }
         return 0;
