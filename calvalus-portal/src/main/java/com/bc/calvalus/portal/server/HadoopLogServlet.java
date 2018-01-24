@@ -45,6 +45,7 @@ import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.util.ConverterUtils;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,7 +56,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
@@ -68,23 +68,28 @@ import java.util.logging.Level;
  */
 public class HadoopLogServlet extends HttpServlet {
 
+    private static final int KILO_BYTES = 1024;
+    private static final int DEFAULT_LOG_MAX_SIZE = 100;
+
+    private BackendConfig backendConfig;
     private boolean withExternalAccessControl;
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         doGet(req, resp);
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         String productionId = req.getParameter("productionId");
         if (productionId == null) {
             showErrorPage("Missing query parameter 'productionId'", resp);
             return;
         }
         ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
+        backendConfig = new BackendConfig(getServletContext());
         withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean(
-                    "calvalus.accesscontrol.external", false);
+                "calvalus.accesscontrol.external", false);
         try {
             Production production = serviceContainer.getProductionService().getProduction(productionId);
             final String userName = getUserName(req).toLowerCase();
@@ -242,8 +247,8 @@ public class HadoopLogServlet extends HttpServlet {
         writer.println("<body>");
         writer.println("<h1>Error while showing processing log</h1>");
         writer.println("While retrieving the logfile from the Hadoop Cluster an error occurred.</br>" +
-                       "In most cases this is related to the fact, that the logs are automatically removed after roughly 24 hours.</br>" +
-                       "Depending on the cluster activity this can happen sooner or later.</br></br></br>");
+                "In most cases this is related to the fact, that the logs are automatically removed after roughly 24 hours.</br>" +
+                "Depending on the cluster activity this can happen sooner or later.</br></br></br>");
         writer.println("<hr>");
         writer.println("<h5>Internal error message</h5>");
         writer.println(message);
@@ -256,43 +261,56 @@ public class HadoopLogServlet extends HttpServlet {
     private int dumpAllContainersLogs(ApplicationId appId, String appOwner,
                                       OutputStream outputStream, Configuration conf) throws IOException {
         Path remoteRootLogDir = new Path(conf.get(
-                    YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
-                    YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
+                YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
+                YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
         String logDirSuffix = LogAggregationUtils.getRemoteNodeLogDirSuffix(conf);
         // TODO Change this to get a list of files from the LAS.
         Path remoteAppLogDir = LogAggregationUtils.getRemoteAppLogDir(
-                    remoteRootLogDir, appId, appOwner, logDirSuffix);
+                remoteRootLogDir, appId, appOwner, logDirSuffix);
         RemoteIterator<FileStatus> nodeFiles;
         try {
             nodeFiles = FileContext.getFileContext(conf).listStatus(remoteAppLogDir);
         } catch (FileNotFoundException fnf) {
             System.out.println("Logs not available at " + remoteAppLogDir.toString());
             System.out
-                        .println("Log aggregation has not completed or is not enabled.");
+                    .println("Log aggregation has not completed or is not enabled.");
             return -1;
         }
         while (nodeFiles.hasNext()) {
             FileStatus thisNodeFile = nodeFiles.next();
             AggregatedLogFormat.LogReader reader = new AggregatedLogFormat.LogReader(
-                        conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
-            try {
-
+                    conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
+            try (CountablePrintStream countablePrintStream = new CountablePrintStream(outputStream)) {
                 DataInputStream valueStream;
                 AggregatedLogFormat.LogKey key = new AggregatedLogFormat.LogKey();
                 valueStream = reader.next(key);
 
-                PrintStream out = new PrintStream(outputStream);
                 while (valueStream != null) {
-                    String containerString = "\n\nContainer: " + key + " on "
-                                             + thisNodeFile.getPath().getName();
-                    out.println(containerString);
-                    out.println(StringUtils.repeat("=", containerString.length()));
-                    while (true) {
-                        try {
-                            AggregatedLogFormat.LogReader.readAContainerLogsForALogType(valueStream, out);
-                        } catch (EOFException eof) {
-                            break;
+                    String containerString = "\n\nContainer: " + key + " on " + thisNodeFile.getPath().getName();
+                    countablePrintStream.println(containerString);
+                    countablePrintStream.println(StringUtils.repeat("=", containerString.length()));
+                    long logMaxSizeBytes;
+                    try {
+                        logMaxSizeBytes = Long.parseLong(backendConfig.getConfigMap().get("log.max.size.kb")) * KILO_BYTES;
+                    } catch (NumberFormatException exception) {
+                        logMaxSizeBytes = DEFAULT_LOG_MAX_SIZE * KILO_BYTES;
+                    }
+                    if (countablePrintStream.getCount() < logMaxSizeBytes) {
+                        while (true) {
+                            try {
+                                AggregatedLogFormat.LogReader.readAContainerLogsForALogType(valueStream, countablePrintStream);
+                            } catch (EOFException eof) {
+                                CalvalusLogger.getLogger().log(Level.INFO, "EOF. Accumulated size: " +
+                                        countablePrintStream.getCount());
+                                break;
+                            }
                         }
+                    } else {
+                        String message = String.format("Log file contents have been omitted because it has already " +
+                                "reached the maximum limit of %d Bytes.", logMaxSizeBytes);
+                        countablePrintStream.println(StringUtils.repeat("-", message.length()));
+                        countablePrintStream.println(message);
+                        countablePrintStream.println(StringUtils.repeat("-", message.length()));
                     }
 
                     // Next container
