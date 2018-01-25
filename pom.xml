@@ -15,9 +15,8 @@
         <hadoop.version>2.7.3-BC</hadoop.version>
         <calvalus.version>2.15-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <!-- <snap.version>[6.0.0-SNAPSHOT,7)</snap.version> -->
-        <snap.version>6.0.0-SNAPSHOT</snap.version>
-        <ceres.version>[6.0.0-SNAPSHOT,7)</ceres.version>
+        <snap.version>7.0.0-SNAPSHOT</snap.version>
+        <ceres.version>[6.0.0-SNAPSHOT,7.0.0-SNAPSHOT]</ceres.version>
         <seadas.reader.version>1.7-SNAPSHOT</seadas.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>2.7.4</geotools.version>
@@ -324,165 +323,6 @@
                 <version>1.4.8</version>
             </dependency>
 
-            <!--
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-core</artifactId>
-                <version>${snap.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-gpf</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-binning</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-envisat-reader</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-netcdf</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>jcl-over-slf4j</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.google.protobuf</groupId>
-                        <artifactId>protobuf-java</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-geotiff</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-bigtiff</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-runtime</artifactId>
-                <version>${snap.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.esa.s3tbx</groupId>
-                <artifactId>s3tbx-avhrr-reader</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.s3tbx</groupId>
-                <artifactId>s3tbx-landsat-reader</artifactId>
-                <version>${snap.version}</version>
-            </dependency>
--->
             <dependency>
                 <groupId>org.geotools</groupId>
                 <artifactId>gt-render</artifactId>
@@ -527,73 +367,11 @@
 
             <!--  Hadoop -->
 
-<!--
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-                <artifactId>hadoop-client</artifactId>
-                <version>${hadoop.version}</version>
--->
-                <!--
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jdt</groupId>
-                        <artifactId>core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty-util</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-runtime</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-compiler</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jsp-api-2.1</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jsp-2.1</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-el</groupId>
-                        <artifactId>commons-el</artifactId>
-                    </exclusion>
-                </exclusions>
-                -->
-<!--
-            </dependency>
-        -->
-<!--
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                <version>2.6.0</version>
-            </dependency>
--->
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client</artifactId>
                 <version>${hadoop.version}</version>
             </dependency>
-
-            <!-- not used currently
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-test</artifactId>
-                <version>${hadoop.version}</version>
-                <scope>test</scope>
-            </dependency>
-            -->
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
 
@@ -644,10 +422,6 @@
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
                 <version>3.1</version>
-<!--
-                <version>20020423</version>
-                <scope>test</scope>
--->
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
