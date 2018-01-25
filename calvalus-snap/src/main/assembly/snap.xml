@@ -124,6 +124,7 @@
                 <include>com.thoughtworks.xstream:xstream</include>
                 <include>org.hsqldb:hsqldb</include>
                 <include>xerces:xercesImpl</include>
+                <include>ncsa.hdf:lib-hdf</include>
 
             </includes>
             <useTransitiveDependencies>true</useTransitiveDependencies>
