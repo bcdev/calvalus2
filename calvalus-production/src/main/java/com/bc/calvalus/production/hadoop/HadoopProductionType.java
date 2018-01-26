@@ -149,10 +149,12 @@ public abstract class HadoopProductionType implements ProductionType {
         try {
             Configuration jobConfig = getProcessingService().createJobConfig(productionRequest.getUserName());
             // the following values have defaults in mapred-default.xml
-            // we instead want to apply our settings in the mapred-site.xml on the RM
+            // we instead want to apply our settings in the mapred-site.xml or yarn-site.xml on the RM
             // user provided still values take precedence
             jobConfig.unset("mapreduce.map.memory.mb");
             jobConfig.unset("mapreduce.reduce.memory.mb");
+            jobConfig.unset("mapreduce.jobhistory.address");
+            jobConfig.unset("mapreduce.jobhistory.webapp.address");
             jobConfig.set(JobConfigNames.CALVALUS_USER, productionRequest.getUserName());
             jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, productionRequest.getProductionType());
             return jobConfig;
