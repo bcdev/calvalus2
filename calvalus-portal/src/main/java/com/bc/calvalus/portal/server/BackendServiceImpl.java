@@ -916,9 +916,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private void updateProductionStatuses() {
         final ProductionService productionService = this.serviceContainer.getProductionService();
         if (productionService != null) {
-            synchronized (this) {
-                productionService.updateStatuses(getUserName());
-            }
+            productionService.updateStatuses(getUserName());
         }
     }
 

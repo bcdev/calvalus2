@@ -19,3 +19,6 @@ calvalus.plainText.parameter: |
   This is a multiline
   Textfield
   </parameters>
+copyInput: true
+minDate: 2017-10-01
+maxDate: 2017-12-31

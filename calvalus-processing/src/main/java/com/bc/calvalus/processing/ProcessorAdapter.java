@@ -117,6 +117,7 @@ public abstract class ProcessorAdapter {
         }
         GpfUtils.init(conf);
         Engine.start();
+        CalvalusLogger.restoreCalvalusLogFormatter();
     }
 
     protected MapContext getMapContext() {
@@ -404,16 +405,24 @@ public abstract class ProcessorAdapter {
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         if (inputFile != null) {
+            Product product;
+            getMapContext().getCounter("Direct File System Counters", "INPUT_FILE_BYTES_READ").setValue(inputFile.length());
             if (inputFormat != null) {
                 LOG.info(String.format("openInputProduct: inputFile  = %s inputFormat  = %s", inputFile, inputFormat));
-                return ProductIO.readProduct(inputFile, inputFormat);
+                product = ProductIO.readProduct(inputFile, inputFormat);
             } else {
                 LOG.info(String.format("openInputProduct: inputFile  = %s", inputFile));
-                return ProductIO.readProduct(inputFile);
+                product = ProductIO.readProduct(inputFile);
             }
+            CalvalusProductIO.printProductOnStdout(product, "opened from local file");
+            return product;
         } else {
             LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
             Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+
+            FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
+            getMapContext().getCounter("Direct File System Counters", "FILE_SPLIT_BYTES_READ").setValue(fileSplit.getLength());
+
             File fileLocation = product.getFileLocation();
             LOG.info(String.format("openInputProduct: fileLocation  = %s", fileLocation));
             if (fileLocation != null) {

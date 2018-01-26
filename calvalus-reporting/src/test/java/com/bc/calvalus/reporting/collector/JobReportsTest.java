@@ -42,7 +42,7 @@ public class JobReportsTest {
     public void canInitialize() throws Exception {
         jobReports.init(this.sampleJobsReportPathString);
 
-        assertThat(jobReports.getKnownJobIdSet().size(), equalTo(11));
+        assertThat(jobReports.getKnownJobIdSet().size(), equalTo(13));
         assertThat(jobReports.contains("job_1484837520075_13150"), equalTo(true));
         assertThat(jobReports.contains("unknown_job_id"), equalTo(false));
     }

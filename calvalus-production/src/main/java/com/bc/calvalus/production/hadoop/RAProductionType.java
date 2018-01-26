@@ -28,10 +28,10 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
 
@@ -120,26 +120,27 @@ public class RAProductionType extends HadoopProductionType {
         try {
             Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
             regionsIterator = raConfig.createNamedRegionIterator(conf);
-            List<String> regionNames = new ArrayList<>();
-            Geometry union = null;
+            List<String> names = new ArrayList<>();
+            List<Geometry> geometries = new ArrayList<>();
             while (regionsIterator.hasNext()) {
                 RAConfig.NamedRegion namedRegion = regionsIterator.next();
-                if (union == null) {
-                    union = namedRegion.region;
-                } else {
-                    union = union.union(namedRegion.region);
+                Geometry geometry = namedRegion.region;
+                if (geometry.getNumPoints() > 20) {
+                    geometry = geometry.getEnvelope();
                 }
-                regionNames.add(namedRegion.name);
+                geometries.add(geometry);
+                names.add(namedRegion.name);
             }
-            if (regionNames.isEmpty()) {
+            if (names.isEmpty()) {
                 throw new ProductionException("No region defined");
             }
+            Geometry union = CascadedPolygonUnion.union(geometries);
             if (union == null) {
                 throw new ProductionException("Can not build union from given regions");
             }
-            union = union.convexHull();
-            raConfig.setInternalRegionNames(regionNames.toArray(new String[0]));
-            return new String[]{raConfig.toXml(), union.toString()};
+            Geometry convexHull = union.convexHull();
+            raConfig.setInternalRegionNames(names.toArray(new String[0]));
+            return new String[]{raConfig.toXml(), convexHull.toString()};
         } catch (IOException e) {
             throw new ProductionException("Illegal Region-analysis configuration: " + e.getMessage(), e);
         } finally {

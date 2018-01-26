@@ -67,28 +67,27 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
             String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
+            Product inputProduct = getInputProduct();
             Product sourceProduct;
-            // TODO defaults for subsetting preserve old behaviour
             if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
-                sourceProduct = createSubset();
+                sourceProduct = createSubsetFromInput(inputProduct);
             } else {
-                sourceProduct = getInputProduct();
+                sourceProduct = inputProduct;
             }
-            Product subsetProduct = createSubset();
             int minWidth = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, 0);
             int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
-            if (subsetProduct.getSceneRasterWidth() < minWidth &&
-                subsetProduct.getSceneRasterHeight() < minHeight) {
+            if (sourceProduct.getSceneRasterWidth() < minWidth && sourceProduct.getSceneRasterHeight() < minHeight) {
                 String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
                                     "It will be suppressed from the processing.";
-                getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
-                                               subsetProduct.getSceneRasterHeight()));
+                getLogger().info(String.format(msgPattern, sourceProduct.getSceneRasterWidth(),
+                                               sourceProduct.getSceneRasterHeight()));
                 return false;
             }
+            Product processedProduct = getProcessedProduct(sourceProduct, processorName, processorParameters);
             if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
-                targetProduct = createSubset(getProcessedProduct(subsetProduct, processorName, processorParameters));
+                targetProduct = createSubsetFromOutput(processedProduct);
             } else {
-                targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+                targetProduct = processedProduct;
             }
             if (targetProduct == null ||
                 targetProduct.getSceneRasterWidth() == 0 ||
@@ -100,7 +99,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                                            targetProduct.getSceneRasterWidth(),
                                            targetProduct.getSceneRasterHeight()));
             if (hasInvalidStartAndStopTime(targetProduct)) {
-                copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+                copySceneRasterStartAndStopTime(inputProduct, targetProduct, null);
             }
         } finally {
             pm.done();
@@ -143,6 +142,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                 throw new IllegalArgumentException("Invalid operator parameters: " + e.getMessage(), e);
             }
             product = GPF.createProduct(operatorName, parameterMap, product);
+            CalvalusProductIO.printProductOnStdout(product, "computed by operator " + operatorName);
         }
         return product;
     }

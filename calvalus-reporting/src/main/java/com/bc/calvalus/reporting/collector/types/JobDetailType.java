@@ -1,11 +1,11 @@
 package com.bc.calvalus.reporting.collector.types;
 
 
-import java.time.Instant;
 import java.util.List;
 
 /**
  * @author muhammad.bc.
+ * @author hans
  */
 public class JobDetailType {
 
@@ -14,12 +14,15 @@ public class JobDetailType {
     private String state;
     private String jobId;
     private String jobName;
+    private String submitTime;
     private String startTime;
-    private String inputPath;
     private String finishTime;
+    private String confXmlPath;
     private String mapsCompleted;
     private String reducesCompleted;
     private String fileBytesRead;
+    private String inputFileBytesRead;
+    private String fileSplitBytesRead;
     private String fileBytesWritten;
     private String hdfsBytesRead;
     private String hdfsBytesWritten;
@@ -31,10 +34,18 @@ public class JobDetailType {
     private String remoteUser;
     private String remoteRef;
     private String processType;
+    private String mapClass;
     private String wpsJobId;
     private String workflowType;
+    private String inputPath;
     private String inProductType;
     private String dataProcessorUsed;
+    private String outputDir;
+    private String configuredCpuCores;
+    private String configuredRam;
+    private String collectionName;
+    private String systemName;
+    private String outputType;
 
     public String getJobId() {
         return jobId;
@@ -46,6 +57,10 @@ public class JobDetailType {
 
     public String getQueue() {
         return queue;
+    }
+
+    public String getSubmitTime() {
+        return submitTime;
     }
 
     public String getStartTime() {
@@ -68,12 +83,20 @@ public class JobDetailType {
         return state;
     }
 
-    public String getInputPath() {
-        return inputPath;
+    public String getConfXmlPath() {
+        return confXmlPath;
     }
 
     public String getFileBytesRead() {
         return fileBytesRead;
+    }
+
+    public String getInputFileBytesRead() {
+        return inputFileBytesRead;
+    }
+
+    public String getFileSplitBytesRead() {
+        return fileSplitBytesRead;
     }
 
     public String getFileBytesWritten() {
@@ -124,6 +147,10 @@ public class JobDetailType {
         return processType;
     }
 
+    public String getMapClass() {
+        return mapClass;
+    }
+
     public String getWpsJobId() {
         return wpsJobId;
     }
@@ -132,12 +159,40 @@ public class JobDetailType {
         return workflowType;
     }
 
+    public String getInputPath() {
+        return inputPath;
+    }
+
     public String getInProductType() {
         return inProductType;
     }
 
     public String getDataProcessorUsed() {
         return dataProcessorUsed;
+    }
+
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
+    }
+
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public String getOutputType() {
+        return outputType;
     }
 
     // use for test only
@@ -155,6 +210,7 @@ public class JobDetailType {
         this.queue = job.getQueue();
         this.state = job.getState();
         this.totalMaps = job.getMapsTotal();
+        this.submitTime = job.getSubmitTime();
         this.startTime = job.getStartTime();
         this.finishTime = job.getFinishTime();
         this.mapsCompleted = job.getMapsCompleted();
@@ -162,15 +218,23 @@ public class JobDetailType {
     }
 
     public void setConfInfo(JobConf conf) {
-        this.inputPath = conf.getPath();
+        this.confXmlPath = conf.getConfXmlPath();
         this.jobName = conf.getJobName();
         this.wpsJobId = conf.getWpsJobId();
         this.remoteRef = conf.getRemoteRef();
         this.remoteUser = conf.getRemoteUser();
         this.processType = conf.getProcessType();
+        this.mapClass = conf.getMapClass();
         this.workflowType = conf.getWorkflowType();
-        this.inProductType = conf.getInProductType();
+        this.inputPath = conf.getInputPath();
+        this.inProductType = conf.getInputType();
         this.dataProcessorUsed = conf.getDataProcessorUsed();
+        this.outputDir = conf.getOutputDir();
+        this.configuredCpuCores = conf.getConfiguredCpuCores();
+        this.configuredRam = conf.getConfiguredRam();
+        this.collectionName = conf.getInputCollectionName();
+        this.systemName = conf.getSystemName();
+        this.outputType = conf.getOutputType();
     }
 
     public void setCounterInfo(JobCounters jobCounters) {
@@ -199,11 +263,10 @@ public class JobDetailType {
             mbMillisReduceTotal = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("CPU_MILLISECONDS")) {
             cpuMilliseconds = jobCounter.getTotalCounterValue().toString();
+        } else if (counterTypeName.equalsIgnoreCase("INPUT_FILE_BYTES_READ")) {
+            inputFileBytesRead = jobCounter.getTotalCounterValue().toString();
+        } else if (counterTypeName.equalsIgnoreCase("FILE_SPLIT_BYTES_READ")) {
+            fileSplitBytesRead = jobCounter.getTotalCounterValue().toString();
         }
-    }
-
-    private Instant getDateTimeInstance(String finishTime) {
-        long epochMilli = Long.parseLong(finishTime);
-        return Instant.ofEpochMilli(epochMilli);
     }
 }

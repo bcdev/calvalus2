@@ -1,7 +1,15 @@
 package com.bc.calvalus.reporting.restservice.io;
 
-import com.bc.calvalus.reporting.restservice.ws.UsageStatistic;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.*;
+
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.*;
+import org.junit.runner.*;
+
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -9,19 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author hans
@@ -34,7 +29,7 @@ public class JSONExtractorTest {
 
     @Before
     public void setUp() throws Exception {
-        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
+        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
         jsonExtractor = new JSONExtractor();
     }
 
@@ -61,8 +56,10 @@ public class JSONExtractorTest {
     }
 
     @Test
-    public void testTimeInterval() throws Exception {
-        JSONExtractor.FilterUserTimeInterval timeInterval = new JSONExtractor.FilterUserTimeInterval(1483933291070L, "2017", "01", "01");
+    public void testTimeInterval() {
+        JSONExtractor.FilterUserTimeInterval timeInterval = new JSONExtractor.FilterUserTimeInterval(1483933291070L,
+                                                                                                     "2017", "01",
+                                                                                                     "01");
         boolean isWithIn = timeInterval.filterYear();
         assertTrue(isWithIn);
     }
@@ -81,7 +78,8 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getMapsCompleted(), equalTo(7));
         assertThat(usageStatistic.getReducesCompleted(), equalTo(0));
         assertThat(usageStatistic.getState(), equalTo("SUCCEEDED"));
-        assertThat(usageStatistic.getInputPath(), equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/13/000020/job_1481485063251_20533_conf.xml"));
+        assertThat(usageStatistic.getInputPath(),
+                   equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/13/000020/job_1481485063251_20533_conf.xml"));
         assertThat(usageStatistic.getFileBytesRead(), equalTo(0L));
         assertThat(usageStatistic.getFileBytesWritten(), equalTo(2100959L));
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(6972918194L));
@@ -106,7 +104,8 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getMapsCompleted(), equalTo(113));
         assertThat(usageStatistic.getReducesCompleted(), equalTo(0));
         assertThat(usageStatistic.getState(), equalTo("FAILED"));
-        assertThat(usageStatistic.getInputPath(), equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/11/000018/job_1481485063251_18142_conf.xml"));
+        assertThat(usageStatistic.getInputPath(),
+                   equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/11/000018/job_1481485063251_18142_conf.xml"));
         assertThat(usageStatistic.getFileBytesRead(), equalTo(0L));
         assertThat(usageStatistic.getFileBytesWritten(), equalTo(37940789L));
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(37483768696L));
@@ -118,7 +117,8 @@ public class JSONExtractorTest {
 
     @Test
     public void testUSerStatisticInYearMonthDay() throws Exception {
-        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageYearMonthDay("martin", "2017", "01", "09");
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageYearMonthDay("martin", "2017", "01",
+                                                                                               "09");
         assertEquals(usageStatisticList.size(), 5);
         UsageStatistic usageStatistic = usageStatisticList.get(0);
 
@@ -130,7 +130,8 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getMapsCompleted(), equalTo(694));
         assertThat(usageStatistic.getReducesCompleted(), equalTo(0));
         assertThat(usageStatistic.getState(), equalTo("SUCCEEDED"));
-        assertThat(usageStatistic.getInputPath(), equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/09/000015/job_1481485063251_15808_conf.xml"));
+        assertThat(usageStatistic.getInputPath(),
+                   equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/09/000015/job_1481485063251_15808_conf.xml"));
         assertThat(usageStatistic.getFileBytesRead(), equalTo(0L));
         assertThat(usageStatistic.getFileBytesWritten(), equalTo(186692272L));
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(732875870L));
@@ -143,19 +144,22 @@ public class JSONExtractorTest {
     @Ignore
     @Test
     public void testUserStatisticRange() throws Exception {
-        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageBetween("martin", "2017-01-09", "2017-01-15");
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageBetween("martin", "2017-01-09",
+                                                                                          "2017-01-15");
         assertEquals(usageStatisticList.size(), 1484);
     }
 
     @Test
     public void testAllDateUsageBetween() throws Exception {
-        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllDateUsageBetween("2017-01-09", "2017-01-15");
+        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllDateUsageBetween(
+                    "2017-01-09", "2017-01-15");
         assertEquals(allUsersStartEndDateStatistic.size(), 7);
     }
 
     @Test
     public void testAllUserUsageBetween() throws Exception {
-        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUserUsageBetween("2017-01-01", "2017-01-30");
+        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUserUsageBetween(
+                    "2017-01-01", "2017-01-30");
         List<UsageStatistic> usageStatisticList = allUsersStartEndDateStatistic.get("bla");
         assertEquals(usageStatisticList.size(), 2);
         assertEquals(allUsersStartEndDateStatistic.size(), 11);
@@ -163,12 +167,13 @@ public class JSONExtractorTest {
 
     @Test
     public void testAllQueueUsageBetween() throws Exception {
-        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllQueueUsageBetween("2017-01-01", "2017-01-30");
+        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllQueueUsageBetween(
+                    "2017-01-01", "2017-01-30");
         assertEquals(allUsersStartEndDateStatistic.size(), 10);
     }
 
     @Test
-    public void testDateBetween() throws Exception {
+    public void testDateBetween() {
         JSONExtractor jsonExtractor = new JSONExtractor();
         Set<String> datesBetween = jsonExtractor.getDatesBetween("2017-01-01", "2017-01-05");
         assertEquals(datesBetween.size(), 5);
@@ -181,14 +186,14 @@ public class JSONExtractorTest {
     }
 
     @Test
-    public void testDateNotBetween() throws Exception {
+    public void testDateNotBetween() {
         Set<String> datesBetween = jsonExtractor.getDatesBetween("2019-01-01", "2017-01-13");
         assertEquals(datesBetween.size(), 0);
     }
 
 
     @Test
-    public void testSingleDateTimePredicate() throws Exception {
+    public void testSingleDateTimePredicate() {
         Predicate<String> stringPredicate = jsonExtractor.filterFileLogBtwDate("2016-12-20");
         assertTrue(stringPredicate.test("2016-12-01_To_2016-12-31.json"));
         assertTrue(stringPredicate.test("2016-12-10_To_2016-12-31.json"));
@@ -196,17 +201,17 @@ public class JSONExtractorTest {
     }
 
     @Test
-    public void testBetweenDateTimePredicate() throws Exception {
+    public void testBetweenDateTimePredicate() {
         List<String> fileName = Arrays.asList(
-                "calvalus-reporting-2014-12-01_to_2014-12-31.json",
-                "calvalus-reporting-2015-03-01_To_2015-01-31.json",
-                "calvalus-reporting-2016-11-01_To_2016-11-30.json",
-                "calvalus-reporting-2016-03-01_To_2016-03-31.json",
-                "calvalus-reporting-2017-09-01_To_2017-12-31.json",
-                "calvalus-reporting-2016-12-01_To_2016-12-31.json",
-                "calvalus-reporting-2018-06-01_To_2018-06-30.json",
-                "calvalus-reporting-2019-07-01_To_2019-07-31.json",
-                "calvalus-reporting-2022-12-01_To_2022-12-31.json");
+                    "calvalus-reporting-2014-12-01_to_2014-12-31.json",
+                    "calvalus-reporting-2015-03-01_To_2015-01-31.json",
+                    "calvalus-reporting-2016-11-01_To_2016-11-30.json",
+                    "calvalus-reporting-2016-03-01_To_2016-03-31.json",
+                    "calvalus-reporting-2017-09-01_To_2017-12-31.json",
+                    "calvalus-reporting-2016-12-01_To_2016-12-31.json",
+                    "calvalus-reporting-2018-06-01_To_2018-06-30.json",
+                    "calvalus-reporting-2019-07-01_To_2019-07-31.json",
+                    "calvalus-reporting-2022-12-01_To_2022-12-31.json");
 
 
         Predicate<String> stringPredicate = jsonExtractor.filterFileLogBtwDate("2016-12-02", "2016-12-12");
@@ -221,14 +226,14 @@ public class JSONExtractorTest {
     }
 
     @Test
-    public void firstDayOfMonth() throws Exception {
+    public void firstDayOfMonth() {
         Assert.assertThat(jsonExtractor.getFirstDayOfMonth("2017-04-12").toString(), is("2017-04-01"));
         Assert.assertThat(jsonExtractor.getFirstDayOfMonth("2020-02-29").toString(), is("2020-02-01"));
         Assert.assertThat(jsonExtractor.getFirstDayOfMonth("2020-02-11").toString(), is("2020-02-01"));
     }
 
     @Test
-    public void lastDayOfMonth() throws Exception {
+    public void lastDayOfMonth() {
         Assert.assertThat(jsonExtractor.getLastDayOfMonth("2014-03-12").toString(), is("2014-03-31"));
         Assert.assertThat(jsonExtractor.getLastDayOfMonth("2019-03-12").toString(), is("2019-03-31"));
         Assert.assertThat(jsonExtractor.getLastDayOfMonth("2020-12-12").toString(), is("2020-12-31"));
@@ -236,12 +241,11 @@ public class JSONExtractorTest {
     }
 
     @Test
-    public void testDateNonExist() throws Exception {
+    public void testDateNonExist() {
         try {
             Assert.assertThat(jsonExtractor.getFirstDayOfMonth("2020/02/29T23:00").toString(), is("2020-02-01T00:00"));
             fail();
-        } catch (DateTimeParseException e) {
-
+        } catch (DateTimeParseException ignored) {
         }
     }
 }

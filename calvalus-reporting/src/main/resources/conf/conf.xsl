@@ -49,16 +49,58 @@
                     </dataProcessorUsed>
                 </xsl:if>
 
+                <xsl:if test="name='mapreduce.job.map.class'">
+                    <mapClass>
+                        <xsl:value-of select="value"/>
+                    </mapClass>
+                </xsl:if>
+
+                <xsl:if test="name='mapreduce.map.cpu.vcores'">
+                    <configuredCpuCores>
+                        <xsl:value-of select="value"/>
+                    </configuredCpuCores>
+                </xsl:if>
+
+                <xsl:if test="name='mapreduce.map.memory.mb'">
+                    <configuredRam>
+                        <xsl:value-of select="value"/>
+                    </configuredRam>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.input.collectionName'">
+                    <inputCollectionName>
+                        <xsl:value-of select="value"/>
+                    </inputCollectionName>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.input.productType'">
+                    <inputType>
+                        <xsl:value-of select="value"/>
+                    </inputType>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.system.name'">
+                    <systemName>
+                        <xsl:value-of select="value"/>
+                    </systemName>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.output.productType'">
+                    <outputType>
+                        <xsl:value-of select="value"/>
+                    </outputType>
+                </xsl:if>
+
                 <xsl:choose>
                     <xsl:when test="name='calvalus.input.pathPatterns'">
-                        <inProductType>
+                        <inputPath>
                             <xsl:value-of select="value"/>
-                        </inProductType>
+                        </inputPath>
                     </xsl:when>
-                    <xsl:when test="name='calvalus.input.collection'">
-                        <inProductType>
+                    <xsl:when test="name='calvalus.input.geoInventory'">
+                        <inputPath>
                             <xsl:value-of select="value"/>
-                        </inProductType>
+                        </inputPath>
                     </xsl:when>
                 </xsl:choose>
             </xsl:for-each>

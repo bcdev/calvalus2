@@ -100,7 +100,7 @@ import java.util.TimeZone;
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-2.14'
+ *                         the production. Defaults to 'calvalus-2.15-SNAPSHOT'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
@@ -157,7 +157,8 @@ public class ProductionTool {
                 || commandLine.hasOption("kill")
                 || commandLine.hasOption("copy")
                 || commandLine.hasOption("ingestion")
-                || commandLine.hasOption("help");
+                || commandLine.hasOption("help")
+                || commandLine.hasOption("test-auth");
         List argList = commandLine.getArgList();
         if (argList.size() == 0 && !hasOtherCommand) {
             exit("Error: Missing argument REQUEST. (use option --help for usage help)", -1);
@@ -213,6 +214,12 @@ public class ProductionTool {
                 copyFilesToHDFS(commandLine.getOptionValue("copy"), config);
             }
 
+            if (commandLine.hasOption("test-auth")) {
+                String samlToken = fetchSamlToken(config);
+                say("Successfully retrieved SAML token:\n");
+                say(samlToken);
+            }
+
             // Don't exit if we want to 'kill' something, since we need the production service to do so.
             if (requestPath == null && !commandLine.hasOption("kill")) {
                 return;
@@ -261,21 +268,7 @@ public class ProductionTool {
                     hook = new DebugTokenGenerator(publicKey, privateKey, certificate, getUserName());
                     break;
                 case "saml":
-                    Init.init();
-                    String casUrl = config.getOrDefault("calvalus.cas.url", "https://sso.eoc.dlr.de/cas-codede");
-                    String portalUrl = config.getOrDefault("calvalus.portal.url", "https://processing.code-de.org/calvalus.jsp");
-                    String privateKeyPath = config.get("calvalus.crypt.samlkey-private-key");
-                    if (privateKeyPath == null) {
-                        throw new IllegalStateException("No entry for calvalus.crypt.samlkey-private-key found in Calvalus config.");
-                    }
-                    say(String.format("Fetching SAML token from %s and adding to request.", casUrl));
-                    String tgt = fetchTgt(casUrl);
-                    String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
-                    PrivateKey privateSamlKey = readPrivateDerKey(privateKeyPath);
-                    Document document = parseXml(samlToken);
-                    document = decipher(privateSamlKey, document);
-                    document = fixRootNode(document);
-                    samlToken = getStringFromDoc(document).replace("\\s+", "");
+                    String samlToken = fetchSamlToken(config).replace("\\s+", "");
                     String publicKeySaml = config.get("calvalus.crypt.calvalus-public-key");
                     hook = new TokenGenerator(publicKeySaml, samlToken);
                     break;
@@ -311,6 +304,24 @@ public class ProductionTool {
                 }
             }
         }
+    }
+
+    private String fetchSamlToken(Map<String, String> config) throws IOException, GeneralSecurityException, SAXException, ParserConfigurationException, XMLEncryptionException, org.jdom2.JDOMException {
+        Init.init();
+        String casUrl = config.getOrDefault("calvalus.cas.url", "https://sso.eoc.dlr.de/cas-codede");
+        String portalUrl = config.getOrDefault("calvalus.portal.url", "https://processing.code-de.org/calvalus.jsp");
+        String privateKeyPath = config.get("calvalus.crypt.samlkey-private-key");
+        if (privateKeyPath == null) {
+            throw new IllegalStateException("No entry for calvalus.crypt.samlkey-private-key found in Calvalus config.");
+        }
+        say(String.format("Fetching SAML token from %s.", casUrl));
+        String tgt = fetchTgt(casUrl);
+        String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
+        PrivateKey privateSamlKey = readPrivateDerKey(privateKeyPath);
+        Document document = parseXml(samlToken);
+        document = decipher(privateSamlKey, document);
+        document = fixRootNode(document);
+        return getStringFromDoc(document);
     }
 
     static Document fixRootNode(Document samlToken) throws org.jdom2.JDOMException {
@@ -915,6 +926,10 @@ public class ProductionTool {
         options.addOption(OptionBuilder
                 .withLongOpt("verify")
                 .withDescription("Verify existence and size to avoid double copying, defaults to false")
+                .create());
+        options.addOption(OptionBuilder
+                .withLongOpt("test-auth")
+                .withDescription("Test authentication by SAML token. Print SAML token on success.")
                 .create());  // (sub) commands don't have short options
         return options;
     }

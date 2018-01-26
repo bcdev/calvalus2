@@ -167,6 +167,40 @@
                                 </reduceCounterValue>
                             </counter>
                         </xsl:when>
+
+                        <xsl:when test="name='INPUT_FILE_BYTES_READ'">
+                            <counter>
+                                <name>
+                                    <xsl:value-of select="name"/>
+                                </name>
+                                <totalCounterValue>
+                                    <xsl:value-of select="totalCounterValue"/>
+                                </totalCounterValue>
+                                <mapCounterValue>
+                                    <xsl:value-of select="mapCounterValue"/>
+                                </mapCounterValue>
+                                <reduceCounterValue>
+                                    <xsl:value-of select="reduceCounterValue"/>
+                                </reduceCounterValue>
+                            </counter>
+                        </xsl:when>
+
+                        <xsl:when test="name='FILE_SPLIT_BYTES_READ'">
+                            <counter>
+                                <name>
+                                    <xsl:value-of select="name"/>
+                                </name>
+                                <totalCounterValue>
+                                    <xsl:value-of select="totalCounterValue"/>
+                                </totalCounterValue>
+                                <mapCounterValue>
+                                    <xsl:value-of select="mapCounterValue"/>
+                                </mapCounterValue>
+                                <reduceCounterValue>
+                                    <xsl:value-of select="reduceCounterValue"/>
+                                </reduceCounterValue>
+                            </counter>
+                        </xsl:when>
                     </xsl:choose>
                 </xsl:for-each>
 

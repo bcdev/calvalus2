@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting.urban;
+package com.bc.calvalus.reporting.common;
 
 /**
  * TODO add API doc

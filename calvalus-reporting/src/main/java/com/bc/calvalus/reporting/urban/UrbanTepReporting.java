@@ -1,6 +1,10 @@
 package com.bc.calvalus.reporting.urban;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.reporting.common.Report;
+import com.bc.calvalus.reporting.common.Reporter;
+import com.bc.calvalus.reporting.common.ReportingConnection;
+import com.bc.calvalus.reporting.common.StatusHandler;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -12,9 +16,9 @@ import java.util.logging.Logger;
 /**
  * @author martin
  */
-public class UrbanTepReporting {
+public class UrbanTepReporting implements Reporter {
 
-    static final Logger LOGGER = CalvalusLogger.getLogger();
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
     private final String configPath;
     private final Properties config = new Properties();
     private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
@@ -23,16 +27,54 @@ public class UrbanTepReporting {
     private WpsConnection wpsConnection = new WpsConnection(this);
     private StatusHandler statusHandler = new StatusHandler(this);
 
-    public UrbanTepReporting(String configPath) {
+    private UrbanTepReporting(String configPath) {
         this.configPath = configPath;
     }
 
-    public Properties getConfig() { return config; }
-    public ReportingConnection getReportingConnection() { return reportingConnection; }
-    public AccountingConnection getAccountingConnection() { return accountingConnection; }
-    public StatusHandler getStatusHandler() { return statusHandler; }
-    public ScheduledThreadPoolExecutor getTimer() { return timer; }
-    public void setTimer(ScheduledThreadPoolExecutor timer) { this.timer = timer; }
+    @Override
+    public String getName() {
+        return "urbantep";
+    }
+
+    @Override
+    public Properties getConfig() {
+        return config;
+    }
+
+    @Override
+    public void process(Report report) {
+        switch (report.state) {
+        case NOT_YET_RETRIEVED:
+            getStatusHandler().setRunning(report.job, report.creationTime);
+            // fall through, no break
+        case NEW:
+            getReportingConnection().retrieveSingle(report);
+            break;
+        case NOT_YET_ACCOUNTED:
+            getStatusHandler().setRunning(report.job, report.creationTime);
+            // fall through
+        case RETRIEVED:
+            getAccountingConnection().send(report);
+            break;
+        default:
+            LOGGER.warning("report " + report.job + " in state " + report.state + " cannot be handled");
+        }
+    }
+
+    @Override
+    public StatusHandler getStatusHandler() {
+        return statusHandler;
+    }
+
+    @Override
+    public ScheduledThreadPoolExecutor getTimer() {
+        return timer;
+    }
+
+    @Override
+    public void setTimer(ScheduledThreadPoolExecutor timer) {
+        this.timer = timer;
+    }
 
     public static void main(String[] args) {
         try {
@@ -43,13 +85,21 @@ public class UrbanTepReporting {
         }
     }
 
-    public void run() throws Exception {
+    private ReportingConnection getReportingConnection() {
+        return reportingConnection;
+    }
+
+    private AccountingConnection getAccountingConnection() {
+        return accountingConnection;
+    }
+
+    private void run() throws Exception {
         initConfiguration();
         statusHandler.initReport();
         wpsConnection.run();
     }
 
-    void initConfiguration() throws IOException {
+    private void initConfiguration() throws IOException {
         try {
             try (Reader in = new FileReader(configPath)) {
                 config.load(in);
@@ -58,28 +108,4 @@ public class UrbanTepReporting {
             throw new IOException("failed to read configuration from " + configPath + ": " + e.getMessage(), e);
         }
     }
-
-    /**
-     * Called by Report runnable that is queued in scheduled worker
-     * @param report
-     */
-    public void process(Report report) {
-        switch (report.state) {
-            case NOT_YET_RETRIEVED:
-                getStatusHandler().setRunning(report.job, report.creationTime);
-                // fall through, no break
-            case NEW:
-                getReportingConnection().retrieve(report);
-                break;
-            case NOT_YET_ACCOUNTED:
-                getStatusHandler().setRunning(report.job, report.creationTime);
-                // fall through
-            case RETRIEVED:
-                getAccountingConnection().send(report);
-                break;
-            default:
-                LOGGER.warning("report " + report.job + " in state " + report.state + " cannot be handled");
-        }
-    }
-
 }

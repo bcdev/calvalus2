@@ -20,8 +20,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin;
-import com.bc.calvalus.processing.beam.PathConfiguration;
-import com.bc.calvalus.processing.beam.Sentinel2CalvalusReaderPlugin;
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
@@ -30,15 +28,21 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,6 +142,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (inputFile == null) {
             inputFile = CalvalusProductIO.copyFileToLocal(inputPath, getConfiguration());
             setInputFile(inputFile);
+        }
+        if (getMapContext().getInputSplit() instanceof FileSplit) {
+            FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
+            getMapContext().getCounter("Direct File System Counters", "FILE_SPLIT_BYTES_READ").setValue(fileSplit.getLength());
         }
         Rectangle productRect = null;
         Rectangle inputRectangle = getInputRectangle();
@@ -252,16 +260,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public Product openProcessedProduct() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
             Product product = ProductIO.readProduct(new File(cwd, outputFilesNames[0]));
+            CalvalusProductIO.printProductOnStdout(product, "executable output");
             File productFileLocation = product.getFileLocation();
             if (isSentinel2(outputFilesNames[0])) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("referenceBand", "B5");
                 product = GPF.createProduct("Resample", params, product);
+                CalvalusProductIO.printProductOnStdout(product, "resampled");
                 product.setFileLocation(productFileLocation);
             } else if (isLandsat(outputFilesNames[0])) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("referenceBand", "red");
                 product = GPF.createProduct("Resample", params, product);
+                CalvalusProductIO.printProductOnStdout(product, "resampled");
                 product.setFileLocation(productFileLocation);
             }
             getLogger().info(String.format("Opened product width = %d height = %d",

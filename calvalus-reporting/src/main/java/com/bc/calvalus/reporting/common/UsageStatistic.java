@@ -1,28 +1,41 @@
-package com.bc.calvalus.reporting.restservice.ws;
+package com.bc.calvalus.reporting.common;
 
 /**
+ * @author muhammad.bc.
  * @author hans
  */
 public class UsageStatistic {
 
+
     private String jobId;
     private String user;
     private String queue;
+    private long submitTime;
     private long startTime;
     private long finishTime;
     private String state;
 
-    private String outputDir;
-    private String remoteUser;
     private String jobName;
+    private String remoteUser;
     private String remoteRef;
     private String processType;
+    private String mapClass;
+    private String workflowType;
     private String inputPath;
+    private String inProductType;
+    private String collectionName;
+    private String configuredCpuCores;
+    private String configuredRam;
+    private String systemName;
+    private String outputType;
+    private String outputDir;
 
     private int mapsCompleted;
     private int totalMaps;
     private int reducesCompleted;
     private long fileBytesRead;
+    private long inputFileBytesRead;
+    private long fileSplitBytesRead;
     private long fileBytesWritten;
     private long hdfsBytesRead;
     private long hdfsBytesWritten;
@@ -34,18 +47,30 @@ public class UsageStatistic {
     public UsageStatistic(String jobId,
                           String user,
                           String queue,
+                          long submitTime,
                           long startTime,
                           long finishTime,
                           String state,
-                          String outputDir,
-                          String remoteUser,
                           String jobName,
+                          String remoteUser,
                           String remoteRef,
                           String processType,
+                          String mapClass,
+                          String workflowType,
                           String inputPath,
+                          String inProductType,
+                          String collectionName,
+                          String configuredCpuCores,
+                          String configuredRam,
+                          String systemName,
+                          String outputType,
+                          String outputDir,
                           int mapsCompleted,
+                          int totalMaps,
                           int reducesCompleted,
                           long fileBytesRead,
+                          long inputFileBytesRead,
+                          long fileSplitBytesRead,
                           long fileBytesWritten,
                           long hdfsBytesRead,
                           long hdfsBytesWritten,
@@ -56,24 +81,35 @@ public class UsageStatistic {
         this.jobId = jobId;
         this.user = user;
         this.queue = queue;
+        this.submitTime = submitTime;
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.state = state;
-        this.outputDir = outputDir;
-        this.remoteUser = remoteUser;
         this.jobName = jobName;
+        this.remoteUser = remoteUser;
         this.remoteRef = remoteRef;
         this.processType = processType;
+        this.mapClass = mapClass;
+        this.workflowType = workflowType;
         this.inputPath = inputPath;
+        this.inProductType = inProductType;
+        this.collectionName = collectionName;
+        this.configuredCpuCores = configuredCpuCores;
+        this.configuredRam = configuredRam;
+        this.systemName = systemName;
+        this.outputType = outputType;
+        this.outputDir = outputDir;
         this.mapsCompleted = mapsCompleted;
         this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
         this.fileBytesRead = fileBytesRead;
+        this.inputFileBytesRead = inputFileBytesRead;
+        this.fileSplitBytesRead = fileSplitBytesRead;
         this.fileBytesWritten = fileBytesWritten;
         this.hdfsBytesRead = hdfsBytesRead;
         this.hdfsBytesWritten = hdfsBytesWritten;
-        this.mbMillisReduceTotal = mbMillisReduceTotal;
         this.mbMillisMapTotal = mbMillisMapTotal;
+        this.mbMillisReduceTotal = mbMillisReduceTotal;
         this.vCoresMillisTotal = vCoresMillisTotal;
         this.cpuMilliseconds = cpuMilliseconds;
     }
@@ -90,6 +126,10 @@ public class UsageStatistic {
         return queue;
     }
 
+    public long getSubmitTime() {
+        return submitTime;
+    }
+
     public long getStartTime() {
         return startTime;
     }
@@ -98,7 +138,7 @@ public class UsageStatistic {
         return finishTime;
     }
 
-    long getTotalTime() {
+    public long getTotalTime() {
         return finishTime - startTime;
     }
 
@@ -106,16 +146,12 @@ public class UsageStatistic {
         return state;
     }
 
-    public String getOutputDir() {
-        return outputDir;
+    public String getJobName() {
+        return jobName;
     }
 
     public String getRemoteUser() {
         return remoteUser;
-    }
-
-    public String getJobName() {
-        return jobName;
     }
 
     public String getRemoteRef() {
@@ -126,12 +162,52 @@ public class UsageStatistic {
         return processType;
     }
 
+    public String getMapClass() {
+        return mapClass;
+    }
+
+    public String getWorkflowType() {
+        return workflowType;
+    }
+
     public String getInputPath() {
         return inputPath;
     }
 
+    public String getInProductType() {
+        return inProductType;
+    }
+
+    public String getCollectionName() {
+        return collectionName;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public String getOutputType() {
+        return outputType;
+    }
+
+    public String getOutputDir() {
+        return outputDir;
+    }
+
     public int getMapsCompleted() {
         return mapsCompleted;
+    }
+
+    public int getTotalMaps() {
+        return totalMaps;
     }
 
     public int getReducesCompleted() {
@@ -140,6 +216,14 @@ public class UsageStatistic {
 
     public long getFileBytesRead() {
         return fileBytesRead;
+    }
+
+    public long getInputFileBytesRead() {
+        return inputFileBytesRead;
+    }
+
+    public long getFileSplitBytesRead() {
+        return fileSplitBytesRead;
     }
 
     public long getFileBytesWritten() {
@@ -168,9 +252,5 @@ public class UsageStatistic {
 
     public long getCpuMilliseconds() {
         return cpuMilliseconds;
-    }
-
-    public int getTotalMaps() {
-        return totalMaps;
     }
 }

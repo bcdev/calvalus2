@@ -7,6 +7,11 @@ import com.bc.calvalus.reporting.ui.shared.UserInfoInDetails;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -19,23 +24,19 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * @author muhammad.bc.
  */
 
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
-    static final String STATUS_FAILED = "\"Status\": \"Failed\"";
-    String calvalusReportingWebServicesUrl;
-    static final int HTTP_SUCCESSFUL_CODE_START = 200;
-    static final int HTTP_SUCCESSFUL_CODE_END = 300;
+    private static final String STATUS_FAILED = "\"Status\": \"Failed\"";
+    private String calvalusReportingWebServicesUrl;
+    private static final int HTTP_SUCCESSFUL_CODE_START = 200;
+    private static final int HTTP_SUCCESSFUL_CODE_END = 300;
 
-    static final int TO_GB = 1024;
-    static final int FIRST_DAY = 1;
+    private static final int TO_GB = 1024;
+    private static final int FIRST_DAY = 1;
 
     public JobResourceServiceImpl() throws IOException {
         try (InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("calvalus-reporting.properties")) {
@@ -115,17 +116,20 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private List<UserInfo> getAllDateUsageBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-date/%s/%s"), startDate, endDate),
+                                        MediaType.APPLICATION_JSON);
         return gsonToUserInfo(jsonUser);
     }
 
     private List<UserInfo> getAllUserUsageBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-user/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-user/%s/%s"), startDate, endDate),
+                                        MediaType.APPLICATION_JSON);
         return gsonToUserInfo(jsonUser);
     }
 
     private List<UserInfo> getAllQueueUsageBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-queue/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-queue/%s/%s"), startDate, endDate),
+                                        MediaType.APPLICATION_JSON);
         return gsonToUserInfo(jsonUser);
     }
 
@@ -170,6 +174,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        assert parse != null;
         return String.format("%.3f ", parse.longValue() / size);
     }
 

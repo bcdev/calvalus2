@@ -9,31 +9,40 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * @author muhammad.bc.
+ * @author hans
  */
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-        "path",
-        "wpsJobId",
-        "remoteUser",
-        "jobName",
-        "remoteRef",
-        "processType",
-        "workflowType",
-        "dataProcessorUsed",
-        "inProductType"
+            "confXmlPath",
+            "wpsJobId",
+            "jobName",
+            "remoteUser",
+            "remoteRef",
+            "processType",
+            "workflowType",
+            "dataProcessorUsed",
+            "mapClass",
+            "inputPath",
+            "inputType",
+            "inputCollectionName",
+            "outputDir",
+            "outputType",
+            "configuredCpuCores",
+            "configuredRam",
+            "systemName"
 })
 @XmlRootElement(name = "conf")
 public class JobConf {
 
     @XmlElement(required = true)
-    private String path;
+    private String confXmlPath;
     @XmlElement(required = true)
     private String wpsJobId;
     @XmlElement(required = true)
-    private String remoteUser;
-    @XmlElement(required = true)
     private String jobName;
+    @XmlElement(required = true)
+    private String remoteUser;
     @XmlElement(required = true)
     private String remoteRef;
     @XmlElement(required = true)
@@ -43,30 +52,30 @@ public class JobConf {
     @XmlElement(required = true)
     private String dataProcessorUsed;
     @XmlElement(required = true)
-    private String inProductType;
+    private String mapClass;
+    @XmlElement(required = true)
+    private String inputPath;
+    @XmlElement(required = true)
+    private String inputType;
+    @XmlElement(required = true)
+    private String inputCollectionName;
+    @XmlElement(required = true)
+    private String outputDir;
+    @XmlElement(required = true)
+    private String outputType;
+    @XmlElement(required = true)
+    private String configuredCpuCores;
+    @XmlElement(required = true)
+    private String configuredRam;
+    @XmlElement(required = true)
+    private String systemName;
 
-    public String getInProductType() {
-        return inProductType;
+    public String getConfXmlPath() {
+        return confXmlPath;
     }
 
-    public void setInProductType(String inProductType) {
-        this.inProductType = inProductType;
-    }
-
-    public String getDataProcessorUsed() {
-        return dataProcessorUsed;
-    }
-
-    public void setDataProcessorUsed(String dataProcessorUsed) {
-        this.dataProcessorUsed = dataProcessorUsed;
-    }
-
-    public String getWorkflowType() {
-        return workflowType;
-    }
-
-    public void setWorkflowType(String workflowType) {
-        this.workflowType = workflowType;
+    public void setConfXmlPath(String value) {
+        this.confXmlPath = value;
     }
 
     public String getWpsJobId() {
@@ -77,20 +86,20 @@ public class JobConf {
         this.wpsJobId = wpsJobId;
     }
 
-    public String getRemoteUser() {
-        return remoteUser;
-    }
-
-    public void setRemoteUser(String remoteUser) {
-        this.remoteUser = remoteUser;
-    }
-
     public String getJobName() {
         return jobName;
     }
 
     public void setJobName(String jobName) {
         this.jobName = jobName;
+    }
+
+    public String getRemoteUser() {
+        return remoteUser;
+    }
+
+    public void setRemoteUser(String remoteUser) {
+        this.remoteUser = remoteUser;
     }
 
     public String getRemoteRef() {
@@ -109,12 +118,91 @@ public class JobConf {
         this.processType = processType;
     }
 
-    public String getPath() {
-        return path;
+    public String getWorkflowType() {
+        return workflowType;
     }
 
-    public void setPath(String value) {
-        this.path = value;
+    public void setWorkflowType(String workflowType) {
+        this.workflowType = workflowType;
     }
 
+    public String getDataProcessorUsed() {
+        return dataProcessorUsed;
+    }
+
+    public void setDataProcessorUsed(String dataProcessorUsed) {
+        this.dataProcessorUsed = dataProcessorUsed;
+    }
+
+    public String getMapClass() {
+        return mapClass;
+    }
+
+    public void setMapClass(String mapClass) {
+        this.mapClass = mapClass;
+    }
+
+    public String getInputPath() {
+        return inputPath;
+    }
+
+    public void setInputPath(String inputPath) {
+        this.inputPath = inputPath;
+    }
+
+    public String getInputType() {
+        return inputType;
+    }
+
+    public void setInputType(String inputType) {
+        this.inputType = inputType;
+    }
+
+    public String getInputCollectionName() {
+        return inputCollectionName;
+    }
+
+    public void setInputCollectionName(String inputCollectionName) {
+        this.inputCollectionName = inputCollectionName;
+    }
+
+    public String getOutputDir() {
+        return outputDir;
+    }
+
+    public void setOutputDir(String outputDir) {
+        this.outputDir = outputDir;
+    }
+
+    public String getOutputType() {
+        return outputType;
+    }
+
+    public void setOutputType(String outputType) {
+        this.outputType = outputType;
+    }
+
+    public String getConfiguredCpuCores() {
+        return configuredCpuCores;
+    }
+
+    public void setConfiguredCpuCores(String configuredCpuCores) {
+        this.configuredCpuCores = configuredCpuCores;
+    }
+
+    public String getConfiguredRam() {
+        return configuredRam;
+    }
+
+    public void setConfiguredRam(String configuredRam) {
+        this.configuredRam = configuredRam;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public void setSystemName(String systemName) {
+        this.systemName = systemName;
+    }
 }
