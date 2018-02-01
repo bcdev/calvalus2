@@ -18,8 +18,7 @@ package com.bc.calvalus.portal.server;
 
 import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
 
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.production.ProcessingLogHandler;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ServiceContainer;
@@ -52,7 +51,8 @@ public class HadoopLogServlet extends HttpServlet {
         BackendConfig backendConfig = new BackendConfig(getServletContext());
         boolean withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean(
                     "calvalus.accesscontrol.external", false);
-        ProcessingLogHandler logHandler = new ProcessingLogHandler(backendConfig, withExternalAccessControl);
+        ProcessingLogHandler logHandler = new ProcessingLogHandler(backendConfig.getConfigMap(),
+                                                                   withExternalAccessControl);
         int responseStatus;
         if (productionId == null) {
             responseStatus = logHandler.showErrorPage("Missing query parameter 'productionId'", outputStream);
@@ -63,8 +63,7 @@ public class HadoopLogServlet extends HttpServlet {
                     throw new ProductionException("Failed to get production for id: " + productionId);
                 }
                 final String userName = getUserName(req).toLowerCase();
-                WorkflowItem workflow = production.getWorkflow();
-                responseStatus = logHandler.handleWorkFlow(workflow, ProcessState.ERROR, outputStream, userName);
+                responseStatus = logHandler.handleProduction(production, outputStream, userName);
             } catch (ProductionException e) {
                 responseStatus = logHandler.showErrorPage("Failed to get production for id: " + productionId,
                                                           outputStream);

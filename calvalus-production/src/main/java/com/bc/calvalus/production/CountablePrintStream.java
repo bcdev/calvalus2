@@ -1,4 +1,4 @@
-package com.bc.calvalus.portal.server;
+package com.bc.calvalus.production;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -10,7 +10,7 @@ public class CountablePrintStream extends PrintStream {
 
     private long count = 0;
 
-    public CountablePrintStream(OutputStream out) {
+    CountablePrintStream(OutputStream out) {
         super(out);
     }
 
