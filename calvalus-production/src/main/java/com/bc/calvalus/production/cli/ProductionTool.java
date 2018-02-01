@@ -6,6 +6,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.ingestion.IngestionTool;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.production.ProcessingLogHandler;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -38,6 +39,7 @@ import org.apache.xml.security.utils.EncryptionConstants;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.esa.snap.core.util.StringUtils;
 import org.jdom.JDOMException;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
@@ -56,12 +58,15 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -129,6 +134,7 @@ public class ProductionTool {
     private static final String TOOL_NAME = "cpt";
     private static final String SYSTEM_USER_NAME = "hadoop";
     private static final Options TOOL_OPTIONS = createCommandlineOptions();
+    private static final String DEFAULT_LOG_DIRECTORY = "log/";
 
     private boolean errors;
     private boolean quiet;
@@ -280,6 +286,9 @@ public class ProductionTool {
             if (production.isAutoStaging()) {
                 stageProduction(serviceContainer.getProductionService(), production);
             }
+            if (commandLine.hasOption("joblogs")){
+                handleJobLogs(commandLine, serviceContainer, config, production);
+            }
 
         } catch (JDOMException e) {
             exit("Error: Invalid WPS XML", 3, e);
@@ -302,6 +311,47 @@ public class ProductionTool {
                 } catch (Exception e) {
                     exit("Warning: Failed to close production service! Job may be still alive!", 0);
                 }
+            }
+        }
+    }
+
+    private void handleJobLogs(CommandLine commandLine, ServiceContainer serviceContainer, Map<String, String> config,
+                               Production production) throws IOException {
+        boolean withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean(
+                    "calvalus.accesscontrol.external", false);
+        ProcessingLogHandler logHandler = new ProcessingLogHandler(config, withExternalAccessControl);
+        String logFilePath = commandLine.getOptionValue("joblogs");
+        OutputStream out = null;
+        try{
+            if("stdout".equalsIgnoreCase(logFilePath)){
+                out = new ByteArrayOutputStream();
+                int responseCode = logHandler.handleProduction(production, out, getUserName());
+                if(responseCode == 0){
+                    System.out.println(out.toString());
+                }else{
+                    System.out.println("There is an issue in accessing the log for this productionId '" + production.getId() + "'");
+                }
+            } else{
+                if (StringUtils.isNullOrEmpty(logFilePath)){
+                    java.nio.file.Path logDirPath = Paths.get(DEFAULT_LOG_DIRECTORY);
+                    if(!Files.exists(logDirPath)){
+                        System.out.println("Creating '" + DEFAULT_LOG_DIRECTORY + "' directory");
+                        Files.createDirectory(logDirPath);
+                    }
+                    logFilePath = DEFAULT_LOG_DIRECTORY + production.getId() + ".log";
+                }
+                out = new FileOutputStream(logFilePath);
+                System.out.println("Writing processing logs....");
+                int responseCode = logHandler.handleProduction(production, out, getUserName());
+                if(responseCode == 0){
+                    System.out.println("Log has been successfully written to '" + logFilePath + "'");
+                }else{
+                    System.out.println("There is an issue in accessing the log for this process. Please see '" + logFilePath + "'");
+                }
+            }
+        } finally {
+            if(out!=null) {
+                out.close();
             }
         }
     }
@@ -930,6 +980,13 @@ public class ProductionTool {
         options.addOption(OptionBuilder
                 .withLongOpt("test-auth")
                 .withDescription("Test authentication by SAML token. Print SAML token on success.")
+                .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                .withLongOpt("joblogs")
+                .withDescription("Store the aggregated logs in FILEPATH. When FILEPATH is not specified, the logs are stored " +
+                                 "in " + DEFAULT_LOG_DIRECTORY + " directory. Enter 'stdout' to display the logs in standard output.")
+                .hasOptionalArg()
+                .withArgName("FILEPATH")
                 .create());  // (sub) commands don't have short options
         return options;
     }

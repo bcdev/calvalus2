@@ -1,4 +1,4 @@
-package com.bc.calvalus.portal.server;
+package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.security.PrivilegedExceptionAction;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -38,28 +39,18 @@ public class ProcessingLogHandler {
 
     private static final int KILO_BYTES = 1024;
 
-    private BackendConfig backendConfig;
+    private Map<String, String> configMap;
     private boolean withExternalAccessControl;
 
-    public ProcessingLogHandler(BackendConfig backendConfig, boolean withExternalAccessControl) {
-        this.backendConfig = backendConfig;
+    public ProcessingLogHandler(Map<String, String> configMap, boolean withExternalAccessControl) {
+        this.configMap = configMap;
         this.withExternalAccessControl = withExternalAccessControl;
     }
 
-    public int handleWorkFlow(WorkflowItem workflow, ProcessState processState, OutputStream out,
-                              String userName) throws IOException {
-        WorkflowItem[] items = workflow.getItems();
-        if (items.length == 0) {
-            // the one and only item must be the failed one
-            return showLogFor(workflow, out, userName);
-        } else {
-            for (WorkflowItem workflowItem : items) {
-                if (workflowItem.getStatus().getState() == processState) {
-                    return handleWorkFlow(workflowItem, processState, out, userName);
-                }
-            }
-            return showErrorPage("Cannot find logs with the status '" + processState + "'.", out);
-        }
+    public int handleProduction(Production production, OutputStream out, String userName) throws IOException {
+        WorkflowItem workflow = production.getWorkflow();
+        ProcessState processState = production.getProcessingStatus().getState();
+        return handleWorkFlow(workflow, processState, out, userName);
     }
 
     public int showErrorPage(String message, OutputStream out) {
@@ -77,7 +68,24 @@ public class ProcessingLogHandler {
         writer.println("</body>");
         writer.flush();
         writer.close();
+
         return -1;
+    }
+
+    private int handleWorkFlow(WorkflowItem workflow, ProcessState processState, OutputStream out,
+                               String userName) throws IOException {
+        WorkflowItem[] items = workflow.getItems();
+        if (items.length == 0) {
+            // the one and only item must be the failed one
+            return showLogFor(workflow, out, userName);
+        } else {
+            for (WorkflowItem workflowItem : items) {
+                if (workflowItem.getStatus().getState() == processState) {
+                    return handleWorkFlow(workflowItem, processState, out, userName);
+                }
+            }
+            return showErrorPage("Cannot find logs with the status '" + processState + "'.", out);
+        }
     }
 
     private int showLogFor(WorkflowItem workflowItem, OutputStream out,
@@ -185,8 +193,7 @@ public class ProcessingLogHandler {
                         countablePrintStream.println(StringUtils.repeat("=", containerString.length()));
                         long logMaxSizeBytes;
                         try {
-                            logMaxSizeBytes = Long.parseLong(
-                                        backendConfig.getConfigMap().get("log.max.size.kb")) * KILO_BYTES;
+                            logMaxSizeBytes = Long.parseLong(configMap.get("log.max.size.kb")) * KILO_BYTES;
                         } catch (NumberFormatException exception) {
                             logMaxSizeBytes = 0;
                         }
