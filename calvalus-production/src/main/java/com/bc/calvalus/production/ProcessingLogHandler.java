@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author hans
@@ -38,6 +39,9 @@ import java.util.logging.Level;
 public class ProcessingLogHandler {
 
     private static final int KILO_BYTES = 1024;
+    private static final int RETRY_PERIOD_MILLIS = 2000;
+    private static final int MAX_RETRIES = 10;
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
 
     private Map<String, String> configMap;
     private boolean withExternalAccessControl;
@@ -115,9 +119,20 @@ public class ProcessingLogHandler {
         JobID jobId = (JobID) jobIds[0];
         org.apache.hadoop.mapred.JobID downgradeJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
         try {
-            RunningJob runningJob = jobClient.getJob(downgradeJobId);
+            int runningJobRetries = 0;
+            RunningJob runningJob = null;
+            while (runningJobRetries < MAX_RETRIES) {
+                runningJob = jobClient.getJob(downgradeJobId);
+                if (runningJob != null) {
+                    break;
+                }
+                runningJobRetries++;
+                LOGGER.log(Level.INFO, "No running job for jobId '" + downgradeJobId.toString() +
+                                       "'. Retrying in " + RETRY_PERIOD_MILLIS / 1000 + " s.");
+                Thread.sleep(RETRY_PERIOD_MILLIS);
+            }
             Configuration conf = jobClient.getConf();
-            CalvalusLogger.getLogger().log(Level.INFO, "runningJob = " + runningJob);
+            LOGGER.log(Level.INFO, "runningJob = " + runningJob);
             if (runningJob == null) {
                 return showErrorPage("No 'RunningJob' found for jobId: " + jobId, out);
             }
@@ -139,13 +154,12 @@ public class ProcessingLogHandler {
                         try {
                             appId = ConverterUtils.toApplicationId(appIdStr);
                         } catch (Exception e) {
-                            System.err.println("Invalid ApplicationId specified: " + appIdStr);
+                            LOGGER.log(Level.SEVERE, "Invalid ApplicationId specified: " + appIdStr);
                             return -1;
                         }
                         int resultCode = dumpAllContainersLogs(appId, userName, out, conf);
                         if (resultCode != 0) {
-                            showErrorPage("Failed to open Logfile.", out);
-                            return -1;
+                            return showErrorPage("Failed to open Logfile.", out);
                         }
                         return 0;
                     }
@@ -169,12 +183,10 @@ public class ProcessingLogHandler {
         // TODO Change this to get a list of files from the LAS.
         Path remoteAppLogDir = LogAggregationUtils.getRemoteAppLogDir(
                     remoteRootLogDir, appId, appOwner, logDirSuffix);
-        RemoteIterator<FileStatus> nodeFiles;
-        try {
-            nodeFiles = FileContext.getFileContext(conf).listStatus(remoteAppLogDir);
-        } catch (FileNotFoundException fnf) {
-            System.out.println("Logs not available at " + remoteAppLogDir.toString());
-            System.out.println("Log aggregation has not completed or is not enabled.");
+        RemoteIterator<FileStatus> nodeFiles = retrieveFiles(conf, remoteAppLogDir);
+        if (nodeFiles == null) {
+            LOGGER.log(Level.INFO, "Logs not available at " + remoteAppLogDir.toString());
+            LOGGER.log(Level.INFO, "Log aggregation has not completed or is not enabled.");
             return -1;
         }
         try (CountablePrintStream countablePrintStream = new CountablePrintStream(outputStream)) {
@@ -203,8 +215,8 @@ public class ProcessingLogHandler {
                                     AggregatedLogFormat.LogReader.readAContainerLogsForALogType(valueStream,
                                                                                                 countablePrintStream);
                                 } catch (EOFException eof) {
-                                    CalvalusLogger.getLogger().log(Level.INFO, "Finished reading a file. " +
-                                                                               "Accumulated size: " + countablePrintStream.getCount());
+                                    LOGGER.log(Level.INFO, "Finished reading a file. " +
+                                                           "Accumulated size: " + countablePrintStream.getCount());
                                     break;
                                 }
                             }
@@ -227,5 +239,30 @@ public class ProcessingLogHandler {
             }
         }
         return 0;
+    }
+
+    private RemoteIterator<FileStatus> retrieveFiles(Configuration conf, Path remoteAppLogDir) throws IOException {
+        int retriesCount = 0;
+        while (true) {
+            try {
+                RemoteIterator<FileStatus> nodeFiles = FileContext.getFileContext(conf).listStatus(remoteAppLogDir);
+                if (nodeFiles != null) {
+                    return nodeFiles;
+                }
+            } catch (FileNotFoundException fnf) {
+                retriesCount++;
+                if (retriesCount >= MAX_RETRIES) {
+                    fnf.printStackTrace();
+                    break;
+                }
+                LOGGER.log(Level.INFO, "Logs not yet available at " + remoteAppLogDir.toString() + ". " +
+                                       "Retrying in " + RETRY_PERIOD_MILLIS / 1000 + " s...");
+                try {
+                    Thread.sleep(RETRY_PERIOD_MILLIS);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        }
+        return null;
     }
 }
