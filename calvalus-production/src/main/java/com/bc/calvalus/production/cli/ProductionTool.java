@@ -1,5 +1,7 @@
 package com.bc.calvalus.production.cli;
 
+import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_ERROR_CODE;
+
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
@@ -73,6 +75,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -135,6 +138,8 @@ public class ProductionTool {
     private static final String SYSTEM_USER_NAME = "hadoop";
     private static final Options TOOL_OPTIONS = createCommandlineOptions();
     private static final String DEFAULT_LOG_DIRECTORY = "log/";
+    private static final String JOB_REPORT_FILE = "job.report";
+    private final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     private boolean errors;
     private boolean quiet;
@@ -282,6 +287,9 @@ public class ProductionTool {
                     throw new RuntimeException("unknown auth type " + authPolicy);
             }
 
+            String jobSubmissionDate = df.format(new Date());
+            config.put("jobSubmissionDate", jobSubmissionDate);
+
             Production production = orderProduction(serviceContainer.getProductionService(), request, hook);
             if (production.isAutoStaging()) {
                 stageProduction(serviceContainer.getProductionService(), production);
@@ -322,35 +330,60 @@ public class ProductionTool {
         ProcessingLogHandler logHandler = new ProcessingLogHandler(config, withExternalAccessControl);
         String logFilePath = commandLine.getOptionValue("joblogs");
         OutputStream out = null;
-        try{
-            if("stdout".equalsIgnoreCase(logFilePath)){
+        try {
+            if ("stdout".equalsIgnoreCase(logFilePath)) {
                 out = new ByteArrayOutputStream();
                 int responseCode = logHandler.handleProduction(production, out, getUserName());
-                if(responseCode == 0){
+                if (responseCode == 0) {
                     System.out.println(out.toString());
-                }else{
-                    System.out.println("There is an issue in accessing the log for this productionId '" + production.getId() + "'");
+                } else {
+                    System.out.println(
+                                "There is an issue in accessing the log for this productionId '" + production.getId() + "'");
                 }
-            } else{
-                if (StringUtils.isNullOrEmpty(logFilePath)){
-                    java.nio.file.Path logDirPath = Paths.get(DEFAULT_LOG_DIRECTORY);
-                    if(!Files.exists(logDirPath)){
-                        System.out.println("Creating '" + DEFAULT_LOG_DIRECTORY + "' directory");
-                        Files.createDirectory(logDirPath);
-                    }
+            } else {
+                java.nio.file.Path logDirPath = Paths.get(DEFAULT_LOG_DIRECTORY);
+                if (!Files.exists(logDirPath)) {
+                    System.out.println("Creating '" + DEFAULT_LOG_DIRECTORY + "' directory");
+                    Files.createDirectory(logDirPath);
+                }
+                if (StringUtils.isNullOrEmpty(logFilePath)) {
                     logFilePath = DEFAULT_LOG_DIRECTORY + production.getId() + ".log";
                 }
                 out = new FileOutputStream(logFilePath);
                 System.out.println("Writing processing logs....");
                 int responseCode = logHandler.handleProduction(production, out, getUserName());
-                if(responseCode == 0){
+                if (responseCode == 0) {
                     System.out.println("Log has been successfully written to '" + logFilePath + "'");
-                }else{
-                    System.out.println("There is an issue in accessing the log for this process. Please see '" + logFilePath + "'");
+                } else if (responseCode == LOG_STREAM_EMPTY_ERROR_CODE) {
+                    System.out.println("Log files return no contents. It is likely that log aggregation process " +
+                                       "has not been completed. Try again later with command 'yarn logs -applicationId " +
+                                       "<applicationId>. Check " + DEFAULT_LOG_DIRECTORY + JOB_REPORT_FILE + " for " +
+                                       "information about the applicationId");
+                    java.nio.file.Path logPath = Paths.get(logFilePath);
+                    if(Files.exists(logPath)){
+                        Files.delete(logPath);
+                    }
+                } else {
+                    System.out.println(
+                                "There is an issue in accessing the log for this process. Please see '" + logFilePath + "'");
+                }
+                Object[] jobIds = production.getJobIds();
+                for (Object jobId : jobIds) {
+                    String newLine = config.get("jobSubmissionDate") + "\t" +
+                                     (jobId.toString().replace("job", "application")) + "\t" +
+                                     production.getName() + "\n";
+                    try {
+                        java.nio.file.Path jobReportPath = Paths.get(DEFAULT_LOG_DIRECTORY, JOB_REPORT_FILE);
+                        Files.write(jobReportPath, newLine.getBytes(),
+                                    Files.exists(jobReportPath) ? StandardOpenOption.APPEND : StandardOpenOption.CREATE);
+                    } catch (IOException e) {
+                        System.err.println("Unable to add new job to " + DEFAULT_LOG_DIRECTORY + JOB_REPORT_FILE);
+                        e.printStackTrace();
+                    }
                 }
             }
         } finally {
-            if(out!=null) {
+            if (out != null) {
                 out.close();
             }
         }
@@ -502,9 +535,7 @@ public class ProductionTool {
         PrivateKey privateKey = readPrivatePemKey("/home/" + userId + "/.ssh/id_rsa");
         final Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, privateKey);
-        final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
-
         String token = userId + '\n' + df.format(new Date()) + "\n47110815";
         byte[] bytes = cipher.doFinal(token.getBytes());
         return Base64.getUrlEncoder().encode(bytes);
