@@ -39,16 +39,23 @@ import java.util.logging.Logger;
 public class ProcessingLogHandler {
 
     private static final int KILO_BYTES = 1024;
-    private static final int RETRY_PERIOD_MILLIS = 2000;
-    private static final int MAX_RETRIES = 10;
+    private static final int DEFAULT_RETRY_PERIOD_MILLIS = 1000;
+    private static final int DEFAULT_MAX_RETRIES = 10;
     private static final Logger LOGGER = CalvalusLogger.getLogger();
+
+    public static final int LOG_STREAM_EMPTY_ERROR_CODE = 1;
+    private static final int LOG_GENERAL_ERROR_CODE = -1;
 
     private Map<String, String> configMap;
     private boolean withExternalAccessControl;
+    private long retryPeriodMillis;
+    private long maxRetries;
 
     public ProcessingLogHandler(Map<String, String> configMap, boolean withExternalAccessControl) {
         this.configMap = configMap;
         this.withExternalAccessControl = withExternalAccessControl;
+        this.retryPeriodMillis = resolveRetryPeriod();
+        this.maxRetries = resolveMaxRetries();
     }
 
     public int handleProduction(Production production, OutputStream out, String userName) throws IOException {
@@ -73,7 +80,7 @@ public class ProcessingLogHandler {
         writer.flush();
         writer.close();
 
-        return -1;
+        return LOG_GENERAL_ERROR_CODE;
     }
 
     private int handleWorkFlow(WorkflowItem workflow, ProcessState processState, OutputStream out,
@@ -121,15 +128,16 @@ public class ProcessingLogHandler {
         try {
             int runningJobRetries = 0;
             RunningJob runningJob = null;
-            while (runningJobRetries < MAX_RETRIES) {
+            while (runningJobRetries < this.maxRetries) {
                 runningJob = jobClient.getJob(downgradeJobId);
                 if (runningJob != null) {
                     break;
                 }
                 runningJobRetries++;
                 LOGGER.log(Level.INFO, "No running job for jobId '" + downgradeJobId.toString() +
-                                       "'. Retrying in " + RETRY_PERIOD_MILLIS / 1000 + " s.");
-                Thread.sleep(RETRY_PERIOD_MILLIS);
+                                       "'. Already tried " + runningJobRetries + " time(s) (maxRetries=" +
+                                       this.maxRetries + ", retryPeriodMillis=" + this.retryPeriodMillis + ")");
+                Thread.sleep(this.retryPeriodMillis);
             }
             Configuration conf = jobClient.getConf();
             LOGGER.log(Level.INFO, "runningJob = " + runningJob);
@@ -155,13 +163,13 @@ public class ProcessingLogHandler {
                             appId = ConverterUtils.toApplicationId(appIdStr);
                         } catch (Exception e) {
                             LOGGER.log(Level.SEVERE, "Invalid ApplicationId specified: " + appIdStr);
-                            return -1;
+                            return LOG_GENERAL_ERROR_CODE;
                         }
                         int resultCode = dumpAllContainersLogs(appId, userName, out, conf);
-                        if (resultCode != 0) {
+                        if (resultCode == LOG_GENERAL_ERROR_CODE) {
                             return showErrorPage("Failed to open Logfile.", out);
                         }
-                        return 0;
+                        return resultCode;
                     }
                 });
             } catch (InterruptedException e) {
@@ -183,15 +191,22 @@ public class ProcessingLogHandler {
         // TODO Change this to get a list of files from the LAS.
         Path remoteAppLogDir = LogAggregationUtils.getRemoteAppLogDir(
                     remoteRootLogDir, appId, appOwner, logDirSuffix);
+        // give a short period to increase the probability that the logs have been successfully aggregated
+        try {
+            Thread.sleep(this.retryPeriodMillis);
+        } catch (InterruptedException ignored) {
+        }
         RemoteIterator<FileStatus> nodeFiles = retrieveFiles(conf, remoteAppLogDir);
         if (nodeFiles == null) {
             LOGGER.log(Level.INFO, "Logs not available at " + remoteAppLogDir.toString());
             LOGGER.log(Level.INFO, "Log aggregation has not completed or is not enabled.");
-            return -1;
+            return LOG_GENERAL_ERROR_CODE;
         }
         try (CountablePrintStream countablePrintStream = new CountablePrintStream(outputStream)) {
             while (nodeFiles.hasNext()) {
                 FileStatus thisNodeFile = nodeFiles.next();
+                LOGGER.log(Level.INFO, "Reading log file " + thisNodeFile.getPath().getName() + " with size " +
+                                       thisNodeFile.getBlockSize());
                 AggregatedLogFormat.LogReader reader = new AggregatedLogFormat.LogReader(
                             conf, new Path(remoteAppLogDir, thisNodeFile.getPath().getName()));
                 try {
@@ -237,6 +252,9 @@ public class ProcessingLogHandler {
                     reader.close();
                 }
             }
+            if (countablePrintStream.getCount() == 0) {
+                return LOG_STREAM_EMPTY_ERROR_CODE;
+            }
         }
         return 0;
     }
@@ -251,18 +269,35 @@ public class ProcessingLogHandler {
                 }
             } catch (FileNotFoundException fnf) {
                 retriesCount++;
-                if (retriesCount >= MAX_RETRIES) {
+                if (retriesCount >= this.maxRetries) {
                     fnf.printStackTrace();
                     break;
                 }
                 LOGGER.log(Level.INFO, "Logs not yet available at " + remoteAppLogDir.toString() + ". " +
-                                       "Retrying in " + RETRY_PERIOD_MILLIS / 1000 + " s...");
+                                       "'. Already tried " + retriesCount + " time(s) (maxRetries=" +
+                                       this.maxRetries + ", retryPeriodMillis=" + this.retryPeriodMillis + ")");
                 try {
-                    Thread.sleep(RETRY_PERIOD_MILLIS);
+                    Thread.sleep(this.retryPeriodMillis);
                 } catch (InterruptedException ignored) {
                 }
             }
         }
         return null;
+    }
+
+    private long resolveRetryPeriod() {
+        try {
+            return Long.parseLong(configMap.get("retry.period.millis"));
+        } catch (NumberFormatException exception) {
+            return DEFAULT_RETRY_PERIOD_MILLIS;
+        }
+    }
+
+    private long resolveMaxRetries() {
+        try {
+            return Long.parseLong(configMap.get("max.retries"));
+        } catch (NumberFormatException exception) {
+            return DEFAULT_MAX_RETRIES;
+        }
     }
 }
