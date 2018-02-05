@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Properties;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.logging.Logger;
 
@@ -21,7 +22,7 @@ public class UrbanTepReporting implements Reporter {
     private static final Logger LOGGER = CalvalusLogger.getLogger();
     private final String configPath;
     private final Properties config = new Properties();
-    private ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1);
+    private ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
     private ReportingConnection reportingConnection = new ReportingConnection(this);
     private AccountingConnection accountingConnection = new AccountingConnection(this);
     private WpsConnection wpsConnection = new WpsConnection(this);
@@ -67,13 +68,13 @@ public class UrbanTepReporting implements Reporter {
     }
 
     @Override
-    public ScheduledThreadPoolExecutor getTimer() {
+    public ScheduledExecutorService getExecutorService() {
         return timer;
     }
 
     @Override
-    public void setTimer(ScheduledThreadPoolExecutor timer) {
-        this.timer = timer;
+    public void setExecutorService(ScheduledExecutorService executorService) {
+        this.timer = executorService;
     }
 
     public static void main(String[] args) {

@@ -32,12 +32,15 @@ public class ReportingConnection {
     private static final Logger LOGGER = CalvalusLogger.getLogger();
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final int DELAY_SECONDS = 300;
-    private Gson gson = new Gson();
-    private Reporter reporter;
+
+    private final Reporter reporter;
+    private final Gson gson;
+
     private String cursor;
 
     public ReportingConnection(Reporter reporter) {
         this.reporter = reporter;
+        gson = new Gson();
         cursor = reporter.getConfig().getProperty("reporting.cursor");
     }
 
@@ -55,7 +58,7 @@ public class ReportingConnection {
                 LOGGER.warning("retrieving report " + url + " ... failed with HTTP " + status + " - re-scheduling ...");
                 report.state = State.NOT_YET_RETRIEVED;
                 reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
                 return;
             }
             String resources = builder.get(String.class);
@@ -63,7 +66,7 @@ public class ReportingConnection {
                 LOGGER.warning("retrieving resources " + url + " ... failed: " + resources + " - re-scheduling ...");
                 report.state = State.NOT_YET_RETRIEVED;
                 reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
                 return;
             }
             report.usageStatistic = gson.fromJson(resources, UsageStatistic.class);
@@ -71,17 +74,17 @@ public class ReportingConnection {
                 LOGGER.info("retrieving resources " + url + " ... not yet available - re-scheduling ...");
                 report.state = State.NOT_YET_RETRIEVED;
                 reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
                 return;
             }
             LOGGER.info("retrieving resources " + url + " ... done");
             report.state = State.RETRIEVED;
-            reporter.getTimer().execute(report);
+            reporter.getExecutorService().execute(report);
         } catch (RuntimeException e) {
             LOGGER.warning("retrieving resources " + url + " ... failed: " + e.getMessage() + " - re-scheduling ...");
             report.state = State.NOT_YET_RETRIEVED;
             reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+            reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
         }
     }
 
@@ -127,7 +130,7 @@ public class ReportingConnection {
                         LOGGER.info("skipping " + report.job + " with " + report.creationTime + " before cursor " + cursor);
                     } else {
                         LOGGER.info("record " + report.job + " received");
-                        reporter.getTimer().execute(report);
+                        reporter.getExecutorService().execute(report);
                         reporter.getStatusHandler().setRunning(report.job, report.creationTime);
                     }
                 }

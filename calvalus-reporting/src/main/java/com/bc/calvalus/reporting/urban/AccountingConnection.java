@@ -63,7 +63,7 @@ public class AccountingConnection {
                 LOGGER.warning("unable to create reporting directory '" + reportsDirPath + "'");
                 report.state = State.NOT_YET_ACCOUNTED;
                 reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
                 return;
             }
         }
@@ -74,7 +74,7 @@ public class AccountingConnection {
             LOGGER.warning("Writing report " + report.job + " to file failed: " + e.getMessage());
             report.state = State.NOT_YET_ACCOUNTED;
             reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+            reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
             return;
         }
         LOGGER.info(String.format("report %s written to file", report.job));
@@ -97,7 +97,7 @@ public class AccountingConnection {
             e.printStackTrace();
             report.state = State.NOT_YET_ACCOUNTED;
             reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+            reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
         }
     }
 

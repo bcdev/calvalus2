@@ -1,7 +1,7 @@
 package com.bc.calvalus.reporting.common;
 
 import java.util.Properties;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * @author hans
@@ -10,8 +10,8 @@ public interface Reporter {
     String getName();
     Properties getConfig();
     StatusHandler getStatusHandler();
-    ScheduledThreadPoolExecutor getTimer();
-    void setTimer(ScheduledThreadPoolExecutor timer);
+    ScheduledExecutorService getExecutorService();
+    void setExecutorService(ScheduledExecutorService executorService);
 
     /**
      * Called by Report runnable that is queued in scheduled worker

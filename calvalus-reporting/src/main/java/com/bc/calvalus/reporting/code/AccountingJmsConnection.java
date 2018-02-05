@@ -24,16 +24,27 @@ import java.util.logging.Logger;
 public class AccountingJmsConnection {
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
-    private final CodeReporting reporter;
-    private JmsClient jmsClient;
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     static {
         TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
+    private final CodeReporting reporter;
+    private final JmsClient jmsClient;
+
     AccountingJmsConnection(CodeReporting reporter) {
         this.reporter = reporter;
+        try {
+            jmsClient = new JmsClient(reporter.getConfig().getProperty("message.consumer.url"),
+                                      reporter.getConfig().getProperty("queue.name"));
+        } catch (URISyntaxException e) {
+            LOGGER.log(Level.SEVERE, "Invalid ActiveMQ URI", e);
+            throw new IllegalArgumentException(e);
+        } catch (JMSException e) {
+            LOGGER.log(Level.SEVERE, "Unable to initialize JMS Producer", e);
+            throw new IllegalArgumentException(e);
+        }
     }
 
     void send(Report report) {
@@ -48,7 +59,7 @@ public class AccountingJmsConnection {
                 LOGGER.warning("unable to create reporting directory '" + reportsDirPath + "'");
                 report.state = State.NOT_YET_ACCOUNTED;
                 reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-                reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+                reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
                 return;
             }
         }
@@ -59,7 +70,7 @@ public class AccountingJmsConnection {
             LOGGER.warning("Writing report " + report.job + " to file failed: " + e.getMessage());
             report.state = State.NOT_YET_ACCOUNTED;
             reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+            reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
             return;
         }
         LOGGER.info(String.format("report %s written to file", report.job));
@@ -70,24 +81,19 @@ public class AccountingJmsConnection {
             return;
         }
         try {
-            if (jmsClient == null) {
-                jmsClient = new JmsClient(reporter.getConfig().getProperty("message.consumer.url"),
-                                          reporter.getConfig().getProperty("queue.name"));
-            }
             jmsClient.sendMessage(messageJson);
             LOGGER.info("report " + report.job + " sent to CODE accounting.");
             report.state = State.ACCOUNTED;
             reporter.getStatusHandler().setHandled(report.job, report.creationTime);
         } catch (JMSException e) {
             LOGGER.log(Level.SEVERE, "Unable to initialize JMS Producer", e);
-        } catch (URISyntaxException e) {
-            LOGGER.log(Level.SEVERE, "Invalid ActiveMQ URI", e);
+
         } catch (RuntimeException e) {
             LOGGER.warning("Sending report " + report.job + " to accounting failed: " + e.getMessage());
             e.printStackTrace();
             report.state = State.NOT_YET_ACCOUNTED;
             reporter.getStatusHandler().setFailed(report.job, report.creationTime);
-            reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
+            reporter.getExecutorService().schedule(report, 60, TimeUnit.SECONDS);
         }
     }
 

@@ -17,13 +17,19 @@ import java.net.URISyntaxException;
  */
 public class JmsClient {
 
-    private Session jmsSession;
-    private MessageProducer jmsProducer;
-    private Connection connection;
+    private final Session jmsSession;
+    private final MessageProducer jmsProducer;
+    private final Connection connection;
 
-    public JmsClient(String messageConsumerUrl, String queueName)
-                throws URISyntaxException, JMSException {
-        initJmsProducer(messageConsumerUrl, queueName);
+    public JmsClient(String messageConsumerUrl, String queueName) throws URISyntaxException, JMSException {
+        URI uri = new URI(messageConsumerUrl);
+        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(uri);
+        connection = activeMQConnectionFactory.createConnection();
+        connection.start();
+        jmsSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = jmsSession.createQueue(queueName);
+        jmsProducer = jmsSession.createProducer(destination);
+        jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
     }
 
     public void sendMessage(String messageJson) throws JMSException {
@@ -37,15 +43,4 @@ public class JmsClient {
         }
     }
 
-    private void initJmsProducer(String messageConsumerUrl, String queueName)
-                throws URISyntaxException, JMSException {
-        URI uri = new URI(messageConsumerUrl);
-        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(uri);
-        connection = activeMQConnectionFactory.createConnection();
-        connection.start();
-        jmsSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = jmsSession.createQueue(queueName);
-        jmsProducer = jmsSession.createProducer(destination);
-        jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-    }
 }
