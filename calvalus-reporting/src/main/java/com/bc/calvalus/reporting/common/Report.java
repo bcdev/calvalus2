@@ -6,6 +6,7 @@ package com.bc.calvalus.reporting.common;
  * @author Martin Boettcher
  */
 public class Report implements Runnable {
+
     public State state = State.NEW;
     public String job;
     public String creationTime;
@@ -16,7 +17,8 @@ public class Report implements Runnable {
     public UsageStatistic usageStatistic;
     private Reporter reporter;
 
-    public Report(Reporter reporter, String job, String creationTime, String name, String requestId, String requestStatus, String uri) {
+    public Report(Reporter reporter, String job, String creationTime, String name, String requestId,
+                  String requestStatus, String uri) {
         this.reporter = reporter;
         this.job = job;
         this.creationTime = creationTime;

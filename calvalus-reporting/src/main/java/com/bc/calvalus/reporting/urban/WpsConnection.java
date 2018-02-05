@@ -60,7 +60,7 @@ public class WpsConnection {
                     Thread.currentThread().wait(60 * 1000);
                 } catch (InterruptedException ignore) {
                 }
-                drainTimer();
+                drainExecutorService();
                 LOGGER.info("queue drained and renewed");
             }
         }
@@ -86,7 +86,7 @@ public class WpsConnection {
             LOGGER.info("skipping " + report.job + " with " + report.creationTime + " before cursor " + cursor);
         } else {
             LOGGER.info("record " + report.job + " received");
-            reporter.getTimer().execute(report);
+            reporter.getExecutorService().execute(report);
             reporter.getStatusHandler().setRunning(report.job, report.creationTime);
         }
     }
@@ -122,14 +122,14 @@ public class WpsConnection {
         }
     }
 
-    private void drainTimer() {
-        reporter.getTimer().shutdownNow();
+    private void drainExecutorService() {
+        reporter.getExecutorService().shutdownNow();
         try {
-            reporter.getTimer().awaitTermination(60, TimeUnit.SECONDS);
+            reporter.getExecutorService().awaitTermination(60, TimeUnit.SECONDS);
         } catch (InterruptedException ignored) {
         }
         reporter.getStatusHandler().running.clear();
         reporter.getStatusHandler().failed.clear();
-        reporter.setTimer(new ScheduledThreadPoolExecutor(1));
+        reporter.setExecutorService(new ScheduledThreadPoolExecutor(1));
     }
 }
