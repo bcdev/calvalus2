@@ -87,8 +87,8 @@ public class MACompareProductionType extends HadoopProductionType {
             setRequestParameters(productionRequest, maJobConfig);
             processorProductionRequest.configureProcessor(maJobConfig);
 
-            maConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression" + suffix, ""));
-            maConfig.setGoodRecordExpression(productionRequest.getString("goodRecordExpression" + suffix, ""));
+            maConfig.setGoodPixelExpression(productionRequest.getXmlDecodedString("goodPixelExpression" + suffix, ""));
+            maConfig.setGoodRecordExpression(productionRequest.getXmlDecodedString("goodRecordExpression" + suffix, ""));
 
             List<DateRange> dateRanges = productionRequest.getDateRanges();
             setInputLocationParameters(productionRequest, maJobConfig);

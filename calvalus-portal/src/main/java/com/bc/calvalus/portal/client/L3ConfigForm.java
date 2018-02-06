@@ -445,7 +445,7 @@ public class L3ConfigForm extends Composite {
         for (int i = 0; i < variableList.size(); i++) {
             L3VariableTable.ConfiguredVariable variable = variableList.get(i);
             parameters.put("expression." + i + ".variable", variable.getName());
-            parameters.put("expression." + i + ".expression", variable.getExpression());
+            parameters.put("expression." + i + ".expression", ParametersEditorGenerator.encodeXML(variable.getExpression()));
         }
         if (variableList.size() > 0) {
             parameters.put("expression.count", variableList.size() + "");
