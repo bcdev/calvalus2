@@ -264,7 +264,8 @@ public class PatternBasedInputFormat extends InputFormat {
             }
         } else {
             String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
-            throw new IOException(String.format(msgFormat, file.getPath()));
+            LOG.warning(String.format(msgFormat, file.getPath()));
+            //throw new IOException(String.format(msgFormat, file.getPath()));
         }
         return null;
     }
