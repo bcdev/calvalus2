@@ -140,20 +140,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
             FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
         }
         CalvalusLogger.getLogger().info("...done");
-//        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
-//        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
-//        qlConfig.setImageType("png");
-//        qlConfig.setBandName("JD");
-//        qlConfig.setSubSamplingX(125);
-//        qlConfig.setSubSamplingY(125);
-//        File localCpd = new File("fire-modis-pixel.cpd");
-//        CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/fire-modis-pixel.cpd"), localCpd, context.getConfiguration());
-//        qlConfig.setCpdURL(localCpd.toURI().toURL().toExternalForm());
-//        RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
-//        if (image != null) {
-//            ImageIO.write(image, "png", new File(baseFilename + ".png"));
-//            FileUtil.copy(new File(baseFilename + ".png"), fs, pngPath, false, context.getConfiguration());
-//        }
     }
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);

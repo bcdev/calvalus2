@@ -85,8 +85,7 @@ public class ModisGridInputFormat extends InputFormat {
         }
 
         if (Boolean.parseBoolean(conf.get("calvalus.onlyCheck", "true"))) {
-            CalvalusLogger.getLogger().info("Only performed the check, produced no input splits.");
-            return new ArrayList<>();
+            throw new IllegalStateException("Only performed the check, produced no input splits.");
         }
 
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));

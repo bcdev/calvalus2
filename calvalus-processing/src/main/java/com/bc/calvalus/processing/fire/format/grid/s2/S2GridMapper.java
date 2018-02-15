@@ -46,14 +46,14 @@ public class S2GridMapper extends AbstractGridMapper {
         LOG.info("paths=" + Arrays.toString(paths));
 
         List<ZipFile> geoLookupTables = new ArrayList<>();
-        String fiveDegTile = paths[paths.length - 1].getName();
+        String twoDegTile = paths[paths.length - 1].getName();
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
         for (int i = 0; i < paths.length - 1; i++) {
             String utmTile = paths[i].getName().substring(4, 9);
-            String localGeoLookupFileName = fiveDegTile + "-" + utmTile + ".zip";
-            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/" + localGeoLookupFileName);
+            String localGeoLookupFileName = twoDegTile + "-" + utmTile + ".zip";
+            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-geolookup/" + localGeoLookupFileName);
             if (!new File(localGeoLookupFileName).exists()) {
                 File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
                 geoLookupTables.add(new ZipFile(localGeoLookup));
@@ -76,7 +76,7 @@ public class S2GridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource(twoDegTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -85,7 +85,7 @@ public class S2GridMapper extends AbstractGridMapper {
         setDataSource(dataSource);
         GridCell gridCell = computeGridCell(year, month);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, fiveDegTile)), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, twoDegTile)), gridCell);
     }
 
     @Override

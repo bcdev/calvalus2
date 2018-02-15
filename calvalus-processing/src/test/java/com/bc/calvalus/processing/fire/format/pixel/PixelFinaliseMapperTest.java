@@ -369,18 +369,19 @@ public class PixelFinaliseMapperTest {
     public void testCreateMetadata() throws Exception {
 //        for (PixelProductArea area : new S2Strategy().getAllAreas()) {
         for (GlobalPixelProductArea area : GlobalPixelProductArea.values()) {
+            System.out.println(area.nicename);
 //            for (MonthYear monthYear : s2MonthYears()) {
             // "h37v17;185;90;190;95"
-            for (int year = 2000; year <= 2000; year++) {
-                for (int month = 12; month <= 12; month++) {
+            for (int year = 2000; year <= 2016; year++) {
+                String targetDir = "c:\\ssd\\" + year;
+                if (Files.notExists(Paths.get(targetDir))) {
+                    Files.createDirectory(Paths.get(targetDir));
+                }
+                for (int month = 1; month <= 12; month++) {
                     String monthPad = month < 10 ? "0" + month : "" + month;
                     String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
-                    String baseFilename = PixelFinaliseMapper.createBaseFilename(year + "", monthPad, "v5.0", areaString);
-                    String metadata = PixelFinaliseMapper.createMetadata(year + "", monthPad, "v5.0", areaString);
-                    String targetDir = "c:\\ssd\\" + area.name();
-                    if (Files.notExists(Paths.get(targetDir))) {
-                        Files.createDirectory(Paths.get(targetDir));
-                    }
+                    String baseFilename = PixelFinaliseMapper.createBaseFilename(year + "", monthPad, "fv5.0", areaString);
+                    String metadata = PixelFinaliseMapper.createMetadata(year + "", monthPad, "fv5.0", areaString);
                     try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
                         fw.write(metadata);
                     }

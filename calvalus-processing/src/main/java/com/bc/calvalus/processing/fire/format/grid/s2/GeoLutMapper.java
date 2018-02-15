@@ -2,6 +2,10 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -10,10 +14,13 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.util.Progressable;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.SubsetOp;
 
+import java.awt.*;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,8 +35,6 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.S2_GRID_PIXELSIZE;
-
 public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
     @Override
@@ -40,7 +45,7 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
 
         for (String tile : get2DegTiles(utmTile)) {
             String zipFile = "./" + tile + "-" + utmTile + ".zip";
-            Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-geometry-lut/" + zipFile);
+            Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-geolookup/" + zipFile);
 
             if (FileSystem.get(context.getConfiguration()).exists(targetPath)) {
                 CalvalusLogger.getLogger().info(String.format("LUT for tile %s and utmTile %s already exists.", tile, utmTile));
@@ -68,6 +73,7 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                     fin.close();
                 }
             }
+
             CalvalusLogger.getLogger().info("...done, copying to final directory and cleaning...");
             FileUtil.copy(new File(zipFile), inputSplit.getPath(0).getFileSystem(context.getConfiguration()), targetPath, false, context.getConfiguration());
             Arrays.stream(new File(".").listFiles((dir, name) -> name.endsWith(".dat"))).forEach(File::delete);
@@ -76,40 +82,53 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
     }
 
     static boolean extract(Progressable context, File localFile, String utmTile, String tile) throws IOException {
-        int tileX = Integer.parseInt(tile.substring(4));
-        int tileY = Integer.parseInt(tile.substring(1, 3));
         CalvalusLogger.getLogger().info(String.format("Running for tile %s and utmTile %s", tile, utmTile));
 
-        GeoPos geoPos = new GeoPos();
-        PixelPos pixelPos = new PixelPos();
-        Product p = ProductIO.readProduct(localFile);
+        GeoPos gp = new GeoPos();
+        PixelPos pp = new PixelPos();
+        Product refProduct = ProductIO.readProduct(localFile);
+        GeoCoding refGeoCoding = refProduct.getSceneGeoCoding();
         boolean hasFoundPixel = false;
+        int x0 = Integer.parseInt(tile.split("h")[1]);
+        int y0 = Integer.parseInt(tile.split("h")[0].substring(1));
+
         for (int y = 0; y < 8; y++) {
-            double upperLat = 90 - tileY * 2 - y / 4.0;
             for (int x = 0; x < 8; x++) {
+
+                GeometryFactory factory = new GeometryFactory();
+                WKTReader wktReader = new WKTReader(factory);
+                double topLat = 90 - (y0 * 2 + y * 0.25);
+                double leftLon = -180 + (x0 * 2 + x * 0.25);
+                double bottomLat = 90 - (y0 * 2 + (y + 1) * 0.25);
+                double rightLon = -180 + (x0 * 2 + (x + 1) * 0.25);
+                Geometry geometry = null;
+                try {
+                    String wellKnownText = String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))", leftLon, topLat, rightLon, topLat, rightLon, bottomLat, leftLon, bottomLat, leftLon, topLat);
+                    geometry = wktReader.read(wellKnownText);
+                } catch (ParseException e) {
+                    throw new IllegalStateException("Must not come here");
+                }
+
                 String pathname = "./" + tile + "-" + utmTile + "-" + x + "-" + y + ".dat";
                 File file = new File(pathname);
                 try (FileWriter fos = new FileWriter(file)) {
-                    double currentLon = tileX * 2 - 180 + x / 4.0;
-                    for (int x1 = 0; x1 < 1381; x1++) {
-                        geoPos.lon = currentLon;
-                        double currentLat = upperLat;
-                        for (int y1 = 0; y1 < 1381; y1++) {
-                            geoPos.lat = currentLat;
-                            p.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
-                            if (p.containsPixel(pixelPos)) {
+                    Rectangle rectangle = SubsetOp.computePixelRegion(refProduct, geometry, 0);
+                    for (pp.y = rectangle.y; pp.y < rectangle.y + rectangle.height; pp.y++) {
+                        for (pp.x = rectangle.x; pp.x < rectangle.x + rectangle.width; pp.x++) {
+                            refGeoCoding.getGeoPos(pp, gp);
+                            boolean isInLatRange = gp.lat <= 90 - (y0 * 2 + y * 0.25) && gp.lat >= 90 - (y0 * 2 + (y + 1) * 0.25);
+                            boolean isInLonRange = gp.lon >= -180 + (x0 * 2 + x * 0.25) && gp.lon <= -180 + (x0 * 2 + (x + 1) * 0.25);
+                            if (isInLatRange && isInLonRange) {
+                                fos.write(x + " " + y + " " + (int) pp.x + " " + (int) pp.y + "\n");
                                 hasFoundPixel = true;
-                                fos.write(x1 + " " + y1 + " " + (int) pixelPos.x + " " + (int) pixelPos.y + "\n");
                             }
-                            currentLat -= S2_GRID_PIXELSIZE;
                         }
-                        currentLon += S2_GRID_PIXELSIZE;
                     }
                 }
-                CalvalusLogger.getLogger().info(String.format("%02.2f%%.", (float) ((y * 8.0 + (x + 1)) * 100 / 64.0)));
-                context.progress();
+                CalvalusLogger.getLogger().info(String.format("%02.2f%%.", (float) ((y * 8 + x) * 100.0 / 64.0)));
             }
         }
+
         return hasFoundPixel;
     }
 
