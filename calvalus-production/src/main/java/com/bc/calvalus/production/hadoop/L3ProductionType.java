@@ -267,7 +267,7 @@ public class L3ProductionType extends HadoopProductionType {
         }
         binningConfig.setNumRows(getNumRows(productionRequest));
         binningConfig.setSuperSampling(productionRequest.getInteger("superSampling", 1));
-        binningConfig.setMaskExpr(productionRequest.getString("maskExpr", ""));
+        binningConfig.setMaskExpr(productionRequest.getXmlDecodedString("maskExpr", ""));
         binningConfig.setVariableConfigs(getVariables(productionRequest));
         binningConfig.setAggregatorConfigs(getAggregators(productionRequest));
         return binningConfig;
@@ -303,7 +303,7 @@ public class L3ProductionType extends HadoopProductionType {
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
             String name = request.getString(prefix + ".variable");
-            String exp = request.getString(prefix + ".expression", "");
+            String exp = request.getXmlDecodedString(prefix + ".expression", "");
             if (!exp.isEmpty()){
                 variableConfigs[vIndex++] = new VariableConfig(name, exp);
             }

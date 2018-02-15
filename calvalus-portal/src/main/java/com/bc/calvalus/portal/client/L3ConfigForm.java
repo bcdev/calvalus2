@@ -318,7 +318,7 @@ public class L3ConfigForm extends Composite {
             aggregatorTable.addRow();
         }
 
-        maskExpr.setValue(defaultValidMask);
+        maskExpr.setValue(ParametersEditorGenerator.decodeXML(defaultValidMask));
     }
 
     public void validateForm() throws ValidationException {
@@ -445,13 +445,13 @@ public class L3ConfigForm extends Composite {
         for (int i = 0; i < variableList.size(); i++) {
             L3VariableTable.ConfiguredVariable variable = variableList.get(i);
             parameters.put("expression." + i + ".variable", variable.getName());
-            parameters.put("expression." + i + ".expression", variable.getExpression());
+            parameters.put("expression." + i + ".expression", ParametersEditorGenerator.encodeXML(variable.getExpression()));
         }
         if (variableList.size() > 0) {
             parameters.put("expression.count", variableList.size() + "");
         }
 
-        parameters.put("maskExpr", maskExpr.getText());
+        parameters.put("maskExpr", ParametersEditorGenerator.encodeXML(maskExpr.getText()));
         parameters.put("periodLength", steppingPeriodLength.getValue().toString());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
         parameters.put("compositingType", getCompositingType());
@@ -481,7 +481,7 @@ public class L3ConfigForm extends Composite {
     public void setValues(Map<String, String> parameters) {
         String maskExprValue = parameters.get("maskExpr");
         if (maskExprValue != null) {
-            maskExpr.setValue(maskExprValue);
+            maskExpr.setValue(ParametersEditorGenerator.decodeXML(maskExprValue));
         }
         String periodLengthValue = parameters.get("periodLength");
         if (periodLengthValue != null) {

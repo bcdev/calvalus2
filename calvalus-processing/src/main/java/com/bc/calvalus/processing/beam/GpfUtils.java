@@ -73,11 +73,15 @@ public class GpfUtils {
 
     private static void reportJvmMemory() {
         LOG.info("------------------ JVM Memory -----------------");
-        LOG.info("Runtime max: " + mb(Runtime.getRuntime().maxMemory()));
-        MemoryMXBean m = ManagementFactory.getMemoryMXBean();
+        // https://stackoverflow.com/questions/3571203/what-are-runtime-getruntime-totalmemory-and-freememory/18375641#18375641
+        Runtime runtime = Runtime.getRuntime();
+        LOG.info("Runtime used:      " + mb(runtime.totalMemory() - runtime.freeMemory()));
+        LOG.info("Runtime allocated: " + mb(runtime.totalMemory()));
+        LOG.info("Runtime max:       " + mb(runtime.maxMemory()));
 
+        MemoryMXBean m = ManagementFactory.getMemoryMXBean();
         LOG.info("Non-heap: " + mb(m.getNonHeapMemoryUsage().getMax()));
-        LOG.info("Heap: " + mb(m.getHeapMemoryUsage().getMax()));
+        LOG.info("Heap:     " + mb(m.getHeapMemoryUsage().getMax()));
 
         for (MemoryPoolMXBean mp : ManagementFactory.getMemoryPoolMXBeans()) {
             LOG.info(String.format("Pool: %s (type %s) = %s", mp.getName(), mp.getType(), mb(mp.getUsage().getMax())));
@@ -86,6 +90,6 @@ public class GpfUtils {
     }
 
     static String mb(long memBytes) {
-        return String.format("%.2f MiB", (double) memBytes / OneMiB);
+        return String.format("%8.2f MiB", (double) memBytes / OneMiB);
     }
 }

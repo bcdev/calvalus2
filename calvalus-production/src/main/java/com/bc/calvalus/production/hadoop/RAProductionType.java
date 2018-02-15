@@ -162,7 +162,7 @@ public class RAProductionType extends HadoopProductionType {
         raConfig.setRegionSourceAttributeName(productionRequest.getString("regionSourceAttributeName", null));
         raConfig.setRegionSourceAttributeFilter(productionRequest.getString("regionSourceAttributeFilter", null));
 
-        raConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression", null));
+        raConfig.setGoodPixelExpression(productionRequest.getXmlDecodedString("goodPixelExpression", null));
         raConfig.setPercentiles(productionRequest.getString("percentiles", ""));
         raConfig.setWritePerRegion(productionRequest.getBoolean("writePerRegion", Boolean.TRUE));
         raConfig.setWriteSeparateHistogram(productionRequest.getBoolean("writeSeparateHistogram", Boolean.TRUE));
