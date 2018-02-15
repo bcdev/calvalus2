@@ -220,7 +220,7 @@ public class ProcessingLogHandler {
                         countablePrintStream.println(StringUtils.repeat("=", containerString.length()));
                         long logMaxSizeBytes;
                         try {
-                            logMaxSizeBytes = Long.parseLong(configMap.get("log.max.size.kb")) * KILO_BYTES;
+                            logMaxSizeBytes = Long.parseLong(configMap.get("calvalus.logs.maxSizeKb")) * KILO_BYTES;
                         } catch (NumberFormatException exception) {
                             logMaxSizeBytes = 0;
                         }
@@ -287,7 +287,7 @@ public class ProcessingLogHandler {
 
     private long resolveRetryPeriod() {
         try {
-            return Long.parseLong(configMap.get("retry.period.millis"));
+            return Long.parseLong(configMap.get("calvalus.logs.cpt.retryPeriodMillis"));
         } catch (NumberFormatException exception) {
             return DEFAULT_RETRY_PERIOD_MILLIS;
         }
@@ -295,7 +295,7 @@ public class ProcessingLogHandler {
 
     private long resolveMaxRetries() {
         try {
-            return Long.parseLong(configMap.get("max.retries"));
+            return Long.parseLong(configMap.get("calvalus.logs.cpt.maxRetries"));
         } catch (NumberFormatException exception) {
             return DEFAULT_MAX_RETRIES;
         }
