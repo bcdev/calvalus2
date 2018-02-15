@@ -89,8 +89,8 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         Product refProduct = ProductIO.readProduct(localFile);
         GeoCoding refGeoCoding = refProduct.getSceneGeoCoding();
         boolean hasFoundPixel = false;
-        int x0 = Integer.parseInt(tile.split("h")[1]);
-        int y0 = Integer.parseInt(tile.split("h")[0].substring(1));
+        int x0 = Integer.parseInt(tile.split("y")[0].substring(1));
+        int y0 = Integer.parseInt(tile.split("y")[1]);
 
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
