@@ -374,7 +374,9 @@ public abstract class ProcessorAdapter {
                     return getInputProduct();
                 }
             };
-            inputRectangle = calculator.computeRect();
+            try {
+                inputRectangle = calculator.computeRect();
+            } catch (IOException _) {}
             LOG.info("getInputRectangle: calculated inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
