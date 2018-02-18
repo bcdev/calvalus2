@@ -77,6 +77,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public void prepareProcessing() throws IOException {
         super.prepareProcessing();
         Configuration conf = getConfiguration();
+        String user = conf.get("mapreduce.job.user.name");
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
         if (getInputParameters().length > 0) {
@@ -114,7 +115,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             
             getLogger().info("prepare: " + executable + " " + inputPath.toString()+ " " + outputPath.toString());
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
-            Process process = Runtime.getRuntime().exec(cmdArray);
+            String[] env = new String[] { "HADOOP_USER_NAME=" + user };
+            Process process = Runtime.getRuntime().exec(cmdArray, env);
             String processLogName = executable + "-prepare";
             KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
@@ -185,6 +187,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public KeywordHandler process(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
+        String user = conf.get("mapreduce.job.user.name");
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, "");
         if (getInputParameters().length > 0) {
@@ -231,7 +234,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         getLogger().info("process: " + executable + " " + inputFile.getCanonicalPath());
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
-        Process process = Runtime.getRuntime().exec(cmdArray);
+        String[] env = new String[] { "HADOOP_USER_NAME=" + user };
+        Process process = Runtime.getRuntime().exec(cmdArray, env);
         String processLogName = executable + "-process";
         KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
@@ -340,8 +344,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             cmdArray[0] = "./finalize";
             System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
             cmdArray[cmdArray.length - 1] = outputPath.toString();
+            String user = conf.get("mapreduce.job.user.name");
+            String[] env = new String[] { "HADOOP_USER_NAME=" + user };
 
-            Process process = Runtime.getRuntime().exec(cmdArray);
+            Process process = Runtime.getRuntime().exec(cmdArray, env);
             String processLogName = executable + "-finalize";
             KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
