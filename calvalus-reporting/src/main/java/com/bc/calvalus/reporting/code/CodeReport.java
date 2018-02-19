@@ -143,24 +143,34 @@ public class CodeReport {
                                                   usageStatistic.getWorkflowType());
         this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / KILO_BYTE;
         this.ramHours = calculateRamHours(usageStatistic.getMbMillisMapTotal(),
-                                          usageStatistic.getMbMillisReduceTotal());
+                usageStatistic.getMbMillisReduceTotal());
         this.processingWorkflow = usageStatistic.getWorkflowType();
         this.duration = (usageStatistic.getFinishTime() - usageStatistic.getStartTime()) / MILLIS_PER_SECOND;
         this.processingStatus = usageStatistic.getState();
         this.outProductsNumber = usageStatistic.getReducesCompleted() > 0 ? usageStatistic.getReducesCompleted() : usageStatistic.getMapsCompleted();
         this.outProductsType = usageStatistic.getOutputType();
         this.outCollection = usageStatistic.getJobName();
-        this.outProductsLocation = usageStatistic.getOutputDir();
+        this.outProductsLocation = usageStatistic.getOutputDir() != null ?
+                usageStatistic.getOutputDir() :
+                resolveOutProductsLocation(usageStatistic.getWorkflowType(), usageStatistic.getInputPath());
         this.outProductsSize = getGbFromBytes(usageStatistic.getFileBytesWritten());
 
         this.serviceHost = getHostName();
         this.messageTime = LocalDateTime.now().toString();
     }
 
+    private String resolveOutProductsLocation(String workflowType, String inputPath) {
+        if ("GeoDB".equalsIgnoreCase(workflowType)) {
+            return inputPath;
+        } else {
+            return "Not available";
+        }
+    }
+
     private String resolveProcessorName(String processType, String mapClass, String workflowType) {
         if (processType != null) {
             return processType;
-        } else if (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains("l3.L3FormatterMapper")) {
+        } else if (mapClass != null && (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains("l3.L3FormatterMapper"))) {
             return "Formatting";
         } else if ("L3".equalsIgnoreCase(workflowType)) {
             return "Aggregation";
