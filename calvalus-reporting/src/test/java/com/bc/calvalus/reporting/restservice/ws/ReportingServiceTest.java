@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 
 import org.junit.*;
 
+import java.util.Locale;
+
 /**
  * @author hans
  */
@@ -14,6 +16,7 @@ public class ReportingServiceTest {
 
     @Before
     public void setUp() throws Exception {
+        Locale.setDefault(Locale.ENGLISH);
         reportingService = new ReportingService();
     }
 
