@@ -1,6 +1,7 @@
 package com.bc.calvalus.reporting.code;
 
 import com.bc.calvalus.reporting.common.UsageStatistic;
+import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -8,6 +9,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -143,7 +145,7 @@ public class CodeReport {
                                                   usageStatistic.getWorkflowType());
         this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / KILO_BYTE;
         this.ramHours = calculateRamHours(usageStatistic.getMbMillisMapTotal(),
-                usageStatistic.getMbMillisReduceTotal());
+                                          usageStatistic.getMbMillisReduceTotal());
         this.processingWorkflow = usageStatistic.getWorkflowType();
         this.duration = (usageStatistic.getFinishTime() - usageStatistic.getStartTime()) / MILLIS_PER_SECOND;
         this.processingStatus = usageStatistic.getState();
@@ -151,12 +153,42 @@ public class CodeReport {
         this.outProductsType = usageStatistic.getOutputType();
         this.outCollection = usageStatistic.getJobName();
         this.outProductsLocation = usageStatistic.getOutputDir() != null ?
-                usageStatistic.getOutputDir() :
-                resolveOutProductsLocation(usageStatistic.getWorkflowType(), usageStatistic.getInputPath());
+                                   usageStatistic.getOutputDir() :
+                                   resolveOutProductsLocation(usageStatistic.getWorkflowType(),
+                                                              usageStatistic.getInputPath());
         this.outProductsSize = getGbFromBytes(usageStatistic.getFileBytesWritten());
 
         this.serviceHost = getHostName();
         this.messageTime = LocalDateTime.now().toString();
+    }
+
+    public String toJson() {
+        validateMandatoryFields();
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder = gsonBuilder.registerTypeAdapter(Double.class, new JsonSerializer<Double>() {
+            @Override
+            public JsonElement serialize(Double src, Type typeOfSrc, JsonSerializationContext context) {
+                return new JsonPrimitive((new BigDecimal(src)).setScale(6, BigDecimal.ROUND_HALF_UP));
+            }
+        });
+        Gson gson = gsonBuilder.setPrettyPrinting().create();
+        return gson.toJson(this);
+    }
+
+    private void validateMandatoryFields() {
+        String mandatoryFields = PropertiesWrapper.get("mandatory.fields");
+        String[] split = mandatoryFields.split(",");
+        for (String s : split) {
+            try {
+                Field declaredField = this.getClass().getDeclaredField(s);
+                if (declaredField.get(this) == null) {
+                    throw new IllegalArgumentException("Field '" + s + "' is mandatory but not available.");
+                }
+            } catch (NoSuchFieldException | IllegalAccessException exception) {
+                throw new IllegalArgumentException(exception);
+            }
+        }
     }
 
     private String resolveOutProductsLocation(String workflowType, String inputPath) {
@@ -170,7 +202,8 @@ public class CodeReport {
     private String resolveProcessorName(String processType, String mapClass, String workflowType) {
         if (processType != null) {
             return processType;
-        } else if (mapClass != null && (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains("l3.L3FormatterMapper"))) {
+        } else if (mapClass != null && (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains(
+                    "l3.L3FormatterMapper"))) {
             return "Formatting";
         } else if ("L3".equalsIgnoreCase(workflowType)) {
             return "Aggregation";
@@ -209,18 +242,6 @@ public class CodeReport {
 
     private double calculateRamHours(long mbMillisMapTotal, long mbMillisReduceTotal) {
         return (mbMillisMapTotal + mbMillisReduceTotal) / (KILO_BYTE * SECONDS_PER_HOUR * MILLIS_PER_SECOND);
-    }
-
-    public String toJson() {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder = gsonBuilder.registerTypeAdapter(Double.class, new JsonSerializer<Double>() {
-            @Override
-            public JsonElement serialize(Double src, Type typeOfSrc, JsonSerializationContext context) {
-                return new JsonPrimitive((new BigDecimal(src)).setScale(6, BigDecimal.ROUND_HALF_UP));
-            }
-        });
-        Gson gson = gsonBuilder.setPrettyPrinting().create();
-        return gson.toJson(this);
     }
 
     private String getHostName() {

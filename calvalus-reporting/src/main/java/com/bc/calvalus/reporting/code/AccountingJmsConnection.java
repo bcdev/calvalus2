@@ -3,6 +3,7 @@ package com.bc.calvalus.reporting.code;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.reporting.common.Report;
 import com.bc.calvalus.reporting.common.State;
+import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.jms.JMSException;
 import java.io.File;
@@ -33,9 +34,10 @@ public class AccountingJmsConnection {
     private final CodeReporting reporter;
     private final JmsClient jmsClient;
 
-    AccountingJmsConnection(CodeReporting reporter) {
+    AccountingJmsConnection(CodeReporting reporter) throws IOException {
         this.reporter = reporter;
         try {
+            PropertiesWrapper.loadConfigFile("code.properties");
             jmsClient = new JmsClient(reporter.getConfig().getProperty("message.consumer.url"),
                                       reporter.getConfig().getProperty("queue.name"));
         } catch (URISyntaxException e) {
@@ -44,12 +46,22 @@ public class AccountingJmsConnection {
         } catch (JMSException e) {
             LOGGER.log(Level.SEVERE, "Unable to initialize JMS Producer", e);
             throw new IllegalArgumentException(e);
+        } catch (IOException exception) {
+            LOGGER.log(Level.SEVERE, "Unable to load configuration", exception);
+            throw exception;
         }
     }
 
     void send(Report report) {
         CodeReport codeReport = new CodeReport(report.usageStatistic);
-        String messageJson = codeReport.toJson();
+        String messageJson;
+        try {
+            messageJson = codeReport.toJson();
+        } catch (IllegalArgumentException exception) {
+            LOGGER.log(Level.SEVERE, "Unable to construct the report for job '" + report.job + "'.", exception);
+            reporter.getStatusHandler().setFailed(report.job, report.creationTime);
+            return;
+        }
         LOGGER.info("sending report " + report.usageStatistic.getJobId());
         Path reportsDirPath = Paths.get(reporter.getConfig().getProperty("reporting.code.reportsdir"));
         if (!Files.exists(reportsDirPath)) {
@@ -87,7 +99,6 @@ public class AccountingJmsConnection {
             reporter.getStatusHandler().setHandled(report.job, report.creationTime);
         } catch (JMSException e) {
             LOGGER.log(Level.SEVERE, "Unable to initialize JMS Producer", e);
-
         } catch (RuntimeException e) {
             LOGGER.warning("Sending report " + report.job + " to accounting failed: " + e.getMessage());
             e.printStackTrace();

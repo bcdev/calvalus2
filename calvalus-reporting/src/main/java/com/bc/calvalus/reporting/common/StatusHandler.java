@@ -96,28 +96,27 @@ public class StatusHandler {
         writeStatus();
     }
 
-    private void writeStatus() {
+    // synchronized to prevent frequently-thrown ConcurrentModificationException
+    private synchronized void writeStatus() {
         if (statusFile == null) {
             statusFile = new File(reporter.getConfig().getProperty("name", reporter.getName()) + ".status");
         }
-        try {
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(statusFile))) {
-                // 1 jobs, 1 running, 0 reported, 0 failed, 77 pre-existing since 2017-04-01T00:00:00
-                // 10 jobs, 0 running, 10 reported, 0 failed, 10 pre-existing since start of service
-                out.append(String.valueOf(
-                            reportMap.entrySet().size() - preexisting + running.size() + failed.size())).append(
-                            " jobs, ").
-                            append(String.valueOf(running.size())).append(" running, ").
-                            append(String.valueOf(reportMap.entrySet().size() - preexisting)).append(" reported, ").
-                            append(String.valueOf(failed.size())).append(" failed, ").
-                            append(String.valueOf(preexisting)).append(" pre-existing since ").
-                            append(historyDate).append("\n");
-                for (String name : failed) {
-                    out.append("f ").append(name).append("\n");
-                }
-                for (String name : running) {
-                    out.append("r ").append(name).append("\n");
-                }
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(statusFile))) {
+            // 1 jobs, 1 running, 0 reported, 0 failed, 77 pre-existing since 2017-04-01T00:00:00
+            // 10 jobs, 0 running, 10 reported, 0 failed, 10 pre-existing since start of service
+            out.append(String.valueOf(
+                        reportMap.entrySet().size() - preexisting + running.size() + failed.size())).append(
+                        " jobs, ").
+                        append(String.valueOf(running.size())).append(" running, ").
+                        append(String.valueOf(reportMap.entrySet().size() - preexisting)).append(" reported, ").
+                        append(String.valueOf(failed.size())).append(" failed, ").
+                        append(String.valueOf(preexisting)).append(" pre-existing since ").
+                        append(historyDate).append("\n");
+            for (String name : failed) {
+                out.append("f ").append(name).append("\n");
+            }
+            for (String name : running) {
+                out.append("r ").append(name).append("\n");
             }
         } catch (IOException e) {
             LOGGER.warning("failed writing instance log " + reporter.getConfig().getProperty("name",
