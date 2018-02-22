@@ -12,11 +12,11 @@ import java.util.List;
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLASSES_COUNT;
 
 /**
- * Represents a cell which contains an arbitrary number of values; each value is written into the final grid product.
+ * Represents a set of target grid cells; each grid cell value is written into the final grid product.
  *
  * @author thomas
  */
-public class GridCell implements Writable {
+public class GridCells implements Writable {
 
     public float[] baFirstHalf;
     public float[] baSecondHalf;
@@ -177,7 +177,7 @@ public class GridCell implements Writable {
 
     @Override
     public String toString() {
-        return "GridCell{" +
+        return "GridCells{" +
                 "baFirstHalf=" + Arrays.toString(baFirstHalf) +
                 ", baSecondHalf=" + Arrays.toString(baSecondHalf) +
                 ", patchNumberFirstHalf=" + Arrays.toString(patchNumberFirstHalf) +

@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.fire.format.grid.meris;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.ErrorPredictor;
-import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -90,11 +90,11 @@ public class MerisGridMapper extends AbstractGridMapper {
 
         setDataSource(new MerisDataSource(sourceProduct, lcProduct, srProducts));
 
-        GridCell gridCell = computeGridCell(year, month);
+        GridCells gridCells = computeGridCells(year, month);
 
         context.progress();
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCells);
         errorPredictor.dispose();
     }
 

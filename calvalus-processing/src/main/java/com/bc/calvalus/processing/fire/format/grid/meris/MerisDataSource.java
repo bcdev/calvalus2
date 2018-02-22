@@ -12,7 +12,7 @@ import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFile;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +37,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
     }
 
     MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts, int sourceWidth, int sourceHeight) {
+        super(-1, -1);
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
         this.srProducts = srProducts;

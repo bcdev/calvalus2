@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * @author thomas
  */
-public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWritable, NullWritable> {
+public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullWritable, NullWritable> {
 
     private static final int SCENE_RASTER_WIDTH = 1440;
     private static final int SCENE_RASTER_HEIGHT = 720;
@@ -39,7 +39,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
 
     protected String firstHalfFile;
     protected String secondHalfFile;
-    private GridCell currentGridCell;
+    private GridCells currentGridCells;
     private int targetSize;
 
     @Override
@@ -50,24 +50,24 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
     }
 
     @Override
-    protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
-        Iterator<GridCell> iterator = values.iterator();
-        currentGridCell = iterator.next();
+    protected void reduce(Text key, Iterable<GridCells> values, Context context) throws IOException, InterruptedException {
+        Iterator<GridCells> iterator = values.iterator();
+        currentGridCells = iterator.next();
 
-        float[] burnedAreaFirstHalf = currentGridCell.baFirstHalf;
-        float[] burnedAreaSecondHalf = currentGridCell.baSecondHalf;
+        float[] burnedAreaFirstHalf = currentGridCells.baFirstHalf;
+        float[] burnedAreaSecondHalf = currentGridCells.baSecondHalf;
 
-        float[] patchNumbersFirstHalf = currentGridCell.patchNumberFirstHalf;
-        float[] patchNumbersSecondHalf = currentGridCell.patchNumberSecondHalf;
+        float[] patchNumbersFirstHalf = currentGridCells.patchNumberFirstHalf;
+        float[] patchNumbersSecondHalf = currentGridCells.patchNumberSecondHalf;
 
-        float[] errorsFirstHalf = currentGridCell.errorsFirstHalf;
-        float[] errorsSecondHalf = currentGridCell.errorsSecondHalf;
+        float[] errorsFirstHalf = currentGridCells.errorsFirstHalf;
+        float[] errorsSecondHalf = currentGridCells.errorsSecondHalf;
 
-        List<float[]> baInLcFirstHalf = currentGridCell.baInLcFirstHalf;
-        List<float[]> baInLcSecondHalf = currentGridCell.baInLcSecondHalf;
+        List<float[]> baInLcFirstHalf = currentGridCells.baInLcFirstHalf;
+        List<float[]> baInLcSecondHalf = currentGridCells.baInLcSecondHalf;
 
-        float[] coverageFirstHalf = currentGridCell.coverageFirstHalf;
-        float[] coverageSecondHalf = currentGridCell.coverageSecondHalf;
+        float[] coverageFirstHalf = currentGridCells.coverageFirstHalf;
+        float[] coverageSecondHalf = currentGridCells.coverageSecondHalf;
 
         try {
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "burned_area", burnedAreaFirstHalf);
@@ -174,8 +174,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         }
     }
 
-    protected GridCell getCurrentGridCell() {
-        return currentGridCell;
+    protected GridCells getCurrentGridCells() {
+        return currentGridCells;
     }
 
     protected void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {

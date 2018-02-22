@@ -7,7 +7,6 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import com.google.gson.Gson;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,32 +14,26 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
-    public static final int CACHE_SIZE = 480;
     public static final double MODIS_AREA_SIZE = 53664.6683222854702276;
     private final Product[] products;
     private final Product[] lcProducts;
     private final List<ZipFile> geoLookupTables;
     private final String targetCell; // "800,312"
-    private final SortedMap<String, Integer> bandToMinY;
-    private final SortedMap<String, ProductData> data;
     private final SortedSet<Long> alreadyVisitedPixelPoses;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, List<ZipFile> geoLookupTables, String targetCell) {
+        super(480, 4800);
         this.products = products;
         this.lcProducts = lcProducts;
         this.geoLookupTables = geoLookupTables;
         this.targetCell = targetCell;
-        this.bandToMinY = new TreeMap<>();
-        this.data = new TreeMap<>();
         this.alreadyVisitedPixelPoses = new TreeSet<>();
     }
 
@@ -154,41 +147,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return Long.parseLong(tileX + tileY + xPart + yPart);
     }
 
-    float getFloatPixelValue(Band band, String tile, int pixelIndex) throws IOException {
-        String key = band.getName() + "_" + tile;
-        refreshCache(band, key, pixelIndex);
-        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
-        return data.get(key).getElemFloatAt(subPixelIndex);
-    }
-
-    private int getIntPixelValue(Band band, String tile, int pixelIndex) throws IOException {
-        String key = band.getName() + "_" + tile;
-        refreshCache(band, key, pixelIndex);
-        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
-        return data.get(key).getElemIntAt(subPixelIndex);
-    }
-
-    private void refreshCache(Band band, String key, int pixelIndex) throws IOException {
-        int currentMinY;
-        if (bandToMinY.containsKey(key)) {
-            currentMinY = bandToMinY.get(key);
-        } else {
-            int pixelIndexY = pixelIndex / 4800;
-            currentMinY = pixelIndexY - pixelIndexY % CACHE_SIZE;
-        }
-
-        int pixelIndexY = pixelIndex / 4800;
-        boolean pixelIndexIsInCache = pixelIndexY >= currentMinY && pixelIndexY < currentMinY + CACHE_SIZE;
-        boolean alreadyRead = pixelIndexIsInCache && data.containsKey(key);
-        if (!alreadyRead) {
-            ProductData productData = ProductData.createInstance(band.getDataType(), band.getRasterWidth() * CACHE_SIZE);
-            band.readRasterData(0, pixelIndexY - pixelIndexY % CACHE_SIZE, 4800, CACHE_SIZE, productData);
-            data.put(key, productData);
-            currentMinY = pixelIndexY - pixelIndexY % CACHE_SIZE;
-            bandToMinY.put(key, currentMinY);
-        }
-    }
-
     private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY, List<ZipFile> geoLookupTables) throws IOException {
         Gson gson = new Gson();
         String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX < 10 ? "0" + targetCellX : targetCellX, targetCellY);
@@ -217,14 +175,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         } else {
             return oldStatus == -1 ? (status == 3 ? -1 : 1) : 1;
         }
-    }
-
-    static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
-        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6;
-    }
-
-    static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth;
     }
 
 }

@@ -3,7 +3,7 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
-import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -108,9 +108,9 @@ public class ModisGridMapper extends AbstractGridMapper {
         dataSource.setDoySecondHalf(doySecondHalf);
 
         setDataSource(dataSource);
-        GridCell gridCell = computeGridCell(year, month, new ProgressSplitProgressMonitor(context));
+        GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCells);
     }
 
     static String[] getXCoords(String targetTile) {

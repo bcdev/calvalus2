@@ -7,12 +7,15 @@ import org.esa.snap.core.util.ProductUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.time.Instant;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.S2_GRID_PIXELSIZE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class GridFormatUtilsTest {
 
@@ -31,14 +34,28 @@ public class GridFormatUtilsTest {
     @Test
     public void testFilterProducts() throws Exception {
         Product a = new Product("a", "t", 50, 50);
-        a.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10, 10, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
         Product b = new Product("b", "t", 50, 50);
-        b.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10.25, 9.5, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
         Product c = new Product("c", "t", 50, 50);
-        c.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 16, 15, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+        moveTo(a, 30, -2);
+        moveTo(b, 30.248, -2);
+        moveTo(c, 30.25, -5);
 
-        assertArrayEquals(new Product[]{a}, GridFormatUtils.filter("v40h95", new Product[]{a, b, c}, 0, 0));
-        assertArrayEquals(new Product[]{b}, GridFormatUtils.filter("v40h95", new Product[]{a, b, c}, 1, 1));
+        assertArrayEquals(new Product[]{a, b}, GridFormatUtils.filter("x210y88", new Product[]{a, b, c}, 0, 0));
+        assertArrayEquals(new Product[]{b}, GridFormatUtils.filter("x210y88", new Product[]{a, b, c}, 1, 0));
+        assertArrayEquals(new Product[]{c}, GridFormatUtils.filter("x210y84", new Product[]{a, b, c}, 1, 3));
+        assertArrayEquals(new Product[]{}, GridFormatUtils.filter("x210y84", new Product[]{a, b, c}, 1, 5));
+
+        try {
+            GridFormatUtils.filter("x210y88", new Product[]{a, b, c}, -1, 8);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+
+    }
+
+    private static void moveTo(Product p, double east, double north) throws FactoryException, TransformException {
+        p.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, east, north, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
     }
 
     @Ignore

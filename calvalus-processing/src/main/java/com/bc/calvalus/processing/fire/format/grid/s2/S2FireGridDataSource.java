@@ -8,7 +8,6 @@ import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
 
 import java.io.BufferedReader;
@@ -27,15 +26,16 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.filter
 
 public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
+    private static final int DIMENSION = 5490;
     private final String tile;
     private final Product[] sourceProducts;
     private final Product[] lcProducts;
-    public static final int STEP = 2;
     private List<ZipFile> geoLookupTables;
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
     public S2FireGridDataSource(String tile, Product sourceProducts[], Product[] lcProducts, List<ZipFile> geoLookupTables) {
+        super(549, DIMENSION);
         this.tile = tile;
         this.sourceProducts = sourceProducts;
         this.lcProducts = lcProducts;
@@ -48,13 +48,15 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         Product[] products = filter(tile, sourceProducts, x, y);
         if (products.length == 0) {
+            CalvalusLogger.getLogger().warning("No input product available for pixel x=" + x + ", y=" + y);
             return null;
         }
 
-        SourceData data = new SourceData(1381, 1381);
+        SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();
 
         for (int i = 0; i < products.length; i++) {
+            CalvalusLogger.getLogger().info("Handling product " + (i + 1) + "/" + products.length);
             Product product = products[i];
             Product lcProduct = lcProducts[i];
             ZipFile geoLookupTable = null;
@@ -89,58 +91,50 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             Band cl = product.getBand("CL");
             Band lc = lcProduct.getBand("lccs_class");
 
-            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
-            ProductData clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
-            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
-
-            jd.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), jdData);
-            cl.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), clData);
-            lc.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), lcData);
-
             while ((line = br.readLine()) != null) {
                 String[] splitLine = line.split(" ");
-                int targetX = Integer.parseInt(splitLine[0]);
-                int targetY = Integer.parseInt(splitLine[1]);
-                int sourceX = Integer.parseInt(splitLine[2]);
-                int sourceY = Integer.parseInt(splitLine[3]);
-                int targetPixelIndex = targetY * 1381 + targetX;
+                int x0 = Integer.parseInt(splitLine[2]);
+                int y0 = Integer.parseInt(splitLine[3]);
 
-                int sourcePixelIndex = sourceY * product.getSceneRasterWidth() + sourceX;
+                int pixelIndex = y0 * DIMENSION + x0;
 
-                int sourceJD = (int) jdData.getElemFloatAt(sourcePixelIndex);
-                float sourceCL = clData.getElemFloatAt(sourcePixelIndex);
-                int oldValue = data.burnedPixels[targetPixelIndex];
-                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) || isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
-                    if (sourceJD > oldValue && sourceJD < 900) {
-                        data.burnedPixels[targetPixelIndex] = sourceJD;
-                        if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
-                            data.probabilityOfBurnFirstHalf[targetPixelIndex] = sourceCL;
-                        } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
-                            data.probabilityOfBurnSecondHalf[targetPixelIndex] = sourceCL;
-                        }
-                    }
-
-                    int sourceLC = lcData.getElemIntAt(sourcePixelIndex);
-                    data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                    data.lcClasses[targetPixelIndex] = sourceLC;
+                int sourceJD = (int) getFloatPixelValue(jd, tile, pixelIndex);
+                boolean isValidFirstHalfPixel = isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD);
+                boolean isValidSecondHalfPixel = isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD);
+                if (isValidFirstHalfPixel || isValidSecondHalfPixel) {
+                    data.burnedPixels[pixelIndex] = sourceJD;
                 }
+
+                float sourceCL;
+                if (cl != null) {
+                    sourceCL = getFloatPixelValue(cl, tile, pixelIndex);
+                } else {
+                    sourceCL = 0.0F;
+                }
+                data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
+                data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
+
+                int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
+                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                data.lcClasses[pixelIndex] = sourceLC;
                 if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
                     // put observed pixel into first or second half of month
                     int productJD = getProductJD(product);
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
-                        data.statusPixelsFirstHalf[targetPixelIndex] = 1;
+                        data.statusPixelsFirstHalf[pixelIndex] = 1;
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
-                        data.statusPixelsSecondHalf[targetPixelIndex] = 1;
+                        data.statusPixelsSecondHalf[pixelIndex] = 1;
                     }
                 }
-                if (data.areas[targetPixelIndex] == GridFormatUtils.NO_AREA) {
-                    data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
+
+                if (data.areas[pixelIndex] == GridFormatUtils.NO_AREA) {
+                    data.areas[pixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
                 }
             }
         }
 
-        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 1381, 1381), true);
-        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 1381, 1381), false);
+        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), true);
+        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), false);
 
         return data;
     }
@@ -148,14 +142,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     static int getProductJD(Product product) {
         String productDate = product.getName().substring(product.getName().lastIndexOf("-") + 1);// BA-T31NBJ-20160219T101925
         return LocalDate.parse(productDate, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")).get(ChronoField.DAY_OF_YEAR);
-    }
-
-    static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
-        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6;
-    }
-
-    static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth;
     }
 
 }

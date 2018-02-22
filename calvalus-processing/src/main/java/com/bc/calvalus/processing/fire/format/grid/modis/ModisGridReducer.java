@@ -4,7 +4,7 @@ import com.bc.calvalus.processing.analysis.QuicklookGenerator;
 import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
-import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -28,14 +28,14 @@ public class ModisGridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<GridCells> values, Context context) throws IOException, InterruptedException {
         super.reduce(key, values, context);
-        GridCell currentGridCell = getCurrentGridCell();
+        GridCells currentGridCells = getCurrentGridCells();
         try {
             int x = getX(key.toString());
             int y = getY(key.toString());
-            writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCell.burnableFraction);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCell.burnableFraction);
+            writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCells.burnableFraction);
+            writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCells.burnableFraction);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }

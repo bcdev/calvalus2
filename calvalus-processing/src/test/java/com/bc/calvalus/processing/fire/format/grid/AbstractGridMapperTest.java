@@ -117,25 +117,25 @@ public class AbstractGridMapperTest {
         S2FireGridDataSource dataSource = new S2FireGridDataSource("v40h98", products.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
         mapper.setDataSource(dataSource);
 
-        GridCell gridCell = mapper.computeGridCell(2016, 1);
+        GridCells gridCells = mapper.computeGridCells(2016, 1);
         Product product = new Product("test", "test", 8, 8);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Float(gridCell.baFirstHalf));
+        ba1.setData(new ProductData.Float(gridCells.baFirstHalf));
         Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
-        pa1.setData(new ProductData.Float(gridCell.patchNumberFirstHalf));
+        pa1.setData(new ProductData.Float(gridCells.patchNumberFirstHalf));
         Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
-        co1.setData(new ProductData.Float(gridCell.coverageFirstHalf));
+        co1.setData(new ProductData.Float(gridCells.coverageFirstHalf));
         Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
-        er1.setData(new ProductData.Float(gridCell.errorsFirstHalf));
+        er1.setData(new ProductData.Float(gridCells.errorsFirstHalf));
         Band ba2 = product.addBand("ba2", ProductData.TYPE_FLOAT32);
-        ba2.setData(new ProductData.Float(gridCell.baSecondHalf));
+        ba2.setData(new ProductData.Float(gridCells.baSecondHalf));
         Band pa2 = product.addBand("pa2", ProductData.TYPE_FLOAT32);
-        pa2.setData(new ProductData.Float(gridCell.patchNumberSecondHalf));
+        pa2.setData(new ProductData.Float(gridCells.patchNumberSecondHalf));
         Band co2 = product.addBand("co2", ProductData.TYPE_FLOAT32);
-        co2.setData(new ProductData.Float(gridCell.coverageSecondHalf));
+        co2.setData(new ProductData.Float(gridCells.coverageSecondHalf));
         Band er2 = product.addBand("er2", ProductData.TYPE_FLOAT32);
-        er2.setData(new ProductData.Float(gridCell.errorsSecondHalf));
-        List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
+        er2.setData(new ProductData.Float(gridCells.errorsSecondHalf));
+        List<float[]> baInLcFirstHalf = gridCells.baInLcFirstHalf;
         for (int i = 0; i < baInLcFirstHalf.size(); i++) {
             float[] floats = baInLcFirstHalf.get(i);
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
@@ -143,7 +143,7 @@ public class AbstractGridMapperTest {
         }
 
         Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);
-        buf.setData(new ProductData.Float(gridCell.burnableFraction));
+        buf.setData(new ProductData.Float(gridCells.burnableFraction));
 
         product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 8, 8, -14, 14, 0.25, 0.25, 0.0, 0.0));
 
@@ -195,25 +195,25 @@ public class AbstractGridMapperTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, geoLookupTables, targetTile);
         mapper.setDataSource(dataSource);
 
-        GridCell gridCell = mapper.computeGridCell(2006, 3);
+        GridCells gridCells = mapper.computeGridCells(2006, 3);
         Product product = new Product("test", "test", 1, 1);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Float(gridCell.baFirstHalf));
+        ba1.setData(new ProductData.Float(gridCells.baFirstHalf));
         Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
-        pa1.setData(new ProductData.Float(gridCell.patchNumberFirstHalf));
+        pa1.setData(new ProductData.Float(gridCells.patchNumberFirstHalf));
         Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
-        co1.setData(new ProductData.Float(gridCell.coverageFirstHalf));
+        co1.setData(new ProductData.Float(gridCells.coverageFirstHalf));
         Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
-        er1.setData(new ProductData.Float(gridCell.errorsFirstHalf));
+        er1.setData(new ProductData.Float(gridCells.errorsFirstHalf));
         Band ba2 = product.addBand("ba2", ProductData.TYPE_FLOAT32);
-        ba2.setData(new ProductData.Float(gridCell.baSecondHalf));
+        ba2.setData(new ProductData.Float(gridCells.baSecondHalf));
         Band pa2 = product.addBand("pa2", ProductData.TYPE_FLOAT32);
-        pa2.setData(new ProductData.Float(gridCell.patchNumberSecondHalf));
+        pa2.setData(new ProductData.Float(gridCells.patchNumberSecondHalf));
         Band co2 = product.addBand("co2", ProductData.TYPE_FLOAT32);
-        co2.setData(new ProductData.Float(gridCell.coverageSecondHalf));
+        co2.setData(new ProductData.Float(gridCells.coverageSecondHalf));
         Band er2 = product.addBand("er2", ProductData.TYPE_FLOAT32);
-        er2.setData(new ProductData.Float(gridCell.errorsSecondHalf));
-        List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
+        er2.setData(new ProductData.Float(gridCells.errorsSecondHalf));
+        List<float[]> baInLcFirstHalf = gridCells.baInLcFirstHalf;
         for (int i = 0; i < baInLcFirstHalf.size(); i++) {
             float[] floats = baInLcFirstHalf.get(i);
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
@@ -221,7 +221,7 @@ public class AbstractGridMapperTest {
         }
 
         Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);
-        buf.setData(new ProductData.Float(gridCell.burnableFraction));
+        buf.setData(new ProductData.Float(gridCells.burnableFraction));
 
         product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 8, 8, -14, 14, 0.25, 0.25, 0.0, 0.0));
 

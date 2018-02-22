@@ -7,8 +7,6 @@ import org.esa.snap.core.datamodel.Product;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource.STEP;
-
 public class GridFormatUtils {
 
     public static final int LC_CLASSES_COUNT = 18;
@@ -34,12 +32,22 @@ public class GridFormatUtils {
     }
 
     public static Product[] filter(String tile, Product[] sourceProducts, int x, int y) {
-        int tileX = Integer.parseInt(tile.substring(4));
-        int tileY = Integer.parseInt(tile.substring(1, 3));
-        double upperLat = 90 - tileY * STEP;
-        double lowerLat = 90 - tileY * STEP - (y + 1) / 4.0;
-        double leftLon = tileX * STEP - 180 + x / 4.0;
-        double rightLon = tileX * STEP - 180 + (x + 1) / 4.0;
+        if (x > 7 || y > 7 || x < 0 || y < 0) {
+            throw new IllegalArgumentException("x > 7 || y > 7 || x < 0 || y < 0: x=" + x + ", y=" + y);
+        }
+        /*
+            returns only those products which overlap the target grid cell (given by x y)
+            within the tile.
+         */
+        int tileX = Integer.parseInt(tile.split("y")[0].substring(1));
+        int tileY = Integer.parseInt(tile.split("y")[1]);
+
+        double upperLat = tileY - 90 + (y + 1) * 0.25;
+        double leftLon = -180 + tileX + x * 0.25;
+        double lowerLat = tileY - 90 + y * 0.25;
+        double rightLon = -180 + tileX + (x + 1) * 0.25;
+
+        System.out.println(String.format("x=%s, y=%s: upperLat=%s, lowerLat=%s, leftLon=%s, rightLon=%s", x, y, upperLat, lowerLat, leftLon, rightLon));
 
         GeoPos UL = new GeoPos(upperLat, leftLon);
         GeoPos LL = new GeoPos(lowerLat, leftLon);

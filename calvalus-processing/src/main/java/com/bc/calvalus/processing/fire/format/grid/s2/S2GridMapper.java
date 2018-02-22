@@ -2,7 +2,8 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
-import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -17,8 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipFile;
 
-import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource.STEP;
-
 /**
  * Runs the fire S2 formatting grid mapper.
  *
@@ -27,9 +26,11 @@ import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSourc
 public class S2GridMapper extends AbstractGridMapper {
 
     private static final float S2_PIXEL_AREA = 400.0f;
+    private static final int GRID_CELLS_PER_DEGREE = 4;
+    private static final int NUM_GRID_CELLS = 2;
 
     protected S2GridMapper() {
-        super(STEP * 4, STEP * 4);
+        super(NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE, NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE);
     }
 
     @Override
@@ -83,9 +84,9 @@ public class S2GridMapper extends AbstractGridMapper {
         dataSource.setDoySecondHalf(doySecondHalf);
 
         setDataSource(dataSource);
-        GridCell gridCell = computeGridCell(year, month);
+        GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, twoDegTile)), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, twoDegTile)), gridCells);
     }
 
     @Override
@@ -103,7 +104,7 @@ public class S2GridMapper extends AbstractGridMapper {
             lcAreaSum += secondBaValues[targetPixelIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
-        if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
+        if (lcAreaSumFraction > burnableFraction * 1.05) {
             throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
         }
     }

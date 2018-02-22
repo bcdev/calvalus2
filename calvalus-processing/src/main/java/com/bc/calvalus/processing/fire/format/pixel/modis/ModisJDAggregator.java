@@ -74,7 +74,7 @@ public class ModisJDAggregator extends AbstractAggregator {
         if (!validJdSet && jd == 0 && cl == 0) {
             targetVector.set(1, 1);
         }
-        // otherwise keep original value
+        // otherwise keep original values
     }
 
     @Override

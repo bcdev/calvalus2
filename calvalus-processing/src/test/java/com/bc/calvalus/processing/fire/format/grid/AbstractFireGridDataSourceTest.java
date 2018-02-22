@@ -14,7 +14,7 @@ public class AbstractFireGridDataSourceTest {
 
     @Before
     public void setUp() throws Exception {
-        dataSource = new AbstractFireGridDataSource() {
+        dataSource = new AbstractFireGridDataSource(4, 4) {
             @Override
             public SourceData readPixels(int x, int y) throws IOException {
                 return null;

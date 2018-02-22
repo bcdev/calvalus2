@@ -92,18 +92,29 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         int x0 = Integer.parseInt(tile.split("y")[0].substring(1));
         int y0 = Integer.parseInt(tile.split("y")[1]);
 
+        double topLat = y0 - 90;
+        double leftLon = -180 + x0;
+        double bottomLat = y0 - 90;
+        double rightLon = -180 + x0;
+
+        CalvalusLogger.getLogger().info("" + topLat);
+        CalvalusLogger.getLogger().info("" + leftLon);
+        CalvalusLogger.getLogger().info("" + bottomLat);
+        CalvalusLogger.getLogger().info("" + rightLon);
+
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
 
                 GeometryFactory factory = new GeometryFactory();
                 WKTReader wktReader = new WKTReader(factory);
-                double topLat = 90 - (y0 * 2 + y * 0.25);
-                double leftLon = -180 + (x0 * 2 + x * 0.25);
-                double bottomLat = 90 - (y0 * 2 + (y + 1) * 0.25);
-                double rightLon = -180 + (x0 * 2 + (x + 1) * 0.25);
-                Geometry geometry = null;
+                topLat = -90 + (y0 + y * 0.25);
+                leftLon = -180 + (x0 + x * 0.25);
+                bottomLat = -90 + (y0 + (y + 1) * 0.25);
+                rightLon = -180 + (x0 + (x + 1) * 0.25);
+                Geometry geometry;
                 try {
                     String wellKnownText = String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))", leftLon, topLat, rightLon, topLat, rightLon, bottomLat, leftLon, bottomLat, leftLon, topLat);
+                    CalvalusLogger.getLogger().info(wellKnownText);
                     geometry = wktReader.read(wellKnownText);
                 } catch (ParseException e) {
                     throw new IllegalStateException("Must not come here");
@@ -113,11 +124,12 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                 File file = new File(pathname);
                 try (FileWriter fos = new FileWriter(file)) {
                     Rectangle rectangle = SubsetOp.computePixelRegion(refProduct, geometry, 0);
+                    System.out.println(rectangle);
                     for (pp.y = rectangle.y; pp.y < rectangle.y + rectangle.height; pp.y++) {
                         for (pp.x = rectangle.x; pp.x < rectangle.x + rectangle.width; pp.x++) {
                             refGeoCoding.getGeoPos(pp, gp);
-                            boolean isInLatRange = gp.lat <= 90 - (y0 * 2 + y * 0.25) && gp.lat >= 90 - (y0 * 2 + (y + 1) * 0.25);
-                            boolean isInLonRange = gp.lon >= -180 + (x0 * 2 + x * 0.25) && gp.lon <= -180 + (x0 * 2 + (x + 1) * 0.25);
+                            boolean isInLatRange = gp.lat >= -90 + (y0 + y * 0.25) && gp.lat <= -90 + (y0 + (y + 1) * 0.25);
+                            boolean isInLonRange = gp.lon >= -180 + (x0 + x * 0.25) && gp.lon <= -180 + (x0 + (x + 1) * 0.25);
                             if (isInLatRange && isInLonRange) {
                                 fos.write(x + " " + y + " " + (int) pp.x + " " + (int) pp.y + "\n");
                                 hasFoundPixel = true;

@@ -23,7 +23,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.SensorStrategy;
-import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -120,7 +120,7 @@ public class FireGridProductionType extends HadoopProductionType {
             job.setMapperClass(strategy.getGridMapperClass());
             job.setReducerClass(strategy.getGridReducerClass());
             job.setMapOutputKeyClass(Text.class);
-            job.setMapOutputValueClass(GridCell.class);
+            job.setMapOutputValueClass(GridCells.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }
 

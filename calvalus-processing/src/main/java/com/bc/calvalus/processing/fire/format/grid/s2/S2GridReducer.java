@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
-import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.fire.format.grid.NcFileFactory;
 import org.apache.hadoop.io.Text;
 import ucar.ma2.InvalidRangeException;
@@ -19,17 +19,17 @@ public class S2GridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<GridCells> values, Context context) throws IOException, InterruptedException {
         super.reduce(key, values, context);
-        GridCell currentGridCell = getCurrentGridCell();
+        GridCells currentGridCells = getCurrentGridCells();
         try {
             int x = getX(key.toString());
             int y = getY(key.toString());
-            writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCell.burnableFraction);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCell.burnableFraction);
+            writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCells.burnableFraction);
+            writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCells.burnableFraction);
 
-            writeFloatChunk(x, y, ncFirst, "fraction_of_observed_area", currentGridCell.coverageFirstHalf);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_observed_area", currentGridCell.coverageSecondHalf);
+            writeFloatChunk(x, y, ncFirst, "fraction_of_observed_area", currentGridCells.coverageFirstHalf);
+            writeFloatChunk(x, y, ncSecond, "fraction_of_observed_area", currentGridCells.coverageSecondHalf);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -48,5 +48,19 @@ public class S2GridReducer extends AbstractGridReducer {
     @Override
     protected int getTargetSize() {
         return S2_CHUNK_SIZE;
+    }
+
+    @Override
+    protected int getX(String key) {
+        // key == 2016-08-x210y88
+        key = key.split("-")[1];
+        return Integer.parseInt(key.split("y")[0].substring(1));
+    }
+
+    @Override
+    protected int getY(String key) {
+        // key == 2016-08-x210y88
+        key = key.split("-")[1];
+        return Integer.parseInt(key.split("y")[1]);
     }
 }

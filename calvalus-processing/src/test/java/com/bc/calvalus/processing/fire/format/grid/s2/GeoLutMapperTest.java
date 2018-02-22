@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.io.File;
 
+import static org.junit.Assert.assertTrue;
+
 public class GeoLutMapperTest {
 
     @Test
@@ -12,9 +14,10 @@ public class GeoLutMapperTest {
         boolean foundPixel = GeoLutMapper.extract(
                 () -> {
                 },
-                new File("d:\\workspace\\fire-cci\\temp\\BA-T35NPD-20151128T084811.nc"),
-                "35NPD",
-                "v43h104");
+                new File("d:\\workspace\\fire-cci\\temp\\BA-T27PZQ-20150628T114417.nc"),
+                "27PZQ",
+                "x81y38");
+        assertTrue(foundPixel);
     }
 
 }
