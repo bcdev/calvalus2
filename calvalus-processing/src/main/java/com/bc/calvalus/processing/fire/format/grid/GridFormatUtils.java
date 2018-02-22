@@ -47,8 +47,6 @@ public class GridFormatUtils {
         double lowerLat = tileY - 90 + y * 0.25;
         double rightLon = -180 + tileX + (x + 1) * 0.25;
 
-        System.out.println(String.format("x=%s, y=%s: upperLat=%s, lowerLat=%s, leftLon=%s, rightLon=%s", x, y, upperLat, lowerLat, leftLon, rightLon));
-
         GeoPos UL = new GeoPos(upperLat, leftLon);
         GeoPos LL = new GeoPos(lowerLat, leftLon);
         GeoPos LR = new GeoPos(lowerLat, rightLon);

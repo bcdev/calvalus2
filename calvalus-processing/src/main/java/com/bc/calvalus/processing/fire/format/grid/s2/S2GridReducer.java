@@ -53,14 +53,14 @@ public class S2GridReducer extends AbstractGridReducer {
     @Override
     protected int getX(String key) {
         // key == 2016-08-x210y88
-        key = key.split("-")[1];
+        key = key.split("-")[2];
         return Integer.parseInt(key.split("y")[0].substring(1));
     }
 
     @Override
     protected int getY(String key) {
         // key == 2016-08-x210y88
-        key = key.split("-")[1];
+        key = key.split("-")[2];
         return Integer.parseInt(key.split("y")[1]);
     }
 }

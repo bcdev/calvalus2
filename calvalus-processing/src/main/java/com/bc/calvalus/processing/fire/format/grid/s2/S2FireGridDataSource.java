@@ -44,6 +44,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
+        CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product[] products = filter(tile, sourceProducts, x, y);
@@ -56,7 +57,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         data.reset();
 
         for (int i = 0; i < products.length; i++) {
-            CalvalusLogger.getLogger().info("Handling product " + (i + 1) + "/" + products.length);
             Product product = products[i];
             Product lcProduct = lcProducts[i];
             ZipFile geoLookupTable = null;
