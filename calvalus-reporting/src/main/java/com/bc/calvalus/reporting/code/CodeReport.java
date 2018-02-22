@@ -207,6 +207,8 @@ public class CodeReport {
             return "Formatting";
         } else if ("L3".equalsIgnoreCase(workflowType)) {
             return "Aggregation";
+        } else if ("GeoDB".equalsIgnoreCase(workflowType)) {
+            return "Geo Indexing";
         } else {
             return "None";
         }
