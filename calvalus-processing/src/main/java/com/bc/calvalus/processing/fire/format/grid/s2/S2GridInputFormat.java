@@ -33,8 +33,6 @@ public class S2GridInputFormat extends InputFormat {
         String month = conf.get("calvalus.month");
         Properties tiles = new Properties();
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
-        tiles.clear();
-        tiles.put("x210y88", "36MTD|36MUD");
         List<InputSplit> splits = new ArrayList<>(1000);
         for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
             String tilePattern = entry.getValue().toString();
