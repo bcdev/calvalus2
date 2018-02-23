@@ -228,7 +228,7 @@ public class CodeReport {
         try {
             return Long.parseLong(valueString);
         } catch (NumberFormatException e) {
-            return -1;
+            return 0;
         }
     }
 
