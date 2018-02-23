@@ -19,7 +19,7 @@
         <ceres.version>[6.0.0-SNAPSHOT,7.0.0-SNAPSHOT]</ceres.version>
         <seadas.reader.version>1.7-SNAPSHOT</seadas.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
-        <geotools.version>2.7.4</geotools.version>
+        <geotools.version>17.1</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
         <ncsa.version>2.7.1</ncsa.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
