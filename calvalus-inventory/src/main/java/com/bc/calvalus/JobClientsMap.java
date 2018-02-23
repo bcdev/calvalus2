@@ -41,7 +41,9 @@ public class JobClientsMap {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
      // 10 minutes in milliseconds
-    private static final long CACHE_RETENTION = 10 * 60 * 1000;
+    private static final long T_10_MINUTES = 10 * 60 * 1000;
+    // 3 hours in milliseconds
+    private static final long T_3_HOURS = 3 * 60 * 60 * 1000;
 
     private final JobConf jobConfTemplate;
     private final Map<String, CacheEntry> jobClientsCache = new HashMap<>();
@@ -54,13 +56,20 @@ public class JobClientsMap {
         withExternalAccessControl = Boolean.getBoolean("calvalus.accesscontrol.external");
         // TODO there should be one Timer for a process that is used for all timer tasks
         this.cacheCleaner = new Timer("jobClientsCacheCleaner", true);
-        TimerTask bundlesQueryCleanTask = new TimerTask() {
+        TimerTask jobClientsCacheRemoveUnused = new TimerTask() {
             @Override
             public void run() {
                 removeUnusedEntries();
             }
         };
-        this.cacheCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, CACHE_RETENTION, CACHE_RETENTION);
+        this.cacheCleaner.scheduleAtFixedRate(jobClientsCacheRemoveUnused, T_10_MINUTES, T_10_MINUTES);
+        TimerTask jobClientsCacheRemoveAll = new TimerTask() {
+            @Override
+            public void run() {
+                removeAllEntries();
+            }
+        };
+        this.cacheCleaner.scheduleAtFixedRate(jobClientsCacheRemoveAll, T_3_HOURS, T_3_HOURS);
     }
 
     public Configuration getConfiguration() {
@@ -159,12 +168,23 @@ public class JobClientsMap {
      */
     private synchronized void removeUnusedEntries() {
         long now = System.currentTimeMillis();
-        long clearIfOlder = now - CACHE_RETENTION;
+        long clearIfOlder = now - T_10_MINUTES;
         if (withExternalAccessControl) {
             fileSystemMap.values().removeIf(fileSystem -> ((fileSystem instanceof CalvalusShFileSystem)
                     && ((CalvalusShFileSystem) fileSystem).getCacheEntry().accessTime < clearIfOlder));
         }
         jobClientsCache.values().removeIf(cacheEntry -> cacheEntry.accessTime < clearIfOlder);
+    }
+
+    /**
+     * We remove JobClients after 3 hours. IN ALL CASES. Because the update thread always triggers the accessTime
+     * Inside it contains a "org.apache.hadoop.mapred.ClientCache" that has a forever growing cache.
+     */
+    private synchronized void removeAllEntries() {
+        if (withExternalAccessControl) {
+            fileSystemMap.clear();
+        }
+        jobClientsCache.clear();
     }
 
     public static class CacheEntry  {
