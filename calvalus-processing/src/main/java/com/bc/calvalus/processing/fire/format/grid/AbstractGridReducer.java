@@ -180,11 +180,16 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         return currentGridCells;
     }
 
+    protected Array transpose(Array values) {
+        return values;
+    }
+
     protected void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
         CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d into variable %s", x, y, targetSize, targetSize, varName));
 
         Variable variable = ncFile.findVariable(varName);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, targetSize, targetSize}, data);
+        transpose(values);
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
 
@@ -195,6 +200,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, targetSize, targetSize}, baInClass);
+        values = transpose(values);
         ncFile.write(variable, new int[]{0, lcClassIndex, y, x}, values);
     }
 

@@ -4,6 +4,7 @@ import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.fire.format.grid.NcFileFactory;
 import org.apache.hadoop.io.Text;
+import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFileWriter;
 
@@ -60,7 +61,11 @@ public class S2GridReducer extends AbstractGridReducer {
     protected int getY(String key) {
         key = key.split("-")[2];
         int y = Integer.parseInt(key.split("y")[1]);
-        return Integer.parseInt(key.split("y")[1]) * 4;
-//        return (180 - y) * 4;
+        return (180 - y) * 4;
+    }
+
+    @Override
+    protected Array transpose(Array values) {
+        return values.transpose(0, 1);
     }
 }
