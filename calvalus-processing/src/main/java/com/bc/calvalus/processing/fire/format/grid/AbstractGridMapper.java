@@ -140,8 +140,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
                 validate(burnableFraction[targetGridCellIndex], baInLcFirstHalf, baInLcSecondHalf, targetGridCellIndex, areas[targetGridCellIndex]);
 
-                errorsFirstHalf[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf, numberOfBurnedPixels);
-                errorsSecondHalf[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf, numberOfBurnedPixels);
+                errorsFirstHalf[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf, areas[targetGridCellIndex], numberOfBurnedPixels);
+                errorsSecondHalf[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf, areas[targetGridCellIndex], numberOfBurnedPixels);
 
                 for (int i = 0; i < errorsFirstHalf.length; i++) {
                     if (baFirstHalf[i] < 0.00001) {
@@ -199,7 +199,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, int numberOfBurnedPixels);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels);
 
     protected abstract void predict(float[] ba, double[] areas, float[] originalErrors);
 
@@ -237,7 +237,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             }
             if (Float.isNaN(error)) {
                 LOG.warning("error is NaN");
-                throw new IllegalStateException("error is NaN");
+//                throw new IllegalStateException("error is NaN");
             }
         }
     }

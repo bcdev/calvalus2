@@ -170,7 +170,7 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, int numberOfBurnedPixels) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels) {
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (Double.isNaN(p)) {

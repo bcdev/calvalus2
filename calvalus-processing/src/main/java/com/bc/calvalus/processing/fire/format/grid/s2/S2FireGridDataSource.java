@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
@@ -47,11 +48,17 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
+        CalvalusLogger.getLogger().info("All products:");
+        CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
+
         Product[] products = filter(tile, sourceProducts, x, y);
         if (products.length == 0) {
             CalvalusLogger.getLogger().warning("No input product available for pixel x=" + x + ", y=" + y);
             return null;
         }
+
+        CalvalusLogger.getLogger().info("Products after filtering:");
+        CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(products).map(Product::getName).toArray()));
 
         SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();

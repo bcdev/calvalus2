@@ -2,22 +2,28 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import org.junit.Test;
 
-import java.io.File;
-
-import static org.junit.Assert.assertTrue;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class GeoLutMapperTest {
 
     @Test
     public void testExtract() throws Exception {
 
-        boolean foundPixel = GeoLutMapper.extract(
-                () -> {
-                },
-                new File("d:\\workspace\\fire-cci\\temp\\BA-T27PZQ-20150628T114417.nc"),
-                "27PZQ",
-                "x81y38");
-        assertTrue(foundPixel);
+        Files.list(Paths.get("d:\\workspace\\fire-cci\\s2-tiles"))
+                .filter(p -> p.getFileName().toString().endsWith("nc"))
+                .forEach(p -> {
+                    try {
+                        String utmTile = p.getFileName().toString().split("-")[1].replace("T", "");
+                        GeoLutMapper.extract(
+                                p.toFile(),
+                                utmTile,
+                                "x164y98");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 
 }

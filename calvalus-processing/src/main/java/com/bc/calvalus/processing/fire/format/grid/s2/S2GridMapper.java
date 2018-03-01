@@ -25,7 +25,6 @@ import java.util.zip.ZipFile;
  */
 public class S2GridMapper extends AbstractGridMapper {
 
-    private static final float S2_PIXEL_AREA = 400.0f;
     private static final int GRID_CELLS_PER_DEGREE = 4;
     private static final int NUM_GRID_CELLS = 2;
 
@@ -110,18 +109,72 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, int num) {
-        /*
-            p is array of burned_probability in cell c
-            var(C) = (p (1-p)).sum()
-            standard_error(c) = sqrt(var(c) *(n/(n-1))
-            sum(C) = p.sum()
-        */
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels) {
+        double sum_pb = 0.0;
+        for (double p : probabilityOfBurn) {
+            if (Double.isNaN(p)) {
+                continue;
+            }
+            if (p > 1) {
+                // no-data/cloud/water
+                continue;
+            }
+            if (p < 0) {
+                throw new IllegalStateException("p < 0");
+            }
+            sum_pb += p;
+        }
+
+        double S = numberOfBurnedPixels / sum_pb;
+
+        double[] pb_i_star = new double[probabilityOfBurn.length];
+
+        for (int i = 0; i < probabilityOfBurn.length; i++) {
+            double pb_i = probabilityOfBurn[i];
+            pb_i_star[i] = pb_i * S;
+        }
+
+        double checksum = 0.0;
+        for (double v : pb_i_star) {
+            checksum += v;
+        }
+
+        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
+            LOG.warning(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
+        }
 
         double var_c = 0.0;
+        int count = 0;
+        for (double p : pb_i_star) {
+            var_c += p * (1 - p);
+            if (Double.isNaN(p)) {
+                continue;
+            }
+            if (p > 1) {
+                // no-data/cloud/water
+                continue;
+            }
+            if (p < 0) {
+                throw new IllegalStateException("p < 0");
+            }
+            count++;
+        }
+
+        if (count == 0) {
+            return 0;
+        }
+        if (count == 1) {
+            return 1;
+        }
+
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) area;
+
+        /*
+        double[] p_b = correct(probabilityOfBurn);
+
         double sum_c = 0.0;
         int count = 0;
-        for (double p : probabilityOfBurn) {
+        for (double p : p_b) {
             if (Double.isNaN(p)) {
                 continue;
             }
@@ -143,7 +196,10 @@ public class S2GridMapper extends AbstractGridMapper {
             return 1;
         }
 
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * S2_PIXEL_AREA;
+        float sqrt = (float) Math.sqrt(var_c * (count / (count - 1.0)));
+        return sqrt * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+
+        */
     }
 
     @Override

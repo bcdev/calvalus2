@@ -12,7 +12,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
-import org.apache.hadoop.util.Progressable;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
@@ -52,7 +51,7 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                 continue;
             }
 
-            boolean hasFoundPixel = extract(context, localFile, utmTile, tile);
+            boolean hasFoundPixel = extract(localFile, utmTile, tile);
             if (!hasFoundPixel) {
                 CalvalusLogger.getLogger().warning("No pixels found!");
             }
@@ -81,7 +80,7 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         }
     }
 
-    static boolean extract(Progressable context, File localFile, String utmTile, String tile) throws IOException {
+    static boolean extract(File localFile, String utmTile, String tile) throws IOException {
         CalvalusLogger.getLogger().info(String.format("Running for tile %s and utmTile %s", tile, utmTile));
 
         GeoPos gp = new GeoPos();
@@ -92,15 +91,10 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         int x0 = Integer.parseInt(tile.split("y")[0].substring(1));
         int y0 = Integer.parseInt(tile.split("y")[1]);
 
-        double topLat = y0 - 90;
-        double leftLon = -180 + x0;
-        double bottomLat = y0 - 90;
-        double rightLon = -180 + x0;
-
-        CalvalusLogger.getLogger().info("" + topLat);
-        CalvalusLogger.getLogger().info("" + leftLon);
-        CalvalusLogger.getLogger().info("" + bottomLat);
-        CalvalusLogger.getLogger().info("" + rightLon);
+        double topLat;
+        double leftLon;
+        double bottomLat;
+        double rightLon;
 
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {

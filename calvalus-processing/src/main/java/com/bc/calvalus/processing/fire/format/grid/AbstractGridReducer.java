@@ -69,6 +69,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         float[] coverageFirstHalf = currentGridCells.coverageFirstHalf;
         float[] coverageSecondHalf = currentGridCells.coverageSecondHalf;
 
+        CalvalusLogger.getLogger().info("Writing for key " + key);
+
         try {
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "burned_area", burnedAreaFirstHalf);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "burned_area", burnedAreaSecondHalf);

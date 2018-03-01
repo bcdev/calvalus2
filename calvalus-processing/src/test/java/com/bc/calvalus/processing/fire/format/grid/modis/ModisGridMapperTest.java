@@ -50,7 +50,7 @@ public class ModisGridMapperTest {
             }
         }
 
-        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 746);
+        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 0, 746);
 
     }
 }
