@@ -98,6 +98,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             Band cl = product.getBand("CL");
             Band lc = lcProduct.getBand("lccs_class");
 
+            String key = product.getName().split("-")[1];
+
             while ((line = br.readLine()) != null) {
                 String[] splitLine = line.split(" ");
                 int x0 = Integer.parseInt(splitLine[2]);
@@ -105,7 +107,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
                 int pixelIndex = y0 * DIMENSION + x0;
 
-                int sourceJD = (int) getFloatPixelValue(jd, tile, pixelIndex);
+                int sourceJD = (int) getFloatPixelValue(jd, key, pixelIndex);
                 boolean isValidFirstHalfPixel = isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD);
                 boolean isValidSecondHalfPixel = isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD);
                 if (isValidFirstHalfPixel || isValidSecondHalfPixel) {
@@ -114,14 +116,14 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
                 float sourceCL;
                 if (cl != null) {
-                    sourceCL = getFloatPixelValue(cl, tile, pixelIndex);
+                    sourceCL = getFloatPixelValue(cl, key, pixelIndex);
                 } else {
                     sourceCL = 0.0F;
                 }
                 data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                 data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
 
-                int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
+                int sourceLC = getIntPixelValue(lc, key, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
                 if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
