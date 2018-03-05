@@ -98,7 +98,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             Band cl = product.getBand("CL");
             Band lc = lcProduct.getBand("lccs_class");
 
-            String key = product.getName().split("-")[1];
+            String key = product.getName();
 
             while ((line = br.readLine()) != null) {
                 String[] splitLine = line.split(" ");
