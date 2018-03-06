@@ -28,10 +28,19 @@ import java.util.regex.Pattern;
  */
 public class GranuleTilesInputFormat extends PatternBasedInputFormat {
 
-    // ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20090108-v2.0.nc
-    static final Pattern FILENAME_PATTERN =
+    // S2A_OPER_PRD_MSIL1C_PDMC_20160601T202439_R069_V20160601T170312_20160601T171125_T14QND.zip
+    // S2A_MSIL1C_20170601T174911_N0205_R141_T12RWU_20170601T180009.zip
+    static final Pattern FILENAME_PATTERN0 =
             Pattern.compile("S2._(?:OPER_PRD_MSIL1C_PDMC_........T......_R..._V........T......_........T......|" +
                                     "MSIL1C_........T......_N...._R...)" +
+                                    "_(T.....)" +
+                                    "(?:|_........T......)" +
+                                    ".zip");
+    static final Pattern FILENAME_PATTERN =
+            Pattern.compile("(S2.)" +
+                                    "_(?:OPER_PRD_MSIL1C_PDMC_........T......|MSIL1C_........T......_N....)" +
+                                    "_(R...)" +
+                                    "(?:_V........T......_........T......|)" +
                                     "_(T.....)" +
                                     "(?:|_........T......)" +
                                     ".zip");
@@ -75,7 +84,7 @@ public class GranuleTilesInputFormat extends PatternBasedInputFormat {
         if (! matcher.matches()) {
             throw new IllegalArgumentException("file name does not match pattern " + FILENAME_PATTERN.pattern() + ": " + fileName);
         }
-        return matcher.group(1);
+        return matcher.group(3) + '_' + matcher.group(2) + '_' + matcher.group(1);
     }
 
     // multi-year variant
