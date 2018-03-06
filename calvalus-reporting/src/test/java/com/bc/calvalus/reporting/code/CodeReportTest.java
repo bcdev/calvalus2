@@ -217,7 +217,6 @@ public class CodeReportTest {
                                               "  \"processingCenter\": \"Calvalus\",\n" +
                                               "  \"configuredCpuCoresPerTask\": 2,\n" +
                                               "  \"cpuCoreHours\": 0.016489,\n" +
-                                              "  \"processorName\": \"None\",\n" +
                                               "  \"configuredRamPerTask\": 4.000000,\n" +
                                               "  \"ramHours\": 1.288120,\n" +
                                               "  \"processingWorkflow\": \"L2\",\n" +

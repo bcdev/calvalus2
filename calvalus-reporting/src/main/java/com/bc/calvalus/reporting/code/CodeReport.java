@@ -210,7 +210,7 @@ public class CodeReport {
         } else if ("GeoDB".equalsIgnoreCase(workflowType)) {
             return "Geo Indexing";
         } else {
-            return "None";
+            return null;
         }
     }
 
