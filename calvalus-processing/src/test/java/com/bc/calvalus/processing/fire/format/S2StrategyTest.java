@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.fire.format;
 
-import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
+import com.bc.calvalus.processing.fire.format.pixel.s2.S2JDAggregator;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
@@ -35,7 +35,7 @@ public class S2StrategyTest {
 
         BinningOp binningOp = new BinningOp();
         binningOp.setMaskExpr("true");
-        binningOp.setAggregatorConfigs(new JDAggregator.Config("JD", "CL", 2016, 2));
+        binningOp.setAggregatorConfigs(new S2JDAggregator.Config("JD", "CL", 2016, 2));
         binningOp.setSourceProducts(product1, product2, product3, product4);
         binningOp.setNumRows(1001878);
         binningOp.setSuperSampling(1);

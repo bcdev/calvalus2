@@ -13,7 +13,7 @@ import org.esa.snap.core.gpf.annotations.Parameter;
 
 import java.time.Year;
 
-public class JDAggregator extends AbstractAggregator {
+public class S2JDAggregator extends AbstractAggregator {
 
     public static final float WATER = 997;
     public static final float CLOUD = 998;
@@ -26,7 +26,7 @@ public class JDAggregator extends AbstractAggregator {
     private final int minDoy;
     private final int maxDoy;
 
-    public JDAggregator(String name, String[] spatialFeatureNames, String[] temporalFeatureNames, String[] outputFeatureNames, int[] doyBounds) {
+    public S2JDAggregator(String name, String[] spatialFeatureNames, String[] temporalFeatureNames, String[] outputFeatureNames, int[] doyBounds) {
         super(name, spatialFeatureNames, temporalFeatureNames, outputFeatureNames);
         this.minDoy = doyBounds[0];
         this.maxDoy = doyBounds[1];
@@ -172,7 +172,7 @@ public class JDAggregator extends AbstractAggregator {
             Config config = (Config) aggregatorConfig;
             int minDoy = Year.of(config.year).atMonth(config.month).atDay(1).getDayOfYear();
             int maxDoy = Year.of(config.year).atMonth(config.month).atEndOfMonth().getDayOfYear();
-            return new JDAggregator(NAME, new String[]{"JD", "CL"}, new String[]{"JD", "CL"}, getTargetVarNames(aggregatorConfig), new int[]{minDoy, maxDoy});
+            return new S2JDAggregator(NAME, new String[]{"JD", "CL"}, new String[]{"JD", "CL"}, getTargetVarNames(aggregatorConfig), new int[]{minDoy, maxDoy});
         }
 
         @Override

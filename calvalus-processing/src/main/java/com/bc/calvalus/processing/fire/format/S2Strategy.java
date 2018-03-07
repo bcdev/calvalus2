@@ -8,7 +8,7 @@ import com.bc.calvalus.processing.fire.format.grid.s2.S2GridInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
-import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
+import com.bc.calvalus.processing.fire.format.pixel.s2.S2JDAggregator;
 import com.bc.calvalus.processing.fire.format.pixel.s2.S2PixelFinaliseMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -167,7 +167,7 @@ public class S2Strategy implements SensorStrategy {
         binningConfig.setSuperSampling(1);
         binningConfig.setMaskExpr("true");
         binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
-        AggregatorConfig aggConfig = new JDAggregator.Config("JD", "CL", year, month);
+        AggregatorConfig aggConfig = new S2JDAggregator.Config("JD", "CL", year, month);
         binningConfig.setAggregatorConfigs(aggConfig);
         return binningConfig;
     }
