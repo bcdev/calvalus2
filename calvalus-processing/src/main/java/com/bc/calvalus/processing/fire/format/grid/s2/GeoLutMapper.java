@@ -101,10 +101,10 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
 
                 GeometryFactory factory = new GeometryFactory();
                 WKTReader wktReader = new WKTReader(factory);
-                topLat = -90 + (y0 + y * 0.25);
-                leftLon = -180 + (x0 + x * 0.25);
-                bottomLat = -90 + (y0 + (y + 1) * 0.25);
-                rightLon = -180 + (x0 + (x + 1) * 0.25);
+                topLat = getTopLat(y0, y);
+                leftLon = getLeftLon(x0, x);
+                bottomLat = getBottomLat(y0, y);
+                rightLon = getRightLon(x0, x);
                 Geometry geometry;
                 try {
                     String wellKnownText = String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))", leftLon, topLat, rightLon, topLat, rightLon, bottomLat, leftLon, bottomLat, leftLon, topLat);
@@ -122,8 +122,8 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                     for (pp.y = rectangle.y; pp.y < rectangle.y + rectangle.height; pp.y++) {
                         for (pp.x = rectangle.x; pp.x < rectangle.x + rectangle.width; pp.x++) {
                             refGeoCoding.getGeoPos(pp, gp);
-                            boolean isInLatRange = gp.lat >= -90 + (y0 + y * 0.25) && gp.lat <= -90 + (y0 + (y + 1) * 0.25);
-                            boolean isInLonRange = gp.lon >= -180 + (x0 + x * 0.25) && gp.lon <= -180 + (x0 + (x + 1) * 0.25);
+                            boolean isInLatRange = gp.lat >= getBottomLat(y0, y) && gp.lat <= getTopLat(y0, y);
+                            boolean isInLonRange = gp.lon >= getLeftLon(x0, x) && gp.lon <= getRightLon(x0, x);
                             if (isInLatRange && isInLonRange) {
                                 fos.write(x + " " + y + " " + (int) pp.x + " " + (int) pp.y + "\n");
                                 hasFoundPixel = true;
@@ -136,6 +136,22 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         }
 
         return hasFoundPixel;
+    }
+
+    static double getBottomLat(int y0, int y) {
+        return getTopLat(y0, y) - 0.25;
+    }
+
+    static double getTopLat(int y0, int y) {
+        return y0 - 90 + (2 - y * 0.25);
+    }
+
+    static double getLeftLon(int x0, int x) {
+        return x0 - 180 + x * 0.25;
+    }
+
+    static double getRightLon(int x0, int x) {
+        return getLeftLon(x0, x) + 0.25;
     }
 
     private static String getUtmTile(File localFile) {

@@ -65,7 +65,7 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
             PositionAndValue neighbourValue = findNeighbourValue(sourceJdArray, lcArray, pixelIndex, width, true, true);
             if (Float.isNaN(neighbourValue.value)) {
                 // case if the whole tile has no BA image. At this point we know that the pixel cannot have burned.
-                int currentSen2CorValue = -2;
+                int currentSen2CorValue = -1;
                 String[] tiles = getTilesForGeoPos(geoPos);
                 for (String tile : tiles) {
                     Product[] sen2CorProducts;
