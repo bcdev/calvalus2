@@ -63,8 +63,4 @@ public class S2GridReducer extends AbstractGridReducer {
         return (180 - y) * 4;
     }
 
-//    @Override
-//    protected Array transpose(Array values, int dim1, int dim2) {
-//        return values.transpose(dim1, dim2);
-//    }
 }

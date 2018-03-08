@@ -14,12 +14,10 @@ import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.image.ResolutionLevel;
-import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.jdom2.Document;
@@ -28,18 +26,12 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
-import javax.media.jai.PlanarImage;
-import java.awt.*;
-import java.awt.image.DataBuffer;
-import java.awt.image.RenderedImage;
-import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
@@ -58,12 +50,20 @@ public abstract class PixelFinaliseMapper extends Mapper {
     public static final String KEY_AREA_STRING = "AREA_STRING";
     public static final String KEY_SENSOR_ID = "SENSOR_ID";
 
-    private static final int JD = 0;
-    private static final int CL = 1;
-    private static final int LC = 2;
+    public static final int JD = 0;
+    public static final int CL = 1;
+    public static final int LC = 2;
+    public static final int SE = 3;
 
-    private static final int[] BAND_TYPES = new int[]{JD, CL, LC};
+    public static final int[] BAND_TYPES = new int[]{JD, CL, LC};
 
+    protected NanHandler nanHandler;
+
+    private String month;
+
+    public PixelFinaliseMapper() {
+        nanHandler = new DefaultNanHandler();
+    }
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -84,7 +84,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         LOG.info("Finalising file '" + inputSplitLocation + "'");
 
         String year = context.getConfiguration().get("calvalus.year");
-        String month = context.getConfiguration().get("calvalus.month");
+        month = context.getConfiguration().get("calvalus.month");
 
         String baseFilename = createBaseFilename(year, month, version, areaString);
 
@@ -106,10 +106,11 @@ public abstract class PixelFinaliseMapper extends Mapper {
         lcProduct = collocateWithSource(lcProduct, source);
 
         Product resultJD = remap(source, baseFilename, sensorId, lcProduct, JD);
-        Product resultCL = remap(source, baseFilename, sensorId, lcProduct, CL);
-        Product resultLC = remap(source, baseFilename, sensorId, lcProduct, LC);
+//        Product resultCL = remap(source, baseFilename, sensorId, lcProduct, CL);
+//        Product resultLC = remap(source, baseFilename, sensorId, lcProduct, LC);
 
-        Product[] results = new Product[]{resultJD, resultCL, resultLC};
+//        Product[] results = new Product[]{resultJD, resultCL, resultLC};
+        Product[] results = new Product[]{resultJD};
 
         FileSystem fs = outputPaths[0].getFileSystem(context.getConfiguration());
         for (int i = 0; i < results.length; i++) {
@@ -159,15 +160,15 @@ public abstract class PixelFinaliseMapper extends Mapper {
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand, nanHandler, month));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
-                clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler()));
+                clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler(), nanHandler, month));
                 break;
             case LC:
                 Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
-                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
+                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand, nanHandler, month));
                 break;
             default:
                 throw new IllegalArgumentException("Programming error: invalid value '" + band + "' for band.");
@@ -222,245 +223,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         }
     }
 
-    private static class JdImage extends SingleBandedOpImage {
-
-        private final Band sourceJdBand;
-        private final Band lcBand;
-
-        JdImage(Band sourceJdBand, Band lcBand) {
-            super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
-            this.sourceJdBand = sourceJdBand;
-            this.lcBand = lcBand;
-        }
-
-        @Override
-        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
-                CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of JD image.");
-            }
-            float[] sourceJdArray = new float[destRect.width * destRect.height];
-            int[] lcArray = new int[destRect.width * destRect.height];
-            try {
-                lcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcArray);
-                sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-            int pixelIndex = 0;
-            PixelPos pixelPos = new PixelPos();
-            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                    pixelPos.x = x;
-                    pixelPos.y = y;
-
-                    float sourceJd = sourceJdArray[pixelIndex];
-                    if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                        if (sourceJd > 0) {
-                            sourceJd = 0;
-                        }
-                    }
-
-                    if (Float.isNaN(sourceJd)) {
-                        sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
-                    }
-
-                    int targetJd;
-                    if (sourceJd < 900) {
-                        targetJd = (int) sourceJd;
-                    } else {
-                        targetJd = -1;
-                    }
-
-                    dest.setSample(x, y, 0, targetJd);
-
-                    pixelIndex++;
-                }
-            }
-        }
-    }
-
-    private static class ClImage extends SingleBandedOpImage {
-
-        private final Band sourceClBand;
-        private final Band sourceJdBand;
-        private final Band lcBand;
-        private final ClScaler clScaler;
-
-        private ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand, ClScaler clScaler) {
-            super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
-            this.sourceClBand = sourceClBand;
-            this.sourceJdBand = sourceJdBand;
-            this.lcBand = lcBand;
-            this.clScaler = clScaler;
-        }
-
-        @Override
-        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
-                CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of CL image.");
-            }
-            float[] sourceClArray = new float[destRect.width * destRect.height];
-            float[] sourceJdArray = new float[destRect.width * destRect.height];
-            int[] lcArray = new int[destRect.width * destRect.height];
-            try {
-                lcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcArray);
-                sourceClBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceClArray));
-                sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-            int pixelIndex = 0;
-            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-
-                    int targetCl;
-                    float sourceCl = sourceClArray[pixelIndex];
-                    sourceCl = clScaler.scaleCl(sourceCl);
-                    if (sourceCl > 100) {
-                        sourceCl = 100.0F;
-                    }
-                    float jdValue = sourceJdArray[pixelIndex];
-
-                    if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                        jdValue = 0;
-                    }
-
-                    if (Float.isNaN(jdValue)) {
-                        NeighbourResult neighbourResult = findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
-                        if (neighbourResult.newPixelIndex != pixelIndex) {
-                            targetCl = (int) sourceClArray[neighbourResult.newPixelIndex];
-                        } else {
-                            targetCl = (int) neighbourResult.neighbourValue;
-                        }
-                    } else {
-                        if (jdValue >= 0 && jdValue < 900) {
-                            targetCl = (int) (sourceCl);
-                        } else {
-                            targetCl = 0;
-                        }
-                    }
-
-                    dest.setSample(x, y, 0, targetCl);
-                    pixelIndex++;
-                }
-            }
-        }
-    }
-
-    static class LcImage extends SingleBandedOpImage {
-
-        private final Band sourceLcBand;
-        private final Band sourceJdBand;
-
-        private LcImage(Band sourceLcBand, Band sourceJdBand) {
-            super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
-            this.sourceLcBand = sourceLcBand;
-            this.sourceJdBand = sourceJdBand;
-        }
-
-        @Override
-        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
-                CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of LC image.");
-            }
-            float[] jdArray = new float[destRect.width * destRect.height];
-            try {
-                sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(jdArray));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-
-            int[] lcData = new int[destRect.width * destRect.height];
-            try {
-                sourceLcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-            int pixelIndex = 0;
-            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                    float jdValue = jdArray[pixelIndex];
-                    int lcValue = lcData[pixelIndex];
-
-                    if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
-                        if (jdValue > 0) {
-                            jdValue = 0;
-                        }
-                    }
-
-                    if (Float.isNaN(jdValue)) {
-                        NeighbourResult neighbourResult = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, true);
-                        lcValue = lcData[neighbourResult.newPixelIndex];
-                        jdValue = neighbourResult.neighbourValue;
-                    }
-
-                    if (jdValue <= 0 || jdValue >= 997) {
-                        lcValue = 0;
-                    }
-                    dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
-                    pixelIndex++;
-                }
-            }
-        }
-    }
-
-    private static class SensorImage extends SingleBandedOpImage implements RenderedImage {
-        private final Band sourceJdBand;
-        private final Band sourceLcBand;
-        private final int sensorId;
-
-        SensorImage(Band sourceJdBand, Band sourceLcBand, String sensorId) {
-            super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
-            this.sourceJdBand = sourceJdBand;
-            this.sourceLcBand = sourceLcBand;
-            this.sensorId = Integer.parseInt(sensorId);
-        }
-
-        @Override
-        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
-                CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of sensor image.");
-            }
-            float[] jdData = new float[destRect.width * destRect.height];
-            try {
-                sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(jdData));
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-
-            int[] lcData = new int[destRect.width * destRect.height];
-            try {
-                sourceLcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-
-            int pixelIndex = 0;
-            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                    float jdValue = jdData[pixelIndex];
-
-                    if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
-                        if (jdValue > 0) {
-                            jdValue = 0;
-                        }
-                    }
-
-                    if (Float.isNaN(jdValue)) {
-                        jdValue = PixelFinaliseMapper.findNeighbourValue(jdData, lcData, pixelIndex, destRect.width, true).neighbourValue;
-                    }
-
-                    if (jdValue > 0 && jdValue < 900) {
-                        dest.setSample(x, y, 0, sensorId);
-                    }
-
-                    pixelIndex++;
-                }
-            }
-        }
-    }
-
-    static NeighbourResult findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD) {
+    protected static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD, boolean returnNaN) {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
@@ -478,7 +241,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     }
                     float neighbourValue = jdData[newPixelIndex];
                     if (!Float.isNaN(neighbourValue) && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
-                        return new NeighbourResult(newPixelIndex, neighbourValue);
+                        return new PositionAndValue(newPixelIndex, neighbourValue);
                     }
                 }
             }
@@ -486,22 +249,26 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         // all neighbours are NaN or not burnable
 
-        if (isJD) {
-            return new NeighbourResult(pixelIndex, -2);
+        if (returnNaN) {
+            return new PositionAndValue(pixelIndex, Float.NaN);
         } else {
-            return new NeighbourResult(pixelIndex, 0);
+            if (isJD) {
+                return new PositionAndValue(pixelIndex, -2);
+            } else {
+                return new PositionAndValue(pixelIndex, 0);
+            }
         }
     }
 
-    static class NeighbourResult {
+    public static class PositionAndValue {
 
-        NeighbourResult(int newPixelIndex, float neighbourValue) {
+        public PositionAndValue(int newPixelIndex, float value) {
             this.newPixelIndex = newPixelIndex;
-            this.neighbourValue = neighbourValue;
+            this.value = value;
         }
 
-        int newPixelIndex;
-        float neighbourValue;
+        public int newPixelIndex;
+        public float value;
 
     }
 
@@ -946,4 +713,16 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
+    protected static interface NanHandler {
+
+        PositionAndValue handleNaN(float[] sourceJdArray, int[] lcArray, int pixelIndex, int width, int imageType, GeoPos geoPos, String month);
+    }
+
+    private static class DefaultNanHandler implements NanHandler {
+
+        @Override
+        public PositionAndValue handleNaN(float[] sourceJdArray, int[] lcArray, int pixelIndex, int width, int imageType, GeoPos geoPos, String month) {
+            return findNeighbourValue(sourceJdArray, lcArray, pixelIndex, width, true, false);
+        }
+    }
 }
