@@ -148,7 +148,13 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
             List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
             FileStatus[] fileStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
             for (FileStatus fileStatus : fileStatuses) {
-                File file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), conf);
+                File localFile = new File(".", fileStatus.getPath().getName());
+                File file;
+                if (!localFile.exists()) {
+                    file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), conf);
+                } else {
+                    file = localFile;
+                }
                 products.add(ProductIO.readProduct(file));
             }
             return products.toArray(new Product[0]);
