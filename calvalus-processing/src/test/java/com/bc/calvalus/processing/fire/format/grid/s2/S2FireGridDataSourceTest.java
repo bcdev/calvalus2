@@ -8,6 +8,13 @@ import static org.junit.Assert.assertEquals;
 public class S2FireGridDataSourceTest {
 
     @Test
+    public void name() throws Exception {
+        // target grid cell: 912 / 408
+//        new S2FireGridDataSource("x228y78");
+
+    }
+
+    @Test
     public void testGetProductJd() throws Exception {
         assertEquals(50, S2FireGridDataSource.getProductJD(new Product("BA-T31NBJ-20160219T101925", "miau")));
     }

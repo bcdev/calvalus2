@@ -143,7 +143,7 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
     }
 
     static double getTopLat(int y0, int y) {
-        return y0 - 90 + (2 - y * 0.25);
+        return -90 + y0 - (y * 0.25);
     }
 
     static double getLeftLon(int x0, int x) {

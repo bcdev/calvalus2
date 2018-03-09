@@ -21,7 +21,7 @@ public class GeoLutMapperTest {
                         GeoLutMapper.extract(
                                 p.toFile(),
                                 utmTile,
-                                "x218y72");
+                                "x228y78");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -30,11 +30,11 @@ public class GeoLutMapperTest {
 
     @Test
     public void testGetLat() throws Exception {
-        assertEquals(-16.0, GeoLutMapper.getTopLat(72, 0));
-        assertEquals(-16.25, GeoLutMapper.getBottomLat(72, 0));
+        assertEquals(-18.0, GeoLutMapper.getTopLat(72, 0));
+        assertEquals(-18.25, GeoLutMapper.getBottomLat(72, 0));
 
-        assertEquals(-17.75, GeoLutMapper.getTopLat(72, 7));
-        assertEquals(-18.0, GeoLutMapper.getBottomLat(72, 7));
+        assertEquals(-19.75, GeoLutMapper.getTopLat(72, 7));
+        assertEquals(-20.0, GeoLutMapper.getBottomLat(72, 7));
     }
 
     @Test
