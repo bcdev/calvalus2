@@ -1,0 +1,25 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css"/>
+
+    <g:FlowPanel styleName="{style.outputParametersPanel}">
+
+        <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+            <g:InlineLabel styleName="{style.panelTitleText}">Quicklook</g:InlineLabel>
+        </g:HTMLPanel>
+
+        <g:CheckBox ui:field="enableQuicklook"
+                    text="Enable quicklook after successful production"
+                    checked="false"
+                    styleName="{style.checkBox} {style.explanatoryLabel}"
+        />
+
+        <g:HTML>
+            <br/>
+        </g:HTML>
+
+    </g:FlowPanel>
+
+</ui:UiBinder>

@@ -451,6 +451,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             if (requestSizeLimit != null) {
                 productionRequest.setParameter(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, (String) requestSizeLimit);
             }
+
+            // uc1: multi-band (RGB)
+            // uc2: single-band with color table
+            boolean isEnableQuicklook = productionRequest.isEnableQuicklook();
+            if( isEnableQuicklook ) {
+                // uc1: multi-band (RGB)
+                productionRequest.setParameter("quicklooks", "true");
+                String ql_params = "<parameters>\n" +
+                        "  <quicklooks>\n" +
+                        "    <config>\n" +
+                        "        <RGBAExpressions>ndbi,ndvi,ndwi</RGBAExpressions>\n" +
+                        "        <imageType>png</imageType>\n" +
+                        "    </config>\n" +
+                        "  </quicklooks>\n" +
+                        "</parameters>";
+                productionRequest.setParameter("calvalus.ql.parameters", ql_params);
+            }
             ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(productionRequest, hook);
             return convert(productionResponse);
         } catch (ProductionException e) {

@@ -44,6 +44,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     private ProductsFromCatalogueForm productsFromCatalogueForm;
     private L2ConfigForm l2ConfigForm;
     private OutputParametersForm outputParametersForm;
+    private QuicklookParametersForm quicklookParametersForm;
     private Widget widget;
 
     public OrderL2ProductionView(PortalContext portalContext) {
@@ -77,6 +78,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         }
 
         outputParametersForm = new OutputParametersForm(portalContext);
+        quicklookParametersForm = new QuicklookParametersForm(portalContext);
         l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged();
 
@@ -89,6 +91,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         }
         panel.add(l2ConfigForm);
         panel.add(outputParametersForm);
+        panel.add(quicklookParametersForm);
         Anchor l2Help = new Anchor("Show Help");
         l2Help.getElement().getStyle().setProperty("textDecoration", "none");
         l2Help.addStyleName("anchor");
@@ -168,6 +171,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         }
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
+        parameters.putAll(quicklookParametersForm.getValueMap());
         return parameters;
     }
 
