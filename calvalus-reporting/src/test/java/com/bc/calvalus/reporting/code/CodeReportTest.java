@@ -51,7 +51,7 @@ public class CodeReportTest {
         assertThat(codeReport.toJson(), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
-                                                       "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
+                                                       "  \"jobSubmissionTime\": \"2018-01-01T00:00:00.000Z\",\n" +
                                                        "  \"userName\": \"user\",\n" +
                                                        "  \"queueName\": \"queue\",\n" +
                                                        "  \"inProducts\": \"/path/to/output\",\n" +
@@ -120,7 +120,7 @@ public class CodeReportTest {
         assertThat(codeReport.toJson(), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
-                                                       "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
+                                                       "  \"jobSubmissionTime\": \"2018-01-01T00:00:00.000Z\",\n" +
                                                        "  \"userName\": \"user\",\n" +
                                                        "  \"queueName\": \"queue\",\n" +
                                                        "  \"inProducts\": \"/path/to/output\",\n" +
@@ -189,7 +189,7 @@ public class CodeReportTest {
         assertThat(codeReport.toJson(), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
-                                                       "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
+                                                       "  \"jobSubmissionTime\": \"2018-01-01T00:00:00.000Z\",\n" +
                                                        "  \"userName\": \"user\",\n" +
                                                        "  \"queueName\": \"queue\",\n" +
                                                        "  \"inProducts\": \"/path/to/output\",\n" +
@@ -258,7 +258,7 @@ public class CodeReportTest {
         assertThat(codeReport.toJson(), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
-                                                       "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
+                                                       "  \"jobSubmissionTime\": \"2018-01-01T00:00:00.000Z\",\n" +
                                                        "  \"userName\": \"user\",\n" +
                                                        "  \"queueName\": \"queue\",\n" +
                                                        "  \"inProducts\": \"/path/to/output\",\n" +
@@ -327,7 +327,7 @@ public class CodeReportTest {
         assertThat(codeReport.toJson(), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
-                                                       "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
+                                                       "  \"jobSubmissionTime\": \"2018-01-01T00:00:00.000Z\",\n" +
                                                        "  \"userName\": \"user\",\n" +
                                                        "  \"queueName\": \"queue\",\n" +
                                                        "  \"inProducts\": \"/path/to/output\",\n" +

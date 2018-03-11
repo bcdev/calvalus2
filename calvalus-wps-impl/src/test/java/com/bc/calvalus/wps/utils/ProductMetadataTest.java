@@ -71,14 +71,14 @@ public class ProductMetadataTest {
                     .build();
 
         Map<String, Object> contextMap = productMetadata.getContextMap();
-        assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T00:00:00.000Z"));
         assertThat(contextMap.get("productOutputDir"), equalTo("user/20160317_10000000"));
         assertThat(contextMap.get("productionName"), equalTo("TEP_Subset_test"));
         assertThat(contextMap.get("processName"), equalTo("Subset"));
         assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
         assertThat(contextMap.get("regionWkt"), equalTo("-10 100 0 100 0 110 -10 110 -10 100"));
-        assertThat(contextMap.get("startDate"), equalTo("2000-01-01T01:00:00.000+01:00"));
-        assertThat(contextMap.get("stopDate"), equalTo("2020-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("startDate"), equalTo("2000-01-01T00:00:00.000Z"));
+        assertThat(contextMap.get("stopDate"), equalTo("2020-01-01T00:00:00.000Z"));
         assertThat(contextMap.get("collectionUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000"));
         assertThat(contextMap.get("processorVersion"), equalTo("1.0"));
         assertThat(contextMap.get("productionType"), equalTo("2"));
@@ -121,14 +121,14 @@ public class ProductMetadataTest {
                     .build();
 
         Map<String, Object> contextMap = productMetadata.getContextMap();
-        assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T00:00:00.000Z"));
         assertThat(contextMap.get("productOutputDir"), equalTo("user/20160317_10000000"));
         assertThat(contextMap.get("productionName"), equalTo("http%3A%2F%2Fcatalog.terradue.com%2Furban-bc%2Fsearch%3Fformat%3Djson%26uid%3Dtep_inverted_timescan_Dakar%2Ftep_user%2F20170427185240_L3_130ec6a9dc24be"));
         assertThat(contextMap.get("processName"), equalTo("Subset"));
         assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
         assertThat(contextMap.get("regionWkt"), equalTo("-10 100 0 100 0 110 -10 110 -10 100"));
-        assertThat(contextMap.get("startDate"), equalTo("2000-01-01T01:00:00.000+01:00"));
-        assertThat(contextMap.get("stopDate"), equalTo("2020-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("startDate"), equalTo("2000-01-01T00:00:00.000Z"));
+        assertThat(contextMap.get("stopDate"), equalTo("2020-01-01T00:00:00.000Z"));
         assertThat(contextMap.get("collectionUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000"));
         assertThat(contextMap.get("processorVersion"), equalTo("1.0"));
         assertThat(contextMap.get("productionType"), equalTo("2"));

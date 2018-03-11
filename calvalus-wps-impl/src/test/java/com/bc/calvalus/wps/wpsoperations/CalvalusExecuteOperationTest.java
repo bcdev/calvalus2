@@ -137,7 +137,7 @@ public class CalvalusExecuteOperationTest {
 
         assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been processed successfully."));
         assertThat(executeResponse.getProcess().getIdentifier().getValue(), equalTo("process1"));
-        assertThat(executeResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T01:00:00.000+01:00"));
+        assertThat(executeResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T00:00:00.000Z"));
         assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(2));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(), equalTo("resultUrl1"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(), equalTo("resultUrl2"));
