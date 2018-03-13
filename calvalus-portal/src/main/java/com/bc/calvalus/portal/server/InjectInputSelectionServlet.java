@@ -5,15 +5,20 @@ import static com.bc.calvalus.portal.server.BCAuthenticationFilter.PAYLOAD_PREFI
 import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.google.gson.Gson;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.IOException;
 
 /**
  * @author hans
  */
 public class InjectInputSelectionServlet extends HttpServlet {
+
+    private static final String FORWARD_URL = "/close-window.jsp";
 
     @Override
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
@@ -32,6 +37,13 @@ public class InjectInputSelectionServlet extends HttpServlet {
         }
         DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(payload);
         getServletContext().setAttribute("catalogueSearch", dtoInputSelection);
+        RequestDispatcher rd = getServletContext().getRequestDispatcher(FORWARD_URL);
+        try {
+            rd.forward(servletRequest, servletResponse);
+        } catch (ServletException | IOException exception) {
+            System.err.println("Unable to forward to " + FORWARD_URL);
+            exception.printStackTrace();
+        }
     }
 
     private DtoInputSelection getDtoInputSelectionFromJson(String payload) {
