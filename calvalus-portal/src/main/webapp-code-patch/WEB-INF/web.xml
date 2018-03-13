@@ -120,7 +120,7 @@
 
     <filter>
         <filter-name>CAS Authentication Filter</filter-name>
-        <filter-class>org.jasig.cas.client.authentication.AuthenticationFilter</filter-class>
+        <filter-class>com.bc.calvalus.portal.server.BCAuthenticationFilter</filter-class>
         <init-param>
             <param-name>casServerLoginUrl</param-name>
             <param-value>https://sso.eoc.dlr.de/cas-codede/login</param-value>

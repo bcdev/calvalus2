@@ -1,15 +1,14 @@
 package com.bc.calvalus.portal.server;
 
+import static com.bc.calvalus.portal.server.BCAuthenticationFilter.PAYLOAD_PREFIX;
+
 import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.google.gson.Gson;
-import org.apache.commons.io.IOUtils;
 
-import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.StringWriter;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author hans
@@ -17,15 +16,26 @@ import java.io.StringWriter;
 public class InjectInputSelectionServlet extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
-                throws IOException {
-        StringWriter writer = new StringWriter();
-        try (ServletInputStream inputStream = servletRequest.getInputStream()) {
-            IOUtils.copy(inputStream, writer);
-        }
-        String inputSelectionString = writer.toString();
-        Gson gson = new Gson();
-        DtoInputSelection dtoInputSelection = gson.fromJson(inputSelectionString, DtoInputSelection.class);
+    protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+        String requestPayload = servletRequest.getParameter("request");
+        DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(requestPayload);
         getServletContext().setAttribute("catalogueSearch", dtoInputSelection);
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
+        HttpSession session = servletRequest.getSession();
+        String payload = "";
+        if (session != null) {
+            String sessionId = session.getId();
+            payload = (String) session.getAttribute(PAYLOAD_PREFIX + sessionId);
+        }
+        DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(payload);
+        getServletContext().setAttribute("catalogueSearch", dtoInputSelection);
+    }
+
+    private DtoInputSelection getDtoInputSelectionFromJson(String payload) {
+        Gson gson = new Gson();
+        return gson.fromJson(payload, DtoInputSelection.class);
     }
 }
