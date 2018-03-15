@@ -48,9 +48,7 @@ class JdImage extends SingleBandedOpImage {
 
                 float sourceJd = sourceJdArray[pixelIndex];
                 if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                    if (sourceJd > 0) {
-                        sourceJd = 0;
-                    }
+                    sourceJd = -2;
                 }
 
                 if (Float.isNaN(sourceJd)) {
