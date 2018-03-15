@@ -15,23 +15,17 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.text.NumberFormat;
 
-import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.SE;
-
 class SensorImage extends SingleBandedOpImage implements RenderedImage {
 
     private final Band sourceJdBand;
     private final Band sourceLcBand;
     private final int sensorId;
-    private final String month;
-    private final PixelFinaliseMapper.NanHandler nanHandler;
 
-    SensorImage(Band sourceJdBand, Band sourceLcBand, String sensorId, String month, PixelFinaliseMapper.NanHandler nanHandler) {
+    SensorImage(Band sourceJdBand, Band sourceLcBand, String sensorId) {
         super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceJdBand = sourceJdBand;
         this.sourceLcBand = sourceLcBand;
         this.sensorId = Integer.parseInt(sensorId);
-        this.month = month;
-        this.nanHandler = nanHandler;
     }
 
     @Override
@@ -65,7 +59,7 @@ class SensorImage extends SingleBandedOpImage implements RenderedImage {
                 }
 
                 if (Float.isNaN(jdValue)) {
-                    jdValue = nanHandler.handleNaN(jdData, lcData, pixelIndex, destRect.width, SE, null, month).value;
+                    jdValue = PixelFinaliseMapper.findNeighbourValue(jdData, lcData, pixelIndex, destRect.width, false).value;
                 }
 
                 if (jdValue > 0 && jdValue < 900) {

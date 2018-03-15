@@ -15,6 +15,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
@@ -55,15 +56,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
     public static final int LC = 2;
     public static final int SE = 3;
 
-    public static final int[] BAND_TYPES = new int[]{JD, CL, LC};
-
-    protected NanHandler nanHandler;
-
-    private String month;
-
-    public PixelFinaliseMapper() {
-        nanHandler = new DefaultNanHandler();
-    }
+    private static final int[] BAND_TYPES = new int[]{JD, CL, LC};
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -84,7 +77,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         LOG.info("Finalising file '" + inputSplitLocation + "'");
 
         String year = context.getConfiguration().get("calvalus.year");
-        month = context.getConfiguration().get("calvalus.month");
+        String month = context.getConfiguration().get("calvalus.month");
 
         String baseFilename = createBaseFilename(year, month, version, areaString);
 
@@ -160,15 +153,15 @@ public abstract class PixelFinaliseMapper extends Mapper {
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand, nanHandler, month));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
-                clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler(), nanHandler, month));
+                clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler()));
                 break;
             case LC:
                 Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
-                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand, nanHandler, month));
+                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
                 break;
             default:
                 throw new IllegalArgumentException("Programming error: invalid value '" + band + "' for band.");
@@ -223,7 +216,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         }
     }
 
-    protected static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD, boolean returnNaN) {
+    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD) {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
@@ -249,25 +242,21 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         // all neighbours are NaN or not burnable
 
-        if (returnNaN) {
-            return new PositionAndValue(pixelIndex, Float.NaN);
+        if (isJD) {
+            return new PositionAndValue(pixelIndex, -2);
         } else {
-            if (isJD) {
-                return new PositionAndValue(pixelIndex, -2);
-            } else {
-                return new PositionAndValue(pixelIndex, 0);
-            }
+            return new PositionAndValue(pixelIndex, 0);
         }
     }
 
-    public static class PositionAndValue {
+    static class PositionAndValue {
 
-        public PositionAndValue(int newPixelIndex, float value) {
+        PositionAndValue(int newPixelIndex, float value) {
             this.newPixelIndex = newPixelIndex;
             this.value = value;
         }
 
-        public int newPixelIndex;
+        int newPixelIndex;
         public float value;
 
     }
@@ -713,16 +702,11 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
-    protected static interface NanHandler {
+    public interface NanHandler {
 
-        PositionAndValue handleNaN(float[] sourceJdArray, int[] lcArray, int pixelIndex, int width, int imageType, GeoPos geoPos, String month);
+        PositionAndValue handleNaN(float[] sourceJdArray, int[] lcArray, int pixelIndex, int width, int imageType, GeoPos geoPos, PixelPos pixelPos, String month);
+
+        void resetCount();
     }
 
-    private static class DefaultNanHandler implements NanHandler {
-
-        @Override
-        public PositionAndValue handleNaN(float[] sourceJdArray, int[] lcArray, int pixelIndex, int width, int imageType, GeoPos geoPos, String month) {
-            return findNeighbourValue(sourceJdArray, lcArray, pixelIndex, width, true, false);
-        }
-    }
 }

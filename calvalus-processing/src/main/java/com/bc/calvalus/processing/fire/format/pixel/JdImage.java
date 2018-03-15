@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.fire.format.pixel;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.image.ResolutionLevel;
@@ -16,21 +15,15 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.text.NumberFormat;
 
-import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.JD;
-
 class JdImage extends SingleBandedOpImage {
 
     private final Band sourceJdBand;
     private final Band lcBand;
-    private final PixelFinaliseMapper.NanHandler nanHandler;
-    private final String month;
 
-    JdImage(Band sourceJdBand, Band lcBand, PixelFinaliseMapper.NanHandler nanHandler, String month) {
+    JdImage(Band sourceJdBand, Band lcBand) {
         super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceJdBand = sourceJdBand;
         this.lcBand = lcBand;
-        this.nanHandler = nanHandler;
-        this.month = month;
     }
 
     @Override
@@ -61,8 +54,7 @@ class JdImage extends SingleBandedOpImage {
                 }
 
                 if (Float.isNaN(sourceJd)) {
-                    GeoPos geoPos = sourceJdBand.getProduct().getSceneGeoCoding().getGeoPos(pixelPos, null);
-                    sourceJd = nanHandler.handleNaN(sourceJdArray, lcArray, pixelIndex, destRect.width, JD, geoPos, month).value;
+                    sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, width, true).value;
                 }
 
                 int targetJd;

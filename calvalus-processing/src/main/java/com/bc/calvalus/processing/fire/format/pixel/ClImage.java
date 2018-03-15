@@ -14,28 +14,19 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.text.NumberFormat;
 
-import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.CL;
-
-/**
- * Created by Thomas on 07.03.2018.
- */
 class ClImage extends SingleBandedOpImage {
 
     private final Band sourceClBand;
     private final Band sourceJdBand;
     private final Band lcBand;
     private final PixelFinaliseMapper.ClScaler clScaler;
-    private final PixelFinaliseMapper.NanHandler nanHandler;
-    private final String month;
 
-    ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand, PixelFinaliseMapper.ClScaler clScaler, PixelFinaliseMapper.NanHandler nanHandler, String month) {
+    ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand, PixelFinaliseMapper.ClScaler clScaler) {
         super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceClBand = sourceClBand;
         this.sourceJdBand = sourceJdBand;
         this.lcBand = lcBand;
         this.clScaler = clScaler;
-        this.nanHandler = nanHandler;
-        this.month = month;
     }
 
     @Override
@@ -70,7 +61,7 @@ class ClImage extends SingleBandedOpImage {
                 }
 
                 if (Float.isNaN(jdValue)) {
-                    PixelFinaliseMapper.PositionAndValue positionAndValue = nanHandler.handleNaN(sourceJdArray, lcArray, pixelIndex, destRect.width, CL, null, month);
+                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
                     if (positionAndValue.newPixelIndex != pixelIndex) {
                         targetCl = (int) sourceClArray[positionAndValue.newPixelIndex];
                     } else {

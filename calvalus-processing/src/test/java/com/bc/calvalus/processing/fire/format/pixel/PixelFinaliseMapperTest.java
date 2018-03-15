@@ -67,7 +67,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false);
+        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
 
         int neighbourValue = (int) positionAndValue.value;
         int newPixelIndex = positionAndValue.newPixelIndex;
@@ -88,7 +88,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(10, neighbourValue);
     }
 
@@ -107,7 +107,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(10, neighbourValue);
     }
 
@@ -123,7 +123,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(10, neighbourValue);
     }
 
@@ -142,7 +142,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(19712, 25344, 256, 256);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(-2, neighbourValue);
     }
 
@@ -160,7 +160,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(10, neighbourValue);
     }
 
@@ -176,7 +176,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(23, neighbourValue);
     }
 
@@ -197,7 +197,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
         assertEquals(24, neighbourValue);
     }
 
@@ -218,7 +218,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(10, 10);
-        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, false);
+        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
 
         int neighbourValue = (int) positionAndValue.value;
         int newPixelIndex = positionAndValue.newPixelIndex;
@@ -243,7 +243,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(10, 10);
-        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false, false);
+        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
 
         int neighbourValue = (int) positionAndValue.value;
         int newPixelIndex = positionAndValue.newPixelIndex;

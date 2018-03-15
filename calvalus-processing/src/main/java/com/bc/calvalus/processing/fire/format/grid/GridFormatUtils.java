@@ -42,9 +42,9 @@ public class GridFormatUtils {
         int tileX = Integer.parseInt(tile.split("y")[0].substring(1));
         int tileY = Integer.parseInt(tile.split("y")[1]);
 
-        double upperLat = tileY - 90 + (y + 1) * 0.25;
+        double upperLat = tileY - 90 + (8 - y) * 0.25;
         double leftLon = -180 + tileX + x * 0.25;
-        double lowerLat = tileY - 90 + y * 0.25;
+        double lowerLat = upperLat - 0.25;
         double rightLon = -180 + tileX + (x + 1) * 0.25;
 
         GeoPos UL = new GeoPos(upperLat, leftLon);

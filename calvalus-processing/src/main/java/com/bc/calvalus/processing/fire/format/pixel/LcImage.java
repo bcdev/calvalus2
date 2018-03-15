@@ -14,21 +14,15 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.text.NumberFormat;
 
-import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.LC;
-
 class LcImage extends SingleBandedOpImage {
 
     private final Band sourceLcBand;
     private final Band sourceJdBand;
-    private final PixelFinaliseMapper.NanHandler nanHandler;
-    private final String month;
 
-    LcImage(Band sourceLcBand, Band sourceJdBand, PixelFinaliseMapper.NanHandler nanHandler, String month) {
+    LcImage(Band sourceLcBand, Band sourceJdBand) {
         super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceLcBand = sourceLcBand;
         this.sourceJdBand = sourceJdBand;
-        this.nanHandler = nanHandler;
-        this.month = month;
     }
 
     @Override
@@ -62,7 +56,7 @@ class LcImage extends SingleBandedOpImage {
                 }
 
                 if (Float.isNaN(jdValue)) {
-                    PixelFinaliseMapper.PositionAndValue positionAndValue = nanHandler.handleNaN(jdArray, lcData, pixelIndex, destRect.width, LC, null, month);
+                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false);
                     lcValue = lcData[positionAndValue.newPixelIndex];
                     jdValue = positionAndValue.value;
                 }

@@ -23,8 +23,6 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.filter;
-
 public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
     private static final int DIMENSION = 5490;
@@ -51,7 +49,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().info("All products:");
         CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
-        Product[] products = filter(tile, sourceProducts, x, y);
+//        Product[] products = filter(tile, sourceProducts, x, y);
+        Product[] products = sourceProducts;
         if (products.length == 0) {
             CalvalusLogger.getLogger().warning("No input product available for pixel x=" + x + ", y=" + y);
             return null;
@@ -74,7 +73,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 }
             }
             if (geoLookupTable == null) {
-                throw new IllegalStateException("No geo-lookup table for ");
+                continue;
+//                throw new IllegalStateException("No geo-lookup table for ");
             }
 
             ZipEntry currentEntry = null;
