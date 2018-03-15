@@ -38,6 +38,8 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -220,6 +222,8 @@ public abstract class PixelFinaliseMapper extends Mapper {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
+        Map<Integer, Integer[]> values = new HashMap<>();
+
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
                 if (pixelIndex % width == 0 && xDirection == -1
@@ -234,19 +238,39 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     }
                     float neighbourValue = jdData[newPixelIndex];
                     if (!Float.isNaN(neighbourValue) && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
-                        return new PositionAndValue(newPixelIndex, neighbourValue);
+                        PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
+                        if (values.containsKey((int) positionAndValue.value)) {
+                            Integer[] v = new Integer[]{values.get((int) positionAndValue.value)[0] + 1, positionAndValue.newPixelIndex};
+                            values.put((int) positionAndValue.value, v);
+                        } else {
+                            Integer[] v = new Integer[]{1, positionAndValue.newPixelIndex};
+                            values.put((int) positionAndValue.value, v);
+                        }
                     }
                 }
             }
         }
 
-        // all neighbours are NaN or not burnable
-
-        if (isJD) {
-            return new PositionAndValue(pixelIndex, -2);
-        } else {
-            return new PositionAndValue(pixelIndex, 0);
+        PositionAndValue result = null;
+        int maxCount = 0;
+        for (int value : values.keySet()) {
+            Integer count = values.get(value)[0];
+            if (count > maxCount) {
+                maxCount = count;
+                result = new PositionAndValue(values.get(value)[1], value);
+            }
         }
+
+        if (result == null) {
+            // all neighbours are NaN or not burnable
+
+            if (isJD) {
+                return new PositionAndValue(pixelIndex, -2);
+            } else {
+                return new PositionAndValue(pixelIndex, 0);
+            }
+        }
+        return result;
     }
 
     static class PositionAndValue {
