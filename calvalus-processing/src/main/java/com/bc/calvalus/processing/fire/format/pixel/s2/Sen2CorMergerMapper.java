@@ -114,7 +114,8 @@ public class Sen2CorMergerMapper extends Mapper {
             }
         }
         if (fileStatuses.length == 0) {
-            throw new IllegalStateException("No sen2cor image for tile '" + tile + "' found.");
+            CalvalusLogger.getLogger().warning("No sen2cor image for tile '" + tile + "' found.");
+            return;
         }
 
         File file = CalvalusProductIO.copyFileToLocal(fileStatuses[0].getPath(), conf);
