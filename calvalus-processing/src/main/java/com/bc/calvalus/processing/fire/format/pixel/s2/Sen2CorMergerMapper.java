@@ -26,9 +26,6 @@ import java.util.List;
 
 public class Sen2CorMergerMapper extends Mapper {
 
-    public static final String NORTH = "326";
-    public static final String SOUTH = "327";
-
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
@@ -104,7 +101,7 @@ public class Sen2CorMergerMapper extends Mapper {
     }
 
     private void writeNotObservedProduct(Configuration conf, String tile, String month) throws IOException {
-        Product notObservedProduct = new Product("BA-T" + tile + "-2016" + month + "01T000000", "", 5490, 5490);
+        Product notObservedProduct = new Product("BA-T" + tile + "-2016" + month + "01T000000", "Non-observed-BA", 5490, 5490);
         notObservedProduct.addBand("JD", "999");
         notObservedProduct.addBand("CL", "0");
 
