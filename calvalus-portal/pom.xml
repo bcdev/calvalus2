@@ -116,6 +116,10 @@
             <version>3.2.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+        </dependency>
 
     </dependencies>
 
