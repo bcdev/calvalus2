@@ -20,17 +20,18 @@ import java.security.Principal;
 public class InjectInputSelectionServlet extends HttpServlet {
 
     private static final String FORWARD_URL = "/close-window.jsp";
-
     private static final String CATALOGUE_SEARCH_PREFIX = "catalogueSearch_";
 
     @Override
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         String requestPayload = servletRequest.getParameter("request");
+        System.out.println("Request payload: " + requestPayload);
         DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(requestPayload);
         Principal userPrincipal = servletRequest.getUserPrincipal();
         if (userPrincipal != null) {
             getServletContext().setAttribute(CATALOGUE_SEARCH_PREFIX + userPrincipal.getName(), dtoInputSelection);
         }
+        closeBrowserWindow(servletRequest, servletResponse);
     }
 
     @Override
@@ -40,12 +41,17 @@ public class InjectInputSelectionServlet extends HttpServlet {
         if (session != null) {
             String sessionId = session.getId();
             payload = (String) session.getAttribute(PAYLOAD_PREFIX + sessionId);
+            System.out.println("Request payload: " + payload);
         }
         DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(payload);
         Principal userPrincipal = servletRequest.getUserPrincipal();
         if (userPrincipal != null) {
             getServletContext().setAttribute(CATALOGUE_SEARCH_PREFIX + userPrincipal.getName(), dtoInputSelection);
         }
+        closeBrowserWindow(servletRequest, servletResponse);
+    }
+
+    private void closeBrowserWindow(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         RequestDispatcher rd = getServletContext().getRequestDispatcher(FORWARD_URL);
         try {
             rd.forward(servletRequest, servletResponse);
