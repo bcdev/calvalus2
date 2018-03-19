@@ -47,7 +47,7 @@ public class DtoInputSelection implements IsSerializable {
     public String toString() {
         return "DtoInputSelection{" +
                "collectionName='" + collectionName + '\'' +
-               ", productIdentifiers=" + productIdentifiers +
+               ", productIdentifiers=" + String.join(",", productIdentifiers) +
                ", dateRange=" + dateRange +
                ", regionGeometry='" + regionGeometry + '\'' +
                '}';
