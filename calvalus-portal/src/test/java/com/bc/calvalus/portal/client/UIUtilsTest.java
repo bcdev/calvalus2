@@ -3,8 +3,8 @@ package com.bc.calvalus.portal.client;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.bc.calvalus.portal.shared.DtoDateRange;
 import com.bc.calvalus.portal.shared.DtoInputSelection;
-import com.bc.calvalus.portal.shared.DtoTimeSelection;
 import org.junit.*;
 
 import java.util.ArrayList;
@@ -17,11 +17,11 @@ import java.util.Map;
 public class UIUtilsTest {
 
     @Test
-    public void parseParametersFromContext() throws Exception {
+    public void parseParametersFromContext() {
         List<String> productIdentifiers = new ArrayList<>();
         productIdentifiers.add("EOP:CODE-DE:S2_MSI_L1C:/S2A_MSIL1C_20171118T111341_N0206_R137_T30UYC_20171118T113620");
         productIdentifiers.add("EOP:CODE-DE:S2_MSI_L1C:/S2A_MSIL1C_20171118T111341_N0206_R137_T31UEA_20171118T113620");
-        DtoTimeSelection timeSelection = new DtoTimeSelection("2017-11-18T00:00:00Z", "2017-11-28T00:00:00Z");
+        DtoDateRange timeSelection = new DtoDateRange("2017-11-18T00:00:00Z", "2017-11-28T00:00:00Z");
         DtoInputSelection inputSelection = new DtoInputSelection("S2_MSI_L1C_RE",
                                                                  productIdentifiers,
                                                                  timeSelection,

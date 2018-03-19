@@ -5,17 +5,17 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 /**
  * @author hans
  */
-public class DtoTimeSelection implements IsSerializable {
+public class DtoDateRange implements IsSerializable {
     private String startTime;
     private String endTime;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    DtoTimeSelection() {
+    DtoDateRange() {
     }
 
-    public DtoTimeSelection(String startTime, String endTime) {
+    public DtoDateRange(String startTime, String endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
     }
