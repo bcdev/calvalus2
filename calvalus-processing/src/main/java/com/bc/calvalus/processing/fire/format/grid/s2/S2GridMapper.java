@@ -59,13 +59,22 @@ public class S2GridMapper extends AbstractGridMapper {
                 geoLookupTables.add(new ZipFile(localGeoLookup));
             }
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            sourceProducts.add(ProductIO.readProduct(sourceProductFile));
+            Product sourceProduct = ProductIO.readProduct(sourceProductFile);
+            sourceProducts.add(sourceProduct);
+
+            if (sourceProduct == null) {
+                throw new IllegalStateException("Product " + sourceProductFile + " is broken.");
+            }
+
             Path lcPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2/lc-2010-T" + utmTile + ".nc");
             File lcFile = new File(".", lcPath.getName());
             if (!lcFile.exists()) {
                 CalvalusProductIO.copyFileToLocal(lcPath, lcFile, context.getConfiguration());
             }
             Product lcProduct = ProductIO.readProduct(lcFile);
+            if (lcProduct == null) {
+                throw new IllegalStateException("LC Product " + lcFile + " is broken.");
+            }
             lcProducts.add(lcProduct);
             LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 1)));
         }

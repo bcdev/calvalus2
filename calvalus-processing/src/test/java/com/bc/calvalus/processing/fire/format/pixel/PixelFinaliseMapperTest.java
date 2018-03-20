@@ -41,6 +41,22 @@ public class PixelFinaliseMapperTest {
         ProductIO.writeProduct(product, "C:\\ssd\\test4.nc", "NetCDF4-CF");
     }
 
+
+    @Test
+    public void testRemap2() throws Exception {
+        System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
+
+        Product lcProduct = ProductIO.readProduct("D:\\workspace\\temp\\collocate.dim");
+        lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
+        final File localL3 = new File("D:\\workspace\\temp\\subset_0_of_L3_2016-11-01_2016-11-30.dim");
+        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "wumpel", "4", lcProduct, 0);
+
+        ProductIO.writeProduct(product, "C:\\ssd\\test6.nc", "NetCDF4-CF");
+    }
+
     private static PixelFinaliseMapper getPixelFinaliseMapper() {
         return new PixelFinaliseMapper() {
             @Override

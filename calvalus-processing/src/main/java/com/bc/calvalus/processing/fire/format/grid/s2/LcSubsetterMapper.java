@@ -15,9 +15,6 @@ import org.esa.snap.core.datamodel.Product;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Created by Thomas on 02.03.2018.
- */
 public class LcSubsetterMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 
     @Override
@@ -31,6 +28,12 @@ public class LcSubsetterMapper extends Mapper<NullWritable, NullWritable, NullWr
         String fileId = localFile.getName();
         String tile = fileId.split("-")[1].substring(1);
 
+        String targetFilename = subset(lcProduct, localFile, tile);
+        FileSystem fileSystem = inputSplit.getPath(0).getFileSystem(context.getConfiguration());
+        FileUtil.copy(new File(targetFilename), fileSystem, new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2-from-s2/", targetFilename), false, context.getConfiguration());
+    }
+
+    static String subset(Product lcProduct, File localFile, String tile) throws IOException {
         Product s2Product = ProductIO.readProduct(localFile);
 
         CollocateOp collocateOp = new CollocateOp();
@@ -52,10 +55,9 @@ public class LcSubsetterMapper extends Mapper<NullWritable, NullWritable, NullWr
 
         String targetFilename = "lc-2010-T" + tile + ".nc";
         ProductIO.writeProduct(targetProduct, targetFilename, "NetCDF4-CF");
-        FileSystem fileSystem = inputSplit.getPath(0).getFileSystem(context.getConfiguration());
-        FileUtil.copy(new File(targetFilename), fileSystem, new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2-from-s2/", targetFilename), false, context.getConfiguration());
         s2Product.dispose();
         targetProduct.dispose();
+        return targetFilename;
     }
 
     private static void removeBandsSafe(Product p) {
