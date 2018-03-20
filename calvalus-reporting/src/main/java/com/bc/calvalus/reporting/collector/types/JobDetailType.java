@@ -40,6 +40,7 @@ public class JobDetailType {
     private String inputPath;
     private String inProductType;
     private String dataProcessorUsed;
+    private String processorDescription;
     private String outputDir;
     private String configuredCpuCores;
     private String configuredRam;
@@ -171,6 +172,10 @@ public class JobDetailType {
         return dataProcessorUsed;
     }
 
+    public String getProcessorDescription() {
+        return processorDescription;
+    }
+
     public String getOutputDir() {
         return outputDir;
     }
@@ -229,6 +234,7 @@ public class JobDetailType {
         this.inputPath = conf.getInputPath();
         this.inProductType = conf.getInputType();
         this.dataProcessorUsed = conf.getDataProcessorUsed();
+        this.processorDescription = conf.getProcessorDescription();
         this.outputDir = conf.getOutputDir();
         this.configuredCpuCores = conf.getConfiguredCpuCores();
         this.configuredRam = conf.getConfiguredRam();

@@ -140,7 +140,7 @@ public class CodeReport {
         this.processingCenter = CALVALUS_PROCESSING_CENTER;
         this.configuredCpuCoresPerTask = parseLong(usageStatistic.getConfiguredCpuCores());
         this.cpuCoreHours = usageStatistic.getCpuMilliseconds() / (SECONDS_PER_HOUR * MILLIS_PER_SECOND);
-        this.processorName = resolveProcessorName(usageStatistic.getProcessType(),
+        this.processorName = resolveProcessorName(usageStatistic.getProcessorDescription(),
                                                   usageStatistic.getMapClass(),
                                                   usageStatistic.getWorkflowType());
         this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / KILO_BYTE;
@@ -199,9 +199,9 @@ public class CodeReport {
         }
     }
 
-    private String resolveProcessorName(String processType, String mapClass, String workflowType) {
-        if (processType != null) {
-            return processType;
+    private String resolveProcessorName(String processorDescription, String mapClass, String workflowType) {
+        if (processorDescription != null) {
+            return processorDescription;
         } else if (mapClass != null && (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains(
                     "l3.L3FormatterMapper"))) {
             return "Formatting";
