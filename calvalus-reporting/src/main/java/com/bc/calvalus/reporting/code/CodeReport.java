@@ -49,6 +49,7 @@ public class CodeReport {
     private final long configuredCpuCoresPerTask;
     private final double cpuCoreHours;
     private final String processorName;
+    private final String processorDescription;
     private final double configuredRamPerTask;
     private final double ramHours;
     private final String processingWorkflow;
@@ -82,6 +83,7 @@ public class CodeReport {
                 long configuredCpuCoresPerTask,
                 double cpuCoreHours,
                 String processorName,
+                String processorDescription,
                 double configuredRamPerTask,
                 double ramHours,
                 String processingWorkflow,
@@ -108,6 +110,7 @@ public class CodeReport {
         this.configuredCpuCoresPerTask = configuredCpuCoresPerTask;
         this.cpuCoreHours = cpuCoreHours;
         this.processorName = processorName;
+        this.processorDescription = processorDescription;
         this.configuredRamPerTask = configuredRamPerTask;
         this.ramHours = ramHours;
         this.processingWorkflow = processingWorkflow;
@@ -140,9 +143,10 @@ public class CodeReport {
         this.processingCenter = CALVALUS_PROCESSING_CENTER;
         this.configuredCpuCoresPerTask = parseLong(usageStatistic.getConfiguredCpuCores());
         this.cpuCoreHours = usageStatistic.getCpuMilliseconds() / (SECONDS_PER_HOUR * MILLIS_PER_SECOND);
-        this.processorName = resolveProcessorName(usageStatistic.getProcessorDescription(),
+        this.processorName = resolveProcessorName(usageStatistic.getProcessType(),
                                                   usageStatistic.getMapClass(),
                                                   usageStatistic.getWorkflowType());
+        this.processorDescription = usageStatistic.getProcessorDescription();
         this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / KILO_BYTE;
         this.ramHours = calculateRamHours(usageStatistic.getMbMillisMapTotal(),
                                           usageStatistic.getMbMillisReduceTotal());
@@ -199,9 +203,9 @@ public class CodeReport {
         }
     }
 
-    private String resolveProcessorName(String processorDescription, String mapClass, String workflowType) {
-        if (processorDescription != null) {
-            return processorDescription;
+    private String resolveProcessorName(String processType, String mapClass, String workflowType) {
+        if (processType != null) {
+            return processType;
         } else if (mapClass != null && (mapClass.contains("l2.L2FormattingMapper") || mapClass.contains(
                     "l3.L3FormatterMapper"))) {
             return "Formatting";
