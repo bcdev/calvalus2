@@ -1,7 +1,5 @@
 package com.bc.calvalus.production.cli;
 
-import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_ERROR_CODE;
-
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
@@ -91,6 +89,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
+import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_ERROR_CODE;
 
 /**
  * The Calvalus production CLI tool "cpt".
@@ -500,10 +500,6 @@ public class ProductionTool {
         }
         Map<String, List<String>> headerFields = conn.getHeaderFields();
         if (headerFields == null) {
-            throw new GeneralSecurityException("Could not retrieve TGT from URL " + casUrl);
-        }
-        List<String> setCookieFields = headerFields.get("Set-Cookie");
-        if (setCookieFields.size() < 2) {
             InputStream in = conn.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             StringBuilder result = new StringBuilder();
@@ -513,7 +509,8 @@ public class ProductionTool {
             }
             throw new IOException("Fetching TGT failed. Reply from CAS server:\n" + result.toString());
         }
-        String setCookie = setCookieFields.get(1);
+        List<String> setCookieFields = headerFields.get("Set-Cookie");
+        String setCookie = setCookieFields.get(0);
         String tgtPart1 = setCookie.split(";")[0];
 
         return tgtPart1.split("=")[1];
