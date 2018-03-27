@@ -49,6 +49,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -107,6 +108,11 @@ public class CalvalusProductIO {
             }
         }
         if (product == null) {
+            Iterator<ProductReaderPlugIn> it = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+            while (it.hasNext()) {
+                ProductReaderPlugIn readerPlugIn = it.next();
+                LOG.info("reader candidate " + readerPlugIn + ' ' + Arrays.toString(readerPlugIn.getFormatNames()) + ' ' + Arrays.toString(readerPlugIn.getInputTypes()));
+            }
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();
@@ -303,6 +309,7 @@ public class CalvalusProductIO {
                 return null;
             }
         } else {
+            LOG.info("looked up reader plugin for " + inputClass + " " + inputFormat);
             return null;
         }
     }
@@ -366,8 +373,13 @@ public class CalvalusProductIO {
             System.out.println("GeoCoding: NULL");
         }
         System.out.println("RasterDataNodes:");
+        int i = 0;
         List<RasterDataNode> rasterDataNodes = p.getRasterDataNodes();
         for (RasterDataNode rdn : rasterDataNodes) {
+            if (++i > 3) {
+                System.out.println("...");
+                break;
+            }
             String rdnTileSize = "";
             if (rdn.isSourceImageSet()) {
                 MultiLevelImage image = rdn.getSourceImage();
