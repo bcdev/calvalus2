@@ -391,15 +391,19 @@ public class ProductionTool {
 
     private String fetchSamlToken(Map<String, String> config) throws IOException, GeneralSecurityException, SAXException, ParserConfigurationException, XMLEncryptionException, org.jdom2.JDOMException {
         Init.init();
+        String casVersion = config.getOrDefault("calvalus.cas.version", "5");
         String casUrl = config.getOrDefault("calvalus.cas.url", "https://sso.eoc.dlr.de/cas-codede");
         String portalUrl = config.getOrDefault("calvalus.portal.url", "https://processing.code-de.org/calvalus.jsp");
         String privateKeyPath = config.get("calvalus.crypt.samlkey-private-key");
         if (privateKeyPath == null) {
             throw new IllegalStateException("No entry for calvalus.crypt.samlkey-private-key found in Calvalus config.");
         }
-        say(String.format("Fetching SAML token from %s.", casUrl));
-        String tgt = fetchTgt(casUrl);
-        String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
+        if (!casVersion.equals("5") && !casVersion.equals("4")) {
+            throw new IllegalStateException("calvalus.cas.version has to be set to either 4 or 5.");
+        }
+        say(String.format("Fetching SAML token from %s, CAS version %s", casUrl, casVersion));
+        String tgt = fetchTgt(casUrl, casVersion);
+        String samlToken = fetchSamlToken(tgt, casUrl, portalUrl, casVersion);
         PrivateKey privateSamlKey = readPrivateDerKey(privateKeyPath);
         Document document = parseXml(samlToken);
         document = decipher(privateSamlKey, document);
@@ -459,8 +463,9 @@ public class ProductionTool {
         return db.parse(inputStream);
     }
 
-    private String fetchSamlToken(String tgt, final String casUrl, String portalUrl) throws IOException {
-        String urlString = casUrl + "/samlCreate2?serviceUrl=" + portalUrl;
+    private String fetchSamlToken(String tgt, final String casUrl, String portalUrl, String casVersion) throws IOException {
+        String serviceParameterName = casVersion.equals("4") ? "serviceUrl" : "service";
+        String urlString = casUrl + "/samlCreate2?" + serviceParameterName + "=" + portalUrl;
         URL url = new URL(urlString);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
@@ -481,7 +486,7 @@ public class ProductionTool {
         return saml.toString();
     }
 
-    private String fetchTgt(String casUrl) throws IOException, GeneralSecurityException {
+    private String fetchTgt(String casUrl, String casVersion) throws IOException, GeneralSecurityException {
         byte[] encryptedSecret = createEncryptedSecret(getUserName());
         String urlParameters = "client_name=PKEY&userid=" + getUserName() + "&secret=" + new String(encryptedSecret);
         byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
@@ -500,6 +505,10 @@ public class ProductionTool {
         }
         Map<String, List<String>> headerFields = conn.getHeaderFields();
         if (headerFields == null) {
+            throw new GeneralSecurityException("Could not retrieve TGT from URL " + casUrl);
+        }
+        List<String> setCookieFields = headerFields.get("Set-Cookie");
+        if (casVersion.equals("4") && setCookieFields.size() < 2) {
             InputStream in = conn.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             StringBuilder result = new StringBuilder();
@@ -509,8 +518,8 @@ public class ProductionTool {
             }
             throw new IOException("Fetching TGT failed. Reply from CAS server:\n" + result.toString());
         }
-        List<String> setCookieFields = headerFields.get("Set-Cookie");
-        String setCookie = setCookieFields.get(0);
+        int cookieIndex = casVersion.equals("4") ? 1 : 0;
+        String setCookie = setCookieFields.get(cookieIndex);
         String tgtPart1 = setCookie.split(";")[0];
 
         return tgtPart1.split("=")[1];
