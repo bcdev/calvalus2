@@ -29,7 +29,7 @@ public class CodeReport {
     private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
     private static final String VERSION = "1.0";
     private static final String SERVICE_HOST = "processing";
-    private static final String CALVALUS_PROCESSING_CENTER = "Calvalus";
+    private static final String CALVALUS_PROCESSING_CENTER = "CODE-DE Calvalus";
     private static final double KILO_BYTE = 1024.0;
     private static final double SECONDS_PER_HOUR = 3600.0;
     private static final double MILLIS_PER_SECOND = 1000.0;
