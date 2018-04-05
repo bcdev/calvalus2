@@ -51,12 +51,10 @@ public abstract class PixelFinaliseMapper extends Mapper {
     public static final String KEY_LC_PATH = "LC_PATH";
     public static final String KEY_VERSION = "VERSION";
     public static final String KEY_AREA_STRING = "AREA_STRING";
-    public static final String KEY_SENSOR_ID = "SENSOR_ID";
 
     public static final int JD = 0;
     public static final int CL = 1;
     public static final int LC = 2;
-    public static final int SE = 3;
 
     private static final int[] BAND_TYPES = new int[]{JD, CL, LC};
 
@@ -71,7 +69,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
         String lcPath = context.getConfiguration().get(KEY_LC_PATH);
         String version = context.getConfiguration().get(KEY_VERSION);
         String areaString = context.getConfiguration().get(KEY_AREA_STRING); // <nicename>;<left>;<top>;<right>;<bottom>
-        String sensorId = context.getConfiguration().get(KEY_SENSOR_ID);
 
         ProductSplit inputSplit = (ProductSplit) context.getInputSplit();
 
@@ -100,12 +97,11 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product lcProduct = ProductIO.readProduct(localLC);
         lcProduct = collocateWithSource(lcProduct, source);
 
-        Product resultJD = remap(source, baseFilename, sensorId, lcProduct, JD);
-//        Product resultCL = remap(source, baseFilename, sensorId, lcProduct, CL);
-//        Product resultLC = remap(source, baseFilename, sensorId, lcProduct, LC);
+        Product resultJD = remap(source, baseFilename, lcProduct, JD);
+        Product resultCL = remap(source, baseFilename, lcProduct, CL);
+        Product resultLC = remap(source, baseFilename, lcProduct, LC);
 
-//        Product[] results = new Product[]{resultJD, resultCL, resultLC};
-        Product[] results = new Product[]{resultJD};
+        Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
         FileSystem fs = outputPaths[0].getFileSystem(context.getConfiguration());
         for (int i = 0; i < results.length; i++) {
@@ -140,7 +136,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
 
-    Product remap(Product source, String baseFilename, String sensorId, Product lcProduct, int band) throws IOException {
+    Product remap(Product source, String baseFilename, Product lcProduct, int band) throws IOException {
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
@@ -175,9 +171,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract ClScaler getClScaler();
 
-    static String createBaseFilename(String year, String month, String version, String areaString) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0], version);
-    }
+    protected abstract String createBaseFilename(String year, String month, String version, String areaString);
 
     static String createMetadata(String year, String month, String version, String areaString) throws IOException {
         String area = areaString.split(";")[0];
@@ -194,7 +188,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
         velocityContext.put("zoneId", area);
         velocityContext.put("zoneName", nicename);
-//        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2017).atMonth(2).atDay(8)));
         velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
         velocityContext.put("westLon", Integer.parseInt(left) - 180);
         velocityContext.put("eastLon", Integer.parseInt(right) - 180);

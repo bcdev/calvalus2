@@ -9,6 +9,14 @@ import static org.junit.Assert.assertEquals;
 public class S2GridMapperTest {
 
     @Test
+    public void name() throws Exception {
+        System.out.println(30129472 / (30129472 - 1.0));
+        double sqrt = Math.sqrt(1004.9875107835129 * (30129472 / (30129472 - 1.0)));
+        System.out.println(sqrt);
+        System.out.println(sqrt * (float) 7.672528883479377E8);
+    }
+
+    @Test
     public void getErrorPerPixel() throws Exception {
         double[] probs = {
                 0.56536696, 0.78055542, 0.65436347, 0.49271366, 0.76923176,

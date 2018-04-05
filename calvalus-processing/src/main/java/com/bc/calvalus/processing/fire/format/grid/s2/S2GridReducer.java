@@ -25,19 +25,16 @@ public class S2GridReducer extends AbstractGridReducer {
         try {
             int x = getX(key.toString());
             int y = getY(key.toString());
-            writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCells.burnableFraction);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCells.burnableFraction);
-
-            writeFloatChunk(x, y, ncFirst, "fraction_of_observed_area", currentGridCells.coverageFirstHalf);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_observed_area", currentGridCells.coverageSecondHalf);
+            writeFloatChunk(x, y, ncFile, "fraction_of_burnable_area", currentGridCells.burnableFraction);
+            writeFloatChunk(x, y, ncFile, "fraction_of_observed_area", currentGridCells.coverage);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
     }
 
     @Override
-    protected String getFilename(String year, String month, String version, boolean firstHalf) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-f%s.nc", year, month, firstHalf ? "07" : "22", version);
+    protected String getFilename(String year, String month, String version) {
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-f%s.nc", year, month, "01", version);
     }
 
     @Override

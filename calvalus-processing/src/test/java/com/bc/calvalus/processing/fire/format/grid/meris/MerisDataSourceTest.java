@@ -34,8 +34,6 @@ public class MerisDataSourceTest {
     @Test
     public void testReadPixels() throws Exception {
         MerisDataSource dataSource = new MerisDataSource(centerProduct, lcProduct, new ArrayList<>(), 2, 2);
-        dataSource.setDoyFirstHalf(7);
-        dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
         dataSource.setDoyLastOfMonth(31);
 
@@ -50,8 +48,6 @@ public class MerisDataSourceTest {
     @Test
     public void testReadPixelsLarger() throws Exception {
         MerisDataSource dataSource = new MerisDataSource(centerProduct, lcProduct, new ArrayList<>(), 3, 3);
-        dataSource.setDoyFirstHalf(7);
-        dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
         dataSource.setDoyLastOfMonth(31);
 

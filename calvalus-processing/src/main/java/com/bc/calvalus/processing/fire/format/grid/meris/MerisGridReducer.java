@@ -38,7 +38,7 @@ public class MerisGridReducer extends AbstractGridReducer {
 //            for (int y = 0; y < 18; y++) {
 //                for (int x = 0; x < 36; x++) {
 //                    firstHalfGridProduct.getBand("observed_area_fraction").readPixels(x * MERIS_CHUNK_SIZE, y * MERIS_CHUNK_SIZE, MERIS_CHUNK_SIZE, MERIS_CHUNK_SIZE, buffer);
-//                    writeFloatChunk(x * MERIS_CHUNK_SIZE, y * MERIS_CHUNK_SIZE, ncFirst, "observed_area_fraction", buffer);
+//                    writeFloatChunk(x * MERIS_CHUNK_SIZE, y * MERIS_CHUNK_SIZE, ncFile, "observed_area_fraction", buffer);
 //                    secondHalfGridProduct.getBand("observed_area_fraction").readPixels(x * MERIS_CHUNK_SIZE, y * MERIS_CHUNK_SIZE, MERIS_CHUNK_SIZE, MERIS_CHUNK_SIZE, buffer);
 //                    writeFloatChunk(x * MERIS_CHUNK_SIZE, y * MERIS_CHUNK_SIZE, ncSecond, "observed_area_fraction", buffer);
 //                }
@@ -49,8 +49,8 @@ public class MerisGridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected String getFilename(String year, String month, String version, boolean firstHalf) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-f%s.nc", year, month, firstHalf ? "07" : "22", version);
+    protected String getFilename(String year, String month, String version) {
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-f%s.nc", year, month, "01", version);
     }
 
     @Override

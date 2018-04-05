@@ -35,8 +35,6 @@ public class ModisFireGridDataSourceTest {
         zipFiles.add(geolookup);
         ModisFireGridDataSource source = new ModisFireGridDataSource(new Product[]{product}, new Product[]{lc}, zipFiles, "" + (798 / 32) * 32 + "," + (79 / 32) * 32);
 
-        source.setDoyFirstHalf(158);
-        source.setDoySecondHalf(173);
         source.setDoyFirstOfMonth(152);
         source.setDoyLastOfMonth(181);
 
@@ -62,8 +60,6 @@ public class ModisFireGridDataSourceTest {
                 new Product[]{lcProduct1},
                 geoLookupTables, "765,340");
 
-        dataSource.setDoyFirstHalf(7);
-        dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
         dataSource.setDoyLastOfMonth(31);
 
@@ -158,8 +154,6 @@ public class ModisFireGridDataSourceTest {
 
         dataSource.setDoyFirstOfMonth(335);
         dataSource.setDoyLastOfMonth(366);
-        dataSource.setDoyFirstHalf(366 + 7);
-        dataSource.setDoySecondHalf(366 + 22);
 
         Band band = product1.getBand("classification");
         assertEquals(0, dataSource.getFloatPixelValue(band, "h31v12", 0), 1E-8);
@@ -187,8 +181,6 @@ public class ModisFireGridDataSourceTest {
 
         dataSource.setDoyFirstOfMonth(121);
         dataSource.setDoyLastOfMonth(151);
-        dataSource.setDoyFirstHalf(121 + 7);
-        dataSource.setDoySecondHalf(151 + 22);
 
         Band band = product3.getBand("classification");
         assertEquals(-2, dataSource.getFloatPixelValue(band, "h19v08", 3411 + 4800 * 4339), 1E-8);
@@ -230,8 +222,6 @@ public class ModisFireGridDataSourceTest {
 
         dataSource.setDoyFirstOfMonth(121);
         dataSource.setDoyLastOfMonth(151);
-        dataSource.setDoyFirstHalf(121 + 7);
-        dataSource.setDoySecondHalf(151 + 22);
 
         for (int y = 0; y < 32; y++) {
             for (int x = 0; x < 32; x++) {
@@ -256,8 +246,6 @@ public class ModisFireGridDataSourceTest {
 
         dataSource.setDoyFirstOfMonth(335);
         dataSource.setDoyLastOfMonth(365);
-        dataSource.setDoyFirstHalf(335 + 7);
-        dataSource.setDoySecondHalf(335 + 22);
 
         SourceData sourceData = dataSource.readPixels(10, 14);
     }

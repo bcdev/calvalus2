@@ -110,7 +110,7 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+    protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
         // no burnable fraction computed for MERIS dataset
     }
 

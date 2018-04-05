@@ -34,11 +34,9 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     private static final int SCENE_RASTER_WIDTH = 1440;
     private static final int SCENE_RASTER_HEIGHT = 720;
 
-    protected NetcdfFileWriter ncFirst;
-    protected NetcdfFileWriter ncSecond;
+    protected NetcdfFileWriter ncFile;
 
-    protected String firstHalfFile;
-    protected String secondHalfFile;
+    protected String ncFilename;
     private GridCells currentGridCells;
     private int targetSize;
 
@@ -54,43 +52,23 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         Iterator<GridCells> iterator = values.iterator();
         currentGridCells = iterator.next();
 
-        float[] burnedAreaFirstHalf = currentGridCells.baFirstHalf;
-        float[] burnedAreaSecondHalf = currentGridCells.baSecondHalf;
-
-        float[] patchNumbersFirstHalf = currentGridCells.patchNumberFirstHalf;
-        float[] patchNumbersSecondHalf = currentGridCells.patchNumberSecondHalf;
-
-        float[] errorsFirstHalf = currentGridCells.errorsFirstHalf;
-        float[] errorsSecondHalf = currentGridCells.errorsSecondHalf;
-
-        List<float[]> baInLcFirstHalf = currentGridCells.baInLcFirstHalf;
-        List<float[]> baInLcSecondHalf = currentGridCells.baInLcSecondHalf;
-
-        float[] coverageFirstHalf = currentGridCells.coverageFirstHalf;
-        float[] coverageSecondHalf = currentGridCells.coverageSecondHalf;
+        float[] burnedArea = currentGridCells.ba;
+        float[] patchNumbers = currentGridCells.patchNumber;
+        float[] errors = currentGridCells.errors;
+        List<float[]> baInLc = currentGridCells.baInLc;
+        float[] coverage = currentGridCells.coverage;
 
         CalvalusLogger.getLogger().info("Writing for key " + key);
 
         try {
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "burned_area", burnedAreaFirstHalf);
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "burned_area", burnedAreaSecondHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "burned_area", burnedArea);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "standard_error", errors);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "number_of_patches", patchNumbers);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "fraction_of_observed_area", coverage);
 
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "standard_error", errorsFirstHalf);
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "standard_error", errorsSecondHalf);
-
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "number_of_patches", patchNumbersFirstHalf);
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "number_of_patches", patchNumbersSecondHalf);
-
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "fraction_of_observed_area", coverageFirstHalf);
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "fraction_of_observed_area", coverageSecondHalf);
-
-            for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-                float[] baInClass = baInLcFirstHalf.get(i);
-                writeVegetationChunk(key.toString(), i, ncFirst, baInClass);
-            }
-            for (int i = 0; i < baInLcSecondHalf.size(); i++) {
-                float[] baInClass = baInLcSecondHalf.get(i);
-                writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
+            for (int i = 0; i < baInLc.size(); i++) {
+                float[] baInClass = baInLc.get(i);
+                writeVegetationChunk(key.toString(), i, ncFile, baInClass);
             }
         } catch (InvalidRangeException e) {
             throw new IOException(e);
@@ -101,25 +79,19 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     protected void cleanup(Context context) throws IOException, InterruptedException {
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
 
-        ncFirst.close();
-        ncSecond.close();
+        ncFile.close();
 
-        File fileLocation = new File("./" + firstHalfFile);
-        File fileLocation2 = new File("./" + secondHalfFile);
-        Path path = new Path(outputDir + "/" + firstHalfFile);
-        Path path2 = new Path(outputDir + "/" + secondHalfFile);
+        File fileLocation = new File("./" + ncFilename);
+        Path path = new Path(outputDir + "/" + ncFilename);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         if (!fs.exists(path)) {
             FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-        }
-        if (!fs.exists(path2)) {
-            FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
         }
     }
 
     protected abstract int getTargetSize();
 
-    protected abstract String getFilename(String year, String month, String version, boolean firstHalf);
+    protected abstract String getFilename(String year, String month, String version);
 
     protected abstract NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException;
 
@@ -137,40 +109,25 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         String timeCoverageStartSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 16).atTime(0, 0, 0));
         String timeCoverageEndSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), lastDayOfMonth).atTime(23, 59, 59));
 
-        firstHalfFile = getFilename(year, month, version, true);
-        secondHalfFile = getFilename(year, month, version, false);
+        ncFilename = getFilename(year, month, version);
 
-        ncFirst = createNcFile(firstHalfFile, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
-        ncSecond = createNcFile(secondHalfFile, version, timeCoverageStartSecondHalf, timeCoverageEndSecondHalf, lastDayOfMonth - 16);
+        ncFile = createNcFile(ncFilename, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
 
         try {
-            writeLon(ncFirst);
-            writeLon(ncSecond);
-            writeLat(ncFirst);
-            writeLat(ncSecond);
+            writeLon(ncFile);
+            writeLat(ncFile);
 
-            writeLonBnds(ncFirst);
-            writeLonBnds(ncSecond);
-            writeLatBnds(ncFirst);
-            writeLatBnds(ncSecond);
+            writeLonBnds(ncFile);
+            writeLatBnds(ncFile);
 
-            writeTime(ncFirst, year, month, true);
-            writeTime(ncSecond, year, month, false);
+            writeTime(ncFile, year, month);
+            writeTimeBnds(ncFile, year, month);
 
-            writeTimeBnds(ncFirst, year, month, true);
-            writeTimeBnds(ncSecond, year, month, false);
+            writeVegetationClasses(ncFile);
+            writeVegetationClassNames(ncFile);
 
-            writeVegetationClasses(ncFirst);
-            writeVegetationClasses(ncSecond);
-
-            writeVegetationClassNames(ncFirst);
-            writeVegetationClassNames(ncSecond);
-
-            prepareFraction("fraction_of_burnable_area", ncFirst);
-            prepareFraction("fraction_of_burnable_area", ncSecond);
-
-            prepareFraction("fraction_of_observed_area", ncFirst);
-            prepareFraction("fraction_of_observed_area", ncSecond);
+            prepareFraction("fraction_of_burnable_area", ncFile);
+            prepareFraction("fraction_of_observed_area", ncFile);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -185,7 +142,6 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
         Variable variable = ncFile.findVariable(varName);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, targetSize, targetSize}, data);
-        transpose(values, 1, 2);
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
 
@@ -196,7 +152,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, targetSize, targetSize}, baInClass);
-        values = transpose(values, 2, 3);
+        values = values;
         ncFile.write(variable, new int[]{0, lcClassIndex, y, x}, values);
     }
 
@@ -239,28 +195,28 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(vegetationClass, values);
     }
 
-    private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month, boolean firstHalf) throws IOException, InvalidRangeException {
+    private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
         Variable timeBnds = ncFile.findVariable("time_bnds");
-        double centralTime = getTimeValue(year, month, firstHalf);
+        double firstDayAsJD = getFirstDayAsJD(year, month);
         int lengthOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth();
         float[] array = new float[]{
-                (float) (centralTime - (firstHalf ? 7 : 6)),
-                (float) (centralTime + (firstHalf ? 8 : lengthOfMonth - 22))
-        };
+                (float) (firstDayAsJD),
+                (float) (firstDayAsJD + lengthOfMonth - 1)};
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 2}, array);
         ncFile.write(timeBnds, values);
     }
 
-    private static void writeTime(NetcdfFileWriter ncFile, String year, String month, boolean firstHalf) throws IOException, InvalidRangeException {
+    private static void writeTime(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
         Variable time = ncFile.findVariable("time");
-        double[] array = new double[]{getTimeValue(year, month, firstHalf)};
+        double firstDayAsJD = getFirstDayAsJD(year, month);
+        double centralDayAsJD = firstDayAsJD + (month.equals("02") ? 13 : 14);
+        double[] array = new double[]{centralDayAsJD};
         Array values = Array.factory(DataType.DOUBLE, new int[]{1}, array);
         ncFile.write(time, values);
     }
 
-    private static double getTimeValue(String year, String month, boolean firstHalf) {
-        int day = firstHalf ? 7 : 22;
-        LocalDate current = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(day);
+    private static double getFirstDayAsJD(String year, String month) {
+        LocalDate current = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1);
         LocalDate epoch = Year.of(1970).atMonth(1).atDay(1);
         return ChronoUnit.DAYS.between(epoch, current);
     }
@@ -337,7 +293,4 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         return y * targetSize;
     }
 
-    protected Array transpose(Array values, int dim1, int dim2) {
-        return values;
-    }
 }

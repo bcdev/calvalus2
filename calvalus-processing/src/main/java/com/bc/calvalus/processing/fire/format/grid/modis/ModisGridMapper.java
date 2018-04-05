@@ -104,8 +104,6 @@ public class ModisGridMapper extends AbstractGridMapper {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, geoLookupTables, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
-        dataSource.setDoyFirstHalf(doyFirstHalf);
-        dataSource.setDoySecondHalf(doySecondHalf);
 
         setDataSource(dataSource);
         GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
@@ -150,22 +148,14 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableAreaFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+    protected void validate(float burnableAreaFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
-        for (float[] firstBaValues : baInLcFirst) {
-            lcAreaSum += firstBaValues[targetPixelIndex];
+        for (float[] baValues : baInLc) {
+            lcAreaSum += baValues[targetGridCellIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
         if (lcAreaSumFraction > burnableAreaFraction * 1.2) {
             throw new IllegalStateException("lcAreaSumFraction (" + lcAreaSumFraction + ") > burnableAreaFraction * 1.2 (" + burnableAreaFraction * 1.2 + ") in first half");
-        }
-        lcAreaSum = 0.0F;
-        for (float[] secondBaValues : baInLcSecond) {
-            lcAreaSum += secondBaValues[targetPixelIndex];
-        }
-        lcAreaSumFraction = getFraction(lcAreaSum, area);
-        if (lcAreaSumFraction > burnableAreaFraction * 1.2) {
-            throw new IllegalStateException("lcAreaSumFraction (" + lcAreaSumFraction + ") > burnableAreaFraction (" + burnableAreaFraction * 1.2 + ") in second half");
         }
     }
 

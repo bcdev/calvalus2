@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.processing.fire.format.pixel.GlobalPixelProductAreaProvider.GlobalPixelProductArea;
+import com.bc.calvalus.processing.fire.format.pixel.s2.S2PixelFinaliseMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
@@ -36,7 +37,7 @@ public class PixelFinaliseMapperTest {
         Product lcProduct = ProductIO.readProduct("c:\\ssd\\modis-analysis\\africa-2000.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
         final File localL3 = new File("C:\\ssd\\modis-analysis\\subset_0_of_L3_2006-03-01_2006-03-31.nc");
-        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "c:\\ssd\\test.nc", "4", lcProduct, 0);
+        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "c:\\ssd\\test.nc", lcProduct, 0);
 
         ProductIO.writeProduct(product, "C:\\ssd\\test4.nc", "NetCDF4-CF");
     }
@@ -52,7 +53,7 @@ public class PixelFinaliseMapperTest {
         Product lcProduct = ProductIO.readProduct("D:\\workspace\\temp\\collocate.dim");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
         final File localL3 = new File("D:\\workspace\\temp\\subset_0_of_L3_2016-11-01_2016-11-30.dim");
-        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "wumpel", "4", lcProduct, 0);
+        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "wumpel", lcProduct, 0);
 
         ProductIO.writeProduct(product, "C:\\ssd\\test6.nc", "NetCDF4-CF");
     }
@@ -62,6 +63,11 @@ public class PixelFinaliseMapperTest {
             @Override
             protected ClScaler getClScaler() {
                 return cl -> cl;
+            }
+
+            @Override
+            protected String createBaseFilename(String year, String month, String version, String areaString) {
+                return "";
             }
 
             @Override
@@ -284,7 +290,7 @@ public class PixelFinaliseMapperTest {
                 for (int month = 1; month <= 12; month++) {
                     String monthPad = month < 10 ? "0" + month : "" + month;
                     String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
-                    String baseFilename = PixelFinaliseMapper.createBaseFilename(year + "", monthPad, "fv5.0", areaString);
+                    String baseFilename = new S2PixelFinaliseMapper().createBaseFilename(year + "", monthPad, "fv5.0", areaString);
                     String metadata = PixelFinaliseMapper.createMetadata(year + "", monthPad, "fv5.0", areaString);
                     try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
                         fw.write(metadata);

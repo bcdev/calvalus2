@@ -18,7 +18,4 @@ interface FireGridDataSource {
 
     void setDoyLastOfMonth(int doyLastOfMonth);
 
-    void setDoyFirstHalf(int doyFirstHalf);
-
-    void setDoySecondHalf(int doySecondHalf);
 }

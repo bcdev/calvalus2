@@ -54,26 +54,14 @@ public class AbstractGridMapperTest {
 
     @Test
     public void testIsValidFirstHalfPixel() throws Exception {
-        assertTrue(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 1));
-        assertTrue(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 7));
-        assertTrue(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 10));
-        assertTrue(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 14));
-        assertTrue(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 15));
-        assertFalse(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 16));
-        assertFalse(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 22));
-        assertFalse(AbstractGridMapper.isValidFirstHalfPixel(1, 22, 31));
-
-        assertFalse(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 1));
-        assertFalse(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 7));
-        assertFalse(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 10));
-        assertFalse(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 14));
-        assertFalse(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 15));
-        assertTrue(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 16));
-        assertTrue(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 22));
-        assertTrue(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 25));
-        assertTrue(AbstractGridMapper.isValidSecondHalfPixel(31, 7, 31));
-
-        assertTrue(AbstractGridMapper.isValidSecondHalfPixel(28, 7, 28));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 1));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 7));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 10));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 14));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 15));
+        assertFalse(AbstractGridMapper.isValidPixel(1, 22, 16));
+        assertFalse(AbstractGridMapper.isValidPixel(1, 22, 22));
+        assertFalse(AbstractGridMapper.isValidPixel(1, 22, 31));
     }
 
     @Test
@@ -120,22 +108,14 @@ public class AbstractGridMapperTest {
         GridCells gridCells = mapper.computeGridCells(2016, 1);
         Product product = new Product("test", "test", 8, 8);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Float(gridCells.baFirstHalf));
+        ba1.setData(new ProductData.Float(gridCells.ba));
         Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
-        pa1.setData(new ProductData.Float(gridCells.patchNumberFirstHalf));
+        pa1.setData(new ProductData.Float(gridCells.patchNumber));
         Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
-        co1.setData(new ProductData.Float(gridCells.coverageFirstHalf));
+        co1.setData(new ProductData.Float(gridCells.coverage));
         Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
-        er1.setData(new ProductData.Float(gridCells.errorsFirstHalf));
-        Band ba2 = product.addBand("ba2", ProductData.TYPE_FLOAT32);
-        ba2.setData(new ProductData.Float(gridCells.baSecondHalf));
-        Band pa2 = product.addBand("pa2", ProductData.TYPE_FLOAT32);
-        pa2.setData(new ProductData.Float(gridCells.patchNumberSecondHalf));
-        Band co2 = product.addBand("co2", ProductData.TYPE_FLOAT32);
-        co2.setData(new ProductData.Float(gridCells.coverageSecondHalf));
-        Band er2 = product.addBand("er2", ProductData.TYPE_FLOAT32);
-        er2.setData(new ProductData.Float(gridCells.errorsSecondHalf));
-        List<float[]> baInLcFirstHalf = gridCells.baInLcFirstHalf;
+        er1.setData(new ProductData.Float(gridCells.errors));
+        List<float[]> baInLcFirstHalf = gridCells.baInLc;
         for (int i = 0; i < baInLcFirstHalf.size(); i++) {
             float[] floats = baInLcFirstHalf.get(i);
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
@@ -198,22 +178,14 @@ public class AbstractGridMapperTest {
         GridCells gridCells = mapper.computeGridCells(2006, 3);
         Product product = new Product("test", "test", 1, 1);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Float(gridCells.baFirstHalf));
+        ba1.setData(new ProductData.Float(gridCells.ba));
         Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
-        pa1.setData(new ProductData.Float(gridCells.patchNumberFirstHalf));
+        pa1.setData(new ProductData.Float(gridCells.patchNumber));
         Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
-        co1.setData(new ProductData.Float(gridCells.coverageFirstHalf));
+        co1.setData(new ProductData.Float(gridCells.coverage));
         Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
-        er1.setData(new ProductData.Float(gridCells.errorsFirstHalf));
-        Band ba2 = product.addBand("ba2", ProductData.TYPE_FLOAT32);
-        ba2.setData(new ProductData.Float(gridCells.baSecondHalf));
-        Band pa2 = product.addBand("pa2", ProductData.TYPE_FLOAT32);
-        pa2.setData(new ProductData.Float(gridCells.patchNumberSecondHalf));
-        Band co2 = product.addBand("co2", ProductData.TYPE_FLOAT32);
-        co2.setData(new ProductData.Float(gridCells.coverageSecondHalf));
-        Band er2 = product.addBand("er2", ProductData.TYPE_FLOAT32);
-        er2.setData(new ProductData.Float(gridCells.errorsSecondHalf));
-        List<float[]> baInLcFirstHalf = gridCells.baInLcFirstHalf;
+        er1.setData(new ProductData.Float(gridCells.errors));
+        List<float[]> baInLcFirstHalf = gridCells.baInLc;
         for (int i = 0; i < baInLcFirstHalf.size(); i++) {
             float[] floats = baInLcFirstHalf.get(i);
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);

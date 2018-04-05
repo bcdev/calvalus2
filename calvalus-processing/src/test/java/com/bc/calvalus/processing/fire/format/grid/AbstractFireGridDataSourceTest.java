@@ -20,9 +20,7 @@ public class AbstractFireGridDataSourceTest {
                 return null;
             }
         };
-        dataSource.setDoyFirstHalf(1);
         dataSource.setDoyFirstOfMonth(1);
-        dataSource.setDoySecondHalf(22);
         dataSource.setDoyLastOfMonth(31);
     }
 
@@ -34,7 +32,7 @@ public class AbstractFireGridDataSourceTest {
                 0, 0, 0, 0,
                 0, 0, 0, 0
         };
-        assertEquals(0, dataSource.getPatchNumbers(make2Dims(pixels), true));
+        assertEquals(0, dataSource.getPatchNumbers(make2Dims(pixels)));
     }
 
     @Test
@@ -45,7 +43,7 @@ public class AbstractFireGridDataSourceTest {
                 1, 0, 0, 0,
                 1, 0, 0, 1
         };
-        assertEquals(3, dataSource.getPatchNumbers(make2Dims(pixels), true));
+        assertEquals(3, dataSource.getPatchNumbers(make2Dims(pixels)));
     }
 
     @Test
@@ -56,7 +54,7 @@ public class AbstractFireGridDataSourceTest {
                 0, 1, 1, 0,
                 0, 0, 0, 0
         };
-        assertEquals(1, dataSource.getPatchNumbers(make2Dims(pixels), true));
+        assertEquals(1, dataSource.getPatchNumbers(make2Dims(pixels)));
     }
 
     @Test
@@ -67,7 +65,7 @@ public class AbstractFireGridDataSourceTest {
                 0, 1, 1, 0,
                 0, 0, 0, 1
         };
-        assertEquals(4, dataSource.getPatchNumbers(make2Dims(pixels), true));
+        assertEquals(4, dataSource.getPatchNumbers(make2Dims(pixels)));
     }
 
     @Test
@@ -76,6 +74,6 @@ public class AbstractFireGridDataSourceTest {
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (int) (Math.random() * 2);
         }
-        dataSource.getPatchNumbers(make2Dims(pixels), true);
+        dataSource.getPatchNumbers(make2Dims(pixels));
     }
 }

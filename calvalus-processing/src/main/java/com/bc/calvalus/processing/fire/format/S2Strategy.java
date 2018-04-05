@@ -196,7 +196,6 @@ public class S2Strategy implements SensorStrategy {
             PixelProductArea area = new S2Strategy().getArea(job.getConfiguration().get("calvalus.area"));
             String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_AREA_STRING, areaString);
-            job.getConfiguration().set(PixelFinaliseMapper.KEY_SENSOR_ID, "6");
             job.setMapperClass(S2PixelFinaliseMapper.class);
             job.setNumReduceTasks(0);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));

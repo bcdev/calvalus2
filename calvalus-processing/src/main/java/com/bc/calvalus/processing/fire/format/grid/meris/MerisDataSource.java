@@ -63,20 +63,15 @@ public class MerisDataSource extends AbstractFireGridDataSource {
         if (computeBA) {
             Band baBand = sourceProduct.getBand("band_1");
             baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.burnedPixels);
-            data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), true);
-            data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), false);
+            data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels));
             Band lcClassification = lcProduct.getBand("lcclass");
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }
         getAreas(geoCoding, sourceWidth, sourceHeight, data.areas);
 
-        byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
-        byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];
+        byte[] statusPixels = new byte[sourceRect.width * sourceRect.height];
         for (File srProduct : srProducts) {
             NetcdfFile netcdfFile = NetcdfFileOpener.open(srProduct);
-            int startIndex = "CCI-Fire-MERIS-SDR-L3-300m-v1.0-2002-07-".length();
-            int day = Integer.parseInt(srProduct.getName().substring(startIndex, startIndex + 2));
-            boolean firstHalf = day <= 15;
             Array status;
             try {
                 status = netcdfFile.findVariable(null, "status").read(new int[]{sourceRect.y, sourceRect.x}, new int[]{sourceRect.height, sourceRect.width});
@@ -86,13 +81,8 @@ public class MerisDataSource extends AbstractFireGridDataSource {
                 netcdfFile.close();
             }
 
-            if (firstHalf) {
-                statusPixelsFirstHalf = (byte[]) status.get1DJavaArray(byte.class);
-            } else {
-                statusPixelsSecondHalf = (byte[]) status.get1DJavaArray(byte.class);
-            }
-            collectStatusPixels(statusPixelsFirstHalf, data.statusPixelsFirstHalf);
-            collectStatusPixels(statusPixelsSecondHalf, data.statusPixelsSecondHalf);
+            statusPixels = (byte[]) status.get1DJavaArray(byte.class);
+            collectStatusPixels(statusPixels, data.statusPixels);
         }
         return data;
     }

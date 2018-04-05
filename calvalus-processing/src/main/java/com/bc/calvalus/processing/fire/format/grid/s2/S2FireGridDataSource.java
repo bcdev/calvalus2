@@ -108,31 +108,25 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 int pixelIndex = y0 * DIMENSION + x0;
 
                 int sourceJD = (int) getFloatPixelValue(jd, key, pixelIndex);
-                boolean isValidFirstHalfPixel = isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD);
-                boolean isValidSecondHalfPixel = isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD);
-                if (isValidFirstHalfPixel || isValidSecondHalfPixel) {
+                boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+                if (isValidPixel) {
                     data.burnedPixels[pixelIndex] = sourceJD;
+                    float sourceCL;
+                    if (cl != null) {
+                        sourceCL = getFloatPixelValue(cl, key, pixelIndex);
+                    } else {
+                        sourceCL = 0.0F;
+                    }
+                    data.probabilityOfBurn[pixelIndex] = sourceCL;
                 }
-
-                float sourceCL;
-                if (cl != null) {
-                    sourceCL = getFloatPixelValue(cl, key, pixelIndex);
-                } else {
-                    sourceCL = 0.0F;
-                }
-                data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
-                data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
 
                 int sourceLC = getIntPixelValue(lc, key, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
                 if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
-                    // put observed pixel into first or second half of month
                     int productJD = getProductJD(product);
-                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
-                        data.statusPixelsFirstHalf[pixelIndex] = 1;
-                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
-                        data.statusPixelsSecondHalf[pixelIndex] = 1;
+                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, productJD)) {
+                        data.statusPixels[pixelIndex] = 1;
                     }
                 }
 
@@ -142,8 +136,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             }
         }
 
-        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), true);
-        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), false);
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION));
 
         return data;
     }

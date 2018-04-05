@@ -16,4 +16,9 @@ public class ModisPixelFinaliseMapper extends PixelFinaliseMapper {
         // no scaling necessary
         return cl -> cl;
     }
+
+    @Override
+    protected String createBaseFilename(String year, String month, String version, String areaString) {
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0], version);
+    }
 }

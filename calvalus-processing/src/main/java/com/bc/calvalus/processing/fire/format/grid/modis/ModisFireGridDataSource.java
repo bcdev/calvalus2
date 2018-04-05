@@ -88,9 +88,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 alreadyVisitedPixelPoses.add(key);
                 int pixelIndex = y0 * 4800 + x0;
                 int sourceJD = (int) getFloatPixelValue(jd, tile, pixelIndex);
-                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
-                    data.burnedPixels[pixelIndex] = sourceJD;
-                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
+                if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD)) {
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
 
@@ -100,23 +98,21 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 } else {
                     sourceCL = 0.0F;
                 }
-                data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
-                data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
+                data.probabilityOfBurn[pixelIndex] = sourceCL;
 
                 int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
                 int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, tile, pixelIndex);
                 int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, tile, pixelIndex);
-                data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf, data.statusPixelsFirstHalf[pixelIndex]);
-                data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixelsSecondHalf[pixelIndex]);
+                data.statusPixels[pixelIndex] = remap(sourceStatusFirstHalf, data.statusPixels[pixelIndex]);
+                data.statusPixels[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixels[pixelIndex]);
 
                 data.areas[pixelIndex] = MODIS_AREA_SIZE;
             }
         }
 
-        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), true);
-        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), false);
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800));
 
         return data;
     }

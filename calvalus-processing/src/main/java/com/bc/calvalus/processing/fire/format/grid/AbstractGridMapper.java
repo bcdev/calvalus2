@@ -39,34 +39,21 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
-        int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
-
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
-        dataSource.setDoyFirstHalf(doyFirstHalf);
-        dataSource.setDoySecondHalf(doySecondHalf);
 
         double[] areas = new double[targetRasterWidth * targetRasterHeight];
-        float[] baFirstHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] baSecondHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] coverageFirstHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] coverageSecondHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] patchNumberFirstHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] patchNumberSecondHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] errorsFirstHalf = new float[targetRasterWidth * targetRasterHeight];
-        float[] errorsSecondHalf = new float[targetRasterWidth * targetRasterHeight];
+        float[] ba = new float[targetRasterWidth * targetRasterHeight];
+        float[] coverage = new float[targetRasterWidth * targetRasterHeight];
+        float[] patchNumber = new float[targetRasterWidth * targetRasterHeight];
+        float[] errors = new float[targetRasterWidth * targetRasterHeight];
         float[] burnableFraction = new float[targetRasterWidth * targetRasterHeight];
 
-        List<float[]> baInLcFirstHalf = new ArrayList<>();
-        List<float[]> baInLcSecondHalf = new ArrayList<>();
+        List<float[]> baInLc = new ArrayList<>();
         for (int c = 0; c < GridFormatUtils.LC_CLASSES_COUNT; c++) {
-            float[] firstHalfBaInLcBuffer = new float[targetRasterWidth * targetRasterHeight];
-            float[] secondHalfBaInLcBuffer = new float[targetRasterWidth * targetRasterHeight];
-            Arrays.fill(firstHalfBaInLcBuffer, 0);
-            Arrays.fill(secondHalfBaInLcBuffer, 0);
-            baInLcFirstHalf.add(firstHalfBaInLcBuffer);
-            baInLcSecondHalf.add(secondHalfBaInLcBuffer);
+            float[] baInLcBuffer = new float[targetRasterWidth * targetRasterHeight];
+            Arrays.fill(baInLcBuffer, 0);
+            baInLc.add(baInLcBuffer);
         }
 
         int targetGridCellIndex = 0;
@@ -78,23 +65,21 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     targetGridCellIndex++;
                     continue;
                 }
-                float baValueFirstHalf = 0.0F;
-                float baValueSecondHalf = 0.0F;
-                float coverageValueFirstHalf = 0.0F;
-                float coverageValueSecondHalf = 0.0F;
+                float baValue = 0.0F;
+                float coverageValue = 0.0F;
                 double burnableFractionValue = 0.0;
 
                 int numberOfBurnedPixels = 0;
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     int doy = data.burnedPixels[i];
-                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
+                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
                         numberOfBurnedPixels++;
-                        baValueFirstHalf += data.areas[i];
+                        baValue += data.areas[i];
                         boolean hasLcClass = false;
                         for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
                             boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
-                            baInLcFirstHalf.get(lcClass)[targetGridCellIndex] += inLcClass ? data.areas[i] : 0.0;
+                            baInLc.get(lcClass)[targetGridCellIndex] += inLcClass ? data.areas[i] : 0.0;
                             if (inLcClass) {
                                 hasLcClass = true;
                             }
@@ -102,53 +87,28 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         if (!hasLcClass && data.lcClasses[i] != 0) {
 //                            LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
                             if (maskUnmappablePixels()) {
-                                baValueFirstHalf -= data.areas[i];
-                            }
-                        }
-                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
-                        numberOfBurnedPixels++;
-                        baValueSecondHalf += data.areas[i];
-                        boolean hasLcClass = false;
-                        for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
-                            boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
-                            baInLcSecondHalf.get(lcClass)[targetGridCellIndex] += inLcClass ? data.areas[i] : 0.0;
-                            if (inLcClass) {
-                                hasLcClass = true;
-                            }
-                        }
-                        if (!hasLcClass && data.lcClasses[i] != 0) {
-//                            LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
-                            if (maskUnmappablePixels()) {
-                                baValueSecondHalf -= data.areas[i];
+                                baValue -= data.areas[i];
                             }
                         }
                     }
 
                     burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
-                    coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 && data.burnable[i] ? data.areas[i] : 0.0F;
-                    coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 && data.burnable[i] ? data.areas[i] : 0.0F;
+                    coverageValue += data.statusPixels[i] == 1 && data.burnable[i] ? data.areas[i] : 0.0F;
                     areas[targetGridCellIndex] += data.areas[i];
                     validate(areas[targetGridCellIndex], targetGridCellIndex);
                 }
 
-                baFirstHalf[targetGridCellIndex] = baValueFirstHalf;
-                baSecondHalf[targetGridCellIndex] = baValueSecondHalf;
-                patchNumberFirstHalf[targetGridCellIndex] = data.patchCountFirstHalf;
-                patchNumberSecondHalf[targetGridCellIndex] = data.patchCountSecondHalf;
-                coverageFirstHalf[targetGridCellIndex] = getFraction(coverageValueFirstHalf, burnableFractionValue);
-                coverageSecondHalf[targetGridCellIndex] = getFraction(coverageValueSecondHalf, burnableFractionValue);
+                ba[targetGridCellIndex] = baValue;
+                patchNumber[targetGridCellIndex] = data.patchCount;
+                coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
                 burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
-                validate(burnableFraction[targetGridCellIndex], baInLcFirstHalf, baInLcSecondHalf, targetGridCellIndex, areas[targetGridCellIndex]);
+                validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
 
-                errorsFirstHalf[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf, areas[targetGridCellIndex], numberOfBurnedPixels);
-                errorsSecondHalf[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf, areas[targetGridCellIndex], numberOfBurnedPixels);
+                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], numberOfBurnedPixels);
 
-                for (int i = 0; i < errorsFirstHalf.length; i++) {
-                    if (baFirstHalf[i] < 0.00001) {
-                        errorsFirstHalf[i] = 0;
-                    }
-                    if (baSecondHalf[i] < 0.00001) {
-                        errorsSecondHalf[i] = 0;
+                for (int i = 0; i < errors.length; i++) {
+                    if (ba[i] < 0.00001) {
+                        errors[i] = 0;
                     }
                 }
 
@@ -157,30 +117,18 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             }
         }
 
-        predict(baFirstHalf, areas, errorsFirstHalf);
-        predict(baSecondHalf, areas, errorsSecondHalf);
-
-        validate(errorsFirstHalf, baFirstHalf);
-        validate(errorsSecondHalf, baSecondHalf);
-
-        validate(baFirstHalf, baInLcFirstHalf);
-        validate(baSecondHalf, baInLcSecondHalf);
-
-        validate(baFirstHalf, areas);
-        validate(baSecondHalf, areas);
+        predict(ba, areas, errors);
+        validate(errors, ba);
+        validate(ba, baInLc);
+        validate(ba, areas);
 
         GridCells gridCells = new GridCells();
         gridCells.bandSize = targetRasterWidth * targetRasterHeight;
-        gridCells.setBaFirstHalf(baFirstHalf);
-        gridCells.setBaSecondHalf(baSecondHalf);
-        gridCells.setPatchNumberFirstHalf(patchNumberFirstHalf);
-        gridCells.setPatchNumberSecondHalf(patchNumberSecondHalf);
-        gridCells.setErrorsFirstHalf(errorsFirstHalf);
-        gridCells.setErrorsSecondHalf(errorsSecondHalf);
-        gridCells.setBaInLcFirstHalf(baInLcFirstHalf);
-        gridCells.setBaInLcSecondHalf(baInLcSecondHalf);
-        gridCells.setCoverageFirstHalf(coverageFirstHalf);
-        gridCells.setCoverageSecondHalf(coverageSecondHalf);
+        gridCells.setBa(ba);
+        gridCells.setPatchNumber(patchNumber);
+        gridCells.setErrors(errors);
+        gridCells.setBaInLc(baInLc);
+        gridCells.setCoverage(coverage);
         gridCells.setBurnableFraction(burnableFraction);
         LOG.info("...done.");
         pm.done();
@@ -203,7 +151,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
     protected abstract void predict(float[] ba, double[] areas, float[] originalErrors);
 
-    protected abstract void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area);
+    protected abstract void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area);
 
     protected abstract boolean maskUnmappablePixels();
 
@@ -256,12 +204,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return fraction;
     }
 
-    static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
-        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
-    }
-
-    static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
+    static boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, int pixel) {
+        return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
     }
 
     public void setDataSource(FireGridDataSource dataSource) {

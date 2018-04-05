@@ -14,8 +14,6 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
 
     protected int doyFirstOfMonth = -1;
     protected int doyLastOfMonth = -1;
-    protected int doyFirstHalf = -1;
-    protected int doySecondHalf = -1;
 
     private final SortedMap<String, Integer> bandToMinY;
     private final SortedMap<String, ProductData> data;
@@ -40,21 +38,11 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         this.doyLastOfMonth = doyLastOfMonth;
     }
 
-    @Override
-    public void setDoyFirstHalf(int doyFirstHalf) {
-        this.doyFirstHalf = doyFirstHalf;
-    }
-
-    @Override
-    public void setDoySecondHalf(int doySecondHalf) {
-        this.doySecondHalf = doySecondHalf;
-    }
-
-    public int getPatchNumbers(int[][] pixels, boolean firstHalf) {
+    public int getPatchNumbers(int[][] pixels) {
         int patchCount = 0;
         for (int i = 0; i < pixels.length; i++) {
             for (int j = 0; j < pixels[i].length; j++) {
-                if (clearObjects(pixels, i, j, firstHalf)) {
+                if (clearObjects(pixels, i, j)) {
                     patchCount++;
                 }
             }
@@ -97,30 +85,26 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         }
     }
 
-    private boolean clearObjects(int[][] array, int x, int y, boolean firstHalf) {
+    private boolean clearObjects(int[][] array, int x, int y) {
         if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
             return false;
         }
-        if (isBurned(array[x][y], firstHalf)) {
+        if (isBurned(array[x][y])) {
             array[x][y] = 0;
-            clearObjects(array, x - 1, y, firstHalf);
-            clearObjects(array, x + 1, y, firstHalf);
-            clearObjects(array, x, y - 1, firstHalf);
-            clearObjects(array, x, y + 1, firstHalf);
+            clearObjects(array, x - 1, y);
+            clearObjects(array, x + 1, y);
+            clearObjects(array, x, y - 1);
+            clearObjects(array, x, y + 1);
             return true;
         }
         return false;
     }
 
-    private boolean isBurned(int pixel, boolean firstHalf) {
-        if (doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
+    private boolean isBurned(int pixel) {
+        if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
             throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
         }
-        if (firstHalf) {
-            boolean b = pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != NO_DATA;
-            return b;
-        }
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
+        return pixel >= doyFirstOfMonth && pixel < doyLastOfMonth - 6 && pixel != 999 && pixel != NO_DATA;
     }
 
     protected static double[] getAreas(GeoCoding gc, int width, int height, double[] areas) {
@@ -134,12 +118,8 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         return areas;
     }
 
-    protected static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
-        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6;
-    }
-
-    protected static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth;
+    protected static boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, int pixel) {
+        return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth;
     }
 
     public static double getUpperLat(int y) {

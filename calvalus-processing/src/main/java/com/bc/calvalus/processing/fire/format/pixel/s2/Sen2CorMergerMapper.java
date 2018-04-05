@@ -33,9 +33,14 @@ public class Sen2CorMergerMapper extends Mapper {
 
         CalvalusLogger.getLogger().info("Searching for files containing tile " + tile + "...");
         for (String month : new String[]{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",}) {
-            String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + tile + "/BA.*2016" + month + ".*.nc";
+            String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + tile + "/BA-T" + tile + "-2016" + month + "01T000000.nc";
             FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, conf);
             if (fileStatuses.length > 0) {
+                continue;
+            }
+            String inputPathPattern2 = "hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + tile + "/BA-T" + tile + "-2016" + month + "01T000001.nc";
+            FileStatus[] fileStatuses2 = getFileStatuses(inputPathPattern2, conf);
+            if (fileStatuses2.length > 0) {
                 continue;
             }
             CalvalusLogger.getLogger().info("Filling data for tile " + tile + " in month " + month);
@@ -94,7 +99,7 @@ public class Sen2CorMergerMapper extends Mapper {
     }
 
     private static void export(Configuration conf, String tile, String month, Product targetProduct) throws IOException {
-        String targetFile = String.format("BA-T%s-2016%s01T000000.nc", tile, month);
+        String targetFile = String.format("BA-T%s-2016%s01T000001.nc", tile, month);
         ProductIO.writeProduct(targetProduct, targetFile, "NetCDF4-CF");
         Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + tile + "/" + targetFile);
         FileUtil.copy(new File(targetFile), FileSystem.get(conf), targetPath, false, conf);
@@ -123,7 +128,7 @@ public class Sen2CorMergerMapper extends Mapper {
 
         ProductUtils.copyGeoCoding(sampleProduct, notObservedProduct);
 
-        String targetFile = String.format("BA-T%s-2016%s01T000000.nc", tile, month);
+        String targetFile = String.format("BA-T%s-2016%s01T000001.nc", tile, month);
         ProductIO.writeProduct(notObservedProduct, targetFile, "NetCDF4-CF");
         Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + tile + "/" + targetFile);
         FileUtil.copy(new File(targetFile), FileSystem.get(conf), targetPath, false, conf);

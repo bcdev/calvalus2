@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
@@ -28,7 +27,6 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Rendering;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
 import org.esa.snap.core.datamodel.Band;
@@ -170,18 +168,18 @@ public class QuicklookGenerator {
             layerChildren.add(0, createShapefileLayer(product, qlConfig.getShapefileURL()));
         }
 
-        // TODO generalize
-        Configuration configuration = context.getConfiguration();
-        if ("FRESHMON".equalsIgnoreCase(configuration.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
-            addFreshmonOverlay(qlConfig, masterBand, imageLayer, canUseAlpha, layerChildren);
-        } else {
-            if (qlConfig.getOverlayURL() != null) {
-                addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
-            }
-            if (qlConfig.isLegendEnabled()) {
-                addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
-            }
-        }
+//        // TODO generalize
+//        Configuration configuration = context.getConfiguration();
+//        if ("FRESHMON".equalsIgnoreCase(configuration.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
+//            addFreshmonOverlay(qlConfig, masterBand, imageLayer, canUseAlpha, layerChildren);
+//        } else {
+//            if (qlConfig.getOverlayURL() != null) {
+//                addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
+//            }
+//            if (qlConfig.isLegendEnabled()) {
+//                addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
+//            }
+//        }
 
 
         Rectangle2D modelBounds = collectionLayer.getModelBounds();
@@ -202,13 +200,13 @@ public class QuicklookGenerator {
         collectionLayer.render(new Rendering() {
             @Override
             public Graphics2D getGraphics() {
-                context.progress();
+//                context.progress();
                 return rendering.getGraphics();
             }
 
             @Override
             public Viewport getViewport() {
-                context.progress();
+//                context.progress();
                 return rendering.getViewport();
             }
         });

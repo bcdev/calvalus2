@@ -159,7 +159,6 @@ public class ModisStrategy implements SensorStrategy {
             PixelProductArea area = new ModisStrategy().getArea(job.getConfiguration().get("calvalus.area"));
             String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_AREA_STRING, areaString);
-            job.getConfiguration().set(PixelFinaliseMapper.KEY_SENSOR_ID, "2");
             job.setNumReduceTasks(0);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
 

@@ -88,8 +88,6 @@ public class S2GridMapper extends AbstractGridMapper {
         S2FireGridDataSource dataSource = new S2FireGridDataSource(twoDegTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
-        dataSource.setDoyFirstHalf(doyFirstHalf);
-        dataSource.setDoySecondHalf(doySecondHalf);
 
         setDataSource(dataSource);
         GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
@@ -103,33 +101,30 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+    protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
-        for (int i = 0; i < baInLcFirst.size(); i++) {
-            float[] firstBaValues = baInLcFirst.get(i);
-            float[] secondBaValues = baInLcSecond.get(i);
-            lcAreaSum += firstBaValues[targetPixelIndex];
-            lcAreaSum += secondBaValues[targetPixelIndex];
+        for (float[] baValues : baInLc) {
+            lcAreaSum += baValues[targetGridCellIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
         if (lcAreaSumFraction > burnableFraction * 1.05) {
-            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
+            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetGridCellIndex + "!");
         }
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, int numberOfBurnedPixels) {
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
+            if (p < 0) {
+                throw new IllegalStateException("p < 0");
+            }
             if (Double.isNaN(p)) {
                 continue;
             }
             if (p > 1) {
                 // no-data/cloud/water
                 continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
             }
             sum_pb += p;
         }
@@ -149,7 +144,7 @@ public class S2GridMapper extends AbstractGridMapper {
         }
 
         if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
-            LOG.warning(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
+            throw new IllegalArgumentException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
         }
 
         double var_c = 0.0;
@@ -176,6 +171,7 @@ public class S2GridMapper extends AbstractGridMapper {
             return 1;
         }
 
+        double area = gridCellArea / probabilityOfBurn.length; // average area of an S2 pixel
         return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) area;
 
         /*

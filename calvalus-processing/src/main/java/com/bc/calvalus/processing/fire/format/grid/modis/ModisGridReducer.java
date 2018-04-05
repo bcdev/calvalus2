@@ -34,8 +34,7 @@ public class ModisGridReducer extends AbstractGridReducer {
         try {
             int x = getX(key.toString());
             int y = getY(key.toString());
-            writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCells.burnableFraction);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCells.burnableFraction);
+            writeFloatChunk(x, y, ncFile, "fraction_of_burnable_area", currentGridCells.burnableFraction);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -45,8 +44,7 @@ public class ModisGridReducer extends AbstractGridReducer {
     protected void cleanup(Context context) throws IOException, InterruptedException {
         super.cleanup(context);
 
-        createQuicklook(context, new File("./" + firstHalfFile));
-        createQuicklook(context, new File("./" + secondHalfFile));
+        createQuicklook(context, new File("./" + ncFilename));
     }
 
     private static void createQuicklook(Context context, File fileLocation) throws IOException {
@@ -78,8 +76,8 @@ public class ModisGridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected String getFilename(String year, String month, String version, boolean firstHalf) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MODIS-f%s.nc", year, month, firstHalf ? "07" : "22", version);
+    protected String getFilename(String year, String month, String version) {
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MODIS-f%s.nc", year, month, "01", version);
     }
 
     @Override

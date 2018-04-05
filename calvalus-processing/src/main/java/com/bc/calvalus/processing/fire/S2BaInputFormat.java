@@ -123,9 +123,21 @@ public class S2BaInputFormat extends InputFormat {
 
     private static Date getDate(FileStatus fs) {
         String fsName = fs.getPath().getName(); // S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V20160116T105012_20160116T105012_T30PVR.tif
-        fsName = fsName.substring("S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V".length(), "S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V".length() + 15); // 20160116T105012
+        // S2A_OPER_PRD_MSIL2A_PDMC_20161205T185452_R022_V20161205T101402_20161205T101402_T30NZK.tif
+        // or
+        //S2A_MSIL2A_20161207T091352_N0204_R050_T32KQF_20161207T092405.tif
+
+        String datePart; // 20160116T105012
+        if (fsName.startsWith("S2A_OPER")) {
+            datePart = fsName.substring("S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V".length(), "S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V".length() + 15);
+        } else if (fsName.startsWith("S2A_MSIL2A")) {
+            datePart = fsName.split("_")[2];
+        } else {
+            throw new IllegalStateException("Invalid input path: " + fsName);
+        }
+
         try {
-            return new SimpleDateFormat("yyyyMMdd'T'HHmmss").parse(fsName);
+            return new SimpleDateFormat("yyyyMMdd'T'HHmmss").parse(datePart);
         } catch (ParseException e) {
             throw new IllegalStateException("Programming error in input format, see wrapped exception", e);
         }
