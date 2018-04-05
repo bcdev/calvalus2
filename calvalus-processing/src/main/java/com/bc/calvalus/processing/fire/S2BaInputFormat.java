@@ -78,7 +78,7 @@ public class S2BaInputFormat extends InputFormat {
     }
 
     private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
-        String referencePath = referenceFileStatus.getPath().toString(); // hdfs://calvalus/calvalus/projects/fire/s2-pre/2016/01/16/S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V20160116T105012_20160116T105012_T30PVR.tif
+        String referencePath = referenceFileStatus.getPath().toString();
         String periodInputPathPattern = getPeriodInputPathPattern(referencePath);
 
         InputPathResolver inputPathResolver = new InputPathResolver();
@@ -104,14 +104,28 @@ public class S2BaInputFormat extends InputFormat {
         Logger.getLogger("com.bc.calvalus").info("Computing max pre images count...");
         String orbit = null;
         for (FileStatus fileStatus : filteredList) {
-            if (orbit == null) {
-                orbit = fileStatus.getPath().getName().substring(42, 47);
-            } else {
-                if (!orbit.equals(fileStatus.getPath().getName().substring(42, 47))) {
-                    Logger.getLogger("com.bc.calvalus").info("...other file found with different orbit, so it is 8.");
-                    return MAX_PRE_IMAGES_COUNT_MULTI_ORBIT;
+            if (fileStatus.getPath().getName().startsWith("S2A_OPER")) {
+                if (orbit == null) {
+                    orbit = fileStatus.getPath().getName().substring(42, 47);
+                } else {
+                    if (!orbit.equals(fileStatus.getPath().getName().substring(42, 47))) {
+                        Logger.getLogger("com.bc.calvalus").info("...other file found with different orbit, so it is 8.");
+                        return MAX_PRE_IMAGES_COUNT_MULTI_ORBIT;
+                    }
                 }
+            } else if (fileStatus.getPath().getName().startsWith("S2A_MSIL2A")) {
+                if (orbit == null) {
+                    orbit = fileStatus.getPath().getName().substring(34, 39);
+                } else {
+                    if (!orbit.equals(fileStatus.getPath().getName().substring(34, 39))) {
+                        Logger.getLogger("com.bc.calvalus").info("...other file found with different orbit, so it is 8.");
+                        return MAX_PRE_IMAGES_COUNT_MULTI_ORBIT;
+                    }
+                }
+            } else {
+                throw new IllegalStateException("Invalid input path: " + fileStatus.getPath().getName());
             }
+
         }
         Logger.getLogger("com.bc.calvalus").info("...no file found with different orbit, so it is 4.");
         return MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT;
@@ -145,8 +159,16 @@ public class S2BaInputFormat extends InputFormat {
 
     static String getPeriodInputPathPattern(String s2PrePath) {
         int yearIndex = s2PrePath.indexOf("s2-pre/") + "s2-pre/".length();
-        int tileIndex = s2PrePath.indexOf(".tif") - 6;
-        String tile = s2PrePath.substring(tileIndex, tileIndex + 6);
+            String tile;
+        if (s2PrePath.contains("S2A_OPER")) {
+            int tileIndex = s2PrePath.indexOf(".tif") - 6;
+            tile = s2PrePath.substring(tileIndex, tileIndex + 6);
+        } else if (s2PrePath.contains("S2A_MSIL2A")) {
+            tile = s2PrePath.split("_")[5];
+        } else {
+            throw new IllegalStateException("Invalid input path: " + s2PrePath);
+        }
+
         String basePath = s2PrePath.substring(0, yearIndex);
         return String.format("%s.*/.*/.*/.*%s.tif$", basePath, tile);
     }
