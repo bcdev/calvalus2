@@ -42,7 +42,7 @@ public class CodeReportTest {
                                                            "S2.L1C",
                                                            "2",
                                                            "4096",
-                                                           "BC Calvalus",
+                                                           "CODE Calvalus",
                                                            "S2_MASKED",
                                                            "file:/calvalus/home/user/12345",
                                                            5,
@@ -72,8 +72,8 @@ public class CodeReportTest {
                                               "  \"inCollection\": \"S2.L1C\",\n" +
                                               "  \"inProductsNumber\": 5,\n" +
                                               "  \"inProductsSize\": 122.281036,\n" +
-                                              "  \"requestSource\": \"BC Calvalus\",\n" +
-                                              "  \"processingCenter\": \"Calvalus\",\n" +
+                                              "  \"requestSource\": \"CODE Calvalus\",\n" +
+                                              "  \"processingCenter\": \"CODE-DE Calvalus\",\n" +
                                               "  \"configuredCpuCoresPerTask\": 2,\n" +
                                               "  \"cpuCoreHours\": 0.016489,\n" +
                                               "  \"processorName\": \"Fmask\",\n" +
@@ -146,7 +146,7 @@ public class CodeReportTest {
                                               "  \"inProductsNumber\": 5,\n" +
                                               "  \"inProductsSize\": 122.281036,\n" +
                                               "  \"requestSource\": \"BC Calvalus\",\n" +
-                                              "  \"processingCenter\": \"Calvalus\",\n" +
+                                              "  \"processingCenter\": \"CODE-DE Calvalus\",\n" +
                                               "  \"configuredCpuCoresPerTask\": 2,\n" +
                                               "  \"cpuCoreHours\": 0.016489,\n" +
                                               "  \"processorName\": \"Formatting\",\n" +
@@ -218,7 +218,7 @@ public class CodeReportTest {
                                               "  \"inProductsNumber\": 5,\n" +
                                               "  \"inProductsSize\": 122.281036,\n" +
                                               "  \"requestSource\": \"BC Calvalus\",\n" +
-                                              "  \"processingCenter\": \"Calvalus\",\n" +
+                                              "  \"processingCenter\": \"CODE-DE Calvalus\",\n" +
                                               "  \"configuredCpuCoresPerTask\": 2,\n" +
                                               "  \"cpuCoreHours\": 0.016489,\n" +
                                               "  \"configuredRamPerTask\": 4.000000,\n" +
@@ -289,7 +289,7 @@ public class CodeReportTest {
                                               "  \"inProductsNumber\": 5,\n" +
                                               "  \"inProductsSize\": 122.281036,\n" +
                                               "  \"requestSource\": \"BC Calvalus\",\n" +
-                                              "  \"processingCenter\": \"Calvalus\",\n" +
+                                              "  \"processingCenter\": \"CODE-DE Calvalus\",\n" +
                                               "  \"configuredCpuCoresPerTask\": 2,\n" +
                                               "  \"cpuCoreHours\": 0.016489,\n" +
                                               "  \"processorName\": \"Formatting\",\n" +
@@ -361,7 +361,7 @@ public class CodeReportTest {
                                               "  \"inProductsNumber\": 5,\n" +
                                               "  \"inProductsSize\": 122.281036,\n" +
                                               "  \"requestSource\": \"BC Calvalus\",\n" +
-                                              "  \"processingCenter\": \"Calvalus\",\n" +
+                                              "  \"processingCenter\": \"CODE-DE Calvalus\",\n" +
                                               "  \"configuredCpuCoresPerTask\": 2,\n" +
                                               "  \"cpuCoreHours\": 0.016489,\n" +
                                               "  \"processorName\": \"Aggregation\",\n" +
