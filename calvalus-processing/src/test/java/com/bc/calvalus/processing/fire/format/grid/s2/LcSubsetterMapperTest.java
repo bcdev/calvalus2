@@ -1,14 +1,10 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
-import com.bc.calvalus.processing.analysis.QuicklookGenerator;
-import com.bc.calvalus.processing.analysis.Quicklooks;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.gpf.GPF;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import javax.imageio.ImageIO;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,8 +12,9 @@ import java.nio.file.Paths;
 
 public class LcSubsetterMapperTest {
 
+    @Ignore
     @Test
-    public void name() throws Exception {
+    public void doSubsettingTestRun() throws Exception {
         Product lcProduct = ProductIO.readProduct("C:\\ssd\\s2-lc\\ESACCI-LC-L4-LC10-Map-20m-P1Y-2016-v1.0.tif");
         Files.list(Paths.get("D:\\workspace\\temp\\for-s2-lc")).filter(p -> p.getFileName().toString().endsWith("nc")).forEach(
                 p -> {
@@ -36,6 +33,7 @@ public class LcSubsetterMapperTest {
         );
     }
 
+    /*
     @Test
     public void createQLs() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -73,4 +71,7 @@ public class LcSubsetterMapperTest {
             Thread.sleep(3 * 60 * 1000);
         }
     }
+
+    */
+
 }

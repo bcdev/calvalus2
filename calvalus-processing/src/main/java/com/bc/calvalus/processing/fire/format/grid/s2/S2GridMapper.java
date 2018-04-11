@@ -82,8 +82,6 @@ public class S2GridMapper extends AbstractGridMapper {
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
-        int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
-        int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
         S2FireGridDataSource dataSource = new S2FireGridDataSource(twoDegTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
@@ -113,7 +111,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, int numberOfBurnedPixels) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels) {
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (p < 0) {
@@ -130,11 +128,21 @@ public class S2GridMapper extends AbstractGridMapper {
         }
 
         double S = numberOfBurnedPixels / sum_pb;
+        if (Double.isNaN(S) || Double.isInfinite(S)) {
+            return 0;
+        }
 
         double[] pb_i_star = new double[probabilityOfBurn.length];
 
         for (int i = 0; i < probabilityOfBurn.length; i++) {
             double pb_i = probabilityOfBurn[i];
+            if (Double.isNaN(pb_i)) {
+                continue;
+            }
+            if (pb_i > 1) {
+                // no-data/cloud/water
+                continue;
+            }
             pb_i_star[i] = pb_i * S;
         }
 
@@ -150,17 +158,8 @@ public class S2GridMapper extends AbstractGridMapper {
         double var_c = 0.0;
         int count = 0;
         for (double p : pb_i_star) {
-            var_c += p * (1 - p);
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
+//            var_c += p * (1 - p);
+            var_c += Math.abs(p * (1 - p));
             count++;
         }
 
@@ -171,8 +170,7 @@ public class S2GridMapper extends AbstractGridMapper {
             return 1;
         }
 
-        double area = gridCellArea / probabilityOfBurn.length; // average area of an S2 pixel
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) area;
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) averageArea;
 
         /*
         double[] p_b = correct(probabilityOfBurn);

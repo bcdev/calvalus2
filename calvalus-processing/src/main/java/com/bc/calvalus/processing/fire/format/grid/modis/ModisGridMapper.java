@@ -182,6 +182,13 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         for (int i = 0; i < probabilityOfBurn.length; i++) {
             double pb_i = probabilityOfBurn[i];
+            if (Double.isNaN(pb_i)) {
+                continue;
+            }
+            if (pb_i > 1) {
+                // no-data/cloud/water
+                continue;
+            }
             pb_i_star[i] = pb_i * S;
         }
 
@@ -191,7 +198,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         }
 
         if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
-            LOG.warning(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
+            throw new IllegalStateException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
         }
 
         double var_c = 0.0;

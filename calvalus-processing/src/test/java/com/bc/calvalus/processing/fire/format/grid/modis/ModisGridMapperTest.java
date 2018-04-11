@@ -1,18 +1,20 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.util.io.CsvReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class ModisGridMapperTest {
 
@@ -39,18 +41,15 @@ public class ModisGridMapperTest {
     @Test
     public void testStandardError() throws Exception {
         Product product = ProductIO.readProduct("c:\\ssd\\modis-analysis\\burned_2006_1_h19v09.nc");
-
-
-        double[] p = new double[14255];
-        try (CsvReader r = new CsvReader(new FileReader(new File("c:\\Users\\Thomas\\Desktop\\Mappe3.csv")), new char[]{';'})) {
-            List<double[]> doubles = r.readDoubleRecords();
-            for (int i = 0; i < doubles.size(); i++) {
-                double[] aDouble = doubles.get(i);
-                p[i] = aDouble[0] / 100;
-            }
+        Band uncertainty = product.getBand("uncertainty");
+        uncertainty.readRasterDataFully(ProgressMonitor.NULL);
+        short[] p0 = (short[]) uncertainty.getData().getElems();
+        double[] p = new double[p0.length];
+        for (int i = 0; i < p.length; i++) {
+            p[i] = p0[i];
         }
 
-        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 0, 746);
-
+        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 0, 2085);
+        assertEquals(10.0, errorPerPixel, 6.7479032E7);
     }
 }

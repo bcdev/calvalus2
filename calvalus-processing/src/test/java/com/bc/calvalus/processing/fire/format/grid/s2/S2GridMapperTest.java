@@ -1,20 +1,156 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
+import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.SourceData;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Year;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.zip.ZipFile;
 
 import static org.junit.Assert.assertEquals;
 
 public class S2GridMapperTest {
 
     @Test
-    public void name() throws Exception {
-        System.out.println(30129472 / (30129472 - 1.0));
-        double sqrt = Math.sqrt(1004.9875107835129 * (30129472 / (30129472 - 1.0)));
-        System.out.println(sqrt);
-        System.out.println(sqrt * (float) 7.672528883479377E8);
+    @Ignore
+    public void acceptanceTest_1() throws IOException {
+        /* prerequisites:
+            burned area files for 2deg-tile x174y98 of tile T30NUN
+            the LC file corresponding to that tile
+            the geo-lookup file x174y98-30NUN.zip
+        */
+        int doyFirstOfMonth = Year.of(2016).atMonth(1).atDay(1).getDayOfYear();
+        int doyLastOfMonth = Year.of(2016).atMonth(1).atDay(Year.of(2016).atMonth(1).lengthOfMonth()).getDayOfYear();
+        List<Product>[] products = getProducts("30NUN");
+        List<ZipFile> geoLookupTables = getGeoLookupTables("x174y98", "30NUN");
+
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("x174y98", products[0].toArray(new Product[0]), products[1].toArray(new Product[0]), geoLookupTables);
+
+        dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
+        dataSource.setDoyLastOfMonth(doyLastOfMonth);
+        SourceData data = dataSource.readPixels(7, 6);
+
+        double areas = 0.0;
+        int numberOfBurnedPixels = 0;
+
+        for (int i = 0; i < data.burnedPixels.length; i++) {
+            areas += data.areas[i];
+            int doy = data.burnedPixels[i];
+            if (AbstractGridMapper.isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+                numberOfBurnedPixels++;
+            }
+        }
+
+        areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
+
+        float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, numberOfBurnedPixels);
+        assertEquals(12644.094, errorPerPixel, 1E-5);
+        assertEquals(158, data.patchCount);
     }
+
+    @Test
+    @Ignore
+    public void acceptanceTest_2() throws IOException {
+        /* prerequisites:
+            burned area files for 2deg-tile x204y88 of tile 35MLS
+            the LC file corresponding to that tile
+            the geo-lookup file x204y88-35MLS.zip
+        */
+        int doyFirstOfMonth = Year.of(2016).atMonth(1).atDay(1).getDayOfYear();
+        int doyLastOfMonth = Year.of(2016).atMonth(1).atDay(Year.of(2016).atMonth(1).lengthOfMonth()).getDayOfYear();
+        List<Product>[] products = getProducts("35MLS");
+        List<ZipFile> geoLookupTables = getGeoLookupTables("x204y88", "35MLS");
+
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("x204y88", products[0].toArray(new Product[0]), products[1].toArray(new Product[0]), geoLookupTables);
+
+        dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
+        dataSource.setDoyLastOfMonth(doyLastOfMonth);
+        SourceData data = dataSource.readPixels(6, 5);
+
+        double areas = 0.0;
+        int numberOfBurnedPixels = 0;
+
+        for (int i = 0; i < data.burnedPixels.length; i++) {
+            areas += data.areas[i];
+            int doy = data.burnedPixels[i];
+            if (AbstractGridMapper.isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+                numberOfBurnedPixels++;
+            }
+        }
+
+        areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
+
+        float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, numberOfBurnedPixels);
+        assertEquals(11063.7255859375, errorPerPixel, 1E-5);
+        assertEquals(40, data.patchCount);
+    }
+
+    private static List<Product>[] getProducts(String tile) throws IOException {
+        List<Product> products = new ArrayList<>();
+        List<Product> lcProducts = new ArrayList<>();
+        final int[] count = new int[]{0};
+        Files.list(Paths.get("D:\\workspace\\fire-cci\\temp"))
+//                .filter(path -> path.getFileName().toString().contains("NUN"))
+                .filter(path -> path.getFileName().toString().contains("BA"))
+                .filter(path -> path.getFileName().toString().contains(tile))
+                .forEach(path -> {
+                    try {
+                        count[0]++;
+                        System.out.println(count[0]);
+                        Product product = ProductIO.readProduct(path.toFile());
+                        Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\temp\\lc-2010-T" + tile + ".nc");
+                        products.add(product);
+                        lcProducts.add(lcProduct);
+                    } catch (IOException e) {
+                        throw new IllegalStateException(e);
+                    }
+                });
+        List<Product>[] lists = new List[2];
+        lists[0] = products;
+        lists[1] = lcProducts;
+        return lists;
+    }
+
+    private static List<Product> getLcProducts() throws IOException {
+        List<Product> products = new ArrayList<>();
+        Files.list(Paths.get("D:\\workspace\\fire-cci\\temp"))
+                .filter(path -> path.getFileName().toString().contains("lc-"))
+                .forEach(path -> {
+                    try {
+                        Product product = ProductIO.readProduct(path.toFile());
+                        products.add(product);
+                    } catch (IOException e) {
+                        throw new IllegalStateException(e);
+                    }
+                });
+        return products;
+    }
+
+    private static List<ZipFile> getGeoLookupTables(String twoDegTile, String s2Tile) throws IOException {
+        List<ZipFile> geoLookupTables = new ArrayList<>();
+        Files.list(Paths.get("D:\\workspace\\fire-cci\\temp"))
+                .filter(path -> path.getFileName().toString().endsWith(".zip"))
+                .filter(path -> path.getFileName().toString().contains(twoDegTile))
+                .filter(path -> path.getFileName().toString().contains(s2Tile))
+                .forEach(path -> {
+                    try {
+                        geoLookupTables.add(new ZipFile(path.toFile()));
+                    } catch (IOException e) {
+                        throw new IllegalStateException(e);
+                    }
+                });
+        return geoLookupTables;
+    }
+
 
     @Test
     public void getErrorPerPixel() throws Exception {
@@ -42,7 +178,7 @@ public class S2GridMapperTest {
         };
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(4.0988349088, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
+        assertEquals(0.004992405883967876, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
 
     }
 
@@ -52,7 +188,7 @@ public class S2GridMapperTest {
         Arrays.fill(probs, 0);
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
+        assertEquals(0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 10), 1E-6);
     }
 
     @Test
@@ -65,7 +201,7 @@ public class S2GridMapperTest {
         probs[4] = 0.51;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
+        assertEquals(0.0952223390340805, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
         probs = new double[6];
         probs[0] = 0;
         probs[1] = 0.5;
@@ -75,7 +211,7 @@ public class S2GridMapperTest {
         probs[5] = Float.NaN;
         areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
+        assertEquals(0.07774871587753296, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
     }
 
     @Test
@@ -88,7 +224,7 @@ public class S2GridMapperTest {
         probs[4] = 0.51;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.0658, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-5);
+        assertEquals(0.0952223390340805, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-5);
     }
 
     @Test

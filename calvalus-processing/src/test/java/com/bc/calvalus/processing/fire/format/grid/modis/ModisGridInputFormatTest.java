@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -13,6 +14,7 @@ import static org.junit.Assert.assertNotNull;
 
 public class ModisGridInputFormatTest {
 
+    @Ignore
     @Test
     public void testGetTilesLut() throws Exception {
         ModisGridInputFormat.TileLut tilesLut = ModisGridInputFormat.getTilesLut(new File("C:\\ssd\\modis-geo-luts\\modis-tiles-lut.txt"));
@@ -33,7 +35,7 @@ public class ModisGridInputFormatTest {
         System.out.println("maxX=" + xVals.get(xVals.size() - 1));
         System.out.println("minY=" + yVals.get(0));
         System.out.println("maxY=" + yVals.get(yVals.size() - 1));
-        
+
 //        for (String key : tilesLut.keySet()) {
 //            SortedSet<String> inputTiles = new TreeSet<>(tilesLut.get(key));
 //            for (String inputTile : inputTiles) {

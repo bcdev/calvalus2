@@ -53,15 +53,15 @@ public class AbstractGridMapperTest {
     }
 
     @Test
-    public void testIsValidFirstHalfPixel() throws Exception {
-        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 1));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 7));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 10));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 14));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 22, 15));
-        assertFalse(AbstractGridMapper.isValidPixel(1, 22, 16));
-        assertFalse(AbstractGridMapper.isValidPixel(1, 22, 22));
-        assertFalse(AbstractGridMapper.isValidPixel(1, 22, 31));
+    public void testIsValidPixel() throws Exception {
+        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 1));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 7));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 10));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 14));
+        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 15));
+        assertFalse(AbstractGridMapper.isValidPixel(32, 60, 16));
+        assertFalse(AbstractGridMapper.isValidPixel(32, 60, 22));
+        assertFalse(AbstractGridMapper.isValidPixel(32, 60, 31));
     }
 
     @Test

@@ -204,7 +204,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return fraction;
     }
 
-    static boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, int pixel) {
+    public static boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, int pixel) {
         return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
     }
 

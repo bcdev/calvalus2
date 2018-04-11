@@ -364,7 +364,8 @@ public abstract class ProcessorAdapter {
             }
         } else {
             // fire-cci hack!
-            if (conf.get("calvalus.sensor").equals("MODIS")) {
+            String sensorParam = conf.get("calvalus.sensor");
+            if (sensorParam != null && sensorParam.equals("MODIS")) {
                 String pathString = getInputPath().toString();
                 String tile = pathString.substring(pathString.indexOf("burned_")).split("_")[3].split("\\.")[0];
                 LOG.info("tile=" + tile);

@@ -1,8 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
-import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
-import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.AreaCalculator;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Before;
@@ -28,18 +26,18 @@ public class AreaCalculatorTest {
         areaCalculator = new AreaCalculator(gc);
     }
 
-    @Test
-    public void testShowSomeResults() throws Exception {
-        Product product = ProductIO.readProduct("C:\\ssd\\20160122-ESACCI-L4_FIRE-BA-MSI-fv4.1.nc");
-        com.bc.calvalus.processing.fire.format.grid.AreaCalculator areaCalculator = new com.bc.calvalus.processing.fire.format.grid.AreaCalculator(product.getSceneGeoCoding());
-        for (int y = 0; y < product.getSceneRasterHeight(); y++) {
-//            for (int x = 0; x < product.getSceneRasterWidth(); x++) {
-            System.out.println(String.format("pixelY=%s, area=%s", y, areaCalculator.calculatePixelSize(0, y)));
-//                System.out.println(String.format("pixelX=%s, pixelY=%s, area=%s", x, y, areaCalculator.calculatePixelSize(x, y)));
-//            }
-        }
-
-    }
+//    @Test
+//    public void testShowSomeResults() throws Exception {
+//        Product product = ProductIO.readProduct("C:\\ssd\\20160122-ESACCI-L4_FIRE-BA-MSI-fv4.1.nc");
+//        com.bc.calvalus.processing.fire.format.grid.AreaCalculator areaCalculator = new com.bc.calvalus.processing.fire.format.grid.AreaCalculator(product.getSceneGeoCoding());
+//        for (int y = 0; y < product.getSceneRasterHeight(); y++) {
+////            for (int x = 0; x < product.getSceneRasterWidth(); x++) {
+//            System.out.println(String.format("pixelY=%s, area=%s", y, areaCalculator.calculatePixelSize(0, y)));
+////                System.out.println(String.format("pixelX=%s, pixelY=%s, area=%s", x, y, areaCalculator.calculatePixelSize(x, y)));
+////            }
+//        }
+//
+//    }
 
     @Test
     public void testCalculateRectangleSize() throws Exception {

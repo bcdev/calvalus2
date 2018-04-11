@@ -104,7 +104,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
             throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
         }
-        return pixel >= doyFirstOfMonth && pixel < doyLastOfMonth - 6 && pixel != 999 && pixel != NO_DATA;
+        return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
     protected static double[] getAreas(GeoCoding gc, int width, int height, double[] areas) {

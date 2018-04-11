@@ -38,8 +38,8 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -215,7 +215,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
-        Map<Integer, Integer[]> values = new HashMap<>();
+        SortedMap<Integer, Integer[]> values = new TreeMap<>();
 
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {

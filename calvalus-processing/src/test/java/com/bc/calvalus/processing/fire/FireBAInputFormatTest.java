@@ -7,9 +7,6 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 
@@ -24,16 +21,16 @@ public class FireBAInputFormatTest {
 
     }
 
-    @Test
-    public void name() throws Exception {
-        ModisGridInputFormat.TileLut tilesLut = getTilesLut(new File("c:\\ssd\\modis-tiles-lut2.txt"));
-        ArrayList<Integer> sizes = new ArrayList<>();
-        for (Set<String> strings : tilesLut.values()) {
-            sizes.add(strings.size());
-        }
-        Collections.sort(sizes);
-        System.out.println(sizes);
-    }
+//    @Test
+//    public void name() throws Exception {
+//        ModisGridInputFormat.TileLut tilesLut = getTilesLut(new File("c:\\ssd\\modis-tiles-lut2.txt"));
+//        ArrayList<Integer> sizes = new ArrayList<>();
+//        for (Set<String> strings : tilesLut.values()) {
+//            sizes.add(strings.size());
+//        }
+//        Collections.sort(sizes);
+//        System.out.println(sizes);
+//    }
 
     static ModisGridInputFormat.TileLut getTilesLut(File modisTilesFile) {
         Gson gson = new Gson();

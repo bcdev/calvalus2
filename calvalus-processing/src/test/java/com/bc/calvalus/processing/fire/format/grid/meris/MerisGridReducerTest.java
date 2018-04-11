@@ -17,11 +17,8 @@ public class MerisGridReducerTest {
 
     @Test
     public void testCreateFilename() throws Exception {
-        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", reducer.getFilename("2008", "06", "v04.0"));
-        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", reducer.getFilename("2008", "06", "v04.0"));
-
-        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", reducer.getFilename("2010", "10", "v04.1"));
-        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", reducer.getFilename("2010", "10", "v04.1"));
+        assertEquals("20080601-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", reducer.getFilename("2008", "06", "v04.0"));
+        assertEquals("20101001-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", reducer.getFilename("2010", "10", "v04.1"));
     }
 
 }

@@ -5,7 +5,7 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -20,32 +20,7 @@ import static org.junit.Assert.fail;
 
 public class ModisFireGridDataSourceTest {
 
-    @Test
-    public void name() throws Exception {
-//        Product p = ProductIO.readProduct("c:\\ssd\\modis-analysis\\grid-test\\burned_2007_6_h18v01.nc");
-        Product product = new Product("dummyburned_year_month_h18v01", "dummy", 4800, 4800);
-        product.addBand("classification", "0", ProductData.TYPE_INT16);
-        product.addBand("numObs1", "0", ProductData.TYPE_UINT8);
-        product.addBand("numObs2", "0", ProductData.TYPE_UINT8);
-
-
-        Product lc = ProductIO.readProduct("C:\\ssd\\modis-analysis\\grid-test\\h18v01-2000.nc");
-        ZipFile geolookup = new ZipFile(new File("c:\\ssd\\modis-analysis\\grid-test\\modis-geo-luts-079x.zip"));
-        ArrayList<ZipFile> zipFiles = new ArrayList<>();
-        zipFiles.add(geolookup);
-        ModisFireGridDataSource source = new ModisFireGridDataSource(new Product[]{product}, new Product[]{lc}, zipFiles, "" + (798 / 32) * 32 + "," + (79 / 32) * 32);
-
-        source.setDoyFirstOfMonth(152);
-        source.setDoyLastOfMonth(181);
-
-        SourceData data = source.readPixels(798 - (798 / 32) * 32, 79 - (79 / 32) * 32);
-        for (boolean b : data.burnable) {
-            if (b) {
-                System.out.println("miau");
-            }
-        }
-    }
-
+    @Ignore
     @Test
     public void readPixels() throws Exception {
         Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\burned_2001_1_h19v08.nc");
@@ -199,37 +174,38 @@ public class ModisFireGridDataSourceTest {
 
     }
 
-    @Test
-    public void acceptanceTestCache3() throws Exception {
-        Product product = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2002_5_h26v04.nc");
-        Product product2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2002_5_h26v05.nc");
-        Product product3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2002_5_h27v05.nc");
-        Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h26v04-2000.nc");
-        Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h26v05-2000.nc");
-        Product lcProduct3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h27v05-2000.nc");
+//    @Test
+//    public void acceptanceTestCache3() throws Exception {
+//        Product product = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2002_5_h26v04.nc");
+//        Product product2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2002_5_h26v05.nc");
+//        Product product3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2002_5_h27v05.nc");
+//        Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h26v04-2000.nc");
+//        Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h26v05-2000.nc");
+//        Product lcProduct3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h27v05-2000.nc");
+//
+//        List<ZipFile> geoLookupTables = new ArrayList<>();
+//        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-115x.zip")));
+//        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-116x.zip")));
+//        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-117x.zip")));
+//        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-118x.zip")));
+//
+//        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
+//                new Product[]{product, product2, product3},
+//                new Product[]{lcProduct, lcProduct2, lcProduct3},
+//                geoLookupTables,
+//                "1152,192");
+//
+//        dataSource.setDoyFirstOfMonth(121);
+//        dataSource.setDoyLastOfMonth(151);
+//
+//        for (int y = 0; y < 32; y++) {
+//            for (int x = 0; x < 32; x++) {
+//                SourceData sourceData = dataSource.readPixels(x, y);
+//            }
+//        }
+//    }
 
-        List<ZipFile> geoLookupTables = new ArrayList<>();
-        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-115x.zip")));
-        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-116x.zip")));
-        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-117x.zip")));
-        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-118x.zip")));
-
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
-                new Product[]{product, product2, product3},
-                new Product[]{lcProduct, lcProduct2, lcProduct3},
-                geoLookupTables,
-                "1152,192");
-
-        dataSource.setDoyFirstOfMonth(121);
-        dataSource.setDoyLastOfMonth(151);
-
-        for (int y = 0; y < 32; y++) {
-            for (int x = 0; x < 32; x++) {
-                SourceData sourceData = dataSource.readPixels(x, y);
-            }
-        }
-    }
-
+    @Ignore
     @Test
     public void acceptanceTest3() throws Exception {
         Product product = ProductIO.readProduct("c:\\ssd\\burned_2001_12_h10v06.nc");

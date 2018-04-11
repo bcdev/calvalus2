@@ -23,8 +23,8 @@ public class Sen2CorMergerInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         List<InputSplit> splits = new ArrayList<>(3000);
-        String configuredTile = context.getConfiguration().get("calvalus.tile");
-        if (configuredTile == null) {
+        String configuredTiles = context.getConfiguration().get("calvalus.tiles");
+        if (configuredTiles == null) {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(GeoLutInputFormat.class.getResourceAsStream("s2-tiles.txt")));
             String tile;
             while ((tile = bufferedReader.readLine()) != null) {
@@ -37,13 +37,16 @@ public class Sen2CorMergerInputFormat extends InputFormat {
                 splits.add(combineFileSplit);
             }
         } else {
-            List<Path> filePaths = new ArrayList<>();
-            List<Long> fileLengths = new ArrayList<>();
-            filePaths.add(new Path(configuredTile));
-            fileLengths.add(0L);
-            CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
-                    fileLengths.stream().mapToLong(Long::longValue).toArray());
-            splits.add(combineFileSplit);
+            String[] tiles = configuredTiles.split(",");
+            for (String tile : tiles) {
+                List<Path> filePaths = new ArrayList<>();
+                List<Long> fileLengths = new ArrayList<>();
+                filePaths.add(new Path(tile));
+                fileLengths.add(0L);
+                CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+                        fileLengths.stream().mapToLong(Long::longValue).toArray());
+                splits.add(combineFileSplit);
+            }
         }
 
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
