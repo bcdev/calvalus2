@@ -52,7 +52,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
         Product[] products = filter(tile, sourceProducts, x, y);
-//        Product[] products = sourceProducts;
         if (products.length == 0) {
             CalvalusLogger.getLogger().warning("No input product available for pixel x=" + x + ", y=" + y);
             return null;
@@ -75,8 +74,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 }
             }
             if (geoLookupTable == null) {
-                continue;
-//                throw new IllegalStateException("No geo-lookup table for ");
+//                continue;
+                throw new IllegalStateException("No geo-lookup table for ");
             }
 
             ZipEntry currentEntry = null;
@@ -119,6 +118,9 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                     } else {
                         sourceCL = 0.0F;
                     }
+
+                    sourceCL = scale(sourceCL);
+
                     data.probabilityOfBurn[pixelIndex] = sourceCL;
                 }
 
@@ -141,6 +143,32 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION));
 
         return data;
+    }
+
+    private float scale(float cl) {
+        if (cl < 0.01) {
+            return 0F;
+        } else if (cl < 0.02) {
+            return 0.1F;
+        } else if (cl < 0.03) {
+            return 0.2F;
+        } else if (cl < 0.04) {
+            return 0.3F;
+        } else if (cl < 0.05) {
+            return 0.4F;
+        } else if (cl <= 0.14) {
+            return 0.5F;
+        } else if (cl <= 0.23) {
+            return 0.6F;
+        } else if (cl < 0.32) {
+            return 0.7F;
+        } else if (cl < 0.41) {
+            return 0.8F;
+        } else if (cl < 0.50) {
+            return 0.9F;
+        } else {
+            return 1.0F;
+        }
     }
 
     static int getProductJD(Product product) {
