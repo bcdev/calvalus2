@@ -151,8 +151,8 @@ public class S2GridMapper extends AbstractGridMapper {
             checksum += v;
         }
 
-        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
-            throw new IllegalArgumentException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
+        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0005) {
+            throw new IllegalArgumentException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0005", checksum, numberOfBurnedPixels));
         }
 
         double var_c = 0.0;
