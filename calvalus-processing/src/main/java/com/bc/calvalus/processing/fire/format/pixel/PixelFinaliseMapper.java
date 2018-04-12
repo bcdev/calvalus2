@@ -216,6 +216,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         int[] yDirections = new int[]{-1, 0, 1};
 
         SortedMap<Integer, Integer[]> values = new TreeMap<>();
+        boolean isCloudy = false;
 
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
@@ -230,6 +231,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
                         continue;
                     }
                     float neighbourValue = jdData[newPixelIndex];
+                    if (neighbourValue == 997) {
+                        isCloudy = true;
+                    }
                     if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
                         PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
                         if (values.containsKey((int) positionAndValue.value)) {
@@ -258,6 +262,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
             // all neighbours are NaN or not burnable
 
             if (isJD) {
+                if (isCloudy) {
+                    return new PositionAndValue(pixelIndex, -1);
+                }
                 return new PositionAndValue(pixelIndex, -2);
             } else {
                 return new PositionAndValue(pixelIndex, 0);
