@@ -230,7 +230,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
                         continue;
                     }
                     float neighbourValue = jdData[newPixelIndex];
-                    if (!Float.isNaN(neighbourValue) && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
+                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
                         PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
                         if (values.containsKey((int) positionAndValue.value)) {
                             Integer[] v = new Integer[]{values.get((int) positionAndValue.value)[0] + 1, positionAndValue.newPixelIndex};
