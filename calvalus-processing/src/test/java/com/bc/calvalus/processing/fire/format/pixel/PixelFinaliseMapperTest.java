@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.JD;
 import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.TILE_SIZE;
 import static org.junit.Assert.assertEquals;
 
@@ -34,13 +35,16 @@ public class PixelFinaliseMapperTest {
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
 
-        Product lcProduct = ProductIO.readProduct("c:\\ssd\\modis-analysis\\africa-2000.nc");
+        Product lcProduct = ProductIO.readProduct("c:\\ssd\\s2-analysis\\pixel\\2010.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        final File localL3 = new File("C:\\ssd\\modis-analysis\\subset_0_of_L3_2006-03-01_2006-03-31.nc");
-        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "c:\\ssd\\test.nc", lcProduct, 0);
-
-        ProductIO.writeProduct(product, "C:\\ssd\\test4.nc", "NetCDF4-CF");
+        final File localL3 = new File("C:\\ssd\\s2-analysis\\pixel\\L3_2016-12-01_2016-12-31.nc");
+        Product sourceProduct = ProductIO.readProduct(localL3);
+        Product product = new S2PixelFinaliseMapper().remap(sourceProduct, "JD", lcProduct, JD);
+        ProductIO.writeProduct(product, "C:\\ssd\\s2-analysis\\pixel\\test.nc", "NetCDF4-CF");
     }
+
+    // 18836 6408
+    // 20263 6942
 
 
     @Test

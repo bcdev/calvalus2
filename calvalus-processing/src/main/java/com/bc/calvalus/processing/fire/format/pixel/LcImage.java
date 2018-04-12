@@ -55,7 +55,7 @@ class LcImage extends SingleBandedOpImage {
                     }
                 }
 
-                if (Float.isNaN(jdValue)) {
+                if (Float.isNaN(jdValue) || jdValue == 999) {
                     PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false);
                     lcValue = lcData[positionAndValue.newPixelIndex];
                     jdValue = positionAndValue.value;

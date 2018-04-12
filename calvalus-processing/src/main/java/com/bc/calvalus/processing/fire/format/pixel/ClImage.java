@@ -60,7 +60,7 @@ class ClImage extends SingleBandedOpImage {
                     jdValue = 0;
                 }
 
-                if (Float.isNaN(jdValue)) {
+                if (Float.isNaN(jdValue) || jdValue == 999) {
                     PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
                     if (positionAndValue.newPixelIndex != pixelIndex) {
                         targetCl = (int) sourceClArray[positionAndValue.newPixelIndex];

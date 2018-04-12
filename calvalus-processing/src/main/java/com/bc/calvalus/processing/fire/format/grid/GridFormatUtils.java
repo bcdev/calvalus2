@@ -32,7 +32,6 @@ public class GridFormatUtils {
     }
 
     public static Product[] filter(String tile, Product[] sourceProducts, int x, int y) {
-        // tile might be x204y88
         if (x > 7 || y > 7 || x < 0 || y < 0) {
             throw new IllegalArgumentException("x > 7 || y > 7 || x < 0 || y < 0: x=" + x + ", y=" + y);
         }
@@ -42,9 +41,6 @@ public class GridFormatUtils {
          */
         int tileX = Integer.parseInt(tile.split("y")[0].substring(1));
         int tileY = Integer.parseInt(tile.split("y")[1]);
-
-        // tileX = 204
-        // tileY = 88
 
         double leftLon = -180 + tileX + x * 0.25;
         double rightLon = -180 + tileX + (x + 1) * 0.25;

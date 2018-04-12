@@ -51,7 +51,7 @@ class JdImage extends SingleBandedOpImage {
                     sourceJd = -2;
                 }
 
-                if (Float.isNaN(sourceJd)) {
+                if (Float.isNaN(sourceJd) || sourceJd == 999) {
                     sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
                 }
 

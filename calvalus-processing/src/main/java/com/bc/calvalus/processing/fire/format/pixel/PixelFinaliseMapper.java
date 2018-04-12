@@ -136,7 +136,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
 
-    Product remap(Product source, String baseFilename, Product lcProduct, int band) throws IOException {
+    protected Product remap(Product source, String baseFilename, Product lcProduct, int band) throws IOException {
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
