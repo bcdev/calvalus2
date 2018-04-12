@@ -60,8 +60,10 @@ class UIUtils {
             }
             parameters.put("minDate", startTime);
             parameters.put("maxDate", endTime);
-            parameters.put("regionWKT", inputSelection.getRegionGeometry());
-
+            String regionGeometry = inputSelection.getRegionGeometry();
+            if (regionGeometry != null && regionGeometry.length() > 0) {
+                parameters.put("regionWKT", regionGeometry);
+            }
             parameters.put("geoInventory", inputSelection.getCollectionName());
             parameters.put("collectionName", inputSelection.getCollectionName());
         }

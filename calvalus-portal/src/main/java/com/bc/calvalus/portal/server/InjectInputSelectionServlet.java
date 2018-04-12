@@ -88,13 +88,15 @@ public class InjectInputSelectionServlet extends HttpServlet {
         JsonDeserializer<DtoInputSelection> deserializer = (jsonElement, type, jsonDeserializationContext) -> {
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             JsonElement featureObject = jsonObject.getAsJsonObject("regionGeometry");
-            String featureString = featureObject.toString();
-            String regionWkt;
-            try {
-                GeoJsonObject geoJsonObject = new ObjectMapper().readValue(featureString, GeoJsonObject.class);
-                regionWkt = extractRegionWkt(geoJsonObject);
-            } catch (IOException exception) {
-                throw new JsonParseException(exception);
+            String regionWkt = "";
+            if(featureObject != null){
+                String featureString = featureObject.toString();
+                try {
+                    GeoJsonObject geoJsonObject = new ObjectMapper().readValue(featureString, GeoJsonObject.class);
+                    regionWkt = extractRegionWkt(geoJsonObject);
+                } catch (IOException exception) {
+                    throw new JsonParseException(exception);
+                }
             }
 
             Type listType = new TypeToken<ArrayList<String>>() {
