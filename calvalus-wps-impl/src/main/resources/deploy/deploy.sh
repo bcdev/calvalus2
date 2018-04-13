@@ -6,11 +6,11 @@ RUN_AS=tomcat
 
 sudo service bc-tomcat stop
 sudo -u $RUN_AS mkdir -p $CATALINA_HOME/conf/calvalus
-sudo -u $RUN_AS cp calvalus.config $CATALINA_HOME/conf/calvalus
-sudo -u $RUN_AS cp calvalus-wps.properties $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp log4j.properties $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp metadata-template.vm $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp -r local-process-descriptor $CATALINA_HOME/conf/calvalus
+sudo -u $RUN_AS cp -r config $CATALINA_HOME/webapps/bc-wps
+sudo -u $RUN_AS cp WEB-INF/web.xml $CATALINA_HOME/webapps/bc-wps/WEB-INF
 sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging $CATALINA_HOME/webapps/bc-wps
 sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging/static-content/software $CATALINA_HOME/webapps/bc-wps
 sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging/static-content/eodata $CATALINA_HOME/webapps/bc-wps

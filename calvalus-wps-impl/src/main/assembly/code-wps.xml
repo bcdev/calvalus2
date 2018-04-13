@@ -9,14 +9,14 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/src/main/resources/config</directory>
+            <directory>${project.basedir}/src/main/resources/config-code</directory>
             <includes>
                 <include>**</include>
             </includes>
             <outputDirectory>/config</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.basedir}/src/main/resources/webapp</directory>
+            <directory>${project.basedir}/src/main/resources/webapp-code</directory>
             <includes>
                 <include>**</include>
             </includes>

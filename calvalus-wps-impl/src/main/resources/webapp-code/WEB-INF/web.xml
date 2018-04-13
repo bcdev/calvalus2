@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+    <display-name>CODE WPS</display-name>
+    <description>CODE WPS</description>
+
+    <context-param>
+        <param-name>calvalus.properties</param-name>
+        <param-value>/opt/tomcat/webapps/bc-wps/config/calvalus.properties</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>stagingServlet</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readmeFile</param-name>
+            <param-value>/staging/directory-listing-readme.txt</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextXsltFile</param-name>
+            <param-value>/staging/directory-listing.xsl</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>simpleServlet</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>Calvalus WPS</servlet-name>
+        <servlet-class>
+            com.bc.wps.utilities.WpsServletContainer
+        </servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>com.bc.wps</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>uploadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
+    </servlet>
+
+    <listener>
+        <listener-class>com.bc.wps.listener.ContainerInitAndDestroy</listener-class>
+    </listener>
+
+    <servlet-mapping>
+        <servlet-name>Calvalus WPS</servlet-name>
+        <url-pattern>/wps/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>stagingServlet</servlet-name>
+        <url-pattern>/staging/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>simpleServlet</servlet-name>
+        <url-pattern>/software/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>simpleServlet</servlet-name>
+        <url-pattern>/eodata/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>uploadServlet</servlet-name>
+        <url-pattern>/upload</url-pattern>
+    </servlet-mapping>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Calvalus HTTP</web-resource-name>
+            <url-pattern>/wps/*</url-pattern>
+            <url-pattern>/staging</url-pattern>
+            <url-pattern>/staging/*</url-pattern>
+            <url-pattern>/eodata</url-pattern>
+            <url-pattern>/eodata/*</url-pattern>
+            <url-pattern>/upload</url-pattern>
+            <url-pattern>/upload/*</url-pattern>
+            <url-pattern>/urbantep-quicklooks/*</url-pattern>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+        </web-resource-collection>
+    </security-constraint>
+
+    <filter>
+        <filter-name>CAS Authentication Filter</filter-name>
+        <filter-class>com.bc.calvalus.wps.authentication.WpsAuthenticationFilter</filter-class>
+        <init-param>
+            <param-name>casServerLoginUrl</param-name>
+            <param-value>https://tsedos.eoc.dlr.de/cas-codede/login</param-value>
+        </init-param>
+        <init-param>
+            <param-name>service</param-name>
+            <!-- <param-value>https://processing.code-de.org/calvalus.jsp</param-value> -->
+            <!--param-value>http://cd-test-cvportal:8080/calvalus.jsp</param-value-->
+            <!--param-value>http://cd-test-cvportal:8080/code-wps/wps/calvalus?Service=WPS&amp;Request=GetCapabilities</param-value-->
+            <param-value>http://cd-test-cvportal:8080/code-wps/wps/calvalus</param-value>
+            <!--param-value>https://processing.code-de-ref.eoc.dlr.de/calvalus.jsp</param-value-->
+            <!--param-value>https://processing.code-de-ref.eoc.dlr.de/injectInputSelection</param-value-->
+        </init-param>
+    </filter>
+
+    <filter>
+        <filter-name>CAS Validation Filter</filter-name>
+        <filter-class>com.bc.calvalus.wps.authentication.SamlCreateTicketValidationFilter</filter-class>
+        <init-param>
+            <param-name>casServerUrlPrefix</param-name>
+            <param-value>https://tsedos.eoc.dlr.de/cas-codede/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>service</param-name>
+            <!-- <param-value>https://processing.code-de.org/calvalus.jsp</param-value> -->
+            <!--param-value>http://cd-test-cvportal:8080/calvalus.jsp</param-value-->
+            <!--param-value>https://processing.code-de-ref.eoc.dlr.de/calvalus.jsp</param-value-->
+            <!--param-value>http://cd-test-cvportal:8080/code-wps/wps/calvalus?Service=WPS&amp;Request=GetCapabilities</param-value-->
+            <param-value>http://cd-test-cvportal:8080/code-wps/wps/calvalus</param-value>
+            <!--param-value>https://processing.code-de-ref.eoc.dlr.de/injectInputSelection</param-value-->
+        </init-param>
+        <init-param>
+            <param-name>artifactParameterName</param-name>
+            <param-value>ticket</param-value>
+        </init-param>
+        <init-param>
+            <param-name>redirectAfterValidation</param-name>
+            <param-value>false</param-value>
+        </init-param>
+        <init-param>
+            <param-name>calvalus.crypt.samlkey-private-key</param-name>
+            <param-value>/home/cvop/.calvalus/samlkey_priv.der</param-value>
+        </init-param>
+
+    </filter>
+
+    <filter>
+        <filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>
+        <filter-class>org.jasig.cas.client.util.HttpServletRequestWrapperFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CAS Authentication Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS Validation Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+</web-app>

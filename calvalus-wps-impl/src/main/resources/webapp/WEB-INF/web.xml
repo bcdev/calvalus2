@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+    <display-name>Calvalus WPS</display-name>
+    <description>Calvalus WPS</description>
+
+    <context-param>
+        <param-name>calvalus.properties</param-name>
+        <param-value>/opt/tomcat/webapps/bc-wps/config/calvalus.properties</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>stagingServlet</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readmeFile</param-name>
+            <param-value>/staging/directory-listing-readme.txt</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextXsltFile</param-name>
+            <param-value>/staging/directory-listing.xsl</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>simpleServlet</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>Calvalus WPS</servlet-name>
+        <servlet-class>
+            com.bc.wps.utilities.WpsServletContainer
+        </servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>com.bc.wps</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>uploadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
+    </servlet>
+
+    <listener>
+        <listener-class>com.bc.wps.listener.ContainerInitAndDestroy</listener-class>
+    </listener>
+
+    <servlet-mapping>
+        <servlet-name>Calvalus WPS</servlet-name>
+        <url-pattern>/wps/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>stagingServlet</servlet-name>
+        <url-pattern>/staging/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>simpleServlet</servlet-name>
+        <url-pattern>/software/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>simpleServlet</servlet-name>
+        <url-pattern>/eodata/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>uploadServlet</servlet-name>
+        <url-pattern>/upload</url-pattern>
+    </servlet-mapping>
+
+    <security-role>
+        <description>This is the group that consists of external users with access to Calvalus WPS.</description>
+        <role-name>calwps</role-name>
+    </security-role>
+
+    <security-role>
+        <description>This is the group that consists of internal users with access to Calvalus Portal.</description>
+        <role-name>calvalus</role-name>
+    </security-role>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Calvalus HTTP</web-resource-name>
+            <url-pattern>/wps/*</url-pattern>
+            <url-pattern>/staging</url-pattern>
+            <url-pattern>/staging/*</url-pattern>
+<!--
+            <url-pattern>/software</url-pattern>
+            <url-pattern>/software/*</url-pattern>
+-->
+            <url-pattern>/eodata</url-pattern>
+            <url-pattern>/eodata/*</url-pattern>
+            <url-pattern>/upload</url-pattern>
+            <url-pattern>/upload/*</url-pattern>
+            <url-pattern>/urbantep-quicklooks/*</url-pattern>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>calwps</role-name>
+            <role-name>calvalus</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>Calvalus WPS</realm-name>
+    </login-config>
+
+</web-app>
