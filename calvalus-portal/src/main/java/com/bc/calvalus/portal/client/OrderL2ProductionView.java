@@ -189,6 +189,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         }
         l2ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
+        quicklookParametersForm.setValues(parameters);
     }
 
     private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {

@@ -118,6 +118,26 @@
     font-size: 14px;
 }
 
+/**************************
+* Quicklook Panel styling *
+***************************/
+.quicklookPanel {
+    margin: 50px 15px;
+    width: 62em;
+}
+
+.quicklookParametersPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.quicklookInputLabel {
+    flex: 0 0 130px;
+    margin: auto 0;
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+}
+
 /**********************
 * Input files styling *
 ***********************/

@@ -428,10 +428,6 @@ public class ProductionRequest implements XmlConvertible {
         return s.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
     }
 
-    public boolean isEnableQuicklook() throws ProductionException {
-        return getBoolean("enableQuicklook", false);
-    }
-
     /////////////////////////////////////////////////////////////////////////
     // XmlConvertible
 

@@ -4,17 +4,168 @@
 
     <ui:style src="style.css"/>
 
-    <g:FlowPanel styleName="{style.outputParametersPanel}">
+    <g:FlowPanel styleName="{style.quicklookPanel}">
 
         <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
             <g:InlineLabel styleName="{style.panelTitleText}">Quicklook</g:InlineLabel>
         </g:HTMLPanel>
 
-        <g:CheckBox ui:field="enableQuicklook"
-                    text="Enable quicklook after successful production"
-                    checked="false"
-                    styleName="{style.checkBox} {style.explanatoryLabel}"
-        />
+        <g:HTMLPanel styleName="{style.quicklookParametersPanel}">
+            <table cellspacing="2" width="100%" border="0px">
+
+                <tr>
+                    <td colspan="3">
+                        <g:RadioButton ui:field="quicklookNone"
+                                       name="quicklookSelection"
+                                       text="No Quicklook"
+                                       styleName="{style.radioButton}"
+                        />
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">
+                        <g:RadioButton ui:field="quicklookSingleBand"
+                                       name="quicklookSelection"
+                                       text="Single-band quicklook"
+                                       styleName="{style.radioButton}"
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Band name:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='bandName' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Colour table:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='cpdURL' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">
+                        <g:RadioButton ui:field="quicklookMultiBand"
+                                       name="quicklookSelection"
+                                       text="RGB quicklook"
+                                       styleName="{style.radioButton}"
+                        />
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Red band expression:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='rgbaExpressionsRedBand' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Green band expression:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='rgbaExpressionsGreenBand' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Blue band expression:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='rgbaExpressionsBlueBand' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Alpha band expression:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='rgbaExpressionsAlphaBand' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Minimum samples:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field="rgbaMinSamples" width="30em"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Maximum samples:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field="rgbaMaxSamples" width="30em"/>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+
+                <tr>
+                    <td colspan="3">
+                        <g:InlineLabel styleName="{style.textBox}">More quicklook options:</g:InlineLabel>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Image type:</g:Label></td>
+                    <td align="left">
+                        <g:ListBox ui:field="imageType" multipleSelect="false" visibleItemCount="1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Overlay URL:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='overlayURL' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Mask overlays:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='maskOverlays' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Sub sampling (X):</g:Label></td>
+                    <td align="left">
+                        <g:IntegerBox ui:field='subSamplingX' enabled="true" visibleLength="6" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Sub sampling (Y):</g:Label></td>
+                    <td align="left">
+                        <g:IntegerBox ui:field='subSamplingY' enabled="true" visibleLength="6" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td><g:Label styleName="{style.quicklookInputLabel}">Background Color:</g:Label></td>
+                    <td align="left">
+                        <g:TextBox ui:field='backgroundColor' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td align="left">
+                        <g:CheckBox ui:field="legendEnabled"
+                                    text="Enable legend"
+                                    checked="false"
+                                    styleName="{style.checkBox} {style.explanatoryLabel}"
+                        />
+                    </td>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+
+            </table>
+
+        </g:HTMLPanel>
 
         <g:HTML>
             <br/>
