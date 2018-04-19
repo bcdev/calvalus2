@@ -231,7 +231,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
                         continue;
                     }
                     float neighbourValue = jdData[newPixelIndex];
-                    if (neighbourValue == 997) {
+                    if (neighbourValue == 998) {
                         isCloudy = true;
                     }
 //                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {

@@ -52,7 +52,7 @@ class JdImage extends SingleBandedOpImage {
                     sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
                 }
 
-                boolean notCloudy = sourceJd != 997 && sourceJd != -1.0;
+                boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
 //                if (!LcRemappingS2.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex])) && notCloudy) {
                 if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex]) && notCloudy) {
                     sourceJd = -2;
