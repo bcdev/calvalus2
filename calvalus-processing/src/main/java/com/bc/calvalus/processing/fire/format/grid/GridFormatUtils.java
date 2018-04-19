@@ -31,7 +31,7 @@ public class GridFormatUtils {
         return result;
     }
 
-    public static Product[] filter(String tile, Product[] sourceProducts, int x, int y) {
+    public static List<Integer> getMatchingProductIndices(String tile, Product[] sourceProducts, int x, int y) {
         if (x > 7 || y > 7 || x < 0 || y < 0) {
             throw new IllegalArgumentException("x > 7 || y > 7 || x < 0 || y < 0: x=" + x + ", y=" + y);
         }
@@ -53,8 +53,10 @@ public class GridFormatUtils {
         GeoPos LR = new GeoPos(lowerLat, rightLon);
         GeoPos UR = new GeoPos(upperLat, rightLon);
 
-        List<Product> filteredProducts = new ArrayList<>();
-        for (Product sourceProduct : sourceProducts) {
+        List<Integer> indices = new ArrayList<>();
+
+        for (int i = 0; i < sourceProducts.length; i++) {
+            Product sourceProduct = sourceProducts[i];
             PixelPos pixelPosUL = sourceProduct.getSceneGeoCoding().getPixelPos(UL, null);
             PixelPos pixelPosLL = sourceProduct.getSceneGeoCoding().getPixelPos(LL, null);
             PixelPos pixelPosLR = sourceProduct.getSceneGeoCoding().getPixelPos(LR, null);
@@ -64,11 +66,10 @@ public class GridFormatUtils {
                     sourceProduct.containsPixel(pixelPosLR) ||
                     sourceProduct.containsPixel(pixelPosUR)
                     ) {
-                filteredProducts.add(sourceProduct);
+                indices.add(i);
             }
         }
-
-        return filteredProducts.toArray(new Product[0]);
+        return indices;
     }
 
     public static String lcYear(int year) {

@@ -82,11 +82,11 @@ public class GridCells implements Writable {
         patchNumber = new float[bandSize];
         errors = new float[bandSize];
         baInLc = new ArrayList<>();
-        burnableFraction = new float[bandSize];
         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
             baInLc.add(new float[bandSize]);
         }
         coverage = new float[bandSize];
+        burnableFraction = new float[bandSize];
 
         for (int i = 0; i < bandSize; i++) {
             ba[i] = in.readFloat();

@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.filter;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.getMatchingProductIndices;
 
 public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
@@ -51,20 +51,17 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().info("All products:");
         CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
-        Product[] products = filter(tile, sourceProducts, x, y);
-        if (products.length == 0) {
+        List<Integer> productIndices = getMatchingProductIndices(tile, sourceProducts, x, y);
+        if (productIndices.size() == 0) {
             CalvalusLogger.getLogger().warning("No input product available for pixel x=" + x + ", y=" + y);
             return null;
         }
 
-        CalvalusLogger.getLogger().info("Products after filtering:");
-        CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(products).map(Product::getName).toArray()));
-
         SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();
 
-        for (int i = 0; i < products.length; i++) {
-            Product product = products[i];
+        for (Integer i : productIndices) {
+            Product product = sourceProducts[i];
             Product lcProduct = lcProducts[i];
             ZipFile geoLookupTable = null;
             for (ZipFile lookupTable : geoLookupTables) {
@@ -74,7 +71,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 }
             }
             if (geoLookupTable == null) {
-//                continue;
                 throw new IllegalStateException("No geo-lookup table for ");
             }
 
@@ -125,7 +121,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 }
 
                 int sourceLC = getIntPixelValue(lc, key, pixelIndex);
-                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                data.burnable[pixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
                 if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
                     int productJD = getProductJD(product);
@@ -160,11 +156,11 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             return 0.5F;
         } else if (cl <= 0.23) {
             return 0.6F;
-        } else if (cl < 0.32) {
+        } else if (cl <= 0.32) {
             return 0.7F;
-        } else if (cl < 0.41) {
+        } else if (cl <= 0.41) {
             return 0.8F;
-        } else if (cl < 0.50) {
+        } else if (cl <= 0.50) {
             return 0.9F;
         } else {
             return 1.0F;

@@ -80,6 +80,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
                             boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
                             baInLc.get(lcClass)[targetGridCellIndex] += inLcClass ? data.areas[i] : 0.0;
+                            // address this after decision if S2 LC is used or not
+                            baInLc.get(lcClass)[targetGridCellIndex] = 0;
                             if (inLcClass) {
                                 hasLcClass = true;
                             }

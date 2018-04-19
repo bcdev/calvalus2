@@ -2,7 +2,7 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.fs.FileSystem;
@@ -146,7 +146,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         Band sourceJdBand = source.getBand("JD");
         Band sourceClBand = source.getBand("CL");
-        Band sourceLcBand = lcProduct.getBand("lccs_class");
+        Band sourceLcBand = lcProduct.getBand("band_1");
 
         switch (band) {
             case JD:
@@ -234,7 +234,8 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     if (neighbourValue == 997) {
                         isCloudy = true;
                     }
-                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
+//                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
+                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemappingS2.isInBurnableLcClass(lcArray[newPixelIndex])) {
                         PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
                         if (values.containsKey((int) positionAndValue.value)) {
                             Integer[] v = new Integer[]{values.get((int) positionAndValue.value)[0] + 1, positionAndValue.newPixelIndex};

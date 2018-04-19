@@ -35,9 +35,6 @@ public class S2GridInputFormat extends InputFormat {
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
         List<InputSplit> splits = new ArrayList<>(1000);
         for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
-//            if (!entry.getKey().toString().startsWith("x176y98")) {
-//                continue;
-//            }
             String tilePattern = entry.getValue().toString();
             String[] utmTiles = tilePattern.split("\\|");
             List<FileStatus> fileStatuses = new ArrayList<>();

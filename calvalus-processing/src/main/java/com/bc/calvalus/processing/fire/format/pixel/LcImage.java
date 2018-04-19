@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.image.ResolutionLevel;
@@ -49,7 +49,8 @@ class LcImage extends SingleBandedOpImage {
                 float jdValue = jdArray[pixelIndex];
                 int lcValue = lcData[pixelIndex];
 
-                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
+//                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
+                if (!LcRemappingS2.isInBurnableLcClass(lcData[pixelIndex])) {
                     if (jdValue > 0) {
                         jdValue = 0;
                     }
@@ -64,7 +65,9 @@ class LcImage extends SingleBandedOpImage {
                 if (jdValue <= 0 || jdValue >= 997) {
                     lcValue = 0;
                 }
-                dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
+//                dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
+                // need to fix this in case S2 LC map is used
+                dest.setSample(x, y, 0, lcValue);
                 pixelIndex++;
             }
         }

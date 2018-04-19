@@ -66,7 +66,7 @@ public class S2GridMapper extends AbstractGridMapper {
                 throw new IllegalStateException("Product " + sourceProductFile + " is broken.");
             }
 
-            Path lcPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2/lc-2010-T" + utmTile + ".nc");
+            Path lcPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2-from-s2/lc-2010-T" + utmTile + ".nc");
             File lcFile = new File(".", lcPath.getName());
             if (!lcFile.exists()) {
                 CalvalusProductIO.copyFileToLocal(lcPath, lcFile, context.getConfiguration());
@@ -158,8 +158,8 @@ public class S2GridMapper extends AbstractGridMapper {
         double var_c = 0.0;
         int count = 0;
         for (double p : pb_i_star) {
-//            var_c += p * (1 - p);
-            var_c += Math.abs(p * (1 - p));
+            var_c += p * (1 - p);
+//            var_c += Math.abs(p * (1 - p));
             count++;
         }
 

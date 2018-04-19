@@ -191,7 +191,7 @@ public class S2Strategy implements SensorStrategy {
         @Override
         protected void configureJob(Job job) throws IOException {
             job.setInputFormatClass(PatternBasedInputFormat.class);
-            job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2010.nc");
+            job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2016.nc");
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv1.0");
             PixelProductArea area = new S2Strategy().getArea(job.getConfiguration().get("calvalus.area"));
             String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);

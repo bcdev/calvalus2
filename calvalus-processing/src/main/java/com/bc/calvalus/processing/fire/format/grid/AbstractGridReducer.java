@@ -104,14 +104,12 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
         int lastDayOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
-        String timeCoverageStartFirstHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 1).atTime(0, 0, 0));
-        String timeCoverageEndFirstHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 15).atTime(23, 59, 59));
-        String timeCoverageStartSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 16).atTime(0, 0, 0));
-        String timeCoverageEndSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), lastDayOfMonth).atTime(23, 59, 59));
+        String timeCoverageStart = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 1).atTime(0, 0, 0));
+        String timeCoverageEnd = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), lastDayOfMonth).atTime(23, 59, 59));
 
         ncFilename = getFilename(year, month, version);
 
-        ncFile = createNcFile(ncFilename, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
+        ncFile = createNcFile(ncFilename, version, timeCoverageStart, timeCoverageEnd, lastDayOfMonth);
 
         try {
             writeLon(ncFile);

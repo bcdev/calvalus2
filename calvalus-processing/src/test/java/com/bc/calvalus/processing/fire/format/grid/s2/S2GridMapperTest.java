@@ -1,9 +1,11 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -37,24 +39,44 @@ public class S2GridMapperTest {
 
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
-        SourceData data = dataSource.readPixels(7, 6);
 
-        double areas = 0.0;
-        int numberOfBurnedPixels = 0;
+        S2GridMapper s2GridMapper = new S2GridMapper();
+        s2GridMapper.setDataSource(dataSource);
+        GridCells gridCells = s2GridMapper.computeGridCells(2016, 1);
 
-        for (int i = 0; i < data.burnedPixels.length; i++) {
-            areas += data.areas[i];
-            int doy = data.burnedPixels[i];
-            if (AbstractGridMapper.isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
-                numberOfBurnedPixels++;
-            }
-        }
+        float[] burnedArea = gridCells.ba;
+        float[] patchNumbers = gridCells.patchNumber;
+        float[] errors = gridCells.errors;
+        float[] coverage = gridCells.coverage;
+        float[] burnableFraction = gridCells.burnableFraction;
 
-        areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
+        Product product = new Product("output", "fire", 8, 8);
+        product.addBand("ba", ProductData.TYPE_FLOAT32).setDataElems(burnedArea);
+        product.addBand("pn", ProductData.TYPE_FLOAT32).setDataElems(patchNumbers);
+        product.addBand("er", ProductData.TYPE_FLOAT32).setDataElems(errors);
+        product.addBand("cov", ProductData.TYPE_FLOAT32).setDataElems(coverage);
+        product.addBand("bf", ProductData.TYPE_FLOAT32).setDataElems(burnableFraction);
 
-        float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, numberOfBurnedPixels);
-        assertEquals(12644.094, errorPerPixel, 1E-5);
-        assertEquals(158, data.patchCount);
+        ProductIO.writeProduct(product, "c:\\ssd\\s2-analysis\\grid\\test.nc", "NetCDF4-CF");
+
+//        SourceData data = dataSource.readPixels(7, 6);
+//
+//        double areas = 0.0;
+//        int numberOfBurnedPixels = 0;
+//
+//        for (int i = 0; i < data.burnedPixels.length; i++) {
+//            areas += data.areas[i];
+//            int doy = data.burnedPixels[i];
+//            if (AbstractGridMapper.isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+//                numberOfBurnedPixels++;
+//            }
+//        }
+//
+//        areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
+//
+//        float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, numberOfBurnedPixels);
+//        assertEquals(8454.585, errorPerPixel, 1E-5);
+//        assertEquals(163, data.patchCount);
     }
 
     @Test
@@ -94,13 +116,52 @@ public class S2GridMapperTest {
         assertEquals(40, data.patchCount);
     }
 
+    @Test
+    @Ignore
+    public void acceptanceTest_3() throws IOException {
+        /* prerequisites:
+            1 burned area file for tile 28PBA
+            the LC file corresponding to that tile
+            the geo-lookup file x162y106-28PBA.zip
+        */
+        int doyFirstOfMonth = Year.of(2016).atMonth(1).atDay(1).getDayOfYear();
+        int doyLastOfMonth = Year.of(2016).atMonth(1).atDay(Year.of(2016).atMonth(1).lengthOfMonth()).getDayOfYear();
+        List<Product>[] products = getProducts("28PBA");
+        List<ZipFile> geoLookupTables = getGeoLookupTables("x162y106", "28PBA");
+
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("x162y106", products[0].toArray(new Product[0]), products[1].toArray(new Product[0]), geoLookupTables);
+
+        dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
+        dataSource.setDoyLastOfMonth(doyLastOfMonth);
+        SourceData data = dataSource.readPixels(4, 6);
+
+        double areas = 0.0;
+        double burnableFractionValue = 0.0;
+
+        for (int i = 0; i < data.burnedPixels.length; i++) {
+            areas += data.areas[i];
+            burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
+        }
+
+        double burnableFraction = getFraction(burnableFractionValue, areas);
+        areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
+    }
+
+    protected static float getFraction(double value, double area) {
+        float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
+        if (Float.isNaN(fraction)) {
+            fraction = 0.0F;
+        }
+        return fraction;
+    }
+
     private static List<Product>[] getProducts(String tile) throws IOException {
-        List<Product> products = new ArrayList<>();
-        List<Product> lcProducts = new ArrayList<>();
+        List<Product> products = new ArrayList<>(2);
+        List<Product> lcProducts = new ArrayList<>(2);
         final int[] count = new int[]{0};
         Files.list(Paths.get("D:\\workspace\\fire-cci\\temp"))
 //                .filter(path -> path.getFileName().toString().contains("NUN"))
-                .filter(path -> path.getFileName().toString().contains("BA"))
+                .filter(path -> path.getFileName().toString().startsWith("BA"))
                 .filter(path -> path.getFileName().toString().contains(tile))
                 .forEach(path -> {
                     try {

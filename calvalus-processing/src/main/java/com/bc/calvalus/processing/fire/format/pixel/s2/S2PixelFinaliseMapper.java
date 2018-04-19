@@ -8,7 +8,7 @@ import org.esa.snap.core.datamodel.Product;
 public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
-    protected Product collocateWithSource(Product lcProduct, Product source) {
+    public Product collocateWithSource(Product lcProduct, Product source) {
         CollocateOp collocateOp = new CollocateOp();
         collocateOp.setMasterProduct(source);
         collocateOp.setSlaveProduct(lcProduct);
@@ -34,11 +34,11 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
                 return 50;
             } else if (cl <= 0.23) {
                 return 60;
-            } else if (cl < 0.32) {
+            } else if (cl <= 0.32) {
                 return 70;
-            } else if (cl < 0.41) {
+            } else if (cl <= 0.41) {
                 return 80;
-            } else if (cl < 0.50) {
+            } else if (cl <= 0.50) {
                 return 90;
             } else {
                 return 100;

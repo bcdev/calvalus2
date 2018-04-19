@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.image.ResolutionLevel;
@@ -56,8 +56,11 @@ class ClImage extends SingleBandedOpImage {
                 }
                 float jdValue = sourceJdArray[pixelIndex];
 
-                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                    jdValue = 0;
+//                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
+                if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex])) {
+                    dest.setSample(x, y, 0, 0);
+                    pixelIndex++;
+                    continue;
                 }
 
                 if (Float.isNaN(jdValue) || jdValue == 999) {

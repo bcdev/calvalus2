@@ -21,7 +21,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.CL;
 import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.JD;
+import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.LC;
 import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.TILE_SIZE;
 import static org.junit.Assert.assertEquals;
 
@@ -37,15 +39,18 @@ public class PixelFinaliseMapperTest {
 
         Product lcProduct = ProductIO.readProduct("c:\\ssd\\s2-analysis\\pixel\\2010.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        final File localL3 = new File("C:\\ssd\\s2-analysis\\pixel\\L3_2016-12-01_2016-12-31.nc");
+        final File localL3 = new File("C:\\ssd\\s2-analysis\\pixel\\new\\L3_2016-11-01_2016-11-30.nc");
         Product sourceProduct = ProductIO.readProduct(localL3);
+
+        lcProduct = new S2PixelFinaliseMapper().collocateWithSource(lcProduct, sourceProduct);
+
         Product product = new S2PixelFinaliseMapper().remap(sourceProduct, "JD", lcProduct, JD);
         ProductIO.writeProduct(product, "C:\\ssd\\s2-analysis\\pixel\\test.nc", "NetCDF4-CF");
+        Product clproduct = new S2PixelFinaliseMapper().remap(sourceProduct, "CL", lcProduct, CL);
+        ProductIO.writeProduct(clproduct, "C:\\ssd\\s2-analysis\\pixel\\test-cl.nc", "NetCDF4-CF");
+        Product lcproduct = new S2PixelFinaliseMapper().remap(sourceProduct, "LC", lcProduct, LC);
+        ProductIO.writeProduct(lcproduct, "C:\\ssd\\s2-analysis\\pixel\\test-lc.nc", "NetCDF4-CF");
     }
-
-    // 18836 6408
-    // 20263 6942
-
 
     @Test
     public void testRemap2() throws Exception {

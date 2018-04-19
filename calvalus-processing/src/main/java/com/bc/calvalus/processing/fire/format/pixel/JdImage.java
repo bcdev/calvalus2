@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.ProductData;
@@ -47,12 +47,15 @@ class JdImage extends SingleBandedOpImage {
                 pixelPos.y = y;
 
                 float sourceJd = sourceJdArray[pixelIndex];
-                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                    sourceJd = -2;
-                }
 
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {
                     sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+                }
+
+                boolean notCloudy = sourceJd != 997 && sourceJd != -1.0;
+//                if (!LcRemappingS2.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex])) && notCloudy) {
+                if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex]) && notCloudy) {
+                    sourceJd = -2;
                 }
 
                 int targetJd;
