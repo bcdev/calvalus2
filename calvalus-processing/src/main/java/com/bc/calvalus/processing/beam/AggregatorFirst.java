@@ -48,6 +48,10 @@ public class AggregatorFirst extends AbstractAggregator {
         this.varIndex = varCtx.getVariableIndex(varName);
     }
 
+    public boolean requiresGrowableSpatialData() {
+        return false;
+    }
+
     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, Float.NaN);

@@ -112,6 +112,10 @@ public final class AggregatorYoungest extends AbstractAggregator {
                '}';
     }
 
+    public boolean requiresGrowableSpatialData() {
+        return false;
+    }
+
     public static class Config extends AggregatorConfig {
 
         @Parameter(label = "Maximum band name", notEmpty = true, notNull = true,

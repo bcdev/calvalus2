@@ -105,11 +105,11 @@ import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_E
  * http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may
  * be one or more of the following:
  *  -S,--snap &lt;NAME&gt;       The name of the SNAP software bundle used for the
- *                         production. Defaults to 'snap-2.0.0'.
+ *                         production. Defaults to 'snap-6.0.1-cv'.
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-2.14.4'
+ *                         the production. Defaults to 'calvalus-2.14.5'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the

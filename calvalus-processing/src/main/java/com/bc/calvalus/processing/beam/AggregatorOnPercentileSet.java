@@ -80,6 +80,10 @@ public class AggregatorOnPercentileSet extends AbstractAggregator {
         this.slName = "sl." + varName;
     }
 
+    public boolean requiresGrowableSpatialData() {
+        return false;
+    }
+
     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);

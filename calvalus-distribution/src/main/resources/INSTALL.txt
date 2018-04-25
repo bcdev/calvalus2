@@ -33,8 +33,8 @@ java -jar cpt.jar --help
 
 The remaining step is to install the SNAP and the Calvalus bundle into the HDFS:
 
-java -jar cpt.jar --deploy snap-bundle/*.jar snap-2.0.0
-java -jar cpt.jar --deploy calvalus-bundle/*.jar calvalus-2.14.4
+java -jar cpt.jar --deploy snap-bundle/*.jar snap-6.0.1-cv
+java -jar cpt.jar --deploy calvalus-bundle/*.jar calvalus-2.14.5
 
 Whereas the name of the SNAP and Calvalus bundle are given in the "calvalus.hadoop.calvalus.calvalus.bundle" and
 the "calvalus.hadoop.calvalus.snap.bundle" configuration property.
