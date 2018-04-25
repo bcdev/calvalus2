@@ -83,6 +83,8 @@ loginResult="$(curl "https://tsedos.eoc.dlr.de/cas-codede/login?service=${SERVIC
 #curl $SERVICE_NAME_CLEAR -b $COOKIE_JAR -k -L -F "request=@test-request.xml"
 if [[ ${SERVICE_TYPE} == "Execute" ]] ; then
     curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: requestId=$(uuidgen)" -F "request=@test-request.xml"
+elif [[ ${SERVICE_TYPE} == "GetStatus" ]] ; then
+    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: queryString=${QUERY_STRING}" | sed 's/http\:/https\:/'
 else
     curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: queryString=${QUERY_STRING}"
 fi

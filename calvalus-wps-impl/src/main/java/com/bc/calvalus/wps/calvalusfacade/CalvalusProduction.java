@@ -10,7 +10,9 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
@@ -23,13 +25,44 @@ import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
+import org.apache.xml.security.encryption.XMLCipher;
+import org.apache.xml.security.encryption.XMLEncryptionException;
+import org.apache.xml.security.utils.EncryptionConstants;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.DOMBuilder;
+import org.jdom2.output.DOMOutputter;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -49,7 +82,15 @@ class CalvalusProduction {
         try {
             ServiceContainer serviceContainer = CalvalusProductionService.getServiceContainerSingleton();
             ProductionRequest request = createProductionRequest(executeRequest, userName, serviceContainer, calvalusFacade);
-            return doProductionAsynchronous(request, serviceContainer.getProductionService(), userName);
+            Map<String, String> requestHeaderMap = calvalusFacade.getRequestHeaderMap();
+            String cookie = requestHeaderMap.get("Cookie");
+            System.out.println("####################");
+            for (Map.Entry<String, String> stringStringEntry : requestHeaderMap.entrySet()) {
+                System.out.println(stringStringEntry.getKey() + "=" + stringStringEntry.getValue());
+            }
+            System.out.println("####################");
+            Map<String, String> config = ProductionServiceConfig.loadConfig(CalvalusProductionService.getConfigFile(), null);
+            return doProductionAsynchronous(request, serviceContainer.getProductionService(), userName, config, cookie);
         } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException("Processing failed : " + exception.getMessage(), exception);
@@ -60,7 +101,17 @@ class CalvalusProduction {
         try {
             ServiceContainer serviceContainer = CalvalusProductionService.getServiceContainerSingleton();
             ProductionRequest request = createProductionRequest(executeRequest, userName, serviceContainer, calvalusFacade);
-            LocalProductionStatus status = doProductionSynchronous(serviceContainer.getProductionService(), request);
+            Map<String, String> requestHeaderMap = calvalusFacade.getRequestHeaderMap();
+            String cookie = requestHeaderMap.get("Cookie");
+            System.out.println("####################");
+            for (Map.Entry<String, String> stringStringEntry : requestHeaderMap.entrySet()) {
+                System.out.println(stringStringEntry.getKey() + "=" + stringStringEntry.getValue());
+            }
+            System.out.println("####################");
+
+
+            Map<String, String> config = ProductionServiceConfig.loadConfig(CalvalusProductionService.getConfigFile(), null);
+            LocalProductionStatus status = doProductionSynchronous(serviceContainer.getProductionService(), request, config, cookie);
             String jobId = status.getJobId();
             calvalusFacade.stageProduction(jobId);
             calvalusFacade.observeStagingStatus(jobId);
@@ -76,27 +127,32 @@ class CalvalusProduction {
         }
     }
 
-    private LocalProductionStatus doProductionSynchronous(ProductionService productionService, ProductionRequest request)
+    private LocalProductionStatus doProductionSynchronous(ProductionService productionService, ProductionRequest request, Map<String, String> config, String cookie)
                 throws ProductionException, InterruptedException {
         logInfo("Ordering production...");
-        ProductionResponse productionResponse = productionService.orderProduction(request);
+
+        TokenGenerator jobHook = createSamlTokenHook(config, cookie);
+        ProductionResponse productionResponse = productionService.orderProduction(request, jobHook);
         Production production = productionResponse.getProduction();
         logInfo("Production successfully ordered. The production ID is: " + production.getId());
         observeProduction(productionService, production);
         ProcessStatus status = production.getProcessingStatus();
         return new LocalProductionStatus(production.getId(),
-                                         status.getState(),
-                                         status.getProgress(),
-                                         status.getMessage(),
-                                         null);
+                status.getState(),
+                status.getProgress(),
+                status.getMessage(),
+                null);
     }
 
-    private LocalProductionStatus doProductionAsynchronous(ProductionRequest request, ProductionService productionService, String userName)
+    private LocalProductionStatus doProductionAsynchronous(ProductionRequest request, ProductionService productionService, String userName, Map<String, String> hadoopConfiguration, String cookie)
                 throws ProductionException {
         logInfo("Ordering production...");
         logInfo("user : " + userName);
         logInfo("request user name : " + request.getUserName());
-        ProductionResponse productionResponse = productionService.orderProduction(request);
+
+        TokenGenerator samlTokenHook = createSamlTokenHook(hadoopConfiguration, cookie);
+
+        ProductionResponse productionResponse = productionService.orderProduction(request, samlTokenHook);
         Production production = productionResponse.getProduction();
         logInfo("Production successfully ordered. The production ID is: " + production.getId());
 
@@ -149,7 +205,6 @@ class CalvalusProduction {
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
-
     private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());
         Runtime.getRuntime().addShutdownHook(shutDownHook);
@@ -172,6 +227,7 @@ class CalvalusProduction {
             logError("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage());
         }
     }
+
 
     private void updateProductionStatuses(String userName) throws IOException, ProductionException {
         final ProductionService productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
@@ -204,5 +260,104 @@ class CalvalusProduction {
 
     private void logInfo(String message) {
         LOG.info(message);
+    }
+
+    private TokenGenerator createSamlTokenHook(Map<String, String> config, String cookie) throws ProductionException {
+        String publicKey = config.get("calvalus.crypt.calvalus-public-key");
+        String casUrl = config.get("calvalus.cas.url");
+        String privateKeyPath = config.get("calvalus.crypt.samlkey-private-key");
+
+        logInfo(cookie);
+        logInfo(publicKey);
+        logInfo(casUrl);
+        logInfo(privateKeyPath);
+
+        String samlToken;
+        try {
+            samlToken = fetchSamlToken(cookie, casUrl, "wps", privateKeyPath);
+        } catch (IOException | NoSuchAlgorithmException | NoSuchProviderException | ParserConfigurationException | XMLEncryptionException | InvalidKeySpecException | JDOMException | SAXException e) {
+            throw new ProductionException("Error fetching SAML token, see nested exception", e);
+        }
+        return new TokenGenerator(publicKey, samlToken);
+    }
+
+    private String fetchSamlToken(String tgc, final String casUrl, String serviceUrl, String privateKeyPath) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, ParserConfigurationException, SAXException, JDOMException, XMLEncryptionException {
+        String urlString = casUrl + "/samlCreate2?service=" + serviceUrl;
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("charset", "utf-8");
+        conn.setRequestProperty("Cookie", "CASTGC=" + tgc);
+        conn.setUseCaches(false);
+        StringBuilder saml = new StringBuilder();
+        try (InputStream in = conn.getInputStream()) {
+            int c;
+            while ((c = in.read()) > 0) {
+                saml.append((char) c);
+            }
+        }
+
+        PrivateKey privateSamlKey = readPrivateDerKey(privateKeyPath);
+        Document document = parseXml(saml.toString());
+        document = decipher(privateSamlKey, document);
+        document = fixRootNode(document);
+        return getStringFromDoc(document);
+    }
+
+
+    static Document fixRootNode(Document samlToken) throws org.jdom2.JDOMException {
+        DOMBuilder builder = new DOMBuilder();
+        org.jdom2.Document jDomDoc = builder.build(samlToken);
+        Element assertionElement = jDomDoc.getRootElement().getChildren().get(0);
+        jDomDoc.detachRootElement();
+        assertionElement.detach();
+        jDomDoc.setRootElement(assertionElement);
+        DOMOutputter outputter = new DOMOutputter();
+        return outputter.output(jDomDoc);
+    }
+
+    private static String getStringFromDoc(Document doc) {
+        try {
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.transform(domSource, result);
+            writer.flush();
+            return writer.toString();
+        } catch (TransformerException ex) {
+            throw new IllegalArgumentException("Unable to parse SAML token", ex);
+        }
+    }
+
+    private static PrivateKey readPrivateDerKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
+        byte[] privKeyByteArray = Files.readAllBytes(Paths.get(filename));
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privKeyByteArray);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(keySpec);
+    }
+
+    private static Document parseXml(String xml) throws SAXException, IOException, ParserConfigurationException {
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        InputStream inputStream = new ByteArrayInputStream(xml.getBytes());
+        return db.parse(inputStream);
+    }
+
+    private static Document decipher(PrivateKey myPrivKey, Document document) throws XMLEncryptionException {
+        org.w3c.dom.Element encryptedDataElement = (org.w3c.dom.Element) document.getElementsByTagNameNS(EncryptionConstants.EncryptionSpecNS, EncryptionConstants._TAG_ENCRYPTEDDATA).item(0);
+        XMLCipher xmlCipher = XMLCipher.getInstance();
+        xmlCipher.init(XMLCipher.DECRYPT_MODE, null);
+        xmlCipher.setKEK(myPrivKey);
+        try {
+            return xmlCipher.doFinal(document, encryptedDataElement);
+        } catch (Exception e) {
+            throw new XMLEncryptionException("", e);
+        }
     }
 }
