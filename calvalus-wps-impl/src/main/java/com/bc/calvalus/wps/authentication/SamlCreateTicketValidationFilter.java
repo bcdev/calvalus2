@@ -1,7 +1,5 @@
 package com.bc.calvalus.wps.authentication;
 
-import static com.bc.calvalus.wps.authentication.WpsAuthenticationFilter.WPS_REQUEST_URL_PREFIX;
-
 import com.bc.calvalus.portal.server.SamlCreateTicketValidator;
 import org.jasig.cas.client.util.CommonUtils;
 import org.jasig.cas.client.validation.AbstractTicketValidationFilter;
@@ -9,6 +7,7 @@ import org.jasig.cas.client.validation.Assertion;
 import org.jasig.cas.client.validation.TicketValidator;
 
 import javax.servlet.FilterConfig;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -32,7 +31,7 @@ public class SamlCreateTicketValidationFilter extends AbstractTicketValidationFi
                                                                                         "encodeServiceUrl",
                                                                                         "hostnameVerifier", "encoding",
                                                                                         "config"));
-    private static final String BASE_URL = "http://cd-test-cvportal:8080";
+    private static final String BASE_WPS_URL = "https://processing.code-de-ref.eoc.dlr.de/wps";
     private static final String PROCESSING_SERVER_NAME = "https://processing.code-de-ref.eoc.dlr.de";
     private static final String WPS_CONTEXT_PATH = "/code-wps/wps/calvalus";
     private static final String GET_CAPABILITIES_QUERY = "Service=WPS&Request=GetCapabilities";
@@ -79,15 +78,27 @@ public class SamlCreateTicketValidationFilter extends AbstractTicketValidationFi
                                           Assertion assertion) {
         HttpSession session = request.getSession();
         String sessionId;
-        String url = BASE_URL + WPS_CONTEXT_PATH + "?" + GET_CAPABILITIES_QUERY;
-        if (session != null) {
-            sessionId = session.getId();
-            String originalRequestURI = (String) session.getAttribute(WPS_REQUEST_URL_PREFIX + sessionId);
-            if (originalRequestURI != null) {
-                url = BASE_URL + originalRequestURI;
+        String url = BASE_WPS_URL + "?" + GET_CAPABILITIES_QUERY;
+        Cookie[] cookies = request.getCookies();
+        String originalRequestURI = null;
+        for (Cookie cookie : cookies) {
+            if ("queryString".equalsIgnoreCase((cookie.getName()))) {
+                originalRequestURI = cookie.getValue();
+                System.out.println(
+                            "[SamlCreateTicketValidationFilter] cookie " + cookie.getName() + " : " + cookie.getValue());
             }
-            System.out.println("[SamlCreateTicketValidationFilter] WPS_REQUEST_URL : " + url);
         }
+//        if (session != null) {
+//            sessionId = session.getId();
+//            originalRequestURI = (String) session.getAttribute(WPS_REQUEST_URL_PREFIX);
+//            System.out.println(
+//                        "[SamlCreateTicketValidationFilter] originalRequestURI " + WPS_REQUEST_URL_PREFIX +
+//                        " : " + originalRequestURI);
+        if (originalRequestURI != null) {
+            url = BASE_WPS_URL + "?" + originalRequestURI;
+        }
+        System.out.println("[SamlCreateTicketValidationFilter] WPS_REQUEST_URL : " + url);
+//        }
         String redirectUrl = CommonUtils.constructServiceUrl(request,
                                                              response,
                                                              url,

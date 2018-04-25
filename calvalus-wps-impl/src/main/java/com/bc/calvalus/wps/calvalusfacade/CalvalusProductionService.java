@@ -12,6 +12,8 @@ import javax.servlet.ServletContextListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -123,19 +125,17 @@ public class CalvalusProductionService implements ServletContextListener {
 
     private static File getConfigFile() throws FileNotFoundException {
         File configFile;
-//        try {
-//            URL calvalusConfigUrl = CalvalusProductionService.class.getClassLoader().getResource("calvalus.config");
-//            if (calvalusConfigUrl == null) {
-//                throw new FileNotFoundException("Cannot find calvalus.config file.");
-//            }
-        configFile = new File("config/calvalus.config");
-//        } catch (FileNotFoundException e) {
-        if (!configFile.exists()) {
+        try {
+            URL calvalusConfigUrl = CalvalusProductionService.class.getClassLoader().getResource("calvalus.config");
+            if (calvalusConfigUrl == null) {
+                throw new FileNotFoundException("Cannot find calvalus.config file.");
+            }
+            configFile = new File(calvalusConfigUrl.toURI());
+        } catch (URISyntaxException | FileNotFoundException e) {
             configFile = new File(DEFAULT_CONFIG_PATH);
             if (!configFile.exists()) {
                 throw new FileNotFoundException("calvalus.config file is not available.");
             }
-
         }
         return configFile;
     }
