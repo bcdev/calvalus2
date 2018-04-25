@@ -13,9 +13,12 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 /**
@@ -98,16 +101,28 @@ public class WpsAuthenticationFilter extends AbstractCasFilter {
 
         if (session != null) {
             String sessionId = session.getId();
-            if ("GET".equalsIgnoreCase(requestMethod) &&queryString.contains("Service=WPS")) {
-                String wpsRequestURL = WPS_REQUEST_URL_PREFIX + sessionId;
-                String fullURI = requestURI + "?" + queryString;
-                System.out.println("Setting " + wpsRequestURL + " : " + fullURI);
-                session.setAttribute(wpsRequestURL, fullURI);
+            if ("GET".equalsIgnoreCase(requestMethod)
+                && queryString != null
+                && queryString.contains("Service=WPS")) {
+                String wpsRequestURL = WPS_REQUEST_URL_PREFIX;
+                System.out.println("Setting " + wpsRequestURL + " : " + "?" + queryString);
+                session.setAttribute(wpsRequestURL, "?" + queryString);
+                response.addCookie(new Cookie("queryString", queryString));
             } else if ("POST".equalsIgnoreCase(requestMethod)
                        && requestPayload != null) {
-                String payloadKey = PAYLOAD_PREFIX + sessionId;
+                String payloadKey = PAYLOAD_PREFIX;
                 System.out.println("Setting " + payloadKey + " : " + requestPayload);
-                session.setAttribute(payloadKey, requestPayload);
+                Cookie[] cookies = request.getCookies();
+                for (Cookie cookie : cookies) {
+                    if ("requestId".equalsIgnoreCase(cookie.getName())) {
+                        String id = cookies[0].getValue();
+                        try (FileWriter fw = new FileWriter(
+                                    new File("/tmp/" + "request-" + id));) {
+                            fw.write(requestPayload);
+                        }
+                    }
+                }
+//                session.setAttribute(payloadKey, requestPayload);
             }
         }
 
