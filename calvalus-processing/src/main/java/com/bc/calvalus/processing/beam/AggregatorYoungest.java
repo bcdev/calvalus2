@@ -25,49 +25,62 @@ import org.esa.snap.binning.Observation;
 import org.esa.snap.binning.VariableContext;
 import org.esa.snap.binning.Vector;
 import org.esa.snap.binning.WritableVector;
-import org.esa.snap.binning.aggregators.AggregatorOnMaxSet;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.annotations.Parameter;
-import org.esa.snap.core.util.StringUtils;
 
+import java.text.ParseException;
 import java.util.Arrays;
 
 /**
- * An aggregator that sets an output if an input is maximal.
+ * An aggregator that selects the youngest spectrum.
  */
 public final class AggregatorYoungest extends AbstractAggregator {
 
-    private final int varIndex;
+    private final int[] varIndices;
+    private final int numVariables;
+    private final float referenceMjd;
 
-    public AggregatorYoungest(VariableContext varCtx, String varName, String targetVarName) {
-        super(Descriptor.NAME, new String[] { varName, varName+"_mjd" }, new String[] { varName, varName+"_mjd" }, new String[] { targetVarName, varName+"_mjd" });
-
+    public AggregatorYoungest(VariableContext varCtx, String mjdVarName, float referenceMjd, String... varNames) {
+        super(Descriptor.NAME,
+              createOutputFeatureNames(mjdVarName, varNames),
+              createOutputFeatureNames(mjdVarName, varNames),
+              createOutputFeatureNames(mjdVarName, varNames));
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
         }
-        if (varName == null) {
-            throw new NullPointerException("varName");
+        if (varNames == null) {
+            throw new NullPointerException("varNames");
         }
-        this.varIndex = varCtx.getVariableIndex(varName);
+        if (varNames.length == 0) {
+            throw new NullPointerException("varNames");
+        }
+        this.referenceMjd = referenceMjd;
+        numVariables = varNames.length;
+        varIndices = new int[varNames.length];
+        for (int i = 0; i < varNames.length; i++) {
+            int varIndex = varCtx.getVariableIndex(varNames[i]);
+            if (varIndex < 0) {
+                throw new IllegalArgumentException("varIndices[" + i + "] < 0");
+            }
+            varIndices[i] = varIndex;
+        }
     }
 
     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
-        vector.set(0, Float.NaN);
-        vector.set(1, Float.NEGATIVE_INFINITY);
-    }
-
-    @Override
-    public void initTemporal(BinContext ctx, WritableVector vector) {
-        vector.set(0, Float.NaN);
-        vector.set(1, Float.NEGATIVE_INFINITY);
+        vector.set(0, Float.NEGATIVE_INFINITY);
+        for (int i=1; i<= numVariables; ++i) {
+            vector.set(1, Float.NaN);
+        }
     }
 
     @Override
     public void aggregateSpatial(BinContext ctx, Observation observationVector, WritableVector spatialVector) {
-        final float value = observationVector.get(varIndex);
-        if (! Float.isNaN(value)) {
-            spatialVector.set(0, value);
-            spatialVector.set(1, (float) observationVector.getMJD());
+        if (Float.isInfinite(spatialVector.get(0))) {
+            spatialVector.set(0, (float) observationVector.getMJD()); 
+            for (int i = 0; i < numVariables; i++) {
+                spatialVector.set(i + 1, observationVector.get(varIndices[i]));
+            }
         }
     }
 
@@ -76,14 +89,20 @@ public final class AggregatorYoungest extends AbstractAggregator {
     }
 
     @Override
+    public void initTemporal(BinContext ctx, WritableVector vector) {
+        vector.set(0, Float.NEGATIVE_INFINITY);
+        for (int i=1; i<= numVariables; ++i) {
+            vector.set(1, Float.NaN);
+        }
+    }
+
+    @Override
     public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs,
                                   WritableVector temporalVector) {
-        final float value = spatialVector.get(0);
-        final float mjd = spatialVector.get(1);
-        final float currentMax = temporalVector.get(1);
-        if (! Float.isNaN(value) && mjd > currentMax) {
-            temporalVector.set(0, value);
-            temporalVector.set(1, mjd);
+        if (spatialVector.get(0) > temporalVector.get(0)) {
+            for (int i = 0; i < numVariables+1; i++) {
+                temporalVector.set(i, spatialVector.get(i));
+            }
         }
     }
 
@@ -93,46 +112,52 @@ public final class AggregatorYoungest extends AbstractAggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        if (Float.isInfinite(temporalVector.get(1))) {
+        if (Float.isInfinite(temporalVector.get(0))) {
             outputVector.set(0, Float.NaN);
-            outputVector.set(1, Float.NaN);
-        } else {
+        } else if (Float.isNaN(referenceMjd)) {
             outputVector.set(0, temporalVector.get(0));
-            outputVector.set(1, temporalVector.get(1));
+        } else {
+            outputVector.set(0, referenceMjd - temporalVector.get(0));
+        }
+        for (int i = 1; i < numVariables + 1; i++) {
+            outputVector.set(i, temporalVector.get(0));
         }
     }
 
     @Override
     public String toString() {
         return "AggregatorYoungest{" +
-               "varIndex=" + varIndex +
+               "varIndices=" + Arrays.toString(varIndices) +
                ", spatialFeatureNames=" + Arrays.toString(getSpatialFeatureNames()) +
                ", temporalFeatureNames=" + Arrays.toString(getTemporalFeatureNames()) +
                ", outputFeatureNames=" + Arrays.toString(getOutputFeatureNames()) +
                '}';
     }
 
-    public boolean requiresGrowableSpatialData() {
-        return false;
+    private static String[] createOutputFeatureNames(String mjdVarName, String[] varNames) {
+        String[] featureNames = new String[varNames.length + 1];
+        featureNames[0] = mjdVarName;
+        System.arraycopy(varNames, 0, featureNames, 1, varNames.length);
+        return featureNames;
     }
 
     public static class Config extends AggregatorConfig {
 
-        @Parameter(label = "Maximum band name", notEmpty = true, notNull = true,
-                   description = "If this band reaches its maximum the values of the source bands are taken.")
-        String varName;
-        @Parameter(label = "Target band name prefix (optional)", description = "The name prefix for the resulting maximum bands. " +
-                                                                    "If empty, the source band name is used")
-        String targetName;
+        @Parameter(label = "Source band names", notNull = true, description = "The bands to be included in the output.")
+        String[] varNames;
+
+        @Parameter(label = "referenceDate",
+                   description = "Date to subtract the youngest observation's MJD from to get the age in days")
+        String referenceDate;
 
         public Config() {
-            this(null, null);
+            this(null);
         }
 
-        public Config(String targetName, String varName) {
+        public Config(String referenceDate, String... varNames) {
             super(Descriptor.NAME);
-            this.targetName = targetName;
-            this.varName = varName;
+            this.referenceDate = referenceDate;
+            this.varNames = varNames;
         }
     }
 
@@ -153,21 +178,40 @@ public final class AggregatorYoungest extends AbstractAggregator {
         @Override
         public Aggregator createAggregator(VariableContext varCtx, AggregatorConfig aggregatorConfig) {
             Config config = (Config) aggregatorConfig;
-            String targetName = StringUtils.isNotNullAndNotEmpty(config.targetName)  ? config.targetName : config.varName;
-            return new AggregatorOnMaxSet(varCtx, config.varName, targetName);
+            float referenceMjd;
+            String mjdVarName;
+            mjdVarName = "mjd";
+                referenceMjd = Float.NaN;
+            if (config.referenceDate != null) {
+                try {
+                    referenceMjd = (float) ProductData.UTC.parse(config.referenceDate, "yyyy-MM-dd'T'HH:mm:ss'Z'").getMJD();
+                    mjdVarName = "age";
+                } catch (ParseException e) {}
+            }
+            return new AggregatorYoungest(varCtx, mjdVarName, referenceMjd, config.varNames);
         }
 
         @Override
-        public String[] getSourceVarNames(AggregatorConfig aggregatorConfig) {
-            Config config = (Config) aggregatorConfig;
-            return new String[] { config.varName };
+        public String[] getSourceVarNames(AggregatorConfig aggregatorConfig) { 
+            Config config = (Config) aggregatorConfig; 
+            return config.varNames;
         }
 
         @Override
         public String[] getTargetVarNames(AggregatorConfig aggregatorConfig) {
-            Config config = (Config) aggregatorConfig;
-            String targetName = StringUtils.isNotNullAndNotEmpty(config.targetName)  ? config.targetName : config.varName;
-            return new String[] { targetName, config.varName + "_mjd" };
+            Config config = (Config) aggregatorConfig; 
+            String[] varNames = new String[config.varNames.length + 1];
+            if (config.referenceDate == null) {
+                varNames[0] = "mjd";
+            } else {
+                varNames[0] = "age";
+            }
+            System.arraycopy(config.varNames, 0, varNames, 1, config.varNames.length);
+            return varNames;
         }
+    }
+
+    public boolean requiresGrowableSpatialData() {
+        return false;
     }
 }
