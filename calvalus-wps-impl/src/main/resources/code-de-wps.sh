@@ -36,8 +36,10 @@ urlencode() {
   REPLY="${encoded}"   #+or echo the result (EASIER)... or both... :p
 }
 
-CAS_HOSTNAME=tsedos.eoc.dlr.de
-WPS_HOSTNAME=processing.code-de-ref.eoc.dlr.de
+CAS_HOSTNAME=sso.eoc.dlr.de
+#CAS_HOSTNAME=tsedos.eoc.dlr.de
+WPS_HOSTNAME=processing.code-de.org
+#WPS_HOSTNAME=processing.code-de-ref.eoc.dlr.de
 
 USERNAME=$1
 PASSWORD=$2
