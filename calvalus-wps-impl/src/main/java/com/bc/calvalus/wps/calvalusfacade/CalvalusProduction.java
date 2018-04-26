@@ -28,6 +28,7 @@ import com.bc.wps.api.schema.Execute;
 import org.apache.xml.security.encryption.XMLCipher;
 import org.apache.xml.security.encryption.XMLEncryptionException;
 import org.apache.xml.security.utils.EncryptionConstants;
+import org.apache.xpath.operations.Bool;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.DOMBuilder;
@@ -118,7 +119,9 @@ class CalvalusProduction {
             status.setResultUrls(calvalusFacade.getProductResultUrls(jobId));
             status.setStopDate(new Date());
             status.setState(ProcessState.COMPLETED);
-            calvalusFacade.generateProductMetadata(jobId);
+            if(Boolean.valueOf(config.get("calvalus.generate.metadata"))){
+                calvalusFacade.generateProductMetadata(jobId);
+            }
             return status;
         } catch (WpsResultProductException | JAXBException | MissingParameterValueException | InvalidProcessorIdException | WpsStagingException |
                     ProductMetadataException | InterruptedException | WpsProcessorNotFoundException | ProductionException |
