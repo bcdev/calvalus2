@@ -120,7 +120,7 @@ public final class AggregatorYoungest extends AbstractAggregator {
             outputVector.set(0, referenceMjd - temporalVector.get(0));
         }
         for (int i = 1; i < numVariables + 1; i++) {
-            outputVector.set(i, temporalVector.get(0));
+            outputVector.set(i, temporalVector.get(i));
         }
     }
 
