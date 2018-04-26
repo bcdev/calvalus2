@@ -118,9 +118,9 @@ public class CalvalusStagingTest {
         List<String> productResultUrls = calvalusStaging.getProductResultUrls("jobId", mockCalvalusDefaultConfig);
 
         assertThat(productResultUrls.size(), equalTo(3));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/product1.nc"));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/product2.nc"));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/jobId-metadata"));
+        assertThat(productResultUrls, hasItems("https://calvalustomcat-test/bc-wps/staging/dummyPath/product1.nc"));
+        assertThat(productResultUrls, hasItems("https://calvalustomcat-test/bc-wps/staging/dummyPath/product2.nc"));
+        assertThat(productResultUrls, hasItems("https://calvalustomcat-test/bc-wps/staging/dummyPath/jobId-metadata"));
     }
 
     @Test
@@ -141,7 +141,7 @@ public class CalvalusStagingTest {
         List<String> productResultUrls = calvalusStaging.getProductResultUrls("jobId", mockCalvalusDefaultConfig);
 
         assertThat(productResultUrls.size(), equalTo(1));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/jobId-metadata"));
+        assertThat(productResultUrls, hasItems("https://calvalustomcat-test/bc-wps/staging/dummyPath/jobId-metadata"));
     }
 
     @Test

@@ -148,9 +148,8 @@ class CalvalusStaging {
                 continue;
             }
             UriBuilder builder = new UriBuilderImpl();
-            String productUrl = builder.scheme("http")
+            String productUrl = builder.scheme("https")
                         .host(wpsServerContext.getHostAddress())
-                        .port(wpsServerContext.getPort())
                         .path(APP_NAME)
                         .path(stagingDirectoryPath)
                         .path(productResultFile.getName())
@@ -158,9 +157,8 @@ class CalvalusStaging {
             productResultUrls.add(productUrl);
         }
         UriBuilder builder = new UriBuilderImpl();
-        String metadataUrl = builder.scheme("http")
+        String metadataUrl = builder.scheme("https")
                     .host(wpsServerContext.getHostAddress())
-                    .port(wpsServerContext.getPort())
                     .path(APP_NAME)
                     .path(stagingDirectoryPath)
                     .path(production.getName().replaceAll(" ", "_") + "-metadata")
