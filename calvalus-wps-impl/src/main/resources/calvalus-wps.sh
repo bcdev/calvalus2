@@ -5,9 +5,13 @@
 if [[ $1 == "h" || $1 == "" ]] ; then
   echo "Usage: calvalus-wps.sh username password type <JobId|requestXml>"
   echo "    type MUST be one of GetCapabilities DescribeProcess Execute GetStatus FetchResults"
+  echo "        GetCapabilities: Provides the capabilities of the CODE-DE WPS interface"
+  echo "        DescribeProcess: Prints all usable processors of the CODE-DE processing system"
+  echo "        Execute: Submits the given processing request to the CODE-DE processing system"
+  echo "        GetStatus: Submits the given processing request to the CODE-DE processing system"
   echo "    if type is Execute, you MUST provide requestXml as 4th parameter"
   echo "    if type is GetStatus, you MUST provide JobId as 4th parameter"
-  echo "    if type is FetchResults, you MUST provide a URL you got from GetStatus after successful processing as 4th parameter"
+  echo "    if type is FetchResult, you MUST provide a URL you got from GetStatus after successful processing as 4th parameter"
   exit 0
 fi
 
@@ -86,8 +90,8 @@ if [[ ${SERVICE_TYPE} == "Execute" ]] ; then
     curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: requestId=$(uuidgen);CASTGC=${COOKIE}" -F "request=@test-request.xml"
 elif [[ ${SERVICE_TYPE} == "GetStatus" ]] ; then
     curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -s -L -H "Cookie: queryString=${QUERY_STRING}"
-elif [[ ${SERVICE_TYPE} == "FetchResults" ]] ; then
-    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L ${4}
+elif [[ ${SERVICE_TYPE} == "FetchResult" ]] ; then
+    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -O -s ${4}
 else
     curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: queryString=${QUERY_STRING}"
 fi

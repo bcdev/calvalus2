@@ -1,12 +1,10 @@
 package com.bc.calvalus.wps.wpsoperations;
 
 import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
-import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.localprocess.LocalFacade;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
@@ -24,7 +22,6 @@ import com.bc.wps.api.utils.WpsTypeConverter;
 import org.esa.snap.core.gpf.GPF;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -49,13 +46,13 @@ public class CalvalusExecuteOperation {
     }
 
     public ExecuteResponse execute(Execute executeRequest)
-                throws InvalidProcessorIdException, WpsProductionException,
-                       WpsResultProductException, ProductionException, IOException {
-        if(isQuotationRequest(executeRequest.getDataInputs())) {
+                throws InvalidProcessorIdException, WpsProductionException {
+        if (isQuotationRequest(executeRequest.getDataInputs())) {
             CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
-            ExecuteResponse processBriefType1 = executeResponse.getQuotationResponse((String)this.processFacade.getRequestHeaderMap().get("remoteUser"),
-                                                                                     (String)this.processFacade.getRequestHeaderMap().get("remoteRef"),
-                                                                                     executeRequest.getDataInputs());
+            ExecuteResponse processBriefType1 = executeResponse.getQuotationResponse(
+                        this.processFacade.getRequestHeaderMap().get("remoteUser"),
+                        this.processFacade.getRequestHeaderMap().get("remoteRef"),
+                        executeRequest.getDataInputs());
             ProcessBriefType responseFormType1 = getQuotationBriefType(executeRequest);
             processBriefType1.setProcess(responseFormType1);
             return processBriefType1;
@@ -81,7 +78,8 @@ public class CalvalusExecuteOperation {
                                                                                       outputType,
                                                                                       context.getServerContext());
             } else {
-                asyncExecuteResponse = executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
+                asyncExecuteResponse = executeResponse.getAcceptedResponse(status.getJobId(),
+                                                                           context.getServerContext());
             }
             asyncExecuteResponse.setProcess(processBriefType);
             return asyncExecuteResponse;
@@ -96,7 +94,8 @@ public class CalvalusExecuteOperation {
                                                                                        executeRequest.getDataInputs(),
                                                                                        outputType);
             } else {
-                syncExecuteResponse = executeResponse.getSuccessfulResponse(status.getResultUrls(), status.getStopTime());
+                syncExecuteResponse = executeResponse.getSuccessfulResponse(status.getResultUrls(),
+                                                                            status.getStopTime());
             }
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
@@ -118,7 +117,8 @@ public class CalvalusExecuteOperation {
 //        return true;
         for (InputType inputType : dataInputs.getInput()) {
             if ("quotation".equalsIgnoreCase(inputType.getIdentifier().getValue())) {
-                if (inputType.getData().getLiteralData() != null && "true".equalsIgnoreCase(inputType.getData().getLiteralData().getValue())) {
+                if (inputType.getData().getLiteralData() != null && "true".equalsIgnoreCase(
+                            inputType.getData().getLiteralData().getValue())) {
                     return true;
                 }
             }

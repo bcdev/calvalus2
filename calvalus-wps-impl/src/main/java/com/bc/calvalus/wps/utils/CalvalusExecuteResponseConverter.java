@@ -52,7 +52,8 @@ public class CalvalusExecuteResponseConverter {
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         XMLGregorianCalendar currentTime = getXmlGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
-        statusType.setProcessAccepted("The request has been accepted. The status of the process can be found in the URL.");
+        statusType.setProcessAccepted("The request has been accepted. In order to check the status, use GetStatus" +
+                " with JobId '" + jobId + "'.");
         executeResponse.setStatus(statusType);
 
         String getStatusUrl = getStatusUrl(jobId, context);

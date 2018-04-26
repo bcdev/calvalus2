@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyFactory;
@@ -82,15 +83,10 @@ class CalvalusProduction {
         try {
             ServiceContainer serviceContainer = CalvalusProductionService.getServiceContainerSingleton();
             ProductionRequest request = createProductionRequest(executeRequest, userName, serviceContainer, calvalusFacade);
-            Map<String, String> requestHeaderMap = calvalusFacade.getRequestHeaderMap();
-            String cookie = requestHeaderMap.get("Cookie");
-            System.out.println("####################");
-            for (Map.Entry<String, String> stringStringEntry : requestHeaderMap.entrySet()) {
-                System.out.println(stringStringEntry.getKey() + "=" + stringStringEntry.getValue());
-            }
-            System.out.println("####################");
+            String casTgcString = calvalusFacade.getHeaderField("Cookie").split(";")[1];
+            String casTgc = casTgcString.split("=")[1];
             Map<String, String> config = ProductionServiceConfig.loadConfig(CalvalusProductionService.getConfigFile(), null);
-            return doProductionAsynchronous(request, serviceContainer.getProductionService(), userName, config, cookie);
+            return doProductionAsynchronous(request, serviceContainer.getProductionService(), userName, config, casTgc);
         } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException("Processing failed : " + exception.getMessage(), exception);
@@ -101,17 +97,10 @@ class CalvalusProduction {
         try {
             ServiceContainer serviceContainer = CalvalusProductionService.getServiceContainerSingleton();
             ProductionRequest request = createProductionRequest(executeRequest, userName, serviceContainer, calvalusFacade);
-            Map<String, String> requestHeaderMap = calvalusFacade.getRequestHeaderMap();
-            String cookie = requestHeaderMap.get("Cookie");
-            System.out.println("####################");
-            for (Map.Entry<String, String> stringStringEntry : requestHeaderMap.entrySet()) {
-                System.out.println(stringStringEntry.getKey() + "=" + stringStringEntry.getValue());
-            }
-            System.out.println("####################");
-
-
+            String casTgcString = calvalusFacade.getHeaderField("Cookie").split(";")[1];
+            String casTgc = casTgcString.split("=")[1];
             Map<String, String> config = ProductionServiceConfig.loadConfig(CalvalusProductionService.getConfigFile(), null);
-            LocalProductionStatus status = doProductionSynchronous(serviceContainer.getProductionService(), request, config, cookie);
+            LocalProductionStatus status = doProductionSynchronous(serviceContainer.getProductionService(), request, config, casTgc);
             String jobId = status.getJobId();
             calvalusFacade.stageProduction(jobId);
             calvalusFacade.observeStagingStatus(jobId);
@@ -266,15 +255,11 @@ class CalvalusProduction {
         String publicKey = config.get("calvalus.crypt.calvalus-public-key");
         String casUrl = config.get("calvalus.cas.url");
         String privateKeyPath = config.get("calvalus.crypt.samlkey-private-key");
-
-        logInfo(cookie);
-        logInfo(publicKey);
-        logInfo(casUrl);
-        logInfo(privateKeyPath);
+        String serviceUrl = config.get("calvalus.cas.serviceUrl");
 
         String samlToken;
         try {
-            samlToken = fetchSamlToken(cookie, casUrl, "wps", privateKeyPath);
+            samlToken = fetchSamlToken(cookie, casUrl, serviceUrl, privateKeyPath);
         } catch (IOException | NoSuchAlgorithmException | NoSuchProviderException | ParserConfigurationException | XMLEncryptionException | InvalidKeySpecException | JDOMException | SAXException e) {
             throw new ProductionException("Error fetching SAML token, see nested exception", e);
         }
@@ -282,7 +267,10 @@ class CalvalusProduction {
     }
 
     private String fetchSamlToken(String tgc, final String casUrl, String serviceUrl, String privateKeyPath) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, ParserConfigurationException, SAXException, JDOMException, XMLEncryptionException {
-        String urlString = casUrl + "/samlCreate2?service=" + serviceUrl;
+        org.apache.xml.security.Init.init();
+        String urlString = casUrl + "/samlCreate2?service=" + URLEncoder.encode(serviceUrl, "UTF-8");
+        String originalHttpAgent = System.getProperty("http.agent", "");
+        System.setProperty("http.agent", "");
         URL url = new URL(urlString);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
@@ -291,6 +279,7 @@ class CalvalusProduction {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setRequestProperty("charset", "utf-8");
         conn.setRequestProperty("Cookie", "CASTGC=" + tgc);
+        conn.setRequestProperty("User-Agent", "curl/7.29.0");
         conn.setUseCaches(false);
         StringBuilder saml = new StringBuilder();
         try (InputStream in = conn.getInputStream()) {
@@ -299,6 +288,8 @@ class CalvalusProduction {
                 saml.append((char) c);
             }
         }
+
+        System.setProperty("http.agent", originalHttpAgent);
 
         PrivateKey privateSamlKey = readPrivateDerKey(privateKeyPath);
         Document document = parseXml(saml.toString());
