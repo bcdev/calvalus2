@@ -3,11 +3,11 @@
 # type has to be one of
 
 if [[ $1 == "h" || $1 == "" ]] ; then
-  echo "Usage: calvalus-wps.sh username password type <requestId|requestXml>"
+  echo "Usage: calvalus-wps.sh username password type <JobId|requestXml>"
   echo "    type MUST be one of GetCapabilities DescribeProcess Execute GetStatus FetchResults"
   echo "    if type is Execute, you MUST provide requestXml as 4th parameter"
-  echo "    if type is GetStatus, you MUST provide requestId as 4th parameter"
-  echo "    if type is FetchResults, you MUST provide requestId as 4th parameter"
+  echo "    if type is GetStatus, you MUST provide JobId as 4th parameter"
+  echo "    if type is FetchResults, you MUST provide a URL you got from GetStatus after successful processing as 4th parameter"
   exit 0
 fi
 
@@ -82,9 +82,12 @@ loginResult="$(curl "https://tsedos.eoc.dlr.de/cas-codede/login?service=${SERVIC
 #curl $SERVICE_NAME_CLEAR -b $COOKIE_JAR -k -L -H "Cookie: queryString=$QUERY_STRING"
 #curl $SERVICE_NAME_CLEAR -b $COOKIE_JAR -k -L -F "request=@test-request.xml"
 if [[ ${SERVICE_TYPE} == "Execute" ]] ; then
-    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: requestId=$(uuidgen)" -F "request=@test-request.xml"
+    COOKIE=$(cat ${COOKIE_JAR} | sed "s:.*CASTGC::" | sed "s:#.*::" | sed "s:#.*::" | sed "s:#.*::" | tr -d '[:space:]')
+    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: requestId=$(uuidgen);CASTGC=${COOKIE}" -F "request=@test-request.xml"
 elif [[ ${SERVICE_TYPE} == "GetStatus" ]] ; then
-    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: queryString=${QUERY_STRING}" | sed 's/http\:/https\:/'
+    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -s -L -H "Cookie: queryString=${QUERY_STRING}"
+elif [[ ${SERVICE_TYPE} == "FetchResults" ]] ; then
+    curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L ${4}
 else
     curl ${SERVICE_NAME_CLEAR} -b ${COOKIE_JAR} -k -L -H "Cookie: queryString=${QUERY_STRING}"
 fi
