@@ -84,6 +84,23 @@ public class CalvalusProductionService implements ServletContextListener {
         }
     }
 
+    public static File getConfigFile() throws FileNotFoundException {
+        File configFile;
+        try {
+            URL calvalusConfigUrl = CalvalusProductionService.class.getClassLoader().getResource("calvalus.config");
+            if (calvalusConfigUrl == null) {
+                throw new FileNotFoundException("Cannot find calvalus.config file.");
+            }
+            configFile = new File(calvalusConfigUrl.toURI());
+        } catch (URISyntaxException | FileNotFoundException e) {
+            configFile = new File(DEFAULT_CONFIG_PATH);
+            if (!configFile.exists()) {
+                throw new FileNotFoundException("calvalus.config file is not available.");
+            }
+        }
+        return configFile;
+    }
+
     synchronized static ServiceContainer getServiceContainerSingleton() throws IOException, ProductionException {
         if (serviceContainer == null) {
             serviceContainer = createServices();
@@ -121,23 +138,6 @@ public class CalvalusProductionService implements ServletContextListener {
             serviceContainer.getProductionService().addObserver(reportingHandler);
         }
         return serviceContainer;
-    }
-
-    static File getConfigFile() throws FileNotFoundException {
-        File configFile;
-        try {
-            URL calvalusConfigUrl = CalvalusProductionService.class.getClassLoader().getResource("calvalus.config");
-            if (calvalusConfigUrl == null) {
-                throw new FileNotFoundException("Cannot find calvalus.config file.");
-            }
-            configFile = new File(calvalusConfigUrl.toURI());
-        } catch (URISyntaxException | FileNotFoundException e) {
-            configFile = new File(DEFAULT_CONFIG_PATH);
-            if (!configFile.exists()) {
-                throw new FileNotFoundException("calvalus.config file is not available.");
-            }
-        }
-        return configFile;
     }
 
     private static File getUserAppDataCalWpsDir() {

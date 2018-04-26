@@ -9,6 +9,8 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionServiceConfig;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
@@ -28,6 +30,7 @@ import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.utils.WpsTypeConverter;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author hans
@@ -71,7 +74,10 @@ public class CalvalusGetStatusOperation extends WpsOperation {
             processBriefType.setProcessVersion(processorConverter.getBundleVersion());
             processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(jobId));
             if (ProcessState.COMPLETED.toString().equals(processStatus.getState())) {
-                calvalusFacade.generateProductMetadata(jobId);
+                Map<String, String> config = ProductionServiceConfig.loadConfig(CalvalusProductionService.getConfigFile(), null);
+                if(Boolean.valueOf(config.get("calvalus.generate.metadata"))){
+                    calvalusFacade.generateProductMetadata(jobId);
+                }
                 executeResponse = getExecuteSuccessfulResponse(processStatus);
             } else if (processStatus.isDone()) {
                 executeResponse = getExecuteFailedResponse(processStatus);
