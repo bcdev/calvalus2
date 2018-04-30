@@ -273,7 +273,6 @@ public class QuicklookParametersForm extends Composite {
         String quicklookParametersValue = parameters.get("calvalus.ql.parameters");
         if( quicklookParametersValue == null || quicklookParametersValue.isEmpty() ) {
             quicklookNone.setValue(true, true);
-            setQuicklookNone();
 
             bandName.setValue(null);
             cpdURL.setValue(null);
@@ -380,7 +379,6 @@ public class QuicklookParametersForm extends Composite {
                 legendEnabled.setValue(true);
             else
                 legendEnabled.setValue(false);
-            legendEnabled.setEnabled(true);
         }
     }
 
