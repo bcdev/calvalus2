@@ -36,6 +36,13 @@
                     <td>&nbsp;&nbsp;&nbsp;</td>
                     <td><g:Label styleName="{style.quicklookInputLabel}">Band name:</g:Label></td>
                     <td align="left">
+                        <g:ListBox ui:field="bandNameListBox" multipleSelect="false" visibleItemCount="1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td align="left">
                         <g:TextBox ui:field='bandName' enabled="true" width="30em" styleName="{style.textBox}"/>&nbsp;
                     </td>
                 </tr>

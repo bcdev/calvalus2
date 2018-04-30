@@ -18,6 +18,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
@@ -221,6 +222,13 @@ public class OrderL2ProductionView extends OrderProductionView {
                 add("BigGeoTiff", outputFormats);
             }
             outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
+
+            List<String> processorVariables = new ArrayList<>();
+            DtoProcessorVariable[] dtoProcessorVariables = processorDescriptor.getProcessorVariables();
+            for (DtoProcessorVariable dtoProcessorVariable : dtoProcessorVariables) {
+                processorVariables.add(dtoProcessorVariable.getName());
+            }
+            quicklookParametersForm.setProcessorVariables(processorVariables.toArray(new String[0]));
         }
     }
 

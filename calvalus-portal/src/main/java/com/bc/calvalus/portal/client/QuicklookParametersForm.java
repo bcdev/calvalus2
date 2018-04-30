@@ -17,6 +17,8 @@
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -55,6 +57,8 @@ public class QuicklookParametersForm extends Composite {
     @UiField
     RadioButton quicklookMultiBand;
 
+    @UiField
+    ListBox bandNameListBox;
     @UiField
     TextBox bandName;
     @UiField
@@ -109,6 +113,19 @@ public class QuicklookParametersForm extends Composite {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> event) {
                 setQuicklookMultiBandEnabled();
+            }
+        });
+
+        bandNameListBox.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                int selectedIndex = bandNameListBox.getSelectedIndex();
+                if (selectedIndex == 0) {
+                    bandName.setEnabled(true);
+                } else if (selectedIndex > 0) {
+                    bandName.setValue(bandNameListBox.getValue(selectedIndex));
+                    bandName.setEnabled(false);
+                }
             }
         });
 
@@ -188,6 +205,18 @@ public class QuicklookParametersForm extends Composite {
             imageType.setSelectedIndex(selectedIndex);
         } else {
             imageType.setSelectedIndex(0);
+        }
+    }
+
+    public void setProcessorVariables(String... processorVariables) {
+        bandNameListBox.clear();
+        bandNameListBox.addItem("<custom>");
+        bandNameListBox.setSelectedIndex(0);
+        if (processorVariables == null)
+            return;
+
+        for (String processorVariable : processorVariables) {
+            bandNameListBox.addItem(processorVariable);
         }
     }
 
@@ -366,9 +395,19 @@ public class QuicklookParametersForm extends Composite {
 
             // bandName
             String bandNameValue = getTagValue(dom, "bandName");
-            if (bandNameValue != null)
+            if (bandNameValue != null) {
                 quicklookSingleBand.setValue(true, true);
-            bandName.setValue(bandNameValue);
+                bandName.setValue(bandNameValue);
+                int itemCount = bandNameListBox.getItemCount();
+                for (int i = 0; i < itemCount; i++) {
+                    String listBand = bandNameListBox.getValue(i);
+                    if (listBand != null && listBand.equals(bandNameValue)) {
+                        bandNameListBox.setSelectedIndex(i);
+                        bandName.setEnabled(false);
+                        break;
+                    }
+                }
+            }
 
             // cpdURL
             String cpdURLValue = getTagValue(dom, "cpdURL");
