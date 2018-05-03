@@ -42,8 +42,8 @@ public final class AggregatorYoungest extends AbstractAggregator {
 
     public AggregatorYoungest(VariableContext varCtx, String mjdVarName, float referenceMjd, String... varNames) {
         super(Descriptor.NAME,
-              createOutputFeatureNames(mjdVarName, varNames),
-              createOutputFeatureNames(mjdVarName, varNames),
+              createIntermediateFeatureNames(mjdVarName, varNames),
+              createIntermediateFeatureNames(mjdVarName, varNames),
               createOutputFeatureNames(mjdVarName, varNames));
         if (varCtx == null) {
             throw new NullPointerException("varCtx");
@@ -68,18 +68,18 @@ public final class AggregatorYoungest extends AbstractAggregator {
 
     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
-        vector.set(0, Float.NEGATIVE_INFINITY);
-        for (int i=1; i<= numVariables; ++i) {
-            vector.set(1, Float.NaN);
+        vector.set(numVariables, Float.NEGATIVE_INFINITY);
+        for (int i=0; i<numVariables; ++i) {
+            vector.set(i, Float.NaN);
         }
     }
 
     @Override
     public void aggregateSpatial(BinContext ctx, Observation observationVector, WritableVector spatialVector) {
-        if (Float.isInfinite(spatialVector.get(0))) {
-            spatialVector.set(0, (float) observationVector.getMJD());
+        if (Float.isInfinite(spatialVector.get(numVariables))) {
+            spatialVector.set(numVariables, (float) observationVector.getMJD());
             for (int i = 0; i < numVariables; i++) {
-                spatialVector.set(i + 1, observationVector.get(varIndices[i]));
+                spatialVector.set(i, observationVector.get(varIndices[i]));
             }
         }
     }
@@ -90,16 +90,16 @@ public final class AggregatorYoungest extends AbstractAggregator {
 
     @Override
     public void initTemporal(BinContext ctx, WritableVector vector) {
-        vector.set(0, Float.NEGATIVE_INFINITY);
-        for (int i=1; i<= numVariables; ++i) {
-            vector.set(1, Float.NaN);
+        vector.set(numVariables, Float.NEGATIVE_INFINITY);
+        for (int i=0; i<numVariables; ++i) {
+            vector.set(i, Float.NaN);
         }
     }
 
     @Override
     public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs,
                                   WritableVector temporalVector) {
-        if (spatialVector.get(0) > temporalVector.get(0)) {
+        if (spatialVector.get(numVariables) > temporalVector.get(numVariables)) {
             for (int i = 0; i < numVariables+1; i++) {
                 temporalVector.set(i, spatialVector.get(i));
             }
@@ -112,15 +112,15 @@ public final class AggregatorYoungest extends AbstractAggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        if (Float.isInfinite(temporalVector.get(0))) {
+        if (Float.isInfinite(temporalVector.get(numVariables))) {
             outputVector.set(0, Float.NaN);
         } else if (Float.isNaN(referenceMjd)) {
-            outputVector.set(0, temporalVector.get(0));
+            outputVector.set(0, temporalVector.get(numVariables));
         } else {
-            outputVector.set(0, referenceMjd - temporalVector.get(0));
+            outputVector.set(0, referenceMjd - temporalVector.get(numVariables));
         }
-        for (int i = 1; i < numVariables + 1; i++) {
-            outputVector.set(i, temporalVector.get(i));
+        for (int i = 0; i < numVariables; i++) {
+            outputVector.set(i+1, temporalVector.get(i));
         }
     }
 
@@ -132,6 +132,13 @@ public final class AggregatorYoungest extends AbstractAggregator {
                ", temporalFeatureNames=" + Arrays.toString(getTemporalFeatureNames()) +
                ", outputFeatureNames=" + Arrays.toString(getOutputFeatureNames()) +
                '}';
+    }
+
+    private static String[] createIntermediateFeatureNames(String mjdVarName, String[] varNames) {
+        String[] featureNames = new String[varNames.length + 1];
+        System.arraycopy(varNames, 0, featureNames, 0, varNames.length);
+        featureNames[varNames.length] = mjdVarName;
+        return featureNames;
     }
 
     private static String[] createOutputFeatureNames(String mjdVarName, String[] varNames) {
@@ -192,14 +199,14 @@ public final class AggregatorYoungest extends AbstractAggregator {
         }
 
         @Override
-        public String[] getSourceVarNames(AggregatorConfig aggregatorConfig) {
-            Config config = (Config) aggregatorConfig;
+        public String[] getSourceVarNames(AggregatorConfig aggregatorConfig) { 
+            Config config = (Config) aggregatorConfig; 
             return config.varNames;
         }
 
         @Override
         public String[] getTargetVarNames(AggregatorConfig aggregatorConfig) {
-            Config config = (Config) aggregatorConfig;
+            Config config = (Config) aggregatorConfig; 
             String[] varNames = new String[config.varNames.length + 1];
             if (config.referenceDate == null) {
                 varNames[0] = "mjd";

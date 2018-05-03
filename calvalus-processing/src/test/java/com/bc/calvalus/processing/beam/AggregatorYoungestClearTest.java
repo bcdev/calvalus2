@@ -19,14 +19,17 @@ import static org.junit.Assert.assertFalse;
  *
  * @author Martin Boettcher
  */
-public class AggregatorYoungestTest {
+public class AggregatorYoungestClearTest {
     private BinContext ctx;
-    private AggregatorYoungest agg;
+    private AggregatorYoungestClear agg;
 
     @Before
     public void setUp() {
         ctx = createCtx();
-        agg = new AggregatorYoungest(new MyVariableContext("a", "b", "c"),"mjd", Float.NaN, "c");
+        agg = new AggregatorYoungestClear(new MyVariableContext("a", "b", "c", "d"),
+                                          "b", 2066, 8,
+                                          "c", 25, 75,
+                                          "mjd", Float.NaN,"a", "c", "d");
     }
 
     @Test
@@ -36,72 +39,87 @@ public class AggregatorYoungestTest {
 
     @Test
     public void testMetadata() {
-        assertEquals("YOUNGEST", agg.getName());
+        assertEquals("YOUNGEST_CLEAR", agg.getName());
 
-        assertEquals(2, agg.getSpatialFeatureNames().length);
-        assertEquals("c", agg.getSpatialFeatureNames()[0]);
-        assertEquals("mjd", agg.getSpatialFeatureNames()[1]);
+        assertEquals(6, agg.getSpatialFeatureNames().length);
+        assertEquals("a", agg.getSpatialFeatureNames()[0]);
+        assertEquals("c", agg.getSpatialFeatureNames()[1]);
+        assertEquals("d", agg.getSpatialFeatureNames()[2]);
+        assertEquals("mjd", agg.getSpatialFeatureNames()[3]);
+        assertEquals("b", agg.getSpatialFeatureNames()[4]);
+        assertEquals("c", agg.getSpatialFeatureNames()[5]);
 
-        assertEquals(2, agg.getTemporalFeatureNames().length);
-        assertEquals("c", agg.getTemporalFeatureNames()[0]);
-        assertEquals("mjd", agg.getTemporalFeatureNames()[1]);
+        assertEquals(6, agg.getTemporalFeatureNames().length);
+        assertEquals("a", agg.getTemporalFeatureNames()[0]);
+        assertEquals("c", agg.getTemporalFeatureNames()[1]);
+        assertEquals("d", agg.getTemporalFeatureNames()[2]);
+        assertEquals("mjd", agg.getTemporalFeatureNames()[3]);
+        assertEquals("b", agg.getTemporalFeatureNames()[4]);
+        assertEquals("c", agg.getTemporalFeatureNames()[5]);
 
-        assertEquals(2, agg.getOutputFeatureNames().length);
-        assertEquals("c", agg.getOutputFeatureNames()[1]);
+        assertEquals(4, agg.getOutputFeatureNames().length);
+        assertEquals("a", agg.getOutputFeatureNames()[1]);
+        assertEquals("c", agg.getOutputFeatureNames()[2]);
+        assertEquals("d", agg.getOutputFeatureNames()[3]);
         assertEquals("mjd", agg.getOutputFeatureNames()[0]);
     }
 
     @Test
     public void testAggregatorYoungest() {
-        VectorImpl svec = vec(NaN, NaN);
-        VectorImpl tvec = vec(NaN, NaN);
-        VectorImpl out = vec(NaN, NaN);
+        VectorImpl svec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
+        VectorImpl tvec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
+        VectorImpl out = vec(NaN, NaN, NaN, NaN);
 
         agg.initSpatial(ctx, svec);
         assertEquals(Float.NaN, svec.get(0), 0.0f);
 
-        agg.aggregateSpatial(ctx, obs(6, 0.99f, 0.88f, 5.5f), svec);
-        agg.aggregateSpatial(ctx, obs(4, 0.99f, 0.88f, NaN), svec);
-        agg.aggregateSpatial(ctx, obs(5, 0.99f, 0.88f, 0.1f), svec);
-        assertEquals(5.5f, svec.get(0), 1e-5f);
+        agg.aggregateSpatial(ctx, obs(6, 0.99f, 0, 0.81f, 5.5f), svec);
+        agg.aggregateSpatial(ctx, obs(4, 0.99f, 16, 0.85f, NaN), svec);
+        agg.aggregateSpatial(ctx, obs(5, 0.99f, 24, 0.89f, 0.1f), svec);
+        assertEquals(5.5f, svec.get(2), 1e-5f);
 
         agg.completeSpatial(ctx, 3, svec);
-        assertEquals(5.5f, svec.get(0), 1e-5f);
+        assertEquals(5.5f, svec.get(2), 1e-5f);
 
         agg.initTemporal(ctx, tvec);
         assertEquals(NaN, tvec.get(0), 0.0f);
 
-        agg.aggregateTemporal(ctx, vec(0.3f, 7), 3, tvec);
-        agg.aggregateTemporal(ctx, vec(1.1f, 9), 3, tvec);
-        agg.aggregateTemporal(ctx, vec(4.7f, 8), 3, tvec);
-        agg.completeTemporal(ctx, 3, tvec);
-        assertEquals(1.1f, tvec.get(0), 1e-5f);
-        assertEquals(9, tvec.get(1), 1e-5f);
+        agg.aggregateTemporal(ctx, vec(0.91f, 0.3f, 0.81f, 6f, 2f, 0.3f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.92f, 0.1f, 0.82f, 8f, 2f, 0.1f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.93f, 0.5f, 0.83f, 7f, 10f, 0.5f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.99f, 0.7f, 0.84f, 5f, 0f, 0.7f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.95f, 0.6f, 0.85f, 4f, 0f, 0.6f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.96f, 0.9f, 0.86f, 9f, 2f, 0.9f), 1, tvec);
+        agg.completeTemporal(ctx, 6, tvec);
+        assertEquals(0.91f, tvec.get(0), 1e-5f);
+        assertEquals(6, tvec.get(3), 1e-5f);
 
         agg.computeOutput(tvec, out);
-        assertEquals(1.1f, out.get(1), 1e-5f);
-        assertEquals(9, out.get(0), 1e-5f);
+        assertEquals(6, out.get(0), 1e-5f);
+        assertEquals(0.91f, out.get(1), 1e-5f);
+        assertEquals(0.3f, out.get(2), 1e-5f);
+        assertEquals(0.81f, out.get(3), 1e-5f);
     }
 
     @Test
     public void testAggregatorYoungest_AllNaN() {
-        VectorImpl svec = vec(NaN, NaN);
-        VectorImpl tvec = vec(NaN, NaN);
-        VectorImpl out = vec(NaN, NaN);
+        VectorImpl svec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
+        VectorImpl tvec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
+        VectorImpl out = vec(NaN, NaN, NaN, NaN);
 
         agg.initSpatial(ctx, svec);
         assertEquals(NaN, svec.get(0), 0.0f);
 
-        agg.aggregateSpatial(ctx, obs(4, .099f, 0.88f, Float.NaN), svec);
-        assertEquals(NaN, svec.get(0), 0.0f);
+        agg.aggregateSpatial(ctx, obs(4, 0.99f, 16, 0.85f, NaN), svec);
+        assertEquals(NaN, svec.get(2), 0.0f);
 
         agg.completeSpatial(ctx, 1, svec);
-        assertEquals(NaN, svec.get(0), 0.0f);
+        assertEquals(NaN, svec.get(2), 0.0f);
 
         agg.initTemporal(ctx, tvec);
         assertEquals(NaN, tvec.get(0), 0.0f);
 
-        agg.aggregateTemporal(ctx, vec(Float.NaN, 4, 0.2f, 9.7f), 3, tvec);
+        agg.aggregateTemporal(ctx, vec(Float.NaN, 0.3f, 0.81f, 6f, 2f, 0.3f), 1, tvec);
         assertEquals(NaN, tvec.get(0), 0.0f);
         agg.completeTemporal(ctx, 1, tvec);
 
