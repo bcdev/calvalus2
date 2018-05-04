@@ -27,9 +27,9 @@ public class AggregatorYoungestClearTest {
     public void setUp() {
         ctx = createCtx();
         agg = new AggregatorYoungestClear(new MyVariableContext("a", "b", "c", "d"),
-                                          "b", 2066, 8,
+                                          "b", 2066, 8, 50,
                                           "c", 25, 75,
-                                          "mjd", Float.NaN,"a", "c", "d");
+                                          "age", 33,"a", "c", "d");
     }
 
     @Test
@@ -45,7 +45,7 @@ public class AggregatorYoungestClearTest {
         assertEquals("a", agg.getSpatialFeatureNames()[0]);
         assertEquals("c", agg.getSpatialFeatureNames()[1]);
         assertEquals("d", agg.getSpatialFeatureNames()[2]);
-        assertEquals("mjd", agg.getSpatialFeatureNames()[3]);
+        assertEquals("age", agg.getSpatialFeatureNames()[3]);
         assertEquals("b", agg.getSpatialFeatureNames()[4]);
         assertEquals("c", agg.getSpatialFeatureNames()[5]);
 
@@ -53,7 +53,7 @@ public class AggregatorYoungestClearTest {
         assertEquals("a", agg.getTemporalFeatureNames()[0]);
         assertEquals("c", agg.getTemporalFeatureNames()[1]);
         assertEquals("d", agg.getTemporalFeatureNames()[2]);
-        assertEquals("mjd", agg.getTemporalFeatureNames()[3]);
+        assertEquals("age", agg.getTemporalFeatureNames()[3]);
         assertEquals("b", agg.getTemporalFeatureNames()[4]);
         assertEquals("c", agg.getTemporalFeatureNames()[5]);
 
@@ -61,7 +61,7 @@ public class AggregatorYoungestClearTest {
         assertEquals("a", agg.getOutputFeatureNames()[1]);
         assertEquals("c", agg.getOutputFeatureNames()[2]);
         assertEquals("d", agg.getOutputFeatureNames()[3]);
-        assertEquals("mjd", agg.getOutputFeatureNames()[0]);
+        assertEquals("age", agg.getOutputFeatureNames()[0]);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class AggregatorYoungestClearTest {
         assertEquals(6, tvec.get(3), 1e-5f);
 
         agg.computeOutput(tvec, out);
-        assertEquals(6, out.get(0), 1e-5f);
+        assertEquals(27, out.get(0), 1e-5f);
         assertEquals(0.91f, out.get(1), 1e-5f);
         assertEquals(0.3f, out.get(2), 1e-5f);
         assertEquals(0.81f, out.get(3), 1e-5f);
