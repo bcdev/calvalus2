@@ -46,10 +46,11 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
     private final long weakCloudFilter;
     private final int lowerPercentileThreshold;
     private final int upperPercentileThreshold;
+    private final int filterThreshold;
     private final float referenceMjd;
 
     public AggregatorYoungestClear(VariableContext varCtx,
-                                   String flagsVarName, long strongCloudFilter, long weakCloudFilter,
+                                   String flagsVarName, long strongCloudFilter, long weakCloudFilter, int filterThreshold,
                                    String percentileVarName, int lowerPercentileThreshold, int upperPercentileThreshold,
                                    String mjdVarName, float referenceMjd, String... varNames) {
         super(Descriptor.NAME,
@@ -68,6 +69,7 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
         this.referenceMjd = referenceMjd;
         this.strongCloudFilter = strongCloudFilter;
         this.weakCloudFilter = weakCloudFilter;
+        this.filterThreshold = filterThreshold;
         this.lowerPercentileThreshold = lowerPercentileThreshold;
         this.upperPercentileThreshold = upperPercentileThreshold;
         this.flagsVarIndex = varCtx.getVariableIndex(flagsVarName);
@@ -167,7 +169,7 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
             }
         }
         // ... else weak
-        if (numValidObs * 2 < numTemporalObs) {
+        if (numValidObs < numTemporalObs * filterThreshold / 100.0) {
             numValidObs = 0;
             for (int j=0; j<numTemporalObs; ++j) {
                 if ((flags[j] & weakCloudFilter) == 0) {
@@ -179,7 +181,7 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
             }
         }
         // ... else nothing
-        if (numValidObs * 2 < numTemporalObs) {
+        if (numValidObs < numTemporalObs * filterThreshold / 100.0) {
             numValidObs = numTemporalObs;
             for (int j = 0; j < numTemporalObs; ++j) {
                 marker[j] = true;
@@ -263,6 +265,8 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
         long strongCloudFilter;
         @Parameter(label = "Weak cloud filter mask", description = "Bit mask of weak cloud filter", defaultValue = "8")
         long weakCloudFilter;
+        @Parameter(label = "Filter threshold", description = "Percent of minimum remaining", defaultValue = "20")
+        int filterThreshold;
         @Parameter(label = "Threshold band name", description = "Band to sort observations")
         String percentileVarName;
         @Parameter(label = "Lower threshold", description = "Percentile for cutting off dark pixels", defaultValue = "25")
@@ -276,18 +280,19 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
         String[] varNames;
 
         public Config() {
-            this("pixel_classif_flags", 2066, 8,
+            this("pixel_classif_flags", 2066, 8, 20,
                  null, 25, 75,
                  null);
         }
 
-        public Config(String flagVarName, long strongCloudFilter, long weakCloudFilter,
+        public Config(String flagVarName, long strongCloudFilter, long weakCloudFilter, int filterThreshold,
                       String percentileVarName, int lowerPercentileThreshold, int upperPercentileThreshold,
                       String referenceDate, String... varNames) {
             super(Descriptor.NAME);
             this.flagsVarName = flagVarName;
             this.strongCloudFilter = strongCloudFilter;
             this.weakCloudFilter = weakCloudFilter;
+            this.filterThreshold = filterThreshold;
             this.percentileVarName = percentileVarName;
             this.lowerPercentileThreshold = lowerPercentileThreshold;
             this.upperPercentileThreshold = upperPercentileThreshold;
@@ -323,7 +328,7 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
                     mjdVarName = "age";
                 } catch (ParseException e) {}
             }
-            return new AggregatorYoungestClear(varCtx, config.flagsVarName, config.strongCloudFilter, config.weakCloudFilter,
+            return new AggregatorYoungestClear(varCtx, config.flagsVarName, config.strongCloudFilter, config.weakCloudFilter, config.filterThreshold,
                                                config.percentileVarName, config.lowerPercentileThreshold, config.upperPercentileThreshold,
                                                mjdVarName, referenceMjd, config.varNames);
         }
