@@ -119,17 +119,36 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
                 File localFile = null;
+                String snapFormatName = "SENTINEL-2-MSI-MultiRes";
                 if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
                     localFile = new File(pathConfig.getPath().toUri());
+                    if (localFile.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
+                        snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                    } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
+                        snapFormatName = "Sen2Agri-MSI-MultiRes";
+                    }
                 } else {
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
                     // find *MTD*xml file in top directory
                     for (File file : unzippedFiles) {
-                        if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
-                            File parentFile = file.getParentFile();
-                            if (parentFile != null && parentFile.getName().endsWith(".SAFE")) {
+                        if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")
+                                && file.getParentFile() != null
+                                && file.getParentFile().getName().endsWith(".SAFE")) {
+                            localFile = file;
+                            snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                            break;
+                        }
+                    }
+                    if (localFile == null && pathConfig.getPath().getName().contains("MSIL2A")) {
+                        // find *MTD*xml file in top directory
+                        for (File file : unzippedFiles) {
+                            //S2A_OPER_SSC_L2VALD_14PRC____20180208.HDR
+                            if (file.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")
+                                    && file.getParentFile() != null
+                                    && file.getParentFile().getName().endsWith(".SAFE")) {
                                 localFile = file;
+                                snapFormatName = "Sen2Agri-MSI-MultiRes";
                                 break;
                             }
                         }
@@ -142,7 +161,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_20M);
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
-                product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
+                product = readProduct(localFile, snapFormatName);
                 CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 File productFileLocation = product.getFileLocation();
                 if (product.getStartTime() == null && product.getEndTime() == null) {
