@@ -102,6 +102,35 @@ public class AggregatorYoungestClearTest {
     }
 
     @Test
+    public void testAggregatorYoungest_nofallback() {
+        agg = new AggregatorYoungestClear(new MyVariableContext("a", "b", "c", "d"),
+                                          "b", 2059, 9, 10,
+                                          "c", 10, 80,
+                                          "age", 33,"a", "c", "d");
+
+        VectorImpl tvec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
+        VectorImpl out = vec(NaN, NaN, NaN, NaN);
+
+        agg.initTemporal(ctx, tvec);
+        assertEquals(NaN, tvec.get(0), 0.0f);
+
+        agg.aggregateTemporal(ctx, vec(0.91f, 0.3f, 0.81f, 6f, 10f, 0.3f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.92f, 0.1f, 0.82f, 8f, 10f, 0.1f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.93f, 0.5f, 0.83f, 7f, 8f, 0.5f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.99f, 0.7f, 0.84f, 5f, 0f, 0.7f), 1, tvec);
+        agg.aggregateTemporal(ctx, vec(0.95f, 0.6f, 0.85f, 4f, 10f, 0.6f), 1, tvec);
+        agg.completeTemporal(ctx, 5, tvec);
+        assertEquals(0.99f, tvec.get(0), 1e-5f);
+        assertEquals(5, tvec.get(3), 1e-5f);
+
+        agg.computeOutput(tvec, out);
+        assertEquals(28, out.get(0), 1e-5f);
+        assertEquals(0.99f, out.get(1), 1e-5f);
+        assertEquals(0.7f, out.get(2), 1e-5f);
+        assertEquals(0.84f, out.get(3), 1e-5f);
+    }
+
+    @Test
     public void testAggregatorYoungest_AllNaN() {
         VectorImpl svec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
         VectorImpl tvec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
