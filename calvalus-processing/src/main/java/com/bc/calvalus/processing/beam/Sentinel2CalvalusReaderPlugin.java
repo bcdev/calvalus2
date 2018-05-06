@@ -107,6 +107,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         private static final Pattern NAME_TIME_PATTERN_L1C = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
         private static final Pattern NAME_TIME_PATTERN_L2A = Pattern.compile("S2._MSIL2A_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
+        public static final String SEN2AGRI_L2_FORMAT = "S2_AGRI_SSC_L2VALD";
 
         Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
             super(productReaderPlugIn);
@@ -125,7 +126,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     if (localFile.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
                         snapFormatName = "SENTINEL-2-MSI-MultiRes";
                     } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
-                        snapFormatName = "Sen2Agri-MSI-MultiRes";
+                        snapFormatName = SEN2AGRI_L2_FORMAT;
                     }
                 } else {
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
@@ -148,13 +149,13 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                                     && file.getParentFile() != null
                                     && file.getParentFile().getName().endsWith(".SAFE")) {
                                 localFile = file;
-                                snapFormatName = "Sen2Agri-MSI-MultiRes";
+                                snapFormatName = SEN2AGRI_L2_FORMAT;
                                 break;
                             }
                         }
                     }
                     if (localFile == null) {
-                        throw new IllegalFileFormatException("input has no MTD_SAF file.");
+                        throw new IllegalFileFormatException("input has no MTD_SAF file and no S2VALD hdr.");
                     }
                     CalvalusLogger.getLogger().info("productXML file = " + localFile);
                 }
