@@ -26,7 +26,7 @@ public class AggregatorYoungestTest {
     @Before
     public void setUp() {
         ctx = createCtx();
-        agg = new AggregatorYoungest(new MyVariableContext("a", "b", "c"),"c", "Out");
+        agg = new AggregatorYoungest(new MyVariableContext("a", "b", "c"),"mjd", Float.NaN, "c");
     }
 
     @Test
@@ -40,15 +40,15 @@ public class AggregatorYoungestTest {
 
         assertEquals(2, agg.getSpatialFeatureNames().length);
         assertEquals("c", agg.getSpatialFeatureNames()[0]);
-        assertEquals("c_mjd", agg.getSpatialFeatureNames()[1]);
+        assertEquals("mjd", agg.getSpatialFeatureNames()[1]);
 
         assertEquals(2, agg.getTemporalFeatureNames().length);
         assertEquals("c", agg.getTemporalFeatureNames()[0]);
-        assertEquals("c_mjd", agg.getSpatialFeatureNames()[1]);
+        assertEquals("mjd", agg.getTemporalFeatureNames()[1]);
 
         assertEquals(2, agg.getOutputFeatureNames().length);
-        assertEquals("Out", agg.getOutputFeatureNames()[0]);
-        assertEquals("c_mjd", agg.getSpatialFeatureNames()[1]);
+        assertEquals("c", agg.getOutputFeatureNames()[1]);
+        assertEquals("mjd", agg.getOutputFeatureNames()[0]);
     }
 
     @Test
@@ -58,11 +58,11 @@ public class AggregatorYoungestTest {
         VectorImpl out = vec(NaN, NaN);
 
         agg.initSpatial(ctx, svec);
-        assertEquals(NaN, svec.get(0), 0.0f);
+        assertEquals(Float.NaN, svec.get(0), 0.0f);
 
+        agg.aggregateSpatial(ctx, obs(6, 0.99f, 0.88f, 5.5f), svec);
         agg.aggregateSpatial(ctx, obs(4, 0.99f, 0.88f, NaN), svec);
         agg.aggregateSpatial(ctx, obs(5, 0.99f, 0.88f, 0.1f), svec);
-        agg.aggregateSpatial(ctx, obs(6, 0.99f, 0.88f, 5.5f), svec);
         assertEquals(5.5f, svec.get(0), 1e-5f);
 
         agg.completeSpatial(ctx, 3, svec);
@@ -79,8 +79,8 @@ public class AggregatorYoungestTest {
         assertEquals(9, tvec.get(1), 1e-5f);
 
         agg.computeOutput(tvec, out);
-        assertEquals(1.1f, out.get(0), 1e-5f);
-        assertEquals(9, out.get(1), 1e-5f);
+        assertEquals(1.1f, out.get(1), 1e-5f);
+        assertEquals(9, out.get(0), 1e-5f);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class AggregatorYoungestTest {
         agg.completeTemporal(ctx, 1, tvec);
 
         agg.computeOutput(tvec, out);
-        assertEquals(NaN, out.get(0), 0.0f);
+        assertEquals(NaN, out.get(1), 0.0f);
     }
 
 
