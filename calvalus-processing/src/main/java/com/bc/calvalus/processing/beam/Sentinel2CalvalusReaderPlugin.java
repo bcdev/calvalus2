@@ -107,7 +107,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         private static final Pattern NAME_TIME_PATTERN_L1C = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
         private static final Pattern NAME_TIME_PATTERN_L2A = Pattern.compile("S2._MSIL2A_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
-        public static final String SEN2AGRI_L2_FORMAT = "S2_AGRI_SSC_L2VALD";
+        public static final String FORMAT_L2_SEN2AGRI = "S2_AGRI_SSC_L2VALD";
 
         Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
             super(productReaderPlugIn);
@@ -126,7 +126,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     if (localFile.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
                         snapFormatName = "SENTINEL-2-MSI-MultiRes";
                     } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
-                        snapFormatName = SEN2AGRI_L2_FORMAT;
+                        snapFormatName = FORMAT_L2_SEN2AGRI;
                     }
                 } else {
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
@@ -149,7 +149,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                                     && file.getParentFile() != null
                                     && file.getParentFile().getName().endsWith(".SAFE")) {
                                 localFile = file;
-                                snapFormatName = SEN2AGRI_L2_FORMAT;
+                                snapFormatName = FORMAT_L2_SEN2AGRI;
                                 break;
                             }
                         }
@@ -163,27 +163,45 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, snapFormatName);
+
+                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
+                if (snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
+                    for (Band band : product.getBands()) {
+                        if (!"FRE_R1_B2".equals(band.getName())
+                                && !"FRE_R1_B3".equals(band.getName())
+                                && !"FRE_R1_B4".equals(band.getName())
+                                && !"FRE_R1_B8".equals(band.getName())
+                                && !"CLD_R1".equals(band.getName())
+                                && !"MSK_R1".equals(band.getName())) {
+                            product.removeBand(band);
+                        }
+                    }
+                }
+
+                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
+                if (!snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
+
+                    if (!inputFormat.equals(FORMAT_MULTI)) {
+                        product.setProductReader(this);
+                        Map<String, Object> params = new HashMap<>();
+                        if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
+                            params.put("referenceBand", "B2");
+                        } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
+                            params.put("referenceBand", "B5");
+                        } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
+                            params.put("referenceBand", "B1");
+                        } else {
+                            String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
+                            throw new IllegalArgumentException(msg);
+                        }
+                        product = GPF.createProduct("Resample", params, product);
+                    }
+                }
                 CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
-                File productFileLocation = product.getFileLocation();
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, localFile.getName());
                 }
-                if (!inputFormat.equals(FORMAT_MULTI)) {
-                    product.setProductReader(this);
-                    Map<String, Object> params = new HashMap<>();
-                    if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
-                        params.put("referenceBand", "B2");
-                    } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
-                        params.put("referenceBand", "B5");
-                    } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
-                        params.put("referenceBand", "B1");
-                    } else {
-                        String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
-                        throw new IllegalArgumentException(msg);
-                    }
-                    product = GPF.createProduct("Resample", params, product);
-                    product.setFileLocation(productFileLocation);
-                }
+                product.setFileLocation(product.getFileLocation());
                 return product;
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
@@ -220,7 +238,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             throw new IllegalStateException("Should not be called");
         }
     }
-    
+
     static Product readProduct(File xmlFile, String formatPrefix) throws IOException {
         ProductReaderPlugIn productReaderPlugin = findWithFormatPrefix(xmlFile, formatPrefix);
         return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
