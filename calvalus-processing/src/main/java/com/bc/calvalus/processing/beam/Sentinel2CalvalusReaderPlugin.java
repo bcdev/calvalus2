@@ -178,30 +178,31 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     }
                 }
 
-                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
-                if (!snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
-
-                    if (!inputFormat.equals(FORMAT_MULTI)) {
-                        product.setProductReader(this);
-                        Map<String, Object> params = new HashMap<>();
-                        if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
-                            params.put("referenceBand", "B2");
-                        } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
-                            params.put("referenceBand", "B5");
-                        } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
-                            params.put("referenceBand", "B1");
-                        } else {
-                            String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
-                            throw new IllegalArgumentException(msg);
-                        }
-                        product = GPF.createProduct("Resample", params, product);
-                    }
-                }
                 CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, localFile.getName());
                 }
-                product.setFileLocation(product.getFileLocation());
+
+                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
+                if (!inputFormat.equals(FORMAT_MULTI)
+                        && !snapFormatName.equals(FORMAT_L2_SEN2AGRI)
+                        ) {
+                    product.setProductReader(this);
+                    Map<String, Object> params = new HashMap<>();
+                    if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
+                        params.put("referenceBand", "B2");
+                    } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
+                        params.put("referenceBand", "B5");
+                    } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
+                        params.put("referenceBand", "B1");
+                    } else {
+                        String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
+                        throw new IllegalArgumentException(msg);
+                    }
+                    File productFileLocation = product.getFileLocation();
+                    product = GPF.createProduct("Resample", params, product);
+                    product.setFileLocation(productFileLocation);
+                }
                 return product;
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
