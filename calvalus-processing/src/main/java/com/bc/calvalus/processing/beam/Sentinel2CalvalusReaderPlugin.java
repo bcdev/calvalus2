@@ -32,6 +32,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.SnapFileFilter;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -164,44 +165,54 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 Product product;
                 product = readProduct(localFile, snapFormatName);
 
-                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
-                if (snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
-                    for (Band band : product.getBands()) {
-                        if (!"FRE_R1_B2".equals(band.getName())
-                                && !"FRE_R1_B3".equals(band.getName())
-                                && !"FRE_R1_B4".equals(band.getName())
-                                && !"FRE_R1_B8".equals(band.getName())
-                                && !"CLD_R1".equals(band.getName())
-                                && !"MSK_R1".equals(band.getName())) {
-                            product.removeBand(band);
-                        }
-                    }
-                }
+//                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
+//                if (snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
+//                    for (Band band : product.getBands()) {
+//                        if (!"FRE_R1_B2".equals(band.getName())
+//                                && !"FRE_R1_B3".equals(band.getName())
+//                                && !"FRE_R1_B4".equals(band.getName())
+//                                && !"FRE_R1_B8".equals(band.getName())
+//                                && !"CLD_R1".equals(band.getName())
+//                                && !"MSK_R1".equals(band.getName())) {
+//                            product.removeBand(band);
+//                        }
+//                    }
+//                }
 
                 CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, localFile.getName());
                 }
 
-                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
+//                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
                 if (!inputFormat.equals(FORMAT_MULTI)
-                        && !snapFormatName.equals(FORMAT_L2_SEN2AGRI)
+//                        && !snapFormatName.equals(FORMAT_L2_SEN2AGRI)
                         ) {
-                    product.setProductReader(this);
+                    // Do not set the product reader, SNAP will else try to read data with it, leads to NPE in JAI
+                    //product.setProductReader(this);
                     Map<String, Object> params = new HashMap<>();
-                    if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
-                        params.put("referenceBand", "B2");
-                    } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
-                        params.put("referenceBand", "B5");
-                    } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
-                        params.put("referenceBand", "B1");
-                    } else {
+                    String referenceBand = null;
+                    if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_10M)) {
+                        referenceBand = "B2";
+                    } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_20M)) {
+                        referenceBand = "B5";
+                    } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_60M)) {
+                        referenceBand = "B1";
+                    } else if (snapFormatName == FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_10M)) {
+                        referenceBand = "FRE_R1_B2";
+                    } else if (snapFormatName == FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_20M)) {
+                        referenceBand = "FRE_R2_B5";
+                    }
+                    if (referenceBand == null || !product.containsBand(referenceBand)) {
                         String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
                         throw new IllegalArgumentException(msg);
                     }
+                    params.put("referenceBand", referenceBand);
                     File productFileLocation = product.getFileLocation();
+                    Dimension preferredTileSize = product.getPreferredTileSize();
                     product = GPF.createProduct("Resample", params, product);
-                    product.setFileLocation(productFileLocation);
+                    //product.setFileLocation(productFileLocation);
+                    product.setPreferredTileSize(preferredTileSize);
                 }
                 return product;
             } else {
