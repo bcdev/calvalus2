@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.ColorPaletteSet;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -149,6 +150,12 @@ class CalvalusProduction {
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
+    private ColorPaletteSet[] getColorPaletteSets(String userName, ServiceContainer serviceContainer) throws ProductionException, IOException {
+        List<ColorPaletteSet> colorPaletteSets = new ArrayList<>();
+        colorPaletteSets.addAll(Arrays.asList(serviceContainer.getColorPaletteService().getColorPaletteSets(userName, "")));
+        colorPaletteSets.addAll(Arrays.asList(serviceContainer.getColorPaletteService().getColorPaletteSets(userName, "user=" + userName)));
+        return colorPaletteSets.toArray(new ColorPaletteSet[colorPaletteSets.size()]);
+    }
 
     private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());

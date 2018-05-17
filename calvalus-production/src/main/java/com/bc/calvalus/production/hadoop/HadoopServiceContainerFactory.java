@@ -1,6 +1,8 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.JobClientsMap;
+import com.bc.calvalus.inventory.ColorPaletteService;
+import com.bc.calvalus.inventory.DefaultColorPaletteService;
 import com.bc.calvalus.inventory.DefaultInventoryService;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.InventoryService;
@@ -43,6 +45,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
         String archiveRootDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir", "eodata");
+        String colorPaletteRootDir = serviceConfiguration.getOrDefault("calvalus.portal.colorPaletteRootDir", "auxiliary");
         String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
                                                                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
         // disable cache, otherwise org.apache.hadoop.fs.FileSystem.Cache grows forever
@@ -59,6 +62,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
             JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
             final HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
             final InventoryService inventoryService = new DefaultInventoryService(hdfsFileSystemService, archiveRootDir);
+            final ColorPaletteService colorPaletteService = new DefaultColorPaletteService(hdfsFileSystemService, colorPaletteRootDir);
             final HadoopProcessingService processingService = new HadoopProcessingService(jobClientsMap, softwareDir);
             final ProductionStore productionStore;
             if ("memory".equals(serviceConfiguration.get("production.db.type"))) {
@@ -81,7 +85,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                                                             productionStore,
                                                                             productionTypes);
             stagingService.setProductionService((Observable) productionService);
-            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService, hadoopConfiguration);
+            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService, colorPaletteService, hadoopConfiguration);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }

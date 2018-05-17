@@ -23,12 +23,14 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.ColorPaletteSet;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoColorPaletteSet;
 import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
@@ -260,6 +262,24 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
             LOG.fine("getProductSets returns " + dtoProductSets.length);
             return dtoProductSets;
+        } catch (IOException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public DtoColorPaletteSet[] getColorPaletteSets(String filter) throws BackendServiceException {
+        if (filter.contains("dummy")) {
+            filter = filter.replace("dummy", getUserName());
+        }
+        try {
+            ColorPaletteSet[] colorPaletteSets = serviceContainer.getColorPaletteService().getColorPaletteSets(getUserName(), filter);
+            DtoColorPaletteSet[] dtoColorPaletteSets = new DtoColorPaletteSet[colorPaletteSets.length];
+            for (int i = 0; i < dtoColorPaletteSets.length; i++) {
+                dtoColorPaletteSets[i] = convert(colorPaletteSets[i]);
+            }
+            LOG.fine("dtoColorPaletteSets returns " + dtoColorPaletteSets.length);
+            return dtoColorPaletteSets;
         } catch (IOException e) {
             throw convert(e);
         }
@@ -708,6 +728,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 productSet.getRegionWKT(),
                 productSet.getBandNames(),
                 productSet.getGeoInventory());
+    }
+
+    private DtoColorPaletteSet convert(ColorPaletteSet colorPaletteSet) {
+        return new DtoColorPaletteSet(colorPaletteSet.getName(),
+                colorPaletteSet.getPath());
     }
 
     private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,

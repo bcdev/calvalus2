@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.inventory.ColorPaletteService;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.InventoryService;
 import org.apache.hadoop.conf.Configuration;
@@ -27,15 +28,18 @@ public class ServiceContainer {
     private final ProductionService productionService;
     private final FileSystemService fileSystemService;
     private final InventoryService inventoryService;
+    private final ColorPaletteService colorPaletteService;
     private final Configuration hadoopConfiguration;
 
     public ServiceContainer(ProductionService productionService, 
                             FileSystemService fileSystemService, 
-                            InventoryService inventoryService, 
+                            InventoryService inventoryService,
+                            ColorPaletteService colorPaletteService,
                             Configuration hadoopConfiguration) {
         this.productionService = productionService;
         this.fileSystemService = fileSystemService;
         this.inventoryService = inventoryService;
+        this.colorPaletteService = colorPaletteService;
         this.hadoopConfiguration = hadoopConfiguration;
     }
 
@@ -49,6 +53,10 @@ public class ServiceContainer {
 
     public InventoryService getInventoryService() {
         return inventoryService;
+    }
+
+    public ColorPaletteService getColorPaletteService() {
+        return colorPaletteService;
     }
 
     public Configuration getHadoopConfiguration() {

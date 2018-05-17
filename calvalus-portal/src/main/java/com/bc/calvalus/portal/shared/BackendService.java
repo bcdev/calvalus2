@@ -44,6 +44,17 @@ public interface BackendService extends RemoteService {
     DtoProductSet[] getProductSets(String filter) throws BackendServiceException;
 
     /**
+     * Gets all known color palette sets.
+     *
+     * @param filter A filter expression (not yet used).
+     *
+     * @return The product sets.
+     *
+     * @throws BackendServiceException If a server error occurred.
+     */
+    DtoColorPaletteSet[] getColorPaletteSets(String filter) throws BackendServiceException;
+
+    /**
      * Gets all known processors.
      *
      * @param filter A filter expression (not yet used).

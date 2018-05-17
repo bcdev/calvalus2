@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoColorPaletteSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -50,6 +51,8 @@ public class QuicklookParametersForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
+    private final PortalContext portal;
+
     @UiField
     RadioButton quicklookNone;
     @UiField
@@ -62,7 +65,7 @@ public class QuicklookParametersForm extends Composite {
     @UiField
     TextBox bandName;
     @UiField
-    TextBox cpdURL;
+    ListBox colorPalette;
 
     @UiField
     TextBox rgbaExpressionsRedBand;
@@ -92,7 +95,11 @@ public class QuicklookParametersForm extends Composite {
     @UiField
     CheckBox legendEnabled;
 
+    private DtoColorPaletteSet[] colorPaletteSet;
+
     public QuicklookParametersForm(PortalContext portalContext) {
+        this.portal = portalContext;
+
         initWidget(uiBinder.createAndBindUi(this));
 
         quicklookNone.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
@@ -130,13 +137,15 @@ public class QuicklookParametersForm extends Composite {
         });
 
         setAvailableImageTypes();
+        setColorPaletteSets();
+
         quicklookNone.setValue(true);
         setQuicklookNone();
     }
 
     private void setQuicklookNone() {
         bandName.setEnabled(false);
-        cpdURL.setEnabled(false);
+        colorPalette.setEnabled(false);
 
         rgbaExpressionsRedBand.setEnabled(false);
         rgbaExpressionsGreenBand.setEnabled(false);
@@ -156,7 +165,7 @@ public class QuicklookParametersForm extends Composite {
 
     private void setQuicklookSingleBandEnabled() {
         bandName.setEnabled(true);
-        cpdURL.setEnabled(true);
+        colorPalette.setEnabled(true);
 
         rgbaExpressionsRedBand.setEnabled(false);
         rgbaExpressionsGreenBand.setEnabled(false);
@@ -176,7 +185,7 @@ public class QuicklookParametersForm extends Composite {
 
     private void setQuicklookMultiBandEnabled() {
         bandName.setEnabled(false);
-        cpdURL.setEnabled(false);
+        colorPalette.setEnabled(false);
 
         rgbaExpressionsRedBand.setEnabled(true);
         rgbaExpressionsGreenBand.setEnabled(true);
@@ -206,6 +215,16 @@ public class QuicklookParametersForm extends Composite {
         } else {
             imageType.setSelectedIndex(0);
         }
+    }
+
+    private void setColorPaletteSets() {
+        this.colorPaletteSet = portal.getColorPaletteSets();
+        colorPalette.clear();
+        colorPalette.addItem("");
+        for (DtoColorPaletteSet dtoColorPalette : this.colorPaletteSet ) {
+            colorPalette.addItem(dtoColorPalette.getPath());
+        }
+        colorPalette.setSelectedIndex(0);
     }
 
     public void setProcessorVariables(String... processorVariables) {
@@ -283,11 +302,11 @@ public class QuicklookParametersForm extends Composite {
                 bandNameXML = indentXML + "<bandName>" + bandNameValue + "</bandName>\n";
             }
 
-            // cpdURL
+            // color palette
             String cpdURLXML = "";
-            String cpdURLValue = cpdURL.getValue();
-            if (cpdURLValue != null && !cpdURLValue.isEmpty()) {
-                cpdURLXML = indentXML + "<cpdURL>" + cpdURLValue + "</cpdURL>\n";
+            String colorPaletteValue = colorPalette.getSelectedValue();
+            if (colorPaletteValue != null && !colorPaletteValue.isEmpty()) {
+                cpdURLXML = indentXML + "<cpdURL>" + colorPaletteValue + "</cpdURL>\n";
             }
 
             quicklookParameters = "<parameters>\n" +
@@ -375,7 +394,7 @@ public class QuicklookParametersForm extends Composite {
             quicklookNone.setValue(true, true);
 
             bandName.setValue(null);
-            cpdURL.setValue(null);
+            colorPalette.setSelectedIndex(0);
 
             rgbaExpressionsRedBand.setValue(null);
             rgbaExpressionsGreenBand.setValue(null);
@@ -409,9 +428,18 @@ public class QuicklookParametersForm extends Composite {
                 }
             }
 
-            // cpdURL
+            // color palette
             String cpdURLValue = getTagValue(dom, "cpdURL");
-            cpdURL.setValue(cpdURLValue);
+            if (cpdURLValue == null || this.colorPaletteSet == null) {
+                colorPalette.setSelectedIndex(0);
+            } else {
+                for (int i=0; i < this.colorPaletteSet.length; i++ ) {
+                    if( this.colorPaletteSet[i].getPath().equals(cpdURLValue) ) {
+                        colorPalette.setSelectedIndex(i+1);
+                        break;
+                    }
+                }
+            }
 
             // RGBAExpressions
             String RGBAExpressionsValue = getTagValue(dom, "RGBAExpressions");

@@ -23,6 +23,8 @@ public interface BackendServiceAsync {
 
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
+    void getColorPaletteSets(String filter, AsyncCallback<DtoColorPaletteSet[]> callback);
+
     void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);
 
     void getAggregators(String filter, AsyncCallback<DtoAggregatorDescriptor[]> callback);

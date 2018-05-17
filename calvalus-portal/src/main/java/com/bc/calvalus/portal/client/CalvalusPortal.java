@@ -11,6 +11,7 @@ import com.bc.calvalus.portal.shared.ContextRetrievalService;
 import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoColorPaletteSet;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -74,6 +75,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     // Data provided by various external services
     private ListDataProvider<Region> regions;
     private DtoProductSet[] productSets;
+    private DtoColorPaletteSet[] colorPaletteSets;
     private DtoProcessorDescriptor[] systemProcessors;
     private DtoProcessorDescriptor[] userProcessors;
     private DtoProcessorDescriptor[] allUserProcessors;
@@ -128,6 +130,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             public void run() {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
+                backendService.getColorPaletteSets(NO_FILTER, new InitColorPaletteSetsCallback());
 
                 final BundleFilter systemFilter = new BundleFilter();
                 systemFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
@@ -179,6 +182,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     @Override
     public DtoProductSet[] getProductSets() {
         return productSets;
+    }
+
+    @Override
+    public DtoColorPaletteSet[] getColorPaletteSets() {
+        return colorPaletteSets;
     }
 
     @Override
@@ -473,6 +481,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             caught.printStackTrace(System.err);
             Dialog.error("Server-side Error", caught.getMessage());
             CalvalusPortal.this.productSets = new DtoProductSet[0];
+        }
+    }
+
+    private class InitColorPaletteSetsCallback implements AsyncCallback<DtoColorPaletteSet[]> {
+
+        @Override
+        public void onSuccess(DtoColorPaletteSet[] dtoColorPaletteSets) {
+            CalvalusPortal.this.colorPaletteSets = dtoColorPaletteSets;
+            maybeInitFrontend();
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            Dialog.error("Server-side Error", caught.getMessage());
+            CalvalusPortal.this.colorPaletteSets = new DtoColorPaletteSet[0];
         }
     }
 

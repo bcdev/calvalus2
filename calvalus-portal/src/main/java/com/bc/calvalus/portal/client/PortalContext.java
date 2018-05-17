@@ -5,6 +5,7 @@ import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
+import com.bc.calvalus.portal.shared.DtoColorPaletteSet;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -26,6 +27,8 @@ public interface PortalContext {
 
     // make this return ListDataProvider<GsProductSet>
     DtoProductSet[] getProductSets();
+
+    DtoColorPaletteSet[] getColorPaletteSets();
 
     // make this return ListDataProvider<GsProcessorDescriptor>
     DtoProcessorDescriptor[] getProcessors(String filter);
