@@ -178,7 +178,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             if (count >= 2 && Float.isNaN(aggregatedSamples[AGG_INDEX_MJD][i])) {
                 double sdrSum = aggregatedSamples[AGG_INDEX_SDR_SUM][i];
                 double sdrSqrSum = aggregatedSamples[AGG_INDEX_SDR_SQSUM][i];
-
+                double sdr4MaxNdvi = Float.NaN;
                 double sdrMean = sdrSum / count;
                 double sdrSigma = Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
                 if (! withTc4) {
@@ -186,7 +186,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                     if (tau1 > applyFilterThresh) {
                         double tau2 = sdrMean + sdrSigma;
                         double tau3 = sdrMean * 1.35;
-                        double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
+                        sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
                         double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
                         double tau5 = sdrMean - sdrSigma;
                         double tau6 = sdrMean * 0.65;
@@ -199,19 +199,19 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                     double sdrCloudDetector = Math.min(sdrMean - sdrSigma * 1.4, sdrMean * 1.4);
                     result[0][i] = (float) sdrCloudDetector;
                 }
-//                }
-//                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
-//                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " sdrMean=" + sdrMean + " sdrSigma=" + sdrSigma + " sdrCloud=" + result[0][i] + " sdrShadow=" + result[1][i]);
-//                }
+                //}
+                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " sdrMean=" + sdrMean + " sdrSigma=" + sdrSigma + " sdrNdviMax=" + sdr4MaxNdvi + " sdrCloud=" + result[0][i] + " sdrShadow=" + result[1][i]);
+                }
                 // if "ndvi" instead of sdr_B3 (spot only)
                 //if (cloudValue2 > applyFilterThresh) {
                 //    float sdrCloudDetector = Math.max(sdrMean * 0.85f, sdrMean - sdrSigma);
                 //    result[0][i] = sdrCloudDetector;
                 //}
-//            } else {
-//                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
-//                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " count=" + count);
-//                }
+            } else {
+                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " count=" + count);
+                }
             }
             count = aggregatedSamples[AGG_INDEX_TC1_COUNT][i];
             if (withTc4 && count >= 2 && Float.isNaN(aggregatedSamples[AGG_INDEX_TC1_MJD][i])) {

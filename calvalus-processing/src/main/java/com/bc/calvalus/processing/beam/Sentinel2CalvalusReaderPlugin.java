@@ -63,7 +63,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
             if (filename.matches("^S2.*_MSIL1C.*") ||
-                    filename.matches("^S2.*_MSIL2A.*")) {
+                    filename.matches("^S2.*_...L2A.*")) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -106,7 +106,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         private static final Pattern NAME_TIME_PATTERN = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
         //S2A_MSIL1C_20161212T100412_N0204_R122_T33UVT_20161212T100409
         private static final Pattern NAME_TIME_PATTERN_L1C = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
-        private static final Pattern NAME_TIME_PATTERN_L2A = Pattern.compile("S2._MSIL2A_(([0-9]{8}T[0-9]{6})).*");
+        private static final Pattern NAME_TIME_PATTERN_L2A = Pattern.compile("S2._...L2A_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
         public static final String FORMAT_L2_SEN2AGRI = "S2_AGRI_SSC_L2VALD";
 
@@ -142,7 +142,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                             break;
                         }
                     }
-                    if (localFile == null && pathConfig.getPath().getName().contains("MSIL2A")) {
+                    if (localFile == null && pathConfig.getPath().getName().contains("L2A")) {
                         // find *MTD*xml file in top directory
                         for (File file : unzippedFiles) {
                             //S2A_OPER_SSC_L2VALD_14PRC____20180208.HDR
@@ -225,7 +225,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             String productType = filename.substring(3, 11);
             if ("_MSIL1C_".equals(productType)) {
                 pattern = NAME_TIME_PATTERN_L1C;
-            } else if ("_MSIL2A_".equals(productType)) {
+            } else if ("_MSIL2A_".equals(productType) || "_REVL2A_".equals(productType)) {
                 pattern = NAME_TIME_PATTERN_L2A;
             } else {
                 pattern = NAME_TIME_PATTERN;
