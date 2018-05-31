@@ -43,12 +43,12 @@ public class AvhrrGridReducer extends AbstractGridReducer {
 
     @Override
     protected int getTargetWidth() {
-        return 1440;
+        return 80;
     }
 
     @Override
     protected int getTargetHeight() {
-        return 720;
+        return 80;
     }
 
     @Override
