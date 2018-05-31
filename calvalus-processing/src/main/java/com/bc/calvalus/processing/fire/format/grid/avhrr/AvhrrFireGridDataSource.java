@@ -35,7 +35,9 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
-        CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y + " for tile with index " + tileIndex);
+        if (x == 0) {
+            CalvalusLogger.getLogger().warning("Reading data for line " + y + " for tile with index " + tileIndex);
+        }
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         // target grid: 1440*720
