@@ -54,13 +54,13 @@ public class AvhrrGridReducer extends AbstractGridReducer {
     @Override
     protected int getX(String key) {
         int tileIndex = Integer.parseInt(key.split("-")[2]);
-        return tileIndex % 18;
+        return (tileIndex % 18) * 80;
     }
 
     @Override
     protected int getY(String key) {
         int tileIndex = Integer.parseInt(key.split("-")[2]);
-        return tileIndex / 18;
+        return (tileIndex / 18) * 80;
     }
 
 }
