@@ -7,7 +7,7 @@ import static junit.framework.TestCase.assertEquals;
 public class AvhrrFireGridDataSourceTest {
 
     @Test
-    public void getPixelIndex() throws Exception {
+    public void testGetPixelIndex() throws Exception {
 
         // first target grid cell, first index
 

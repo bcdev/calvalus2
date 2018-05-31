@@ -41,7 +41,7 @@ public class AvhrrGridInputFormat extends InputFormat {
         SubsetOp subsetOp = new SubsetOp();
         subsetOp.setParameterDefaultValues();
         subsetOp.setSourceProduct(lcProduct);
-        subsetOp.setBandNames(new String[] {"lccs_class"});
+        subsetOp.setBandNames(new String[]{"lccs_class"});
 
         CollocateOp collocateOp = new CollocateOp();
         collocateOp.setMasterProduct(reprojectionOp.getTargetProduct());
@@ -70,22 +70,22 @@ public class AvhrrGridInputFormat extends InputFormat {
         FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, conf);
         List<FileStatus> fileStatusList = Arrays.asList(fileStatuses);
         fileStatusList.sort(Comparator.comparing(o -> o.getPath().getName()));
-        addSplit(fileStatusList, splits);
+        for (int i = 0; i < 162; i++) {
+            addSplit(fileStatusList, splits, i);
+        }
         return splits;
     }
 
-    private void addSplit(List<FileStatus> fileStatuses, List<InputSplit> splits) throws IOException {
+    private void addSplit(List<FileStatus> fileStatuses, List<InputSplit> splits, int index) throws IOException {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
-        for (int i = 0; i < 162; i++) {
-            for (FileStatus fileStatus : fileStatuses) {
-                Path path = fileStatus.getPath();
-                filePaths.add(path);
-                fileLengths.add(fileStatus.getLen());
-            }
-            filePaths.add(new Path("" + i));
-            fileLengths.add(0L);
+        for (FileStatus fileStatus : fileStatuses) {
+            Path path = fileStatus.getPath();
+            filePaths.add(path);
+            fileLengths.add(fileStatus.getLen());
         }
+        filePaths.add(new Path("" + index));
+        fileLengths.add(0L);
 
         CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
