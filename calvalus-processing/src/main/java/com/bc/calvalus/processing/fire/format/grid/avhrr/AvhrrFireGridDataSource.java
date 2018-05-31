@@ -52,24 +52,25 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         for (int sourceY = 0; sourceY < data.height; sourceY++) {
             for (int sourceX = 0; sourceX < data.height; sourceX++) {
 
-                int pixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
-                int sourceJD = (int) getFloatPixelValue(jd, "", pixelIndex);
+                int sourcePixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
+                int sourceJD = (int) getFloatPixelValue(jd, "", sourcePixelIndex);
                 boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+                int targetPixelIndex = sourceY * 5 + sourceX;
                 if (isValidPixel) {
-                    float sourceCL = getFloatPixelValue(cl, "", pixelIndex);
+                    float sourceCL = getFloatPixelValue(cl, "", sourcePixelIndex);
                     sourceCL = scale(sourceCL);
-                    data.burnedPixels[pixelIndex] = sourceJD;
-                    data.probabilityOfBurn[pixelIndex] = sourceCL;
+                    data.burnedPixels[targetPixelIndex] = sourceJD;
+                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 }
-                int sourceLC = getIntPixelValue(lc, "", pixelIndex);
-                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                data.lcClasses[pixelIndex] = sourceLC;
+                int sourceLC = getIntPixelValue(lc, "", sourcePixelIndex);
+                data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                data.lcClasses[targetPixelIndex] = sourceLC;
 
                 if (sourceJD != -1) { // neither no-data, nor water, nor cloud -> observed pixel
-                    data.statusPixels[pixelIndex] = 1;
+                    data.statusPixels[targetPixelIndex] = 1;
                 }
 
-                data.areas[pixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, 4, 4);
+                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, 4, 4);
             }
         }
 
