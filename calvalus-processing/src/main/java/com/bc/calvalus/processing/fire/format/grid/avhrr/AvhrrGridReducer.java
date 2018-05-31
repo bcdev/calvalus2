@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.grid.s2;
+package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
@@ -9,13 +9,12 @@ import ucar.nc2.NetcdfFileWriter;
 
 import java.io.IOException;
 
-public class S2GridReducer extends AbstractGridReducer {
+public class AvhrrGridReducer extends AbstractGridReducer {
 
-    private static final int S2_CHUNK_SIZE = 8;
-    private final NcFileFactory s2NcFileFactory;
+    private final NcFileFactory avhrrNcFileFactory;
 
-    public S2GridReducer() {
-        this.s2NcFileFactory = new S2NcFileFactory();
+    public AvhrrGridReducer() {
+        this.avhrrNcFileFactory = new AvhrrNcFileFactory();
     }
 
     @Override
@@ -34,22 +33,22 @@ public class S2GridReducer extends AbstractGridReducer {
 
     @Override
     protected String getFilename(String year, String month, String version) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-f%s.nc", year, month, "01", version);
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-LTDR-f%s.nc", year, month, "01", version);
     }
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return s2NcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays);
+        return avhrrNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays);
     }
 
     @Override
     protected int getTargetWidth() {
-        return S2_CHUNK_SIZE;
+        return 1440;
     }
 
     @Override
     protected int getTargetHeight() {
-        return getTargetWidth();
+        return 720;
     }
 
     @Override

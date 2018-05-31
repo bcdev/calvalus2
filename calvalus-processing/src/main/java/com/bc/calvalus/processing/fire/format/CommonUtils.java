@@ -75,6 +75,8 @@ public class CommonUtils {
             return new S2Strategy();
         } else if (sensor.equals("MODIS")) {
             return new ModisStrategy();
+        } else if (sensor.equals("AVHRR")) {
+            return new AvhrrStrategy();
         }
         throw new IllegalStateException("Missing configuration item 'calvalus.sensor'");
     }

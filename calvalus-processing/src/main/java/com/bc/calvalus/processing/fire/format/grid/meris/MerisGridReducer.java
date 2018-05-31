@@ -59,7 +59,12 @@ public class MerisGridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected int getTargetSize() {
+    protected int getTargetWidth() {
         return MERIS_CHUNK_SIZE;
+    }
+
+    @Override
+    protected int getTargetHeight() {
+        return getTargetWidth();
     }
 }

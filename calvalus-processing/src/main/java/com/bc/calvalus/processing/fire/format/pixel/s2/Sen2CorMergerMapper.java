@@ -106,8 +106,8 @@ public class Sen2CorMergerMapper extends Mapper {
     }
 
     private void writeNotObservedProduct(Configuration conf, String tile, String month) throws IOException {
-        Product notObservedProduct = new Product("BA-T" + tile + "-2016" + month + "01T000000", "Non-observed-BA", 5490, 5490);
-        notObservedProduct.addBand("JD", "999");
+        Product notObservedProduct = new Product("BA-T" + tile + "-2016" + month + "01T000001", "Non-observed-BA", 5490, 5490);
+        notObservedProduct.addBand("JD", "998");
         notObservedProduct.addBand("CL", "0");
 
         FileStatus[] fileStatuses = new FileStatus[0];

@@ -86,8 +86,13 @@ public class ModisGridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected int getTargetSize() {
+    protected int getTargetWidth() {
         return ModisGridMapper.WINDOW_SIZE;
+    }
+
+    @Override
+    protected int getTargetHeight() {
+        return getTargetWidth();
     }
 
     @Override
