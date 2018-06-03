@@ -128,7 +128,11 @@ public class CalvalusHadoopTool {
 
         // add parameters of config, maybe translate and apply function
         for (Map.Entry<Object,Object> entry : configParameters.entrySet()) {
-            translateAndInsert(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()), productionTypeDef, jobConf);
+            String key = String.valueOf(entry.getKey());
+            if (key.startsWith("calvalus.hadoop.")) {
+                key = key.substring("calvalus.hadoop.".length());
+            }
+            translateAndInsert(key, String.valueOf(entry.getValue()), productionTypeDef, jobConf);
         }
 
         // add parameters of production type, maybe translate and apply function
