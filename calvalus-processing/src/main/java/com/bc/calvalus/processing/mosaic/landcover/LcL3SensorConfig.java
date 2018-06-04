@@ -81,8 +81,6 @@ public abstract class LcL3SensorConfig {
 
     public abstract String getTemporalCloudBandName();
 
-    public abstract int getTemporalCloudBandIndex();
-
     public abstract float getTemporalCloudFilterThreshold();
 
     public abstract int[] createVariableIndexes(VariableContext varCtx);
@@ -145,11 +143,6 @@ public abstract class LcL3SensorConfig {
 
         public String getTemporalCloudBandName() {
             return "sdr_8";
-        }
-
-        @Override
-        public int getTemporalCloudBandIndex() {
-            return 8;
         }
 
         public float getTemporalCloudFilterThreshold() {
@@ -342,11 +335,6 @@ public abstract class LcL3SensorConfig {
             return "sdr_B3";
         }
 
-        @Override
-        public int getTemporalCloudBandIndex() {
-            return 3;
-        }
-
         public float getTemporalCloudFilterThreshold() {
             return 0.075f;
         }
@@ -497,11 +485,6 @@ public abstract class LcL3SensorConfig {
 
         public String getTemporalCloudBandName() {
             return "sdr_NIR";
-        }
-
-        @Override
-        public int getTemporalCloudBandIndex() {
-            return 3;
         }
 
         public float getTemporalCloudFilterThreshold() {
@@ -655,11 +638,6 @@ public abstract class LcL3SensorConfig {
 
         public String getTemporalCloudBandName() {
             return "refl_2_ac";
-        }
-
-        @Override
-        public int getTemporalCloudBandIndex() {
-            return 2;
         }
 
         public float getTemporalCloudFilterThreshold() {
@@ -876,11 +854,6 @@ public abstract class LcL3SensorConfig {
             return "B7_ac";
         }
 
-        @Override
-        public int getTemporalCloudBandIndex() {
-            return 7;
-        }
-
         public float getTemporalCloudFilterThreshold() {
             return 0.075f;
         }
@@ -1094,11 +1067,6 @@ public abstract class LcL3SensorConfig {
 
         public String getTemporalCloudBandName() {
             return "B4";
-        }
-
-        @Override
-        public int getTemporalCloudBandIndex() {
-            return 3;
         }
 
         public float getTemporalCloudFilterThreshold() {

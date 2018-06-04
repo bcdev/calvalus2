@@ -151,6 +151,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             if (productionRequest.getBoolean("lcl3.cloud", true)) {
                 // if cloud aggregation is disabled, don't set this property
                 jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+                jobConfigSr.set("calvalus.lc.temporalCloudBandName", temporalCloudBandName);
             }
             jobConfigSr.set("calvalus.lc.sensor", sensorName);
             jobConfigSr.set("calvalus.lc.version", outputVersion);

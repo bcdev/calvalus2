@@ -107,13 +107,13 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             float lonMax = lonMin + macroTileSize;
 
             String tileName = "MSI".equals(sensor) || "AGRI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
-            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
+            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) || "AGRI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
             String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
             // global attributes
-            writeable.addGlobalAttribute("title", "ESA CCI land cover surface reflectance " + temporalResolution + " day composite");
-            writeable.addGlobalAttribute("summary", "This dataset contains a tile of a Level-3 " + temporalResolution + "-day global surface reflectance composite from satellite observations placed onto a regular grid.");
+            writeable.addGlobalAttribute("title", "ESA CCI land cover surface reflectance " + temporalResolution.substring(1, temporalResolution.length()-1) + " day composite");
+            writeable.addGlobalAttribute("summary", "This dataset contains a tile of a Level-3 " + temporalResolution.substring(1, temporalResolution.length()-1) + "-day global surface reflectance composite from satellite observations placed onto a regular grid.");
             writeable.addGlobalAttribute("project", "Climate Change Initiative - European Space Agency");
             writeable.addGlobalAttribute("references", "http://www.esa-landcover-cci.org/");
             writeable.addGlobalAttribute("institution", "Brockmann Consult GmbH");
@@ -166,7 +166,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("cdm_data_type", "grid");
 
             writeable.addGlobalAttribute("platform", platform);
-            writeable.addGlobalAttribute("sensor", "AGRI" == sensor ? "MSI" : sensor);
+            writeable.addGlobalAttribute("sensor", "AGRI".equals(sensor) ? "MSI" : sensor);
             writeable.addGlobalAttribute("type", "SR-" + spatialResolution + "-" + temporalResolution);
             writeable.addGlobalAttribute("id", product.getName());
             writeable.addGlobalAttribute("tracking_id", UUID.randomUUID().toString());
