@@ -2,14 +2,26 @@ package com.bc.calvalus.processing.mosaic;
 
 
 import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.ProductUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.awt.*;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.PathIterator;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import static com.bc.calvalus.processing.utils.GeometryUtils.parseWKT;
 import static org.junit.Assert.*;
 
 public class MosaicGridTest {
@@ -342,4 +354,53 @@ public class MosaicGridTest {
         assertEquals(4, mosaicGrid.getPartition(70,36));
         assertEquals(3, mosaicGrid.getPartition(72,35));
     }
+
+    @Test
+    @Ignore
+    public void testGetBounds() throws IOException {
+        Product product = ProductIO.readProduct("/home/boe/tmp/sen2agri/S2A_MSIL2A_20170216T170351_N0204_R069_T14QNF_20170216T171642.SAFE/S2A_OPER_SSC_L2VALD_14QNF____20170216.HDR");
+        final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
+        final com.vividsolutions.jts.geom.Polygon[] polygons = new com.vividsolutions.jts.geom.Polygon[paths.length];
+
+        for (int i = 0; i < paths.length; i++) {
+            polygons[i] = convertToJtsPolygon(paths[i].getPathIterator(null));
+        }
+        final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(
+                polygons.length == 1 ? polygons[0] : new GeometryFactory().createMultiPolygon(polygons));
+        Geometry sourceGeometry = peuckerSimplifier.getResultGeometry();
+        System.out.println("class " + sourceGeometry.getClass());
+        System.out.println("sourceGeometry=" + sourceGeometry);
+        Geometry regionGeometry = parseWKT("POLYGON ((-104 4, -73 4, -73 18, -104 18, -104 4))");
+        Geometry effectiveGeometry = regionGeometry.intersection(sourceGeometry);
+        System.out.println("class " + effectiveGeometry.getClass());
+        System.out.println("effectiveGeometry=" + effectiveGeometry);
+        Geometry boundary = effectiveGeometry.getBoundary();
+        System.out.println("class " + boundary.getClass());
+        System.out.println("boundary=" + boundary);
+    }
+    private com.vividsolutions.jts.geom.Polygon convertToJtsPolygon(PathIterator pathIterator) {
+        ArrayList<double[]> coordList = new ArrayList<double[]>();
+        int lastOpenIndex = 0;
+        while (!pathIterator.isDone()) {
+            final double[] coords = new double[6];
+            final int segType = pathIterator.currentSegment(coords);
+            if (segType == PathIterator.SEG_CLOSE) {
+                // we should only detect a single SEG_CLOSE
+                coordList.add(coordList.get(lastOpenIndex));
+                lastOpenIndex = coordList.size();
+            } else {
+                coordList.add(coords);
+            }
+            pathIterator.next();
+        }
+        final Coordinate[] coordinates = new Coordinate[coordList.size()];
+        for (int i1 = 0; i1 < coordinates.length; i1++) {
+            final double[] coord = coordList.get(i1);
+            coordinates[i1] = new Coordinate(coord[0], coord[1]);
+        }
+
+        GeometryFactory factory = new GeometryFactory();
+        return factory.createPolygon(factory.createLinearRing(coordinates), null);
+    }
+
 }
