@@ -102,7 +102,6 @@
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.13</version>
         </dependency>
 
         <!-- Apache cli command line parser -->
@@ -152,6 +151,12 @@
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
         </dependency>
-
+<!--
+        <dependency>
+        <groupId>org.esa.s2tbx</groupId>
+        <artifactId>sen2agri-reader</artifactId>
+        <version>0.1.1-SNAPSHOT</version>
+        </dependency>
+-->
     </dependencies>
 </project>
