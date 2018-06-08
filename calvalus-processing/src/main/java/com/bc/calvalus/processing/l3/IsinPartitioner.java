@@ -20,6 +20,8 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
+import org.esa.snap.binning.support.IsinPlanetaryGrid;
+import org.esa.snap.core.util.grid.isin.IsinPoint;
 
 /**
  * Partitions the bins by their bin index.
@@ -38,11 +40,9 @@ public class IsinPartitioner extends Partitioner<LongWritable, L3SpatialBin> imp
     public int getPartition(LongWritable binIndex, L3SpatialBin spatialBin, int numPartitions) {
         long idx = binIndex.get();
 
-        final int tile_y = (int) (idx / 10000000000L);
-        long partIndex = idx - 10000000000L * tile_y;
-        final int tile_x = (int) (partIndex / 100000000L);
+        final IsinPoint isinPoint = IsinPlanetaryGrid.toIsinPoint(idx);
 
-        return (tile_y * NUM_TILE_COLUMNS + tile_x) % numPartitions;
+        return (isinPoint.getTile_line() * NUM_TILE_COLUMNS + isinPoint.getTile_col()) % numPartitions;
     }
 
     @Override
