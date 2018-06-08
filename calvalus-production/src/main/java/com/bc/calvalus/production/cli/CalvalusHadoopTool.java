@@ -308,7 +308,9 @@ public class CalvalusHadoopTool {
                 }
             }
         } finally{
-            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (IllegalStateException _e) {}
         }
     }
 
@@ -398,25 +400,31 @@ public class CalvalusHadoopTool {
     }
 
     private static void setHadoopDefaultParameters(Configuration hadoopParameters) {
+        hadoopParameters.set("dfs.client.read.shortcircuit", "true");
+        hadoopParameters.set("dfs.domain.socket.path", "/var/lib/hadoop-hdfs/dn_socket");
+        hadoopParameters.set("dfs.blocksize", "2147483136");
+        hadoopParameters.set("dfs.replication", "1");
+        hadoopParameters.set("dfs.permissions.superusergroup", "hadoop");
+        hadoopParameters.set("fs.permissions.umask-mode", "002");
         hadoopParameters.set("fs.AbstractFileSystem.hdfs.impl", "org.apache.hadoop.fs.Hdfs");
         hadoopParameters.set("fs.AbstractFileSystem.file.impl", "org.apache.hadoop.fs.local.LocalFs");
         hadoopParameters.set("fs.hdfs.impl.disable.cache", "true");
+        hadoopParameters.set("io.file.buffer.size", "131072");
         hadoopParameters.set("mapred.mapper.new-api", "true");
         hadoopParameters.set("mapred.reducer.new-api", "true");
         hadoopParameters.set("mapreduce.framework.name", "yarn");
         hadoopParameters.set("mapreduce.client.genericoptionsparser.used", "true");
-        hadoopParameters.set("yarn.log-aggregation-enable", "true");
-        hadoopParameters.set("dfs.client.read.shortcircuit", "true");
-        hadoopParameters.set("dfs.domain.socket.path", "/var/lib/hadoop-hdfs/dn_socket");
-        hadoopParameters.set("dfs.blocksize", "2147483136");
-        hadoopParameters.set("io.file.buffer.size", "131072");
-        hadoopParameters.set("dfs.replication", "1");
         hadoopParameters.set("mapreduce.map.speculative", "false");
         hadoopParameters.set("mapreduce.reduce.speculative", "false");
-        hadoopParameters.set("dfs.permissions.superusergroup", "hadoop");
-        hadoopParameters.set("fs.permissions.umask-mode", "002");
+        hadoopParameters.set("rpc.engine.org.apache.hadoop.ipc.ProtocolMetaInfoPB", "org.apache.hadoop.ipc.ProtobufRpcEngine");
+        hadoopParameters.set("rpc.engine.org.apache.hadoop.mapreduce.v2.api.MRClientProtocolPB", "org.apache.hadoop.ipc.ProtobufRpcEngine");
+        hadoopParameters.set("yarn.log-aggregation-enable", "true");
         hadoopParameters.set("yarn.app.mapreduce.am.command-opts", "-Xmx512M -Djava.awt.headless=true");
         hadoopParameters.set("yarn.app.mapreduce.am.resource.mb", "512");
+        hadoopParameters.set("yarn.dispatcher.exit-on-error", "true");
+        //hadoopParameters.set("calvalus.logs.cpt.maxRetries", "5");
+        //hadoopParameters.set("calvalus.logs.cpt.retryPeriodMillis", "1000");
+        //hadoopParameters.set("calvalus.logs.maxSizeKb", "100");
     }
 
     private static String getElementContent(Element elem, XMLOutputter xmlOutputter) throws IOException {
@@ -590,4 +598,6 @@ public class CalvalusHadoopTool {
         return "-Djava.awt.headless=true -Xmx" + mem + "M";
     }
     public String add512(String mem) { return String.valueOf(Integer.parseInt(mem)+512); }
+    public String minDateOf(String dateRanges) { return dateRanges.substring(1,dateRanges.length()-1).split(":")[0].trim(); }
+    public String maxDateOf(String dateRanges) { return dateRanges.substring(1,dateRanges.length()-1).split(":")[1].trim(); }
 }
