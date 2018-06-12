@@ -18,11 +18,13 @@ class LcImage extends SingleBandedOpImage {
 
     private final Band sourceLcBand;
     private final Band sourceJdBand;
+    private final Band sourceClBand;
 
-    LcImage(Band sourceLcBand, Band sourceJdBand) {
+    LcImage(Band sourceLcBand, Band sourceJdBand, Band sourceClBand) {
         super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceLcBand = sourceLcBand;
         this.sourceJdBand = sourceJdBand;
+        this.sourceClBand = sourceClBand;
     }
 
     @Override
@@ -31,6 +33,8 @@ class LcImage extends SingleBandedOpImage {
             CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of LC image.");
         }
         float[] jdArray = new float[destRect.width * destRect.height];
+        float[] sourceClArray = new float[destRect.width * destRect.height];
+
         try {
             sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(jdArray));
         } catch (IOException e) {
@@ -40,6 +44,7 @@ class LcImage extends SingleBandedOpImage {
         int[] lcData = new int[destRect.width * destRect.height];
         try {
             sourceLcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
+            sourceClBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, sourceClArray);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -48,6 +53,7 @@ class LcImage extends SingleBandedOpImage {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
                 float jdValue = jdArray[pixelIndex];
                 int lcValue = lcData[pixelIndex];
+                float sourceCl = sourceClArray[pixelIndex];
 
 //                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
                 if (!LcRemappingS2.isInBurnableLcClass(lcData[pixelIndex])) {
@@ -60,13 +66,20 @@ class LcImage extends SingleBandedOpImage {
                     PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false);
                     lcValue = lcData[positionAndValue.newPixelIndex];
                     jdValue = positionAndValue.value;
+                    sourceCl = sourceClArray[positionAndValue.newPixelIndex];
                 }
 
                 if (jdValue <= 0 || jdValue >= 997) {
                     lcValue = 0;
                 }
+
+                if (sourceCl < 0.05) {
+                    lcValue = 0;
+                }
+
 //                dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
                 // need to fix this in case S2 LC map is used
+
                 dest.setSample(x, y, 0, lcValue);
                 pixelIndex++;
             }

@@ -151,7 +151,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
@@ -159,7 +159,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
                 break;
             case LC:
                 Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
-                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
+                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand, sourceClBand));
                 break;
             default:
                 throw new IllegalArgumentException("Programming error: invalid value '" + band + "' for band.");

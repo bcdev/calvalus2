@@ -19,10 +19,12 @@ class JdImage extends SingleBandedOpImage {
 
     private final Band sourceJdBand;
     private final Band lcBand;
+    private final Band sourceClBand;
 
-    JdImage(Band sourceJdBand, Band lcBand) {
+    JdImage(Band sourceJdBand, Band sourceClBand, Band lcBand) {
         super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceJdBand = sourceJdBand;
+        this.sourceClBand = sourceClBand;
         this.lcBand = lcBand;
     }
 
@@ -32,9 +34,11 @@ class JdImage extends SingleBandedOpImage {
             CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of JD image.");
         }
         float[] sourceJdArray = new float[destRect.width * destRect.height];
+        float[] sourceClArray = new float[destRect.width * destRect.height];
         int[] lcArray = new int[destRect.width * destRect.height];
         try {
             lcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcArray);
+            sourceClBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, sourceClArray);
             sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -47,9 +51,13 @@ class JdImage extends SingleBandedOpImage {
                 pixelPos.y = y;
 
                 float sourceJd = sourceJdArray[pixelIndex];
+                float sourceCl = sourceClArray[pixelIndex];
 
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {
-                    sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+                    PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
+                    sourceJd = neighbourValue.value;
+                    int sourceClPos = neighbourValue.newPixelIndex;
+                    sourceCl = sourceClArray[sourceClPos];
                 }
 
                 boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
@@ -63,6 +71,10 @@ class JdImage extends SingleBandedOpImage {
                     targetJd = (int) sourceJd;
                 } else {
                     targetJd = -1;
+                }
+
+                if (sourceCl < 0.5F) {
+                    targetJd = 0;
                 }
 
                 dest.setSample(x, y, 0, targetJd);

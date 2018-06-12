@@ -11,9 +11,6 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoField;
 import java.util.logging.Logger;
 
 public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
@@ -36,7 +33,7 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
         if (x == 0) {
-            CalvalusLogger.getLogger().warning("Reading data for line " + y + " for tile with index " + tileIndex);
+            CalvalusLogger.getLogger().warning("Reading data for line " + (y + 1) + "/80" + " for tile with index " + tileIndex);
         }
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
@@ -126,11 +123,6 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         } else {
             return 1.0F;
         }
-    }
-
-    static int getProductJD(Product product) {
-        String productDate = product.getName().substring(product.getName().lastIndexOf("-") + 1);// BA-T31NBJ-20160219T101925
-        return LocalDate.parse(productDate, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")).get(ChronoField.DAY_OF_YEAR);
     }
 
 }
