@@ -36,6 +36,8 @@ import org.esa.snap.core.datamodel.TiePointGrid;
 import org.esa.snap.core.datamodel.VirtualBand;
 import org.xeustechnologies.jtar.TarEntry;
 import org.xeustechnologies.jtar.TarInputStream;
+import ucar.nc2.Attribute;
+import ucar.nc2.NetcdfFile;
 import ucar.unidata.io.bzip2.CBZip2InputStream;
 
 import javax.imageio.stream.ImageInputStream;
@@ -104,6 +106,7 @@ public class CalvalusProductIO {
                 } else {
                     localFile = copyFileToLocal(path, configuration);
                 }
+                maybeUpdateTilingProperties(localFile);  // TODO: maybe add to other locations where product file is opened
                 product = readProductImpl(localFile, File.class, inputFormat);
             }
         }
@@ -130,6 +133,35 @@ public class CalvalusProductIO {
         LOG.info(String.format("readProduct: took %,d ms for %s", t2 - t1, path));
         printProductOnStdout(product, "opened from " + pathConf.getPath());
         return product;
+    }
+
+    private static void maybeUpdateTilingProperties(File localFile) {
+        if (localFile.getName().endsWith(".nc")
+                && "32".equals(System.getProperty("snap.dataio.reader.tileWidth"))
+                && "32".equals(System.getProperty("snap.dataio.reader.tileHeight"))) {
+            NetcdfFile netcdfFile = null;
+            try {
+                netcdfFile = NetcdfFile.open(localFile.getPath());
+                Attribute tileSizeAttribute = netcdfFile.findGlobalAttribute("TileSize");
+                if (tileSizeAttribute != null) {
+                    String[] tileSizeValues = tileSizeAttribute.getStringValue().split(":");
+                    System.setProperty("snap.dataio.reader.tileWidth", tileSizeValues[0]);
+                    System.setProperty("snap.dataio.reader.tileHeight", tileSizeValues[1]);
+                    LOG.info("tile size adjusted from 32:32 to " + tileSizeAttribute.getStringValue());
+                } else {
+                    LOG.info("tile size not adjusted from 32:32, product has no attribute TileSize");
+                }
+            } catch (Exception e) {
+                LOG.warning("failed to adjusted tile size from 32:32 to product chunking");
+            } finally {
+                if (netcdfFile != null) {
+                    try {
+                        netcdfFile.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }
     }
 
     // currently not used
