@@ -328,14 +328,14 @@ public class L3ConfigForm extends Composite {
         }
 
         Integer steppingP = steppingPeriodLength.getValue();
-        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -30);
+        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -10 || steppingP == -30);
         if (!periodLengthValid) {
             throw new ValidationException(steppingPeriodLength, "Period length must be >= 1");
         }
 
         Integer compositingP = compositingPeriodLength.getValue();
         boolean compositingPeriodLengthValid = compositingP != null &&
-                (compositingP >= 1 || compositingP == -7 || compositingP == -30);
+                (compositingP >= 1 || compositingP == -7 || compositingP == -10 || compositingP == -30);
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
                                           "Compositing period length must be >= 1");
