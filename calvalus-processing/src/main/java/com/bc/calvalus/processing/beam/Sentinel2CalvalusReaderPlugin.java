@@ -140,6 +140,10 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                             localFile = file;
                             snapFormatName = "SENTINEL-2-MSI-MultiRes";
                             break;
+                        } else if (file.getName().endsWith(".dim")) {
+                            localFile = file;
+                            snapFormatName = "BEAM-DIMAP";
+                            break;
                         }
                     }
                     if (localFile == null && pathConfig.getPath().getName().contains("L2A")) {
@@ -185,14 +189,16 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 }
 
 //                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
-                if (!inputFormat.equals(FORMAT_MULTI)
+                if (!inputFormat.equals(FORMAT_MULTI) || (snapFormatName.equals("BEAM-DIMAP") && product.getBand("B2_ac") != null)
 //                        && !snapFormatName.equals(FORMAT_L2_SEN2AGRI)
                         ) {
                     // Do not set the product reader, SNAP will else try to read data with it, leads to NPE in JAI
                     //product.setProductReader(this);
                     Map<String, Object> params = new HashMap<>();
                     String referenceBand = null;
-                    if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_10M)) {
+                    if ("BEAM-DIMAP".equals(snapFormatName)) {  // TODO: only applicable for multi-resolution S2AC
+                        referenceBand = "B2_ac";
+                    } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_10M)) {
                         referenceBand = "B2";
                     } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_20M)) {
                         referenceBand = "B5";
@@ -210,6 +216,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     params.put("referenceBand", referenceBand);
                     File productFileLocation = product.getFileLocation();
                     Dimension preferredTileSize = product.getPreferredTileSize();
+                    CalvalusLogger.getLogger().info("resampling input to " + referenceBand);
                     product = GPF.createProduct("Resample", params, product);
                     //product.setFileLocation(productFileLocation);
                     product.setPreferredTileSize(preferredTileSize);
