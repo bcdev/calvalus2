@@ -49,6 +49,8 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
     private final int filterThreshold;
     private final float referenceMjd;
 
+    private static boolean FIRST_DEBUG_EVENT = true;
+
     public AggregatorYoungestClear(VariableContext varCtx,
                                    String flagsVarName, long strongCloudFilter, long weakCloudFilter, int filterThreshold,
                                    String percentileVarName, int lowerPercentileThreshold, int upperPercentileThreshold,
@@ -170,6 +172,21 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
         }
         // ... else weak
         if (numValidObs < numTemporalObs * filterThreshold / 100.0) {
+            if (FIRST_DEBUG_EVENT) {
+                FIRST_DEBUG_EVENT = false;
+                System.out.println("falling back to weak cloud mask");
+                System.out.println("numValidObs=" + numValidObs);
+                System.out.println("numTemporalObs=" + numTemporalObs);
+                System.out.println("filterThreshold=" + filterThreshold);
+                System.out.println("numTemporalObs * filterThreshold / 100.0=" + (numTemporalObs * filterThreshold / 100.0));
+                System.out.println("strongCloudFilter=" + strongCloudFilter);
+                for (int j=0; j<numTemporalObs; ++j) {
+                    System.out.println("mjds[" + j + "]=" + mjds[j]);
+                    System.out.println("flags[" + j + "]=" + Long.toHexString(flags[j]));
+                    System.out.println("flags[" + j + "] & strongCloudFilter=" + (flags[j] & strongCloudFilter));
+                }
+                System.out.println("numValidObs=" + numValidObs);
+            }
             numValidObs = 0;
             for (int j=0; j<numTemporalObs; ++j) {
                 if ((flags[j] & weakCloudFilter) == 0) {
