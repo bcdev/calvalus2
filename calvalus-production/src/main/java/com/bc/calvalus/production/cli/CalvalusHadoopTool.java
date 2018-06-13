@@ -86,6 +86,7 @@ public class CalvalusHadoopTool {
     private RunningJob runningJob;
     private Thread shutdownHook;
     private boolean quiet;
+    private Configuration hadoopParameters;
 
     public CalvalusHadoopTool(boolean quiet, String userName) {
         this.quiet = quiet;
@@ -193,7 +194,7 @@ public class CalvalusHadoopTool {
         Map<String, Object> productionTypeDef = parseIntoMap("etc/" + productionTypeName + "-cht-type.json");
 
         // create Hadoop job config with Hadoop defaults
-        final Configuration hadoopParameters = new Configuration(false);
+        hadoopParameters = new Configuration(false);
         setHadoopDefaultParameters(hadoopParameters);
         say(hadoopParameters.size() + " Hadoop default parameters");
 
@@ -449,14 +450,12 @@ public class CalvalusHadoopTool {
         }
         return remoteUser.doAs((PrivilegedExceptionAction<Map<String,String>>) () -> {
             Path path = new Path("/calvalus/software/1.0/" + bundles.split(",")[0] + "/bundle-descriptor.xml");
-            FileStatus status = jobClient.getFs().getFileStatus(path);
-            if (status == null) {
+            if (! jobClient.getFs().exists(path)) {
                 path = new Path("/calvalus/home/" + userName + "/software/" + bundles.split(",")[0] + "/bundle-descriptor.xml");
-                status = jobClient.getFs().getFileStatus(path);
-            }
-            if (status == null) {
-                say("no bundle-descriptor.xml in bundle " + bundles.split(",")[0]);
-                return Collections.emptyMap();
+                if (! jobClient.getFs().exists(path)) {
+                    say("no bundle-descriptor.xml in bundle " + bundles.split(",")[0]);
+                    return Collections.emptyMap();
+                }
             }
             BundleDescriptor bd = readBundleDescriptor(path);
             for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
@@ -600,4 +599,23 @@ public class CalvalusHadoopTool {
     public String add512(String mem) { return String.valueOf(Integer.parseInt(mem)+512); }
     public String minDateOf(String dateRanges) { return dateRanges.substring(1,dateRanges.length()-1).split(":")[0].trim(); }
     public String maxDateOf(String dateRanges) { return dateRanges.substring(1,dateRanges.length()-1).split(":")[1].trim(); }
+    public String minMaxDateRange(String minDate) {
+        String dateRanges = hadoopParameters.get("calvalus.input.dateRanges");
+        if (dateRanges != null) {
+            return "[%s:%s]".format(minDate, dateRanges.split(":")[1].trim());
+        } else {
+            return "[%s:]".format(minDate);
+        }
+    }
+    public String maxMinDateRange(String maxDate) {
+        String dateRanges = hadoopParameters.get("calvalus.input.dateRanges");
+        if (dateRanges != null) {
+            return "[%s:%s]".format(dateRanges.split(":")[0].trim(), maxDate);
+        } else {
+            return "[:%s]".format(maxDate);
+        }
+    }
+    public String listDateRange(String date) {
+        return "[%s:%s]".format(date, date);
+    }
 }
