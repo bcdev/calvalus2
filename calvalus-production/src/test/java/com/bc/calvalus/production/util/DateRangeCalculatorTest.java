@@ -365,25 +365,20 @@ public class DateRangeCalculatorTest {
     public void testNext() throws ParseException {
         DateRangeCalculator.Period period = DateRangeCalculator.parsePeriod("-10");
         GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(new SimpleDateFormat("yyyy-MM-dd").parse("2016-01-01"));
-        assertEquals("...", cal.toString());
+        cal.setTime(DATE_FORMAT.parse("2016-01-01"));
         period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-01-11", DATE_FORMAT.format(cal.getTime()));
         period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-01-21", DATE_FORMAT.format(cal.getTime()));
         period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-02-01", DATE_FORMAT.format(cal.getTime()));
         period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-02-11", DATE_FORMAT.format(cal.getTime()));
         period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-02-21", DATE_FORMAT.format(cal.getTime()));
         period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-03-01", DATE_FORMAT.format(cal.getTime()));
         period.next(cal);
-        assertEquals("...", cal.toString());
-        period.next(cal);
-        assertEquals("...", cal.toString());
-        period.next(cal);
-        assertEquals("...", cal.toString());
+        assertEquals("2016-03-11", DATE_FORMAT.format(cal.getTime()));
     }
 }
