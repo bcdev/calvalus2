@@ -23,15 +23,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
+import org.apache.hadoop.mapred.TaskReport;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.xml.security.encryption.XMLEncryptionException;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
@@ -78,30 +79,21 @@ public class CalvalusHadoopTool {
     private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
     private static final SimpleDateFormat ISO_MILLIS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     private static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final int STATUS_POLLING_INTERVAL_MILLIS = 5000;
+    private static final int STATUS_POLLING_INTERVAL_MILLIS = 5000;
 
+    private boolean quiet;
+    private boolean asynchronous;
     private String userName;
     private UserGroupInformation remoteUser;
+    private Configuration hadoopParameters;
     private JobClient jobClient;
     private RunningJob runningJob;
-    private Thread shutdownHook;
-    private boolean quiet;
-    private Configuration hadoopParameters;
 
-    public CalvalusHadoopTool(boolean quiet, String userName) {
+    public CalvalusHadoopTool(boolean quiet, boolean asynchronous, String userName) {
         this.quiet = quiet;
+        this.asynchronous = asynchronous;
         this.userName = userName;
         remoteUser = UserGroupInformation.createRemoteUser(userName);
-        shutdownHook = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    runningJob.killJob();
-                } catch (Exception e) {
-                    System.err.println("Failed to shutdown production: " + e.getMessage());
-                }
-            }
-        };
     }
 
     public static void main(String[] args) {
@@ -110,23 +102,34 @@ public class CalvalusHadoopTool {
             CommandLine commandLine = new GnuParser().parse(options, args);
             Properties configParameters = collectConfigParameters(commandLine);
             String userName = "martin"; // TODO System.getProperty("user.name");
+            boolean quiet = commandLine.hasOption("quiet");
+            boolean asynchronous = commandLine.hasOption("async");
 
             if (commandLine.hasOption("help")) {
-                new HelpFormatter().printHelp("cht [OPTION]... REQUEST",
-                                              "\nThe Calvalus Hadoop Tool translates a request into a Hadoop job and submits it. OPTION may be one or more of the following:",
+                new HelpFormatter().printHelp("cht [OPTION]... REQUEST|IDs",
+                                              "\nThe Calvalus Hadoop Tool translates a request into a Hadoop job, submits it, inquires status. OPTION may be one or more of the following:",
                                               options,
                                               "", false);
             } else if (commandLine.hasOption("test-auth")) {
                 String samlToken = new CasUtil(false).fetchSamlToken2(configParameters, userName);
                 System.out.println("Successfully retrieved SAML token:\n");
                 System.out.println(samlToken);
-            } else if (commandLine.getArgList().size() != 1) {
+            } else if (commandLine.hasOption("status") && commandLine.getArgList().size() < 1) {
+                System.err.println("Error: At least one argument JOBID expected. (use option --help for usage help)");
+                System.exit(1);
+            } else if (commandLine.hasOption("status")) {
+                String[] ids = commandLine.getArgs();
+                Map<String, String> commandLineParameters = collectCommandLineParameters(commandLine);
+                if (! new CalvalusHadoopTool(true, true, userName).getStatus(ids, commandLineParameters, configParameters)) {
+                    System.exit(1);
+                }
+            } else if (! commandLine.hasOption("status") && commandLine.getArgList().size() != 1) {
                 System.err.println("Error: One argument REQUEST expected. (use option --help for usage help)");
                 System.exit(1);
             } else {
                 String requestPath = String.valueOf(commandLine.getArgList().get(0));
                 Map<String, String> commandLineParameters = collectCommandLineParameters(commandLine);
-                if (! new CalvalusHadoopTool(commandLine.hasOption("quiet"), userName).exec(requestPath, commandLineParameters, configParameters)) {
+                if (! new CalvalusHadoopTool(quiet, asynchronous, userName).exec(requestPath, commandLineParameters, configParameters)) {
                     System.exit(1);
                 }
             }
@@ -140,6 +143,105 @@ public class CalvalusHadoopTool {
         }
     }
 
+    /** Inquire status of a list of jobs */
+
+    private boolean getStatus(String[] ids, Map<String, String> commandLineParameters, Properties configParameters)
+            throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, IOException, InterruptedException {
+        // create Hadoop job config with Hadoop defaults
+        hadoopParameters = new Configuration(false);
+        setHadoopDefaultParameters(hadoopParameters);
+
+        // set parameters by tool
+        hadoopParameters.set("calvalus.user", userName);
+
+        // add parameters of config, maybe translate and apply function
+        for (Map.Entry<Object, Object> entry : configParameters.entrySet()) {
+            String key = String.valueOf(entry.getKey());
+            if (key.startsWith("calvalus.hadoop.")) {
+                key = key.substring("calvalus.hadoop.".length());
+            }
+            translateAndInsert(key, String.valueOf(entry.getValue()), null, hadoopParameters);
+        }
+        for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
+            translateAndInsert(entry.getKey(), entry.getValue(), null, hadoopParameters);
+        }
+
+        // create job client for user for status inquiry and for access to file system
+        jobClient = remoteUser.doAs((PrivilegedExceptionAction<JobClient>) () -> new JobClient(new JobConf(hadoopParameters)));
+
+        // inquire single status or all job stati
+        StringBuilder accu = new StringBuilder("{");
+        if (ids.length == 1) {
+            String id = ids[0];
+            JobID jobId = JobID.forName(id);
+            JobStatus status = jobClient.getJobStatus(jobId);
+            accumulateJobStatus(id, status, accu);
+        } else {
+            JobStatus[] jobs = jobClient.getAllJobs();
+            for (String id : ids) {
+                JobStatus status = findById(id, jobs);
+                accumulateJobStatus(id, status, accu);
+            }
+        }
+        accu.append("}");
+        System.out.println(accu.toString());
+        return true;
+    }
+
+    /** Look up job status by ID */
+
+    private static JobStatus findById(String id, JobStatus[] jobs) {
+        for (JobStatus status : jobs) {
+            if (status.getJobID().toString().equals(id)) {
+                return status;
+            }
+        }
+        return null;
+    }
+
+    /** Convert job status into Json string */
+
+    private void accumulateJobStatus(String id, JobStatus job, StringBuilder accu) throws IOException {
+        if (accu.length() > 1) {
+            accu.append(", ");
+        }
+        double progress = job.getMapProgress() * 0.9 + job.getReduceProgress() * 0.1;
+        if (job == null) {
+            accumulateJobStatus(id, "NOT_FOUND", progress, null, accu);
+        } else if (job.getRunState() == JobStatus.SUCCEEDED) {
+            accumulateJobStatus(id, "SUCCEEDED", progress, null, accu);
+        } else if (job.getRunState() == JobStatus.FAILED) {
+            accumulateJobStatus(id, "FAILED", progress, getDiagnostics(jobClient.getJob(job.getJobID())), accu);
+        } else if (job.getRunState() == JobStatus.KILLED) {
+            accumulateJobStatus(id, "CANCELLED", progress, getDiagnostics(jobClient.getJob(job.getJobID())), accu);
+        } else if (job.getRunState() == JobStatus.RUNNING) {
+            accumulateJobStatus(id, "RUNNING", progress, null, accu);
+        } else if (job.getRunState() == JobStatus.PREP) {
+            accumulateJobStatus(id, "WAITING", progress, null, accu);
+        } else {
+            throw new IllegalArgumentException("unknown status " + job.getRunState());
+        }
+    }
+
+    /** Compose Json string for status */
+    
+    private void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu) {
+        accu.append("\"");
+        accu.append(id);
+        accu.append("\": { \"status\": \"");
+        accu.append(status);
+        accu.append("\", \"progress\": ");
+        accu.append(String.format("%d5.3", progress));
+        if (message != null) {
+            accu.append(", \"message\": \"");
+            accu.append(message);
+            accu.append("\"");
+        }
+        accu.append("}");
+    }
+
+    /** Compose and submit Hadoop job, monitor progress (synchronous) or print ID (asynchronous) */
+
     public boolean exec(String requestPath, Map<String, String> commandLineParameters, Map<Object,Object> configParameters)
             throws IOException, InterruptedException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, org.jdom2.JDOMException, GeneralSecurityException, ParserConfigurationException, SAXException, XMLEncryptionException {
 
@@ -150,18 +252,29 @@ public class CalvalusHadoopTool {
                 configParameters,
                 userName);
 
+        // create and parameterise Hadoop job
+
         JobConf jobConf = createJob(requestPath, commandLineParameters, configParameters, hook);
 
         if (! quiet) {
             printParameters("Parameterised job", jobConf);
         }
 
+        // submit job
+
         runningJob = jobClient.submitJob(jobConf);
 
         say("Production successfully ordered with ID " + runningJob.getID());
 
-        return observeState();
+        if (asynchronous) {
+            System.out.println(runningJob.getID());
+            return true;
+        } else {
+            return observeState();
+        }
     }
+
+    /** Retrieve SAML token from CAS or generate debug SAML token */
 
     private HadoopJobHook parameterizeTokenGenerator(String authPolicy, Map<Object,Object> configParameters, String userName)
             throws GeneralSecurityException, ParserConfigurationException, org.jdom2.JDOMException, IOException, SAXException, XMLEncryptionException {
@@ -184,6 +297,8 @@ public class CalvalusHadoopTool {
         }
     }
 
+    /** Parameterise Hadoop job from command line, configuration, request, bundle descriptor, production type */
+
     private JobConf createJob(String requestPath, Map<String, String> commandLineParameters, Map<Object, Object> configParameters, HadoopJobHook hook)
             throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, InterruptedException {
         // read request and production type definition
@@ -200,7 +315,7 @@ public class CalvalusHadoopTool {
 
         // set parameters by tool
         final String productionId = Production.createId(productionTypeName);
-        hadoopParameters.set("calvalus.output.dir", "/calvalus/home/%s/%s".format(userName, productionId));
+        hadoopParameters.set("calvalus.output.dir", String.format(userName, productionId));
         hadoopParameters.set("calvalus.user", userName);
         //jobConfTemplate.set("jobSubmissionDate", ISO_MILLIS_FORMAT.format(new Date()));
         say(hadoopParameters.size() + " parameters with tool-provided ones");
@@ -259,11 +374,11 @@ public class CalvalusHadoopTool {
         ProcessorFactory.installProcessorBundles(userName, jobConf, jobClient.getFs());
         final String calvalusBundle = hadoopParameters.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
         if (calvalusBundle != null) {
-            installBundle(calvalusBundle, jobConf);
+            installBundle(calvalusBundle, jobConf, jobClient.getFs());
         }
         final String snapBundle = hadoopParameters.get(JobConfigNames.CALVALUS_SNAP_BUNDLE);
         if (snapBundle != null) {
-            installBundle(snapBundle, jobConf);
+            installBundle(snapBundle, jobConf, jobClient.getFs());
         }
         if (hook != null) {
             hook.beforeSubmit(jobConf);
@@ -271,7 +386,19 @@ public class CalvalusHadoopTool {
         return jobConf;
     }
 
+    /** Poll request state from Hadoop, kill request in case of interrupt */
+
     private boolean observeState() throws InterruptedException, IOException {
+        Thread shutdownHook = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    runningJob.killJob();
+                } catch (Exception e) {
+                    System.err.println("Failed to shutdown production: " + e.getMessage());
+                }
+            }
+        };
         Runtime.getRuntime().addShutdownHook(shutdownHook);
         try {
             while (true) {
@@ -283,37 +410,45 @@ public class CalvalusHadoopTool {
                 }
                 System.out.println("state " + job.getState() + " map " + job.getMapProgress() + " reduce " + job.getReduceProgress());
                 if (job.getRunState() == JobStatus.FAILED || job.getRunState() == JobStatus.KILLED) {
-                    int eventCounter = 0;
-                    while (true) {
-                        TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
-                        if (taskCompletionEvents.length == 0) {
-                            break;
-                        }
-                        eventCounter += taskCompletionEvents.length;
-                        for (TaskCompletionEvent taskCompletionEvent : taskCompletionEvents) {
-                            if (taskCompletionEvent.getTaskStatus().equals(TaskCompletionEvent.Status.FAILED)) {
-                                String[] taskDiagnostics = runningJob.getTaskDiagnostics(taskCompletionEvent.getTaskAttemptId());
-                                if (taskDiagnostics.length > 0) {
-                                    String firstMessage = taskDiagnostics[0];
-                                    String firstLine = firstMessage.split("\\n")[0];
-                                    String[] firstLineSplit = firstLine.split("Exception: ");
-                                    System.err.println(firstLineSplit[firstLineSplit.length - 1]);
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    String diagnostics = getDiagnostics(runningJob);
+                    System.err.println(diagnostics);
                     return false;
                 } else if (job.getRunState() == JobStatus.SUCCEEDED) {
                     return true;
                 }
             }
-        } finally{
+        } finally {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
             } catch (IllegalStateException _e) {}
         }
     }
+
+    /** Read first exception message of some failed task */
+
+    private static String getDiagnostics(RunningJob runningJob) throws IOException {
+        int eventCounter = 0;
+        while (true) {
+            TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
+            if (taskCompletionEvents.length == 0) {
+                return null;
+            }
+            eventCounter += taskCompletionEvents.length;
+            for (TaskCompletionEvent taskCompletionEvent : taskCompletionEvents) {
+                if (taskCompletionEvent.getTaskStatus().equals(TaskCompletionEvent.Status.FAILED)) {
+                    String[] taskDiagnostics = runningJob.getTaskDiagnostics(taskCompletionEvent.getTaskAttemptId());
+                    if (taskDiagnostics.length > 0) {
+                        String firstMessage = taskDiagnostics[0];
+                        String firstLine = firstMessage.split("\\n")[0];
+                        String[] firstLineSplit = firstLine.split("Exception: ");
+                        return firstLineSplit[firstLineSplit.length - 1];
+                    }
+                }
+            }
+        }
+    }
+
+    /** Read Calvalus configuration file */
 
     private static Properties collectConfigParameters(CommandLine commandLine) throws IOException {
         Properties configParameters = new Properties();
@@ -331,15 +466,22 @@ public class CalvalusHadoopTool {
         return configParameters;
     }
 
+    /** Convert command line into parameters */
+
     private static Map<String, String> collectCommandLineParameters(CommandLine commandLine) {
         Map<String,String> commandLineParameters = new HashMap<String,String>();
         for (Option option : commandLine.getOptions()) {
-            if (! "config".equals(option.getLongOpt())) {
+            if (! "config".equals(option.getLongOpt())
+                    && ! "quiet".equals(option.getLongOpt())
+                    && ! "async".equals(option.getLongOpt())
+                    && ! "auth".equals(option.getLongOpt())) {
                 commandLineParameters.put(option.getLongOpt(), commandLine.getOptionValue(option.getOpt()));
             }
         }
         return commandLineParameters;
     }
+
+    /** Read request or production type definition */
 
     private static Map<String,Object> parseIntoMap(String path) throws IOException {
         switch (FileUtils.getExtension(path)) {
@@ -400,6 +542,22 @@ public class CalvalusHadoopTool {
         }
     }
 
+    /** read one XML literal or complex content value */
+
+    private static String getElementContent(Element elem, XMLOutputter xmlOutputter) throws IOException {
+        List children = elem.getChildren();
+        if (children.size() > 0) {
+            StringWriter out = new StringWriter();
+            Element complexContent = (Element) children.get(0);
+            xmlOutputter.output(complexContent, out);
+            return out.toString();
+        } else {
+            return  elem.getText();
+        }
+    }
+
+    /** set Calvalus default parameters for Hadoop */
+
     private static void setHadoopDefaultParameters(Configuration hadoopParameters) {
         hadoopParameters.set("dfs.client.read.shortcircuit", "true");
         hadoopParameters.set("dfs.domain.socket.path", "/var/lib/hadoop-hdfs/dn_socket");
@@ -428,17 +586,7 @@ public class CalvalusHadoopTool {
         //hadoopParameters.set("calvalus.logs.maxSizeKb", "100");
     }
 
-    private static String getElementContent(Element elem, XMLOutputter xmlOutputter) throws IOException {
-        List children = elem.getChildren();
-        if (children.size() > 0) {
-            StringWriter out = new StringWriter();
-            Element complexContent = (Element) children.get(0);
-            xmlOutputter.output(complexContent, out);
-            return out.toString();
-        } else {
-            return  elem.getText();
-        }
-    }
+    /** read bundle descriptor job parameters */
 
     private Map<String, String> getProcessorDescriptorParameters(Configuration hadoopParameters)
             throws IOException, InterruptedException {
@@ -457,7 +605,7 @@ public class CalvalusHadoopTool {
                     return Collections.emptyMap();
                 }
             }
-            BundleDescriptor bd = readBundleDescriptor(path);
+            BundleDescriptor bd = readBundleDescriptor(path, jobClient.getFs());
             for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
                 if (processor.equals(pd.getExecutableName())) {
                     say("adding bundle descriptor default parameters from " + path.getName());
@@ -469,32 +617,40 @@ public class CalvalusHadoopTool {
         });
     }
 
-    private BundleDescriptor readBundleDescriptor(Path path) throws IOException, BindingException {
+    /** Read bundle descriptor */
+
+    private static BundleDescriptor readBundleDescriptor(Path path, FileSystem fs) throws IOException, BindingException {
         final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
         final BundleDescriptor bd = new BundleDescriptor();
-        parameterBlockConverter.convertXmlToObject(readFile(jobClient.getFs(), path), bd);
+        parameterBlockConverter.convertXmlToObject(readFile(fs, path), bd);
         return bd;
     }
+
+    /** Read file content into string */
 
     private static String readFile(FileSystem fileSystem, Path path) throws IOException {
         try (InputStream is = fileSystem.open(path);
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            IOUtils.copyBytes(is, baos, 8092);
+            IOUtils.copyBytes(is, baos, 8096);
             return baos.toString();
         }
     }
 
-    private void installBundle(String calvalusBundle, JobConf jobConf) throws IOException {
+    /** Add parameters for classpath and dist cache to Hadoop job */
+
+    private static void installBundle(String calvalusBundle, JobConf jobConf, FileSystem fs) throws IOException {
         Path bundlePath = new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle);
-        HadoopProcessingService.addBundleToClassPathStatic(bundlePath, jobConf, jobClient.getFs());
-        HadoopProcessingService.addBundleArchives(bundlePath, jobClient.getFs(), jobConf);
-        HadoopProcessingService.addBundleLibs(bundlePath, jobClient.getFs(), jobConf);
+        HadoopProcessingService.addBundleToClassPathStatic(bundlePath, jobConf, fs);
+        HadoopProcessingService.addBundleArchives(bundlePath, fs, jobConf);
+        HadoopProcessingService.addBundleLibs(bundlePath, fs, jobConf);
     }
+
+    /** Convert Calvalus parameter key and value to Hadoop parameter key and value according to production type definition */
 
     private void translateAndInsert(String key, String value, Map<String, Object> productionTypeDef, Configuration jobConf)
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         String translationKey = "_translate." + key;
-        Object translations = productionTypeDef.get(translationKey);
+        Object translations = productionTypeDef != null ? productionTypeDef.get(translationKey) : null;
         if (translations == null) {
             jobConf.set(key, value);
         } else if (translations instanceof String) {
@@ -516,6 +672,8 @@ public class CalvalusHadoopTool {
         }
     }
 
+    /** Look up parameter using alternative names */
+
     private static String getParameter(Map<String, Object> request, String... names) {
         for (String name : names) {
             if (name != null) {
@@ -528,6 +686,8 @@ public class CalvalusHadoopTool {
         throw new IllegalArgumentException("missing parameter " + names[0]);
     }
 
+    /** List all Hadoop job parameters on console */
+
     private static void printParameters(String header, Configuration jobConf) {
         System.out.println(header);
         System.out.println(jobConf);
@@ -539,22 +699,33 @@ public class CalvalusHadoopTool {
         System.out.println();
     }
 
+    /** Log message */
+
     private void say(String message) {
         if (!quiet) {
             System.out.println(message);
         }
     }
 
+    /** Command line parameter declarations */
     private static Options createCommandLineOptions() {
         Options options = new Options();
         options.addOption(OptionBuilder
                 .withLongOpt("quiet")
-                .withDescription("Quiet mode, only minimum console output.")
+                .withDescription("Quiet mode, minimum console output.")
                 .create("q"));
+        options.addOption(OptionBuilder
+                .withLongOpt("async")
+                .withDescription("Asynchronous mode, submission only.")
+                .create("a"));
+        options.addOption(OptionBuilder
+                .withLongOpt("status")
+                .withDescription("Asynchronous mode, status inquiry only.")
+                .create("s"));
         options.addOption(OptionBuilder
                 .withLongOpt("help")
                 .withDescription("Prints out usage help.")
-                .create()); // (sub) commands don't have short options
+                .create("h")); // (sub) commands don't have short options
         options.addOption(OptionBuilder
                 .withLongOpt("test-auth")
                 .withDescription("Requests SAML token only.")
@@ -586,36 +757,42 @@ public class CalvalusHadoopTool {
                 .withArgName("NAME")
                 .withDescription(
                         "Authentication method. One of unix, saml, debug.")
-                .create("a"));
+                .create("u"));
         return options;
     }
 
+    /** Function for use in production type translation rules */
     public String seconds2Millis(String seconds) {
         return seconds + "000";
     }
-    public String javaOptsOfMem(String mem) {
-        return "-Djava.awt.headless=true -Xmx" + mem + "M";
-    }
+    /** Function for use in production type translation rules */
+    public String javaOptsOfMem(String mem) { return "-Djava.awt.headless=true -Xmx" + mem + "M"; }
+    /** Function for use in production type translation rules */
+    public String javaOptsForExec(String mem) { return "-Djava.awt.headless=true -Xmx384M"; }
+    /** Function for use in production type translation rules */
     public String add512(String mem) { return String.valueOf(Integer.parseInt(mem)+512); }
+    /** Function for use in production type translation rules */
     public String minDateOf(String dateRanges) { return dateRanges.substring(1,dateRanges.length()-1).split(":")[0].trim(); }
+    /** Function for use in production type translation rules */
     public String maxDateOf(String dateRanges) { return dateRanges.substring(1,dateRanges.length()-1).split(":")[1].trim(); }
+    /** Function for use in production type translation rules */
     public String minMaxDateRange(String minDate) {
         String dateRanges = hadoopParameters.get("calvalus.input.dateRanges");
         if (dateRanges != null) {
-            return "[%s:%s]".format(minDate, dateRanges.split(":")[1].trim());
+            return String.format(minDate, dateRanges.split(":")[1].trim());
         } else {
-            return "[%s:]".format(minDate);
+            return String.format(minDate);
         }
     }
+    /** Function for use in production type translation rules */
     public String maxMinDateRange(String maxDate) {
         String dateRanges = hadoopParameters.get("calvalus.input.dateRanges");
         if (dateRanges != null) {
-            return "[%s:%s]".format(dateRanges.split(":")[0].trim(), maxDate);
+            return String.format(dateRanges.split(":")[0].trim(), maxDate);
         } else {
-            return "[:%s]".format(maxDate);
+            return String.format(maxDate);
         }
     }
-    public String listDateRange(String date) {
-        return "[%s:%s]".format(date, date);
-    }
+    /** Function for use in production type translation rules */
+    public String listDateRange(String date) { return String.format(date, date);  }
 }
