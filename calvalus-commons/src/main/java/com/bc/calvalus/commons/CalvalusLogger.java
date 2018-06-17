@@ -48,10 +48,15 @@ public class CalvalusLogger {
         snapLogger.addHandler(calvalusHandler);
         snapLogger.setLevel(Level.INFO);
 
+        Logger hadoopLogger = Logger.getLogger("org.apache.hadoop");
+        hadoopLogger.setUseParentHandlers(false);
+        hadoopLogger.addHandler(calvalusHandler);
+        hadoopLogger.setLevel(Level.SEVERE);
+
         Logger rootLogger = Logger.getLogger("");
         rootLogger.setUseParentHandlers(false);
         rootLogger.addHandler(calvalusHandler);
-        rootLogger.setLevel(Level.INFO);
+        rootLogger.setLevel(Level.SEVERE);
         return logger;
     }
 
