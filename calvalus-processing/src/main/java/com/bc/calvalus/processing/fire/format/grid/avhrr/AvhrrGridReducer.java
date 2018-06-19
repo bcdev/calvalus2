@@ -33,7 +33,10 @@ public class AvhrrGridReducer extends AbstractGridReducer {
 
     @Override
     protected String getFilename(String year, String month, String version) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-LTDR-f%s.nc", year, month, "01", version);
+        if (month.length() < 2) {
+            month = "0" + month;
+        }
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-AVHRR-LTDR-f%s.nc", year, month, "01", version);
     }
 
     @Override

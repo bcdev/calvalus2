@@ -31,6 +31,7 @@ public class S2BaInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
         String inputPathPatterns = conf.get("calvalus.input.pathPatterns");
+        String tile = conf.get("calvalus.tile");
 
         Set<InputSplit> splits = new HashSet<>(1000);
 
@@ -41,13 +42,13 @@ public class S2BaInputFormat extends InputFormat {
 
         // for each split, a single mapper is run
         // --> fileStatuses must contain filestatus for each input product at this stage
-        createSplits(fileStatuses, splits, inventoryService, conf);
+        createSplits(fileStatuses, tile, splits, inventoryService, conf);
         // here, each split must contain two files: pre and post period.
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d split(s).", splits.size()));
         return Arrays.asList(splits.toArray(new InputSplit[0]));
     }
 
-    private void createSplits(FileStatus[] fileStatuses,
+    private void createSplits(FileStatus[] fileStatuses, String tile,
                               Set<InputSplit> splits, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
         /*
         for each file status r:
@@ -58,10 +59,20 @@ public class S2BaInputFormat extends InputFormat {
                 create r, a
          */
         for (FileStatus referenceFileStatus : fileStatuses) {
+            // if there already exists a file, like BA-T37NCF-20160514T075819.nc: continue
+            Date referenceDate = getDate(referenceFileStatus);
+            String postDate = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(referenceDate);
+            String path = "hdfs://calvalus/calvalus/projects/fire/s2-ba/" + tile + "/BA-" + tile + "-" + postDate + ".nc";
+            Logger.getLogger("com.bc.calvalus").info("Checking if BA output file '" + path + "' already exists...");
+            if (inventoryService.pathExists(path)) {
+                Logger.getLogger("com.bc.calvalus").info("already exists, moving to next reference date.");
+                continue;
+            }
+            Logger.getLogger("com.bc.calvalus").info("does not already exist, create splits accordingly.");
             FileStatus[] periodStatuses = getPeriodStatuses(referenceFileStatus, inventoryService, conf);
             for (FileStatus preStatus : periodStatuses) {
                 splits.add(createSplit(referenceFileStatus, preStatus));
-                Logger.getLogger("com.bc.calvalus").info(String.format("Created split with postStatus %s and preStatus %s.", getDate(referenceFileStatus), getDate(preStatus)));
+                Logger.getLogger("com.bc.calvalus").info(String.format("Created split with postStatus %s and preStatus %s.", referenceDate, getDate(preStatus)));
             }
         }
     }
@@ -159,7 +170,7 @@ public class S2BaInputFormat extends InputFormat {
 
     static String getPeriodInputPathPattern(String s2PrePath) {
         int yearIndex = s2PrePath.indexOf("s2-pre/") + "s2-pre/".length();
-            String tile;
+        String tile;
         if (s2PrePath.contains("S2A_OPER")) {
             int tileIndex = s2PrePath.indexOf(".tif") - 6;
             tile = s2PrePath.substring(tileIndex, tileIndex + 6);

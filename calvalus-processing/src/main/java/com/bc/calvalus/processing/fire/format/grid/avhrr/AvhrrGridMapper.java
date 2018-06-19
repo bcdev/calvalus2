@@ -45,17 +45,17 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr.nc"), context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcFile);
 
-        File datesProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-        Product datesProduct = reproject(ProductIO.readProduct(datesProductFile));
-//        File porcProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-//        Product porcProduct = reproject(ProductIO.readProduct(porcProductFile));
+//        File datesProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
+//        Product datesProduct = reproject(ProductIO.readProduct(datesProductFile));
+        File porcProductFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
+        Product porcProduct = reproject(ProductIO.readProduct(porcProductFile));
         File uncProductFile = CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration());
         Product uncProduct = reproject(ProductIO.readProduct(uncProductFile));
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        AvhrrFireGridDataSource dataSource = new AvhrrFireGridDataSource(datesProduct, lcProduct, uncProduct, tileIndex);
+        AvhrrFireGridDataSource dataSource = new AvhrrFireGridDataSource(porcProduct, lcProduct, uncProduct, tileIndex);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
@@ -187,5 +187,15 @@ public class AvhrrGridMapper extends AbstractGridMapper {
 
     @Override
     protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+    }
+
+    @Override
+    public boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
+        return true;
+    }
+
+    @Override
+    protected double scale(float burnedPixel, double area) {
+        return burnedPixel * area;
     }
 }

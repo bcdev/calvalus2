@@ -4,7 +4,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
-import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
@@ -17,14 +16,14 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
-    private final Product datesProduct;
+    private final Product porcProduct;
     private final Product lcProduct;
     private final Product uncProduct;
     private final int tileIndex;
 
-    public AvhrrFireGridDataSource(Product datesProduct, Product lcProduct, Product uncProduct, int tileIndex) {
+    public AvhrrFireGridDataSource(Product porcProduct, Product lcProduct, Product uncProduct, int tileIndex) {
         super(1000, 7200);
-        this.datesProduct = datesProduct;
+        this.porcProduct = porcProduct;
         this.lcProduct = lcProduct;
         this.uncProduct = uncProduct;
         this.tileIndex = tileIndex;
@@ -43,8 +42,8 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         SourceData data = new SourceData(5, 5);
         data.reset();
 
-        AreaCalculator areaCalculator = new AreaCalculator(datesProduct.getSceneGeoCoding());
-        Band jd = datesProduct.getBand("band_1");
+        AreaCalculator areaCalculator = new AreaCalculator(porcProduct.getSceneGeoCoding());
+        Band pc = porcProduct.getBand("band_1");
         Band cl = uncProduct.getBand("band_1");
         Band lc = lcProduct.getBand("lccs_class");
 
@@ -52,20 +51,19 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
             for (int sourceX = 0; sourceX < data.height; sourceX++) {
 
                 int sourcePixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
-                int sourceJD = (int) getFloatPixelValue(jd, "", sourcePixelIndex);
-                boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+                float sourcePC = getFloatPixelValue(pc, "", sourcePixelIndex);
                 int targetPixelIndex = sourceY * 5 + sourceX;
-                if (isValidPixel) {
+                if (isValidPixel(sourcePC)) {
                     float sourceCL = getFloatPixelValue(cl, "", sourcePixelIndex);
                     sourceCL = scale(sourceCL);
-                    data.burnedPixels[targetPixelIndex] = sourceJD;
+                    data.burnedPixels[targetPixelIndex] = sourcePC;
                     data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 }
                 int sourceLC = getIntPixelValue(lc, "", sourcePixelIndex);
                 data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[targetPixelIndex] = sourceLC;
 
-                if (sourceJD != -1) { // neither no-data, nor water, nor cloud -> observed pixel
+                if (sourcePC != -1) { // neither no-data, nor water, nor cloud -> observed pixel
                     data.statusPixels[targetPixelIndex] = 1;
                 }
 
@@ -73,9 +71,13 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
             }
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 5, 5));
+        data.patchCount = 0;
 
         return data;
+    }
+
+    private boolean isValidPixel(float sourcePC) {
+        return sourcePC != -1.0 && sourcePC != -2.0;
     }
 
     static int getPixelIndex(int targetX, int targetY, int sourceX, int sourceY, int tileIndex) {
