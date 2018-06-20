@@ -16,13 +16,13 @@
         <calvalus.version>2.15-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>7.0.0-SNAPSHOT</snap.version>
-        <ceres.version>[6.0.0-SNAPSHOT,7.0.0-SNAPSHOT]</ceres.version>
-        <seadas.reader.version>1.7</seadas.reader.version>
+        <ceres.version>7.0.0-SNAPSHOT</ceres.version>
+        <seadas.reader.version>1.7.3-SNAPSHOT</seadas.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>17.1</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
         <ncsa.version>2.7.1</ncsa.version>
-        <openjpeg.version>[6.0.0,7.0.0-SNAPSHOT]</openjpeg.version>
+        <openjpeg.version>7.0.0-SNAPSHOT</openjpeg.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
