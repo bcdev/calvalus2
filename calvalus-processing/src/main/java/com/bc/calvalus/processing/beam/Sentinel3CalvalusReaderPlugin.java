@@ -131,7 +131,8 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
                 if (productManifest == null) {
                     throw new IllegalFileFormatException("input has no mainfest file.");
                 }
-                
+                // ensure correct geo-coding, the default tie-point-geo-coding is BROKEN
+                System.setProperty("s3tbx.reader.olci.pixelGeoCoding", "true");
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT);
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 if (inputFormat != null && inputFormat.equals(FORMAT_NAME_SLSTRL1B_500m)) {

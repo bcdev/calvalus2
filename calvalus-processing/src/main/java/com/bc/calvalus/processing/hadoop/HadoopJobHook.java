@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.hadoop;
 
-import org.apache.hadoop.mapreduce.Job;
+
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * TODO add API doc
@@ -8,5 +9,5 @@ import org.apache.hadoop.mapreduce.Job;
  * @author Martin Boettcher
  */
 public interface HadoopJobHook {
-    void beforeSubmit(Job job);
+    void beforeSubmit(Configuration job);
 }

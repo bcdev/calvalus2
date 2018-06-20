@@ -63,8 +63,8 @@ public class DebugTokenGenerator extends SamlUtil implements HadoopJobHook {
     }
 
     @Override
-    public void beforeSubmit(Job job) {
-        job.getConfiguration().set("calvalus.token", calvalusTokenOf(job.getConfiguration(), userName));
+    public void beforeSubmit(Configuration job) {
+        job.set("calvalus.token", calvalusTokenOf(job, userName));
     }
 
     private String calvalusTokenOf(Configuration jobParameters, String userName) {

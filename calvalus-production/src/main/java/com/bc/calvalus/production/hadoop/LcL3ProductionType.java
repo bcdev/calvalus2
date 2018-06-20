@@ -121,7 +121,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set("calvalus.lc.version", outputVersion);
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
-            if ("MSI".equals(sensorName)) {
+            if ("MSI".equals(sensorName) || "AGRI".equals(sensorName)) {
                 jobConfigCloud.setIfUnset("calvalus.mosaic.numTileY", "900");
             }
             if ("VEGETATION".equals(sensorName)) {
@@ -151,11 +151,12 @@ public class LcL3ProductionType extends HadoopProductionType {
             if (productionRequest.getBoolean("lcl3.cloud", true)) {
                 // if cloud aggregation is disabled, don't set this property
                 jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+                jobConfigSr.set("calvalus.lc.temporalCloudBandName", temporalCloudBandName);
             }
             jobConfigSr.set("calvalus.lc.sensor", sensorName);
             jobConfigSr.set("calvalus.lc.version", outputVersion);
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
-            if ("MSI".equals(sensorName)) {
+            if ("MSI".equals(sensorName) || "AGRI".equals(sensorName)) {
                 jobConfigSr.setIfUnset("calvalus.mosaic.numTileY", "900");
             }
             jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
@@ -185,7 +186,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set("calvalus.lc.sensor", sensorName);
             jobConfigFormat.set("calvalus.lc.version", outputVersion);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
-            if ("MSI".equals(sensorName)) {
+            if ("MSI".equals(sensorName) || "AGRI".equals(sensorName)) {
                 jobConfigFormat.setIfUnset("calvalus.mosaic.numTileY", "900");
             }
             if ("VEGETATION".equals(sensorName)) {

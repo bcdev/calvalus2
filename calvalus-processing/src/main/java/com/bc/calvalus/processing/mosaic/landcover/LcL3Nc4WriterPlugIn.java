@@ -100,20 +100,20 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             int tileY = product.getMetadataRoot().getAttributeInt("tileY");
             int tileX = product.getMetadataRoot().getAttributeInt("tileX");
             //float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
-            float macroTileSize = "MSI".equals(sensor) ? 1.0f : 5.0f;
+            float macroTileSize = "MSI".equals(sensor) || "AGRI".equals(sensor) ? 1.0f : 5.0f;
             float latMax = 90.0f - macroTileSize * tileY;
             float latMin = latMax - macroTileSize;
             float lonMin = -180.0f + macroTileSize * tileX;
             float lonMax = lonMin + macroTileSize;
 
-            String tileName = "MSI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
-            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
+            String tileName = "MSI".equals(sensor) || "AGRI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
+            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) || "AGRI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
             String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
             // global attributes
-            writeable.addGlobalAttribute("title", "ESA CCI land cover surface reflectance " + temporalResolution + " day composite");
-            writeable.addGlobalAttribute("summary", "This dataset contains a tile of a Level-3 " + temporalResolution + "-day global surface reflectance composite from satellite observations placed onto a regular grid.");
+            writeable.addGlobalAttribute("title", "ESA CCI land cover surface reflectance " + temporalResolution.substring(1, temporalResolution.length()-1) + " day composite");
+            writeable.addGlobalAttribute("summary", "This dataset contains a tile of a Level-3 " + temporalResolution.substring(1, temporalResolution.length()-1) + "-day global surface reflectance composite from satellite observations placed onto a regular grid.");
             writeable.addGlobalAttribute("project", "Climate Change Initiative - European Space Agency");
             writeable.addGlobalAttribute("references", "http://www.esa-landcover-cci.org/");
             writeable.addGlobalAttribute("institution", "Brockmann Consult GmbH");
@@ -143,8 +143,17 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                         "SR Calvalus 2.10-SNAPSHOT LCL3\n" +
                         "SR SNAP 5.0-SNAPSHOT\n" +
                         "SR netcdf-bin 4.1.3 nccopy -k 4");
+            } else if ("AGRI".equals(sensor)) {
+                writeable.addGlobalAttribute("history", "INPUT Sentinel 2 MSI L1C\n" +
+                        "Sen2Agri 1.7\n" +
+                        "Resample referenceBand=B2,upsampling=Nearest\n" +
+                        "S2TBX 6.0-SNAPSHOT\n" +
+                        "SNAP 6.0-SNAPSHOT\n" +
+                        "SR Calvalus 2.15-SNAPSHOT LCL3\n" +
+                        "SR SNAP 6.0\n" +
+                        "SR netcdf-bin 4.1.3 nccopy -k 4");
             } else {
-                writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-2.1, lc-sr-2.1");  // versions
+                writeable.addGlobalAttribute("history", "amorgos-4,0, sen2agri-1.7, lc-sr-2.1");  // versions
             }
             writeable.addGlobalAttribute("comment", "");
 
@@ -157,7 +166,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("cdm_data_type", "grid");
 
             writeable.addGlobalAttribute("platform", platform);
-            writeable.addGlobalAttribute("sensor", sensor);
+            writeable.addGlobalAttribute("sensor", "AGRI".equals(sensor) ? "MSI" : sensor);
             writeable.addGlobalAttribute("type", "SR-" + spatialResolution + "-" + temporalResolution);
             writeable.addGlobalAttribute("id", product.getName());
             writeable.addGlobalAttribute("tracking_id", UUID.randomUUID().toString());

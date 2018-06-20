@@ -22,8 +22,10 @@ import org.junit.Test;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -357,5 +359,26 @@ public class DateRangeCalculatorTest {
 
     private static Date date(String text) throws ParseException {
         return DATE_FORMAT.parse(text);
+    }
+
+    @Test
+    public void testNext() throws ParseException {
+        DateRangeCalculator.Period period = DateRangeCalculator.parsePeriod("-10");
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(DATE_FORMAT.parse("2016-01-01"));
+        period.next(cal);
+        assertEquals("2016-01-11", DATE_FORMAT.format(cal.getTime()));
+        period.next(cal);
+        assertEquals("2016-01-21", DATE_FORMAT.format(cal.getTime()));
+        period.next(cal);
+        assertEquals("2016-02-01", DATE_FORMAT.format(cal.getTime()));
+        period.next(cal);
+        assertEquals("2016-02-11", DATE_FORMAT.format(cal.getTime()));
+        period.next(cal);
+        assertEquals("2016-02-21", DATE_FORMAT.format(cal.getTime()));
+        period.next(cal);
+        assertEquals("2016-03-01", DATE_FORMAT.format(cal.getTime()));
+        period.next(cal);
+        assertEquals("2016-03-11", DATE_FORMAT.format(cal.getTime()));
     }
 }

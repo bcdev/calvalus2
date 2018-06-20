@@ -206,7 +206,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 validateJob(job);
                 // maybe add calvalus.token parameter
                 if (jobHook != null) {
-                    jobHook.beforeSubmit(job);
+                    jobHook.beforeSubmit(job.getConfiguration());
                 }
                 JobID jobId = submitJob(job);  // the impl of submitJob does a doAs as well, but maybe with the wrong user
 

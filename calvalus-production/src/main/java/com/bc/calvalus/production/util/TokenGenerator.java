@@ -44,8 +44,8 @@ public class TokenGenerator extends SamlUtil implements HadoopJobHook {
     }
 
     @Override
-    public void beforeSubmit(Job job) {
-        job.getConfiguration().set("calvalus.token", calvalusTokenOf(job.getConfiguration()));
+    public void beforeSubmit(Configuration job) {
+        job.set("calvalus.token", calvalusTokenOf(job));
     }
 
     private String calvalusTokenOf(Configuration jobParameters) {
