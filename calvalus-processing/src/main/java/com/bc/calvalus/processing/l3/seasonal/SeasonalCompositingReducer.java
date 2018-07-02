@@ -117,6 +117,22 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             "sr_11_mean",
             "vegetation_index_mean"
     };
+    public static String[] AGRI_BANDS = {
+            "status",
+            "status_count",
+            "obs_count",
+            "sr_1_mean",
+            "sr_2_mean",
+            "sr_3_mean",
+            "sr_4_mean",
+            "sr_5_mean",
+            "sr_6_mean",
+            "sr_7_mean",
+            "sr_8_mean",
+            "sr_9_mean",
+            "sr_10_mean",
+            "vegetation_index_mean"
+    };
 
     private final List<float[]> usedTiles = new ArrayList<>();
 
@@ -131,8 +147,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
 
         final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
         final int numberOfBands = context.getCurrentKey().get() >>> 27;
-        final String sensor = numberOfBands == 13 + 1 ? "MERIS" : numberOfBands == 5 + 1 ? "AVHRR" : numberOfBands == 4 + 1 ? "VEGETATION" : "MSI";
-        final String bandName = "MERIS".equals(sensor) ? MERIS_BANDS[bandNumber] : "AVHRR".equals(sensor) ? AVHRR_BANDS[bandNumber] : "VEGETATION".equals(sensor) ? PROBA_BANDS[bandNumber] : MSI_BANDS[bandNumber];
+        final String sensor = numberOfBands == 13 + 1 ? "MERIS" : numberOfBands == 5 + 1 ? "AVHRR" : numberOfBands == 4 + 1 ? "VEGETATION" : numberOfBands == 11 + 1 ? "MSI" : "AGRI";
+        final String bandName = "MERIS".equals(sensor) ? MERIS_BANDS[bandNumber] : "AVHRR".equals(sensor) ? AVHRR_BANDS[bandNumber] : "VEGETATION".equals(sensor) ? PROBA_BANDS[bandNumber] : "MSI".equals(sensor) ? MSI_BANDS[bandNumber] : AGRI_BANDS[bandNumber];
 
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
@@ -147,7 +163,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
         final int resolution = mosaicHeight == 972000 ? 20 : mosaicHeight == 64800 ? 300 : mosaicHeight == 16200 ? 1000 : 19440000 / mosaicHeight;
-        final int numTileRows = "MSI".equals(sensor) ? 180*5 : 36;
+        final int numTileRows = "MSI".equals(sensor) || "AGRI".equals(sensor) ? 180*5 : 36;
         final int numTileColumns = 2 * numTileRows;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72*5 = 2700
 
@@ -172,7 +188,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final String version = conf.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%dm-P%d%s-%s-%s%s-v%s",
                                                     sensor, resolution,
-                                                    "MSI".equals(sensor) ? noOfDays : noOfDays / 7, "MSI".equals(sensor) ? "D" : "W",
+                                                    "MSI".equals(sensor) || "AGRI".equals(sensor) ? noOfDays : noOfDays / 7, "MSI".equals(sensor)  || "AGRI".equals(sensor)? "D" : "W",
                                                     bandName,
                                                     regionName == null ? "" : regionName + "-",
                                                     COMPACT_DATE_FORMAT.format(start), version);
@@ -237,6 +253,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
 
             if (tileRow >= tileArea.y && tileRow < tileArea.y + tileArea.height) {
                 // write lines of tile row to output file
+                LOG.info("writing rows " + tileRow + " to " + (tileRow+tileSize-1) + " to DIMAP intermediate");
                 for (int r = 0; r < tileSize; r++) {
                     for (int tileColumn = tileArea.x; tileColumn < tileArea.x + tileArea.width; tileColumn++) {
                         if (tiles[tileColumn] != null) {
@@ -264,7 +281,6 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                             }
                         }
                     }
-                    LOG.info("writing row " + tileRow + " to DIMAP intermediate");
                     dimapWriter.writeBandRasterData(band,
                                                     0, (tileRow - tileArea.y) * tileSize + r,
                                                     tileArea.width * tileSize, 1,
@@ -298,7 +314,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final InputStream in = new BufferedInputStream(new FileInputStream(new File(targetFileName + ".tif")));
         ProductFormatter.copyAndClose(in, out, context);
 
-        LOG.info("copying to " + outputPath + " done");
+        LOG.info("copying done");
     }
 
     private Rectangle pixelAreaOf(Rectangle tileArea, int tileSize) {

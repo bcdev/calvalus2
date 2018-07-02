@@ -220,7 +220,7 @@ public class CalvalusGetStatusOperationTest {
 
         assertThat(getStatusResponse.getProcess().getIdentifier().getValue(), equalTo("mockBundle~1.0~mockProcessor"));
         assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("1.0"));
-        assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T00:00:00.000Z"));
+        assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
                    equalTo("production_result"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
@@ -250,7 +250,7 @@ public class CalvalusGetStatusOperationTest {
 
         assertThat(getStatusResponse.getProcess().getIdentifier().getValue(), equalTo("local~0.0.1~Subset"));
         assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("0.0.1"));
-        assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T00:00:00.000Z"));
+        assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
                    equalTo("production_result"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),

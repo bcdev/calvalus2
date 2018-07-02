@@ -1,7 +1,5 @@
 package com.bc.calvalus.production.cli;
 
-import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_ERROR_CODE;
-
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
@@ -18,6 +16,7 @@ import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
+import com.bc.calvalus.production.util.CasUtil;
 import com.bc.calvalus.production.util.DebugTokenGenerator;
 import com.bc.calvalus.production.util.TokenGenerator;
 import org.apache.commons.cli.CommandLine;
@@ -91,6 +90,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
+import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_ERROR_CODE;
 
 /**
  * The Calvalus production CLI tool "cpt".
@@ -226,7 +227,7 @@ public class ProductionTool {
             }
 
             if (commandLine.hasOption("test-auth")) {
-                String samlToken = fetchSamlToken(config);
+                String samlToken = new CasUtil(quiet).fetchSamlToken(config, getUserName());
                 say("Successfully retrieved SAML token:\n");
                 say(samlToken);
             }
@@ -279,7 +280,7 @@ public class ProductionTool {
                     hook = new DebugTokenGenerator(publicKey, privateKey, certificate, getUserName());
                     break;
                 case "saml":
-                    String samlToken = fetchSamlToken(config).replace("\\s+", "");
+                    String samlToken = new CasUtil(quiet).fetchSamlToken(config, getUserName()).replace("\\s+", "");
                     String publicKeySaml = config.get("calvalus.crypt.calvalus-public-key");
                     hook = new TokenGenerator(publicKeySaml, samlToken);
                     break;
@@ -387,158 +388,6 @@ public class ProductionTool {
                 out.close();
             }
         }
-    }
-
-    private String fetchSamlToken(Map<String, String> config) throws IOException, GeneralSecurityException, SAXException, ParserConfigurationException, XMLEncryptionException, org.jdom2.JDOMException {
-        Init.init();
-        String casUrl = config.getOrDefault("calvalus.cas.url", "https://sso.eoc.dlr.de/cas-codede");
-        String portalUrl = config.getOrDefault("calvalus.portal.url", "https://processing.code-de.org/calvalus.jsp");
-        String privateKeyPath = config.get("calvalus.crypt.samlkey-private-key");
-        if (privateKeyPath == null) {
-            throw new IllegalStateException("No entry for calvalus.crypt.samlkey-private-key found in Calvalus config.");
-        }
-        say(String.format("Fetching SAML token from %s.", casUrl));
-        String tgt = fetchTgt(casUrl);
-        String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
-        PrivateKey privateSamlKey = readPrivateDerKey(privateKeyPath);
-        Document document = parseXml(samlToken);
-        document = decipher(privateSamlKey, document);
-        document = fixRootNode(document);
-        return getStringFromDoc(document);
-    }
-
-    static Document fixRootNode(Document samlToken) throws org.jdom2.JDOMException {
-        DOMBuilder builder = new DOMBuilder();
-        org.jdom2.Document jDomDoc = builder.build(samlToken);
-        Element assertionElement = jDomDoc.getRootElement().getChildren().get(0);
-        jDomDoc.detachRootElement();
-        assertionElement.detach();
-        jDomDoc.setRootElement(assertionElement);
-        DOMOutputter outputter = new DOMOutputter();
-        return outputter.output(jDomDoc);
-    }
-
-    private static String getStringFromDoc(Document doc) {
-        try {
-            DOMSource domSource = new DOMSource(doc);
-            StringWriter writer = new StringWriter();
-            StreamResult result = new StreamResult(writer);
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            transformer.transform(domSource, result);
-            writer.flush();
-            return writer.toString();
-        } catch (TransformerException ex) {
-            throw new IllegalArgumentException("Unable to parse SAML token", ex);
-        }
-    }
-
-    private static PrivateKey readPrivateDerKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
-        byte[] privKeyByteArray = Files.readAllBytes(Paths.get(filename));
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privKeyByteArray);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        return keyFactory.generatePrivate(keySpec);
-    }
-
-    private static PrivateKey readPrivatePemKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
-        Security.addProvider(new BouncyCastleProvider());
-        try (final PemReader pr = new PemReader(new FileReader(filename))) {
-            final PemObject po = pr.readPemObject();
-
-            final KeySpec keySpec = new PKCS8EncodedKeySpec(po.getContent());
-            final KeyFactory keyFact = KeyFactory.getInstance("RSA", "BC");
-            return keyFact.generatePrivate(keySpec);
-        }
-    }
-
-    private static Document parseXml(String xml) throws SAXException, IOException, ParserConfigurationException {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        dbf.setNamespaceAware(true);
-        DocumentBuilder db = dbf.newDocumentBuilder();
-        InputStream inputStream = new ByteArrayInputStream(xml.getBytes());
-        return db.parse(inputStream);
-    }
-
-    private String fetchSamlToken(String tgt, final String casUrl, String portalUrl) throws IOException {
-        String urlString = casUrl + "/samlCreate2?serviceUrl=" + portalUrl;
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setDoOutput(true);
-        conn.setInstanceFollowRedirects(false);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("charset", "utf-8");
-        conn.setRequestProperty("Cookie", "CASTGC=" + tgt);
-        conn.setUseCaches(false);
-        StringBuilder saml = new StringBuilder();
-        try (InputStream in = conn.getInputStream()) {
-            int c;
-            while ((c = in.read()) > 0) {
-                saml.append((char) c);
-            }
-        }
-
-        return saml.toString();
-    }
-
-    private String fetchTgt(String casUrl) throws IOException, GeneralSecurityException {
-        byte[] encryptedSecret = createEncryptedSecret(getUserName());
-        String urlParameters = "client_name=PKEY&userid=" + getUserName() + "&secret=" + new String(encryptedSecret);
-        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
-        int postDataLength = postData.length;
-        URL url = new URL(casUrl + "/login");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setDoOutput(true);
-        conn.setInstanceFollowRedirects(false);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("charset", "utf-8");
-        conn.setRequestProperty("Content-Length", Integer.toString(postDataLength));
-        conn.setUseCaches(false);
-        try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-            wr.write(postData);
-        }
-        Map<String, List<String>> headerFields = conn.getHeaderFields();
-        if (headerFields == null) {
-            throw new GeneralSecurityException("Could not retrieve TGT from URL " + casUrl);
-        }
-        List<String> setCookieFields = headerFields.get("Set-Cookie");
-        if (setCookieFields.size() < 2) {
-            InputStream in = conn.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            StringBuilder result = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line);
-            }
-            throw new IOException("Fetching TGT failed. Reply from CAS server:\n" + result.toString());
-        }
-        String setCookie = setCookieFields.get(1);
-        String tgtPart1 = setCookie.split(";")[0];
-
-        return tgtPart1.split("=")[1];
-    }
-
-    private static Document decipher(PrivateKey myPrivKey, Document document) throws XMLEncryptionException {
-        org.w3c.dom.Element encryptedDataElement = (org.w3c.dom.Element) document.getElementsByTagNameNS(EncryptionConstants.EncryptionSpecNS, EncryptionConstants._TAG_ENCRYPTEDDATA).item(0);
-        XMLCipher xmlCipher = XMLCipher.getInstance();
-        xmlCipher.init(XMLCipher.DECRYPT_MODE, null);
-        xmlCipher.setKEK(myPrivKey);
-        try {
-            return xmlCipher.doFinal(document, encryptedDataElement);
-        } catch (Exception e) {
-            throw new XMLEncryptionException("", e);
-        }
-    }
-
-    private byte[] createEncryptedSecret(String userId) throws IOException, GeneralSecurityException {
-        PrivateKey privateKey = readPrivatePemKey("/home/" + userId + "/.ssh/id_rsa");
-        final Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, privateKey);
-        df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        String token = userId + '\n' + df.format(new Date()) + "\n47110815";
-        byte[] bytes = cipher.doFinal(token.getBytes());
-        return Base64.getUrlEncoder().encode(bytes);
     }
 
     private Production orderProduction(ProductionService productionService, ProductionRequest request, HadoopJobHook hook) throws

@@ -154,12 +154,37 @@
                             <goal>unpack</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>libs2</id>
+                        <configuration>
+                            <unpack>
+                                <artifact>org.esa.s2tbx:lib-openjpeg:jar</artifact>
+                                <resources>
+                                    <resource>
+                                        <path>auxdata/openjpeg/openjpeg-2.1.0-linux64/bin</path>
+                                        <include>libopenjp2.so</include>
+                                    </resource>
+                                </resources>
+                                <targetDirectory>target/snap-bundle</targetDirectory>
+                            </unpack>
+                            <verbose>true</verbose>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>
                         <groupId>ncsa.hdf</groupId>
                         <artifactId>lib-hdf</artifactId>
                         <version>${ncsa.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.esa.s2tbx</groupId>
+                        <artifactId>lib-openjpeg</artifactId>
+                        <version>${openjpeg.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>

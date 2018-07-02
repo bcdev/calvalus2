@@ -57,8 +57,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01T00:00:00Z"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01T00:00:00Z"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01T01:00:00+01:00"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01T01:00:00+01:00"));
     }
 
     @Test
@@ -77,8 +77,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2000-01-01T00:00:00Z"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2010-01-01T00:00:00Z"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2000-01-01T01:00:00+01:00"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2010-01-01T01:00:00+01:00"));
     }
 
     @Test
@@ -97,8 +97,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.10-SNAPSHOT"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01T00:00:00Z"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01T00:00:00Z"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01T01:00:00+01:00"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01T01:00:00+01:00"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("geoInventory"), equalTo("/calvalus/geoInventory/URBAN_FOOTPRINT_GUF_GLOBAL_75m"));
     }
 
@@ -280,7 +280,7 @@ public class CalvalusDataInputsTest {
 
         assertThat(calvalusDataInputs.toString(),
                    equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
-                                   "minDate : 2016-01-01T00:00:00Z\n" +
+                                   "minDate : 2016-01-01T01:00:00+01:00\n" +
                                    "calvalus.output.compression : none\n" +
                                    "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
                                    "calvalus.wps.remote.user : dummyRemoteUser\n" +
@@ -290,16 +290,16 @@ public class CalvalusDataInputsTest {
                                    "processorBundleVersion : null\n" +
                                    "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                    "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                   "minDateSource : 2016-01-01T00:00:00Z\n" +
+                                   "minDateSource : 2016-01-01T01:00:00+01:00\n" +
                                    "quicklooks : true\n" +
                                    "autoStaging : true\n" +
                                    "calvalus.snap.bundle : snap-3.0.0\n" +
                                    "processorName : null\n" +
-                                   "maxDate : 2017-01-01T00:00:00Z\n" +
+                                   "maxDate : 2017-01-01T01:00:00+01:00\n" +
                                    "processorBundleName : null\n" +
                                    "processorParameters : null\n" +
                                    "productionName : dummyProductionName\n" +
-                                   "maxDateSource : 2017-01-01T00:00:00Z\n" +
+                                   "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
                                    "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 
@@ -324,7 +324,7 @@ public class CalvalusDataInputsTest {
 
         assertThat(calvalusDataInputs.toString(),
                    equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
-                                   "minDate : 2016-01-01T00:00:00Z\n" +
+                                   "minDate : 2016-01-01T01:00:00+01:00\n" +
                                    "calvalus.output.compression : none\n" +
                                    "processorBundleLocation : null\n" +
                                    "calvalus.wps.remote.user : dummyRemoteUser\n" +
@@ -332,14 +332,14 @@ public class CalvalusDataInputsTest {
                                    "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                    "processorBundleVersion : null\n" +
                                    "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                   "minDateSource : 2016-01-01T00:00:00Z\n" +
+                                   "minDateSource : 2016-01-01T01:00:00+01:00\n" +
                                    "quicklooks : true\n" +
                                    "autoStaging : true\n" +
                                    "processorName : null\n" +
-                                   "maxDate : 2017-01-01T00:00:00Z\n" +
+                                   "maxDate : 2017-01-01T01:00:00+01:00\n" +
                                    "processorBundleName : null\n" +
                                    "processorParameters : null\n" +
-                                   "maxDateSource : 2017-01-01T00:00:00Z\n" +
+                                   "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
                                    "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 

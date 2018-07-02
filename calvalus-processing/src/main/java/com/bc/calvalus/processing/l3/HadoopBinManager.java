@@ -34,7 +34,7 @@ public class HadoopBinManager extends BinManager {
 
     @Override
     public L3SpatialBin createSpatialBin(long binIndex) {
-        final L3SpatialBin spatialBin = new L3SpatialBin(binIndex, getSpatialFeatureCount());
+        final L3SpatialBin spatialBin = new L3SpatialBin(binIndex, getSpatialFeatureCount(), getGrowableAggregatorCount());
         initSpatialBin(spatialBin);
         return spatialBin;
     }

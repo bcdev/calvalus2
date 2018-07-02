@@ -1,0 +1,4 @@
+com.bc.calvalus.processing.beam.AggregatorFirst$Descriptor
+com.bc.calvalus.processing.beam.AggregatorYoungest$Descriptor
+com.bc.calvalus.processing.beam.AggregatorYoungestClear$Descriptor
+com.bc.calvalus.processing.beam.AggregatorOnPercentileSet$Descriptor

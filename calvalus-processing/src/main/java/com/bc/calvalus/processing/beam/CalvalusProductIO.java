@@ -36,6 +36,8 @@ import org.esa.snap.core.datamodel.TiePointGrid;
 import org.esa.snap.core.datamodel.VirtualBand;
 import org.xeustechnologies.jtar.TarEntry;
 import org.xeustechnologies.jtar.TarInputStream;
+import ucar.nc2.Attribute;
+import ucar.nc2.NetcdfFile;
 import ucar.unidata.io.bzip2.CBZip2InputStream;
 
 import javax.imageio.stream.ImageInputStream;
@@ -49,6 +51,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -103,10 +106,16 @@ public class CalvalusProductIO {
                 } else {
                     localFile = copyFileToLocal(path, configuration);
                 }
+                maybeUpdateTilingProperties(localFile);  // TODO: maybe add to other locations where product file is opened
                 product = readProductImpl(localFile, File.class, inputFormat);
             }
         }
         if (product == null) {
+            Iterator<ProductReaderPlugIn> it = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+            while (it.hasNext()) {
+                ProductReaderPlugIn readerPlugIn = it.next();
+                LOG.info("reader candidate " + readerPlugIn + ' ' + Arrays.toString(readerPlugIn.getFormatNames()) + ' ' + Arrays.toString(readerPlugIn.getInputTypes()));
+            }
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();
@@ -124,6 +133,35 @@ public class CalvalusProductIO {
         LOG.info(String.format("readProduct: took %,d ms for %s", t2 - t1, path));
         printProductOnStdout(product, "opened from " + pathConf.getPath());
         return product;
+    }
+
+    private static void maybeUpdateTilingProperties(File localFile) {
+        if (localFile.getName().endsWith(".nc")
+                && "32".equals(System.getProperty("snap.dataio.reader.tileWidth"))
+                && "32".equals(System.getProperty("snap.dataio.reader.tileHeight"))) {
+            NetcdfFile netcdfFile = null;
+            try {
+                netcdfFile = NetcdfFile.open(localFile.getPath());
+                Attribute tileSizeAttribute = netcdfFile.findGlobalAttribute("TileSize");
+                if (tileSizeAttribute != null) {
+                    String[] tileSizeValues = tileSizeAttribute.getStringValue().split(":");
+                    System.setProperty("snap.dataio.reader.tileWidth", tileSizeValues[0]);
+                    System.setProperty("snap.dataio.reader.tileHeight", tileSizeValues[1]);
+                    LOG.info("tile size adjusted from 32:32 to " + tileSizeAttribute.getStringValue());
+                } else {
+                    LOG.info("tile size not adjusted from 32:32, product has no attribute TileSize");
+                }
+            } catch (Exception e) {
+                LOG.warning("failed to adjusted tile size from 32:32 to product chunking");
+            } finally {
+                if (netcdfFile != null) {
+                    try {
+                        netcdfFile.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }
     }
 
     // currently not used
@@ -303,6 +341,7 @@ public class CalvalusProductIO {
                 return null;
             }
         } else {
+            LOG.info("looked up reader plugin for " + inputClass + " " + inputFormat);
             return null;
         }
     }
@@ -366,8 +405,13 @@ public class CalvalusProductIO {
             System.out.println("GeoCoding: NULL");
         }
         System.out.println("RasterDataNodes:");
+        int i = 0;
         List<RasterDataNode> rasterDataNodes = p.getRasterDataNodes();
         for (RasterDataNode rdn : rasterDataNodes) {
+            if (++i > 3) {
+                System.out.println("...");
+                break;
+            }
             String rdnTileSize = "";
             if (rdn.isSourceImageSet()) {
                 MultiLevelImage image = rdn.getSourceImage();

@@ -81,7 +81,9 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         job.setMapperClass(L3Mapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(L3SpatialBin.class);
-        job.setPartitionerClass(L3Partitioner.class);
+        if (jobConfig.get("mapreduce.job.partitioner.class") == null) {
+            job.setPartitionerClass(L3Partitioner.class);
+        }
         job.setReducerClass(L3Reducer.class);
         job.setOutputKeyClass(LongWritable.class);
         job.setOutputValueClass(L3TemporalBin.class);

@@ -21,7 +21,12 @@
         <!-- force this version instead of the SNAP one -->
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
         </dependency>
 
         <!--  Calvalus -->
@@ -102,7 +107,6 @@
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.13</version>
         </dependency>
 
         <!-- Apache cli command line parser -->
@@ -152,6 +156,12 @@
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
         </dependency>
-
+<!--
+        <dependency>
+        <groupId>org.esa.s2tbx</groupId>
+        <artifactId>sen2agri-reader</artifactId>
+        <version>0.1.1-SNAPSHOT</version>
+        </dependency>
+-->
     </dependencies>
 </project>

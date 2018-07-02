@@ -138,14 +138,12 @@ public class L2ProductionType extends HadoopProductionType {
             return datePattern + "\\.seq$";
         }
         ProcessorDescriptor.FormattingType formatting = processorDescriptor.getFormatting();
-        if (formatting == ProcessorDescriptor.FormattingType.IMPLICIT) {
+        String outputRegex = processorDescriptor.getOutputRegex();
+        if (! outputRegex.isEmpty()) {
+            return outputRegex;
+        } else  if (formatting == ProcessorDescriptor.FormattingType.IMPLICIT) {
             // MEGS, l2gen, polymer, fmask (regex from processor, if given)
-            String outputRegex = processorDescriptor.getOutputRegex();
-            if (outputRegex.isEmpty()) {
-                return datePattern;
-            } else {
-                return outputRegex;
-            }
+            return datePattern;
         } else {
             // BEAM processor
             return datePattern + "\\.seq$";

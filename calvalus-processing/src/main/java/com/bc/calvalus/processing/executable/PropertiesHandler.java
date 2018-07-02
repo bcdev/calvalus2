@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.executable;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.binding.dom.XppDomElement;
 import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
+import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.XppDom;
@@ -21,6 +22,8 @@ import java.util.Properties;
  * TODO Maybe this could be integrated into {@link com.bc.ceres.resource.Resource}
  */
 public class PropertiesHandler {
+
+    private static XmlFriendlyNameCoder nameCoder = new XmlFriendlyNameCoder();
 
     public static Properties asProperties(String processorParameters) throws IOException {
         Properties properties = new Properties();
@@ -59,8 +62,8 @@ public class PropertiesHandler {
                 }
             } else {
                 for (DomElement element : childElements) {
-                    String name = element.getName();
-                    String value = element.getValue();
+                    String name = nameCoder.decodeNode(element.getName());
+                    String value = nameCoder.decodeNode(element.getValue());
                     if (value != null && element.getChildCount() == 0) {
                         properties.setProperty(prefix + name, value);
                     } else {

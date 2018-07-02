@@ -75,8 +75,8 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         final String version = configuration.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final float[] wavelength = sensorConfig.getWavelengths();
         final String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}-{2}-{3}-{4}-v{5}",
-                                                  sensor, spatialResolution, temporalResolution,
-                                                  "MSI".equals(sensor) ? tileName3(tileY, tileX) : tileName(tileY, tileX), startTime,
+                                                  "AGRI".equals(sensor) ? "MSI" : sensor, spatialResolution, temporalResolution,
+                                                  "MSI".equals(sensor) || "AGRI".equals(sensor) ? tileName3(tileY, tileX) : tileName(tileY, tileX), startTime,
                                                   version);
 
         final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);
