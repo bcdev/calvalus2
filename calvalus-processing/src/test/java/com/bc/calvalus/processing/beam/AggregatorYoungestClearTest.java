@@ -156,6 +156,53 @@ public class AggregatorYoungestClearTest {
         assertEquals(NaN, out.get(1), 0.0f);
     }
 
+    @Test
+    public void testAggregatorYoungest_differentSequences() {
+        VectorImpl tvec = vec(NaN, NaN, NaN, NaN, NaN, NaN);
+        VectorImpl out = vec(NaN, NaN, NaN, NaN);
+
+        VectorImpl[] vectors = {
+            vec(0.91f, 0.3f, 0.81f, 6f, 2f, 0.3f),
+            vec(0.92f, 0.1f, 0.82f, 8f, 2f, 0.1f),
+            vec(0.93f, 0.5f, 0.83f, 7f, 10f, 0.5f),
+            vec(0.99f, 0.7f, 0.84f, 5f, 0f, 0.7f),
+            vec(0.95f, 0.6f, 0.85f, 4f, 0f, 0.6f),
+            vec(0.96f, 0.9f, 0.86f, 9f, 2f, 0.9f)
+        };
+
+        permute(vectors, 0, tvec, out);
+    }
+
+    void testAggregatorYoungest(VectorImpl[] svecs, VectorImpl tvec, VectorImpl out) {
+        agg.initTemporal(ctx, tvec);
+        for (VectorImpl svec : svecs) {
+            agg.aggregateTemporal(ctx, svec, 1, tvec);
+        }
+        agg.completeTemporal(ctx, 6, tvec);
+        agg.computeOutput(tvec, out);
+        assertEquals(27, out.get(0), 1e-5f);
+        assertEquals(0.91f, out.get(1), 1e-5f);
+        assertEquals(0.3f, out.get(2), 1e-5f);
+        assertEquals(0.81f, out.get(3), 1e-5f);
+
+    }
+
+    void permute(VectorImpl[] arr, int k, VectorImpl tvec, VectorImpl out) {
+        for(int i = k; i < arr.length; i++){
+            swap(arr, i, k);
+            permute(arr, k+1, tvec, out);
+            swap(arr, k, i);
+        }
+        if (k == arr.length-1){
+            testAggregatorYoungest(arr, tvec, out);
+        }
+    }
+
+    static void swap(VectorImpl[] vec, int i, int k) {
+        VectorImpl v = vec[i];
+        vec[i] = vec[k];
+        vec[k] = v;
+    }
 
     public static VectorImpl vec(float... values) {
         return new VectorImpl(values);

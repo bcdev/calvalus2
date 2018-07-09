@@ -74,7 +74,9 @@ public class LcL3ProductionType extends HadoopProductionType {
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         String resolution = productionRequest.getString("resolution", "FR");
-        LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(resolution);
+        String sensor = productionRequest.getString("sensor");
+        String spatialResolution = productionRequest.getString("spatialResolution");
+        LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(sensor, spatialResolution);
         int mosaicTileSize = sensorConfig.getMosaicTileSize();
         String groundResolution = sensorConfig.getGroundResolution();
         String sensorName = sensorConfig.getSensorName();
@@ -124,7 +126,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             if ("MSI".equals(sensorName) || "AGRI".equals(sensorName)) {
                 jobConfigCloud.setIfUnset("calvalus.mosaic.numTileY", "900");
             }
-            if ("VEGETATION".equals(sensorName)) {
+            if ("VEGETATION".equals(sensorName)|| "PROBAV".equals(sensorName)) {
                 jobConfigCloud.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
@@ -160,7 +162,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigSr.setIfUnset("calvalus.mosaic.numTileY", "900");
             }
             jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
-            if ("VEGETATION".equals(sensorName)) {
+            if ("VEGETATION".equals(sensorName) || "PROBAV".equals(sensorName)) {
                 jobConfigSr.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
@@ -189,7 +191,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             if ("MSI".equals(sensorName) || "AGRI".equals(sensorName)) {
                 jobConfigFormat.setIfUnset("calvalus.mosaic.numTileY", "900");
             }
-            if ("VEGETATION".equals(sensorName)) {
+            if ("VEGETATION".equals(sensorName) || "PROBAV".equals(sensorName)) {
                 jobConfigFormat.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
             jobConfigFormat.set("calvalus.lc.resolution", resolution);

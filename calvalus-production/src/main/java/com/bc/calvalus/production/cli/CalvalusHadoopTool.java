@@ -54,7 +54,8 @@ public class CalvalusHadoopTool {
             Options options = createCommandLineOptions();
             commandLine = new GnuParser().parse(options, args);
             Properties configParameters = CalvalusHadoopRequestConverter.collectConfigParameters(commandLine);
-            String userName = "martin"; // TODO System.getProperty("user.name");
+            String userName = System.getProperty("user.name");
+            if ("boe".equals(userName)) { userName = "martin"; }  // TODO remove
 
             if (commandLine.hasOption("quiet")) {
                 LOG.setLevel(Level.SEVERE);
@@ -203,6 +204,9 @@ public class CalvalusHadoopTool {
                 JobStatus status = CalvalusHadoopStatusConverter.findById(id, jobs);
                 statusConverter.accumulateJobStatus(id, status, accu);
             }
+        }
+        if (accu.length() > 1) {
+            accu.append(" ");
         }
         accu.append("}");
         System.out.println(accu.toString());
