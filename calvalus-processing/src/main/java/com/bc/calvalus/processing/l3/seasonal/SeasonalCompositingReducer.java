@@ -188,7 +188,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final String version = conf.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%dm-P%d%s-%s-%s%s-v%s",
                                                     sensor, resolution,
-                                                    "MSI".equals(sensor) || "AGRI".equals(sensor) || "VEGETATION".equals(sensor) ? noOfDays : noOfDays / 7, "MSI".equals(sensor) || "AGRI".equals(sensor) || "VEGETATION".equals(sensor) ? "D" : "W",
+                                                    "MSI".equals(sensor) || "AGRI".equals(sensor) ? noOfDays : noOfDays / 7, "MSI".equals(sensor) || "AGRI".equals(sensor) ? "D" : "W",
                                                     bandName,
                                                     regionName == null ? "" : regionName + "-",
                                                     COMPACT_DATE_FORMAT.format(start), version);

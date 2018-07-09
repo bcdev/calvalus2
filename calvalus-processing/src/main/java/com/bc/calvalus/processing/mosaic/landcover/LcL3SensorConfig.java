@@ -459,7 +459,7 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public int getMosaicTileSize() {
-            return 360;
+            return 336;
         }
         @Override
         public String getGroundResolution() {
@@ -601,7 +601,7 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public int getMosaicTileSize() {
-            return 120;
+            return 112;
         }
         @Override
         public String getGroundResolution() {
