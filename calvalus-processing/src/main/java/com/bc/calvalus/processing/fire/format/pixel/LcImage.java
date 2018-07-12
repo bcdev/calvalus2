@@ -57,6 +57,7 @@ class LcImage extends SingleBandedOpImage {
 
 //                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
                 if (!LcRemappingS2.isInBurnableLcClass(lcData[pixelIndex])) {
+//                if (!LcRemapping.isInBurnableLcClass(lcData[pixelIndex])) {
                     if (jdValue > 0) {
                         jdValue = 0;
                     }

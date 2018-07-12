@@ -64,6 +64,7 @@ class JdImage extends SingleBandedOpImage {
                 boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
 //                if (!LcRemappingS2.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex])) && notCloudy) {
                 if (!LcRemappingS2.isInBurnableLcClass(sourceLcClass) && notCloudy) {
+//                if (!LcRemapping.isInBurnableLcClass(sourceLcClass) && notCloudy) {
                     sourceJd = -2;
                 }
 
@@ -74,7 +75,7 @@ class JdImage extends SingleBandedOpImage {
                     targetJd = -1;
                 }
 
-                if (sourceCl < 0.5F && targetJd != -1 && targetJd != -2) {
+                if (sourceCl < 0.05F && targetJd != -1 && targetJd != -2) {
                     targetJd = 0;
                 }
 
@@ -84,4 +85,5 @@ class JdImage extends SingleBandedOpImage {
             }
         }
     }
+
 }

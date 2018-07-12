@@ -72,16 +72,15 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 int numberOfBurnedPixels = 0;
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
-                    int doy = data.burnedPixels[i];
-                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+                    float burnedPixel = data.burnedPixels[i];
+                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel)) {
                         numberOfBurnedPixels++;
-                        baValue += data.areas[i];
+                        double burnedArea = scale(burnedPixel, data.areas[i]);
+                        baValue += burnedArea;
                         boolean hasLcClass = false;
                         for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
                             boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
-                            baInLc.get(lcClass)[targetGridCellIndex] += inLcClass ? data.areas[i] : 0.0;
-                            // address this after decision if S2 LC is used or not
-                            baInLc.get(lcClass)[targetGridCellIndex] = 0;
+                            baInLc.get(lcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0;
                             if (inLcClass) {
                                 hasLcClass = true;
                             }
@@ -89,7 +88,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         if (!hasLcClass && data.lcClasses[i] != 0) {
 //                            LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
                             if (maskUnmappablePixels()) {
-                                baValue -= data.areas[i];
+                                baValue -= burnedArea;
                             }
                         }
                     }
@@ -206,7 +205,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return fraction;
     }
 
-    public static boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, int pixel) {
+    protected double scale(float burnedPixel, double area) {
+        return area;
+    }
+
+    public boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
         return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
     }
 

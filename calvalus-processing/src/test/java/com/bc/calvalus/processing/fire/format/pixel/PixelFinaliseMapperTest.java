@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
-import com.bc.calvalus.processing.fire.format.pixel.GlobalPixelProductAreaProvider.GlobalPixelProductArea;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.S2Strategy;
 import com.bc.calvalus.processing.fire.format.pixel.s2.S2PixelFinaliseMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.dataio.ProductIO;
@@ -82,6 +83,11 @@ public class PixelFinaliseMapperTest {
             @Override
             protected Product collocateWithSource(Product lcProduct, Product source) {
                 return lcProduct;
+            }
+
+            @Override
+            protected Band getLcBand(Product lcProduct) {
+                return lcProduct.getBand("band_1");
             }
         };
     }
@@ -286,12 +292,12 @@ public class PixelFinaliseMapperTest {
     @Ignore
     @Test
     public void testCreateMetadata() throws Exception {
-//        for (PixelProductArea area : new S2Strategy().getAllAreas()) {
-        for (GlobalPixelProductArea area : GlobalPixelProductArea.values()) {
+        for (PixelProductArea area : new S2Strategy().getAllAreas()) {
+//        for (GlobalPixelProductArea area : GlobalPixelProductArea.values()) {
             System.out.println(area.nicename);
 //            for (MonthYear monthYear : s2MonthYears()) {
             // "h37v17;185;90;190;95"
-            for (int year = 2000; year <= 2016; year++) {
+            for (int year = 2016; year <= 2016; year++) {
                 String targetDir = "c:\\ssd\\" + year;
                 if (Files.notExists(Paths.get(targetDir))) {
                     Files.createDirectory(Paths.get(targetDir));
@@ -299,13 +305,14 @@ public class PixelFinaliseMapperTest {
                 for (int month = 1; month <= 12; month++) {
                     String monthPad = month < 10 ? "0" + month : "" + month;
                     String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
-                    String baseFilename = new S2PixelFinaliseMapper().createBaseFilename(year + "", monthPad, "fv5.0", areaString);
-                    String metadata = PixelFinaliseMapper.createMetadata(year + "", monthPad, "fv5.0", areaString);
+                    String baseFilename = new S2PixelFinaliseMapper().createBaseFilename(year + "", monthPad, "FireCCISFD1", areaString);
+                    String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.S2_TEMPLATE, year + "", monthPad, "FireCCISFD1", areaString);
                     try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
                         fw.write(metadata);
                     }
                 }
             }
+            break;
         }
     }
 

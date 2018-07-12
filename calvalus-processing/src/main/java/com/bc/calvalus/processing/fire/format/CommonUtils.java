@@ -98,6 +98,23 @@ public class CommonUtils {
         }
     }
 
+    public static void fixH18BandUInt8(Product product, Product fixedProduct, String bandNameToFix) throws IOException {
+        int width = product.getSceneRasterWidth();
+        int height = product.getSceneRasterHeight();
+        Band bandToFix = product.getBand(bandNameToFix);
+        Band fixedBand = new Band(bandNameToFix, bandToFix.getDataType(), width, product.getSceneRasterHeight());
+        fixedBand.setData(new ProductData.UByte(width * height));
+        fixedProduct.addBand(fixedBand);
+        int[] pixels = new int[width];
+        int[] fixedPixels = new int[width];
+        for (int y = 0; y < product.getSceneRasterHeight(); y++) {
+            bandToFix.readPixels(0, y, width, 1, pixels);
+            System.arraycopy(pixels, 0, fixedPixels, pixels.length / 2, pixels.length / 2);
+            System.arraycopy(pixels, pixels.length / 2, fixedPixels, 0, pixels.length / 2);
+            fixedBand.setPixels(0, y, width, 1, fixedPixels);
+        }
+    }
+
     public static void fixH18BandByte(Product product, Product fixedProduct, String bandNameToFix) throws IOException {
         int width = product.getSceneRasterWidth();
         int height = product.getSceneRasterHeight();

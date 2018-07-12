@@ -54,14 +54,36 @@ public class AbstractGridMapperTest {
 
     @Test
     public void testIsValidPixel() throws Exception {
-        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 1));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 7));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 10));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 14));
-        assertTrue(AbstractGridMapper.isValidPixel(1, 31, 15));
-        assertFalse(AbstractGridMapper.isValidPixel(32, 60, 16));
-        assertFalse(AbstractGridMapper.isValidPixel(32, 60, 22));
-        assertFalse(AbstractGridMapper.isValidPixel(32, 60, 31));
+        AbstractGridMapper gridMapper = new AbstractGridMapper(-1, -1) {
+            @Override
+            protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels) {
+                return 0;
+            }
+
+            @Override
+            protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+
+            }
+
+            @Override
+            protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
+
+            }
+
+            @Override
+            protected boolean maskUnmappablePixels() {
+                return false;
+            }
+        };
+
+        assertTrue(gridMapper.isValidPixel(1, 31, 1));
+        assertTrue(gridMapper.isValidPixel(1, 31, 7));
+        assertTrue(gridMapper.isValidPixel(1, 31, 10));
+        assertTrue(gridMapper.isValidPixel(1, 31, 14));
+        assertTrue(gridMapper.isValidPixel(1, 31, 15));
+        assertFalse(gridMapper.isValidPixel(32, 60, 16));
+        assertFalse(gridMapper.isValidPixel(32, 60, 22));
+        assertFalse(gridMapper.isValidPixel(32, 60, 31));
     }
 
     @Test

@@ -90,6 +90,7 @@ public class S2Strategy implements SensorStrategy {
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
         jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry.toString());
+        jobConfig.set("calvalus.sensor", "MSI");
 
         int lastDayOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atEndOfMonth().getDayOfMonth();
         String minDate = String.format("%s-%s-01", year, month);
@@ -192,7 +193,7 @@ public class S2Strategy implements SensorStrategy {
         protected void configureJob(Job job) throws IOException {
             job.setInputFormatClass(PatternBasedInputFormat.class);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2016.nc");
-            job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv1.0");
+            job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv1.1");
             PixelProductArea area = new S2Strategy().getArea(job.getConfiguration().get("calvalus.area"));
             String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_AREA_STRING, areaString);
@@ -210,82 +211,136 @@ public class S2Strategy implements SensorStrategy {
     private static class S2PixelProductAreaProvider implements PixelProductAreaProvider {
 
         private enum S2PixelProductArea {
-            h34v17(170, 90, 175, 95),
-            h35v17(175, 90, 180, 95),
-            h37v17(185, 90, 190, 95),
-            h38v17(190, 90, 195, 95),
-            h39v17(195, 90, 200, 95),
-            h40v17(200, 90, 205, 95),
-            h41v17(205, 90, 210, 95),
-            h42v17(210, 90, 215, 95),
-            h43v17(215, 90, 220, 95),
-            h44v17(220, 90, 225, 95),
-            h45v17(225, 90, 230, 95),
-            h33v16(165, 95, 170, 100),
-            h34v16(170, 95, 175, 100),
-            h35v16(175, 95, 180, 100),
-            h36v16(180, 95, 185, 100),
-            h37v16(185, 95, 190, 100),
-            h38v16(190, 95, 195, 100),
-            h39v16(195, 95, 200, 100),
-            h40v16(200, 95, 205, 100),
-            h41v16(205, 95, 210, 100),
-            h42v16(210, 95, 215, 100),
-            h43v16(215, 95, 220, 100),
-            h44v16(220, 95, 225, 100),
-            h45v16(225, 95, 230, 100),
-            h31v15(155, 100, 160, 105),
-            h32v15(160, 100, 165, 105),
-            h33v15(165, 100, 170, 105),
-            h34v15(170, 100, 175, 105),
-            h35v15(175, 100, 180, 105),
-            h36v15(180, 100, 185, 105),
-            h37v15(185, 100, 190, 105),
-            h38v15(190, 100, 195, 105),
-            h39v15(195, 100, 200, 105),
-            h40v15(200, 100, 205, 105),
-            h41v15(205, 100, 210, 105),
-            h42v15(210, 100, 215, 105),
-            h43v15(215, 100, 220, 105),
-            h44v15(220, 100, 225, 105),
-            h45v15(225, 100, 230, 105),
-            h31v14(155, 105, 160, 110),
-            h32v14(160, 105, 165, 110),
-            h33v14(165, 105, 170, 110),
-            h34v14(170, 105, 175, 110),
-            h35v14(175, 105, 180, 110),
-            h36v14(180, 105, 185, 110),
-            h37v14(185, 105, 190, 110),
-            h38v14(190, 105, 195, 110),
-            h39v14(195, 105, 200, 110),
-            h40v14(200, 105, 205, 110),
-            h41v14(205, 105, 210, 110),
-            h42v14(210, 105, 215, 110),
-            h43v14(215, 105, 220, 110),
-            h44v14(220, 105, 225, 110),
-            h32v13(160, 110, 165, 115),
-            h33v13(165, 110, 170, 115),
-            h34v13(170, 110, 175, 115),
-            h35v13(175, 110, 180, 115),
-            h36v13(180, 110, 185, 115),
-            h37v13(185, 110, 190, 115),
-            h38v13(190, 110, 195, 115),
-            h39v13(195, 110, 200, 115),
-            h40v13(200, 110, 205, 115),
-            h41v13(205, 110, 210, 115),
-            h42v13(210, 110, 215, 115),
-            h43v13(215, 110, 220, 115);
+            h31v14,
+            h31v15,
+            h32v13,
+            h32v14,
+            h32v15,
+            h33v13,
+            h33v14,
+            h33v15,
+            h33v16,
+            h34v13,
+            h34v14,
+            h34v15,
+            h34v16,
+            h34v17,
+            h35v13,
+            h35v14,
+            h35v15,
+            h35v16,
+            h35v17,
+            h36v13,
+            h36v14,
+            h36v15,
+            h36v16,
+            h37v13,
+            h37v14,
+            h37v15,
+            h37v16,
+            h37v17,
+            h37v18,
+            h38v13,
+            h38v14,
+            h38v15,
+            h38v16,
+            h38v17,
+            h38v18,
+            h38v19,
+            h38v20,
+            h38v21,
+            h38v22,
+            h39v13,
+            h39v14,
+            h39v15,
+            h39v16,
+            h39v17,
+            h39v18,
+            h39v19,
+            h39v20,
+            h39v21,
+            h39v22,
+            h39v23,
+            h39v24,
+            h40v13,
+            h40v14,
+            h40v15,
+            h40v16,
+            h40v17,
+            h40v18,
+            h40v19,
+            h40v20,
+            h40v21,
+            h40v22,
+            h40v23,
+            h40v24,
+            h41v13,
+            h41v14,
+            h41v15,
+            h41v16,
+            h41v17,
+            h41v18,
+            h41v19,
+            h41v20,
+            h41v21,
+            h41v22,
+            h41v23,
+            h41v24,
+            h42v13,
+            h42v14,
+            h42v15,
+            h42v16,
+            h42v17,
+            h42v18,
+            h42v19,
+            h42v20,
+            h42v21,
+            h42v22,
+            h42v23,
+            h42v24,
+            h43v13,
+            h43v14,
+            h43v15,
+            h43v16,
+            h43v17,
+            h43v18,
+            h43v19,
+            h43v20,
+            h43v21,
+            h43v22,
+            h44v14,
+            h44v15,
+            h44v16,
+            h44v17,
+            h44v18,
+            h44v20,
+            h44v21,
+            h44v22,
+            h44v23,
+            h45v15,
+            h45v16,
+            h45v17,
+            h45v20,
+            h45v21,
+            h45v22,
+            h45v23,
+            h46v15,
+            h46v16,
+            h46v20,
+            h46v21;
 
             final int left;
             final int top;
             final int right;
             final int bottom;
 
-            S2PixelProductArea(int left, int top, int right, int bottom) {
-                this.left = left;
-                this.top = top;
-                this.right = right;
-                this.bottom = bottom;
+            S2PixelProductArea() {
+                int h = Integer.parseInt(name().substring(1, 3));
+                int v = Integer.parseInt(name().substring(4, 6));
+                this.left = h * 5;
+                this.top = 180 - (v * 5);
+                this.right = (h +1 )* 5;
+                this.bottom = 180 - ((v + 1) * 5);
             }
 
         }

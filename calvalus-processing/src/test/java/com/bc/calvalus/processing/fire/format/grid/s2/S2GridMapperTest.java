@@ -103,8 +103,8 @@ public class S2GridMapperTest {
 
         for (int i = 0; i < data.burnedPixels.length; i++) {
             areas += data.areas[i];
-            int doy = data.burnedPixels[i];
-            if (AbstractGridMapper.isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+            float doy = data.burnedPixels[i];
+            if (new S2GridMapper().isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
                 numberOfBurnedPixels++;
             }
         }

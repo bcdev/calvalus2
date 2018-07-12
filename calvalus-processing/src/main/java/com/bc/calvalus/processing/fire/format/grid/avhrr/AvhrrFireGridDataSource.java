@@ -51,15 +51,15 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
             for (int sourceX = 0; sourceX < data.height; sourceX++) {
 
                 int sourcePixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
-                float sourcePC = getFloatPixelValue(pc, "", sourcePixelIndex);
+                float sourcePC = getFloatPixelValue(pc, "porcentage", sourcePixelIndex);
                 int targetPixelIndex = sourceY * 5 + sourceX;
                 if (isValidPixel(sourcePC)) {
-                    float sourceCL = getFloatPixelValue(cl, "", sourcePixelIndex);
+                    float sourceCL = getFloatPixelValue(cl, "confidence", sourcePixelIndex);
                     sourceCL = scale(sourceCL);
                     data.burnedPixels[targetPixelIndex] = sourcePC;
                     data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 }
-                int sourceLC = getIntPixelValue(lc, "", sourcePixelIndex);
+                int sourceLC = getIntPixelValue(lc, "landcover", sourcePixelIndex);
                 data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[targetPixelIndex] = sourceLC;
 
@@ -102,25 +102,17 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
     }
 
     private float scale(float cl) {
-        if (cl < 0.01) {
-            return 0F;
-        } else if (cl < 0.02) {
-            return 0.1F;
-        } else if (cl < 0.03) {
-            return 0.2F;
-        } else if (cl < 0.04) {
-            return 0.3F;
-        } else if (cl < 0.05) {
-            return 0.4F;
-        } else if (cl <= 0.14) {
+        if (cl < 5) {
+            return 0.0F;
+        } else if (cl <= 14) {
             return 0.5F;
-        } else if (cl <= 0.23) {
+        } else if (cl <= 23) {
             return 0.6F;
-        } else if (cl <= 0.32) {
+        } else if (cl <= 32) {
             return 0.7F;
-        } else if (cl <= 0.41) {
+        } else if (cl <= 41) {
             return 0.8F;
-        } else if (cl <= 0.50) {
+        } else if (cl <= 50) {
             return 0.9F;
         } else {
             return 1.0F;

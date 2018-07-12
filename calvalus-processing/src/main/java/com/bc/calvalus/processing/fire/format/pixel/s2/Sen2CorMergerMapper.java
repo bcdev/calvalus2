@@ -45,7 +45,7 @@ public class Sen2CorMergerMapper extends Mapper {
             }
             CalvalusLogger.getLogger().info("Filling data for tile " + tile + " in month " + month);
 
-            String sen2corInputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-pre/2016/" + month + "/.*/.*" + tile + ".tif";
+            String sen2corInputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-pre/2016/" + month + "/.*/.*" + tile + ".*tif";
             FileStatus[] sen2CorFileStatuses = getFileStatuses(sen2corInputPathPattern, conf);
 
             List<Product> products = new ArrayList<>();
@@ -75,7 +75,7 @@ public class Sen2CorMergerMapper extends Mapper {
                     "not( v == 0" +
                             " or v == 8" +
                             " or v == 9" +
-                            " or v == 10 ) ? 0 : -1";
+                            " or v == 10 ) ? 0 : 998";
 
             for (int i = 1; i < products.size(); i++) {
                 clause = "not ($sourceProduct.{i}.v == 0" +
@@ -106,8 +106,10 @@ public class Sen2CorMergerMapper extends Mapper {
     }
 
     private void writeNotObservedProduct(Configuration conf, String tile, String month) throws IOException {
+        CalvalusLogger.getLogger().info("No Sen2Cor data for tile " + tile + " in month " + month + " found, writing non-observed BA.");
+
         Product notObservedProduct = new Product("BA-T" + tile + "-2016" + month + "01T000001", "Non-observed-BA", 5490, 5490);
-        notObservedProduct.addBand("JD", "998");
+        notObservedProduct.addBand("JD", "999");
         notObservedProduct.addBand("CL", "0");
 
         FileStatus[] fileStatuses = new FileStatus[0];

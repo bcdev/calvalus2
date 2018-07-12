@@ -73,10 +73,9 @@ public class ModisGridMapper extends AbstractGridMapper {
                     Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
                     ProductUtils.copyGeoCoding(p, temp);
                     CommonUtils.fixH18Band(p, temp, "classification");
-                    CommonUtils.fixH18BandByte(p, temp, "numObs1");
-                    CommonUtils.fixH18BandByte(p, temp, "numObs2");
+                    CommonUtils.fixH18BandByte(p, temp, "numObs");
                     if (p.containsBand("uncertainty")) {
-                        CommonUtils.fixH18Band(p, temp, "uncertainty");
+                        CommonUtils.fixH18BandUInt8(p, temp, "uncertainty");
                     }
                     p = temp;
                 }

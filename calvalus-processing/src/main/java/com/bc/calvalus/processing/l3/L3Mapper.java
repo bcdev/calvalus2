@@ -96,9 +96,13 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                     Product temp = new Product(product.getName(), product.getProductType(), width, height);
                     ProductUtils.copyGeoCoding(product, temp);
                     CommonUtils.fixH18Band(product, temp, "classification");
-                    CommonUtils.fixH18Band(product, temp, "uncertainty");
+                    CommonUtils.fixH18BandUInt8(product, temp, "uncertainty");
                     product = temp;
                 }
+//                if (product.getProductType().equals("Non-observed-BA")) {
+//                    product.removeBand(product.getBand("JD"));
+//                    product.addBand("JD", "999", ProductData.TYPE_FLOAT32);
+//                }
                 //
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,

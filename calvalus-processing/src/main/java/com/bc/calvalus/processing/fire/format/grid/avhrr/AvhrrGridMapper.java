@@ -42,15 +42,15 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         LOG.info("paths=" + Arrays.toString(paths));
         int tileIndex = Integer.parseInt(paths[3].getName());
 
-        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr.nc"), context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(lcFile);
-
 //        File datesProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
 //        Product datesProduct = reproject(ProductIO.readProduct(datesProductFile));
         File porcProductFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         Product porcProduct = reproject(ProductIO.readProduct(porcProductFile));
         File uncProductFile = CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration());
         Product uncProduct = reproject(ProductIO.readProduct(uncProductFile));
+
+        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr.nc"), context.getConfiguration());
+        Product lcProduct = ProductIO.readProduct(lcFile);
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
@@ -191,7 +191,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
 
     @Override
     public boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
-        return true;
+        return pixel > 0.0;
     }
 
     @Override

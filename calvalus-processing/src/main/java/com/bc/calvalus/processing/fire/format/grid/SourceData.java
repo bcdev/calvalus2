@@ -12,7 +12,7 @@ public class SourceData {
 
     public int width;
     public int height;
-    public int[] burnedPixels;
+    public float[] burnedPixels;
     public double[] areas;
     public int[] lcClasses;
     public boolean[] burnable;
@@ -23,7 +23,7 @@ public class SourceData {
     public SourceData(int width, int height) {
         this.width = width;
         this.height = height;
-        burnedPixels = new int[width * height];
+        burnedPixels = new float[width * height];
         areas = new double[width * height];
         statusPixels = new int[width * height];
         lcClasses = new int[width * height];

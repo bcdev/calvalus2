@@ -39,10 +39,10 @@ public class MerisDataSourceTest {
 
         // center
         SourceData data = dataSource.readPixels(0, 0);
-        int[] expected = {
+        float[] expected = {
                 5000, 5001, 5004, 5005,
         };
-        assertArrayEquals(expected, data.burnedPixels);
+        assertArrayEquals(expected, data.burnedPixels, 1E-5F);
     }
 
     @Test
@@ -52,16 +52,16 @@ public class MerisDataSourceTest {
         dataSource.setDoyLastOfMonth(31);
 
         // center larger
-        int[] pixels = dataSource.readPixels(0, 0).burnedPixels;
-        int[] expected = new int[]{
+        float[] pixels = dataSource.readPixels(0, 0).burnedPixels;
+        float[] expected = new float[]{
                 5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
         };
-        assertArrayEquals(expected, pixels);
+        assertArrayEquals(expected, pixels,1E-5F);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testMake2Dims_failing() throws Exception {
-        GridFormatUtils.make2Dims(new int[]{
+        GridFormatUtils.make2Dims(new float[]{
                 1, 0, 1, 1,
                 0, 1, 0, 1,
                 0, 1, 1, 0
@@ -70,17 +70,17 @@ public class MerisDataSourceTest {
 
     @Test
     public void testMake2Dims() throws Exception {
-        int[][] ints = GridFormatUtils.make2Dims(new int[]{
+        float[][] ints = GridFormatUtils.make2Dims(new float[]{
                 1, 0, 1, 1,
                 0, 1, 0, 1,
                 0, 1, 1, 0,
                 0, 0, 0, 1
         });
 
-        assertArrayEquals(new int[]{1, 0, 1, 1}, ints[0]);
-        assertArrayEquals(new int[]{0, 1, 0, 1}, ints[1]);
-        assertArrayEquals(new int[]{0, 1, 1, 0}, ints[2]);
-        assertArrayEquals(new int[]{0, 0, 0, 1}, ints[3]);
+        assertArrayEquals(new float[]{1, 0, 1, 1}, ints[0], 1E-5F);
+        assertArrayEquals(new float[]{0, 1, 0, 1}, ints[1], 1E-5F);
+        assertArrayEquals(new float[]{0, 1, 1, 0}, ints[2], 1E-5F);
+        assertArrayEquals(new float[]{0, 0, 0, 1}, ints[3], 1E-5F);
     }
 
     @Test

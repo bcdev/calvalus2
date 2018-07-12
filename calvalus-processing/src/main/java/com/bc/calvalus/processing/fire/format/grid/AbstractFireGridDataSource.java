@@ -38,7 +38,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         this.doyLastOfMonth = doyLastOfMonth;
     }
 
-    public int getPatchNumbers(int[][] pixels) {
+    public int getPatchNumbers(float[][] pixels) {
         int patchCount = 0;
         for (int i = 0; i < pixels.length; i++) {
             for (int j = 0; j < pixels[i].length; j++) {
@@ -85,7 +85,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         }
     }
 
-    private boolean clearObjects(int[][] array, int x, int y) {
+    private boolean clearObjects(float[][] array, int x, int y) {
         if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
             return false;
         }
@@ -100,7 +100,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         return false;
     }
 
-    private boolean isBurned(int pixel) {
+    private boolean isBurned(float pixel) {
         if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
             throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
         }

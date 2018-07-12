@@ -48,16 +48,14 @@ class ClImage extends SingleBandedOpImage {
         for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
 
-                int targetCl;
+                float targetCl;
                 float sourceCl = sourceClArray[pixelIndex];
                 sourceCl = clScaler.scaleCl(sourceCl);
-                if (sourceCl > 100) {
-                    sourceCl = 100.0F;
-                }
                 float jdValue = sourceJdArray[pixelIndex];
 
 //                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
                 if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex])) {
+//                if (!LcRemapping.isInBurnableLcClass(lcArray[pixelIndex])) {
                     dest.setSample(x, y, 0, 0);
                     pixelIndex++;
                     continue;
@@ -66,19 +64,22 @@ class ClImage extends SingleBandedOpImage {
                 if (Float.isNaN(jdValue) || jdValue == 999) {
                     PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
                     if (positionAndValue.newPixelIndex != pixelIndex) {
-                        targetCl = (int) sourceClArray[positionAndValue.newPixelIndex];
+                        // valid neighbour has been found, use it
+                        targetCl = sourceClArray[positionAndValue.newPixelIndex];
                     } else {
-                        targetCl = (int) positionAndValue.value;
+                        // no valid neighbour: use 0
+                        targetCl = 0;
                     }
+                    targetCl = clScaler.scaleCl(targetCl);
                 } else {
                     if (jdValue >= 0 && jdValue < 900) {
-                        targetCl = (int) (sourceCl);
+                        targetCl = sourceCl;
                     } else {
                         targetCl = 0;
                     }
                 }
 
-                dest.setSample(x, y, 0, targetCl);
+                dest.setSample(x, y, 0, (int) targetCl);
                 pixelIndex++;
             }
         }

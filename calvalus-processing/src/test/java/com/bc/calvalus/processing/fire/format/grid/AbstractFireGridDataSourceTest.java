@@ -26,7 +26,7 @@ public class AbstractFireGridDataSourceTest {
 
     @Test
     public void testGetPatches_0() throws Exception {
-        int[] pixels = {
+        float[] pixels = {
                 0, 0, 0, 0,
                 0, 0, 0, 0,
                 0, 0, 0, 0,
@@ -37,7 +37,7 @@ public class AbstractFireGridDataSourceTest {
 
     @Test
     public void testGetPatches_1() throws Exception {
-        int[] pixels = {
+        float[] pixels = {
                 0, 0, 0, 1,
                 0, 0, 0, 1,
                 1, 0, 0, 0,
@@ -48,7 +48,7 @@ public class AbstractFireGridDataSourceTest {
 
     @Test
     public void testGetPatches_2() throws Exception {
-        int[] pixels = {
+        float[] pixels = {
                 0, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 1, 1, 0,
@@ -59,7 +59,7 @@ public class AbstractFireGridDataSourceTest {
 
     @Test
     public void testGetPatches_3() throws Exception {
-        int[] pixels = {
+        float[] pixels = {
                 1, 0, 1, 1,
                 0, 1, 0, 1,
                 0, 1, 1, 0,
@@ -70,7 +70,7 @@ public class AbstractFireGridDataSourceTest {
 
     @Test
     public void testGetPatches_Large() throws Exception {
-        int[] pixels = new int[90 * 90];
+        float[] pixels = new float[90 * 90];
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (int) (Math.random() * 2);
         }

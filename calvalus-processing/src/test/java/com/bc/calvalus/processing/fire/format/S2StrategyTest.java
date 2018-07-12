@@ -19,6 +19,27 @@ import static org.junit.Assert.assertEquals;
 public class S2StrategyTest {
 
     @Test
+    public void testAreas() throws Exception {
+        PixelProductArea area = new S2Strategy().getArea("h38v21");
+        assertEquals(190, area.left);
+        assertEquals(195, area.right);
+        assertEquals(75, area.top);
+        assertEquals(70, area.bottom);
+
+//        area = new S2Strategy().getArea("h00v00");
+//        assertEquals(0, area.left);
+//        assertEquals(5, area.right);
+//        assertEquals(180, area.top);
+//        assertEquals(175, area.bottom);
+//
+//        area = new S2Strategy().getArea("h71v35");
+//        assertEquals(355, area.left);
+//        assertEquals(360, area.right);
+//        assertEquals(5, area.top);
+//        assertEquals(0, area.bottom);
+    }
+
+    @Test
     public void testGetInputDatePattern() throws Exception {
         assertEquals("201512", S2Strategy.getInputDatePattern(2015, 12));
         assertEquals("201601", S2Strategy.getInputDatePattern(2016, 1));

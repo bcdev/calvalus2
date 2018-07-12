@@ -142,16 +142,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     }
 
     private float scale(float cl) {
-        if (cl < 0.01) {
-            return 0F;
-        } else if (cl < 0.02) {
-            return 0.1F;
-        } else if (cl < 0.03) {
-            return 0.2F;
-        } else if (cl < 0.04) {
-            return 0.3F;
-        } else if (cl < 0.05) {
-            return 0.4F;
+        if (cl < 0.05) {
+            return 0.0F;
         } else if (cl <= 0.14) {
             return 0.5F;
         } else if (cl <= 0.23) {

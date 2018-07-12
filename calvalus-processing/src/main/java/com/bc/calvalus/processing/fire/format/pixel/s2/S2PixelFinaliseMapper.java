@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.pixel.s2;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
 import org.esa.snap.collocation.CollocateOp;
 import org.esa.snap.collocation.ResamplingType;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 
 public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
@@ -36,6 +37,11 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
                 return 100;
             }
         };
+    }
+
+    @Override
+    protected Band getLcBand(Product lcProduct) {
+        return lcProduct.getBand("band_1");
     }
 
     @Override
