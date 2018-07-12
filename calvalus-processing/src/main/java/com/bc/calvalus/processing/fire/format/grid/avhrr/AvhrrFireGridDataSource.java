@@ -67,7 +67,7 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                     data.statusPixels[targetPixelIndex] = 1;
                 }
 
-                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, 4, 4);
+                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, porcProduct.getSceneRasterWidth(), porcProduct.getSceneRasterHeight());
             }
         }
 

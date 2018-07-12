@@ -102,7 +102,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     protected void prepareTargetProducts(Context context) throws IOException {
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
-        String version = "v5.0";
+        String version = context.getConfiguration().get("calvalus.version", "v5.0");
         Assert.notNull(year, "calvalus.year");
         Assert.notNull(month, "calvalus.month");
 
