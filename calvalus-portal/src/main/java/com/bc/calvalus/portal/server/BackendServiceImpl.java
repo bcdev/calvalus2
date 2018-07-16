@@ -23,14 +23,13 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.AbstractFileSystemService;
-import com.bc.calvalus.inventory.ColorPaletteSet;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
-import com.bc.calvalus.portal.shared.DtoColorPaletteSet;
+import com.bc.calvalus.portal.shared.DtoColorPalette;
 import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
@@ -250,6 +249,29 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public DtoColorPalette[] loadColorPalettes(String filter) throws BackendServiceException {
+        ColorPalettePersistence colorPalettePersistence = new ColorPalettePersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
+        try {
+            DtoColorPalette[] dtoColorPalettes = colorPalettePersistence.loadColorPalettes();
+            LOG.fine("loadColorPalettes returns " + dtoColorPalettes.length);
+            return dtoColorPalettes;
+        } catch (IOException e) {
+            log(e.getMessage(), e);
+            throw new BackendServiceException("Failed to load color palettes: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void storeColorPalettes(DtoColorPalette[] colorPalettes) throws BackendServiceException {
+        ColorPalettePersistence colorPalettePersistence = new ColorPalettePersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
+        try {
+            colorPalettePersistence.storeColorPalettes(colorPalettes);
+        } catch (IOException e) {
+            throw new BackendServiceException("Failed to store color palettes: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public DtoProductSet[] getProductSets(String filter) throws BackendServiceException {
         if (filter.contains("dummy")) {
             filter = filter.replace("dummy", getUserName());
@@ -262,24 +284,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
             LOG.fine("getProductSets returns " + dtoProductSets.length);
             return dtoProductSets;
-        } catch (IOException e) {
-            throw convert(e);
-        }
-    }
-
-    @Override
-    public DtoColorPaletteSet[] getColorPaletteSets(String filter) throws BackendServiceException {
-        if (filter.contains("dummy")) {
-            filter = filter.replace("dummy", getUserName());
-        }
-        try {
-            ColorPaletteSet[] colorPaletteSets = serviceContainer.getColorPaletteService().getColorPaletteSets(getUserName(), filter);
-            DtoColorPaletteSet[] dtoColorPaletteSets = new DtoColorPaletteSet[colorPaletteSets.length];
-            for (int i = 0; i < dtoColorPaletteSets.length; i++) {
-                dtoColorPaletteSets[i] = convert(colorPaletteSets[i]);
-            }
-            LOG.fine("dtoColorPaletteSets returns " + dtoColorPaletteSets.length);
-            return dtoColorPaletteSets;
         } catch (IOException e) {
             throw convert(e);
         }
@@ -728,11 +732,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 productSet.getRegionWKT(),
                 productSet.getBandNames(),
                 productSet.getGeoInventory());
-    }
-
-    private DtoColorPaletteSet convert(ColorPaletteSet colorPaletteSet) {
-        return new DtoColorPaletteSet(colorPaletteSet.getName(),
-                colorPaletteSet.getPath());
     }
 
     private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,

@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoColorPaletteSet;
+import com.bc.calvalus.portal.shared.DtoColorPalette;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
@@ -95,7 +95,7 @@ public class QuicklookParametersForm extends Composite {
     @UiField
     CheckBox legendEnabled;
 
-    private DtoColorPaletteSet[] colorPaletteSet;
+    private DtoColorPalette[] availableColorPalettes;
 
     public QuicklookParametersForm(PortalContext portalContext) {
         this.portal = portalContext;
@@ -137,7 +137,7 @@ public class QuicklookParametersForm extends Composite {
         });
 
         setAvailableImageTypes();
-        setColorPaletteSets();
+        setColorPalettes();
 
         quicklookNone.setValue(true);
         setQuicklookNone();
@@ -217,12 +217,12 @@ public class QuicklookParametersForm extends Composite {
         }
     }
 
-    private void setColorPaletteSets() {
-        this.colorPaletteSet = portal.getColorPaletteSets();
+    private void setColorPalettes() {
+        this.availableColorPalettes = portal.getColorPalettes();
         colorPalette.clear();
         colorPalette.addItem("");
-        for (DtoColorPaletteSet dtoColorPalette : this.colorPaletteSet ) {
-            colorPalette.addItem(dtoColorPalette.getPath());
+        for (DtoColorPalette dtoColorPalette : this.availableColorPalettes ) {
+            colorPalette.addItem(dtoColorPalette.getCpdURL());
         }
         colorPalette.setSelectedIndex(0);
     }
@@ -430,11 +430,11 @@ public class QuicklookParametersForm extends Composite {
 
             // color palette
             String cpdURLValue = getTagValue(dom, "cpdURL");
-            if (cpdURLValue == null || this.colorPaletteSet == null) {
+            if (cpdURLValue == null || this.availableColorPalettes == null) {
                 colorPalette.setSelectedIndex(0);
             } else {
-                for (int i=0; i < this.colorPaletteSet.length; i++ ) {
-                    if( this.colorPaletteSet[i].getPath().equals(cpdURLValue) ) {
+                for (int i=0; i < this.availableColorPalettes.length; i++ ) {
+                    if( this.availableColorPalettes[i].getPath().equals(cpdURLValue) ) {
                         colorPalette.setSelectedIndex(i+1);
                         break;
                     }

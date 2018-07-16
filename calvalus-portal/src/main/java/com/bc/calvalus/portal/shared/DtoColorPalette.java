@@ -19,38 +19,59 @@ package com.bc.calvalus.portal.shared;
 import com.google.gwt.user.client.rpc.IsSerializable;
 
 /**
- * GWT-serializable version of the {@link com.bc.calvalus.inventory.ColorPaletteSet} class.
- *
  * @author Declan
  */
-public class DtoColorPaletteSet implements IsSerializable {
+public class DtoColorPalette implements IsSerializable {
 
     private String name;
-    private String path;
+    private String[] path;
+    private String cpdURL;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
      */
-    public DtoColorPaletteSet() {
+    public DtoColorPalette() {
     }
 
-    public DtoColorPaletteSet(String name, String path) {
+    public DtoColorPalette(String name, String[] path, String cpdURL) {
         if (name == null) {
             throw new NullPointerException("name");
         }
         if (path == null) {
             throw new NullPointerException("path");
         }
+        if (path == null) {
+            throw new NullPointerException("cpdURL");
+        }
         this.name = name;
         this.path = path;
+        this.cpdURL = cpdURL;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getPath() {
+    public String[] getPath() {
         return path;
+    }
+
+    public String getCpdURL() {
+        return cpdURL;
+    }
+
+    public boolean isUserColorPalette() {
+        return path != null && path.length > 0 && "user".equals(path[0]);
+    }
+
+    public String getQualifiedName() {
+        StringBuilder sb = new StringBuilder();
+        for (String pathElement : path) {
+            sb.append(pathElement);
+            sb.append(".");
+        }
+        sb.append(name);
+        return sb.toString();
     }
 
     @Override
@@ -62,12 +83,15 @@ public class DtoColorPaletteSet implements IsSerializable {
             return false;
         }
 
-        DtoColorPaletteSet that = (DtoColorPaletteSet) o;
+        DtoColorPalette that = (DtoColorPalette) o;
 
         if (!name.equals(that.name)) {
             return false;
         }
         if (!path.equals(that.path)) {
+            return false;
+        }
+        if (!path.equals(that.cpdURL)) {
             return false;
         }
         return true;

@@ -17,8 +17,6 @@
 package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.inventory.AbstractFileSystemService;
-import com.bc.calvalus.inventory.ColorPaletteService;
-import com.bc.calvalus.inventory.DefaultColorPaletteService;
 import com.bc.calvalus.inventory.DefaultInventoryService;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.AggregatorDescriptor;
@@ -50,7 +48,6 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
 
         AbstractFileSystemService fileSystemService = new LocalFileSystemService();
         InventoryService inventoryService = new DefaultInventoryService(fileSystemService, "eodata");
-        ColorPaletteService colorPaletteService = new DefaultColorPaletteService(fileSystemService, "auxiliary");
 
         ProcessorDescriptor case2r = new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG", "0.5"),
@@ -158,7 +155,7 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
                                                                     "autoStaging", "false"));
         }
 
-        return new ServiceContainer(productionService, fileSystemService, inventoryService, colorPaletteService, new Configuration());
+        return new ServiceContainer(productionService, fileSystemService, inventoryService, new Configuration());
 
     }
 
