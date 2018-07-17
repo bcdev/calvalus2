@@ -229,7 +229,7 @@ public class QuicklookParametersForm extends Composite {
         colorPalette.clear();
         colorPalette.addItem("");
         for (DtoColorPalette dtoColorPalette : this.availableColorPalettes ) {
-            colorPalette.addItem(dtoColorPalette.getCpdURL());
+            colorPalette.addItem(dtoColorPalette.getQualifiedName(), dtoColorPalette.getCpdURL());
         }
         colorPalette.setSelectedIndex(0);
     }
