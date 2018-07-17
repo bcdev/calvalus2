@@ -126,13 +126,7 @@ public class QuicklookParametersForm extends Composite {
         bandNameListBox.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                int selectedIndex = bandNameListBox.getSelectedIndex();
-                if (selectedIndex == 0) {
-                    bandName.setEnabled(true);
-                } else if (selectedIndex > 0) {
-                    bandName.setValue(bandNameListBox.getValue(selectedIndex));
-                    bandName.setEnabled(false);
-                }
+                bandNameListBoxChangeHandler();
             }
         });
 
@@ -143,7 +137,18 @@ public class QuicklookParametersForm extends Composite {
         setQuicklookNone();
     }
 
+    private void bandNameListBoxChangeHandler() {
+        int selectedIndex = bandNameListBox.getSelectedIndex();
+        if (selectedIndex == 0) {
+          bandName.setEnabled(true);
+        } else if (selectedIndex > 0) {
+          bandName.setValue(bandNameListBox.getValue(selectedIndex));
+          bandName.setEnabled(false);
+        }
+    }
+
     private void setQuicklookNone() {
+        bandNameListBox.setEnabled(false);
         bandName.setEnabled(false);
         colorPalette.setEnabled(false);
 
@@ -164,7 +169,8 @@ public class QuicklookParametersForm extends Composite {
     }
 
     private void setQuicklookSingleBandEnabled() {
-        bandName.setEnabled(true);
+        bandNameListBox.setEnabled(true);
+        bandNameListBoxChangeHandler();
         colorPalette.setEnabled(true);
 
         rgbaExpressionsRedBand.setEnabled(false);
@@ -184,6 +190,7 @@ public class QuicklookParametersForm extends Composite {
     }
 
     private void setQuicklookMultiBandEnabled() {
+        bandNameListBox.setEnabled(false);
         bandName.setEnabled(false);
         colorPalette.setEnabled(false);
 
