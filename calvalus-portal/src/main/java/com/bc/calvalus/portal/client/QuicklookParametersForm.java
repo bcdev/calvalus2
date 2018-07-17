@@ -434,7 +434,7 @@ public class QuicklookParametersForm extends Composite {
                 colorPalette.setSelectedIndex(0);
             } else {
                 for (int i=0; i < this.availableColorPalettes.length; i++ ) {
-                    if( this.availableColorPalettes[i].getPath().equals(cpdURLValue) ) {
+                    if( this.availableColorPalettes[i].getCpdURL().equals(cpdURLValue) ) {
                         colorPalette.setSelectedIndex(i+1);
                         break;
                     }
