@@ -66,14 +66,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     continue;
                 }
                 float baValue = 0.0F;
-                float coverageValue = 0.0F;
+                double coverageValue = 0.0F;
                 double burnableFractionValue = 0.0;
 
                 int numberOfBurnedPixels = 0;
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
-                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel)) {
+                    if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel)) {
                         numberOfBurnedPixels++;
                         double burnedArea = scale(burnedPixel, data.areas[i]);
                         baValue += burnedArea;
@@ -197,7 +197,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected static float getFraction(double value, double area) {
+    public static float getFraction(double value, double area) {
         float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
         if (Float.isNaN(fraction)) {
             fraction = 0.0F;
@@ -209,7 +209,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return area;
     }
 
-    public boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
+    public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
         return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
     }
 

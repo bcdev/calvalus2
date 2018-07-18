@@ -76,14 +76,14 @@ public class AbstractGridMapperTest {
             }
         };
 
-        assertTrue(gridMapper.isValidPixel(1, 31, 1));
-        assertTrue(gridMapper.isValidPixel(1, 31, 7));
-        assertTrue(gridMapper.isValidPixel(1, 31, 10));
-        assertTrue(gridMapper.isValidPixel(1, 31, 14));
-        assertTrue(gridMapper.isValidPixel(1, 31, 15));
-        assertFalse(gridMapper.isValidPixel(32, 60, 16));
-        assertFalse(gridMapper.isValidPixel(32, 60, 22));
-        assertFalse(gridMapper.isValidPixel(32, 60, 31));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 1));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 7));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 10));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 14));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 15));
+        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 16));
+        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 22));
+        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 31));
     }
 
     @Test

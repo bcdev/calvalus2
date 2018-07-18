@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
-import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
@@ -104,7 +103,7 @@ public class S2GridMapperTest {
         for (int i = 0; i < data.burnedPixels.length; i++) {
             areas += data.areas[i];
             float doy = data.burnedPixels[i];
-            if (new S2GridMapper().isValidPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+            if (new S2GridMapper().isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
                 numberOfBurnedPixels++;
             }
         }

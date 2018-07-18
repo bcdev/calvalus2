@@ -32,7 +32,7 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
         if (x == 0) {
-            CalvalusLogger.getLogger().warning("Reading data for line " + (y + 1) + "/80" + " for tile with index " + tileIndex);
+            CalvalusLogger.getLogger().info("Reading data for line " + (y + 1) + "/80" + " for tile with index " + tileIndex);
         }
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
@@ -63,15 +63,15 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[targetPixelIndex] = sourceLC;
 
-                if (sourcePC != -1) { // neither no-data, nor water, nor cloud -> observed pixel
+                if (sourcePC != -1) { // has data or is unburnable -> observed pixel
                     data.statusPixels[targetPixelIndex] = 1;
                 }
 
-                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, porcProduct.getSceneRasterWidth(), porcProduct.getSceneRasterHeight());
+                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourcePixelIndex % porcProduct.getSceneRasterWidth(), sourcePixelIndex / porcProduct.getSceneRasterWidth(), porcProduct.getSceneRasterWidth(), porcProduct.getSceneRasterHeight());
             }
         }
 
-        data.patchCount = 0;
+        data.patchCount = -1;
 
         return data;
     }

@@ -190,7 +190,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    public boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
+    public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
         return pixel > 0.0;
     }
 

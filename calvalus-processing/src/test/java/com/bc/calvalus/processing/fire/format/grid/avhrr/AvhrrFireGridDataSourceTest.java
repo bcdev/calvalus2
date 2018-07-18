@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
+import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.junit.Test;
@@ -98,7 +99,11 @@ public class AvhrrFireGridDataSourceTest {
         Product porcProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage.tif");
         Product uncProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Uncertainty.tif");
         Product lcProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\lc-avhrr.nc");
-        new AvhrrFireGridDataSource(porcProduct, lcProduct, uncProduct, 82).readPixels(0, 0);
+        for (int y = 0; y < 80; y++) {
+            for (int x = 0; x < 80; x++) {
+                SourceData data = new AvhrrFireGridDataSource(porcProduct, lcProduct, uncProduct, 113).readPixels(x, y);
+            }
+        }
     }
 
     @Test
@@ -120,7 +125,7 @@ public class AvhrrFireGridDataSourceTest {
     }
 
 
-    String[] tileyears = new String[] {
+    String[] tileyears = new String[]{
             "h20v01.2015",
             "h20v01.2016",
             "h20v01.2017",

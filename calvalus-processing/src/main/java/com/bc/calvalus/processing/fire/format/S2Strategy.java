@@ -131,7 +131,7 @@ public class S2Strategy implements SensorStrategy {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-        String key = String.format("x%sy%s", pixelProductArea.left, pixelProductArea.top);
+        String key = String.format("x%sy%s", pixelProductArea.left, pixelProductArea.bottom);
         return tiles.getProperty(key);
     }
 
@@ -338,9 +338,9 @@ public class S2Strategy implements SensorStrategy {
                 int h = Integer.parseInt(name().substring(1, 3));
                 int v = Integer.parseInt(name().substring(4, 6));
                 this.left = h * 5;
-                this.top = 180 - (v * 5);
+                this.top = 180 - (v * 5); // v16 --> 100 --> 10
                 this.right = (h +1 )* 5;
-                this.bottom = 180 - ((v + 1) * 5);
+                this.bottom = 180 - ((v + 1) * 5); // v16 --> 95 --> 5
             }
 
         }
