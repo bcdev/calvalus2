@@ -100,7 +100,9 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
         }
 
         Product temp = new Product(resultJD.getName(), resultJD.getProductType(), resultJD.getSceneRasterWidth(), resultJD.getSceneRasterHeight());
-        temp.addBand(resultJD.getBand("JD"));
+        Band originalJDBand = resultJD.getBand("JD");
+        temp.addBand(originalJDBand);
+        resultJD.removeBand(originalJDBand);
 
         VectorDataNode geometryNode = new VectorDataNode("geometry", productFeatures);
         temp.getVectorDataGroup().add(geometryNode);
@@ -108,7 +110,6 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
         temp.getBand("JD").setName("JD_orig");
         temp.addBand("JD", "if geometry then -2 else JD_orig");
 
-        resultJD.removeBand(resultJD.getBand("JD"));
         resultJD.addBand(temp.getBand("JD"));
 
     }
