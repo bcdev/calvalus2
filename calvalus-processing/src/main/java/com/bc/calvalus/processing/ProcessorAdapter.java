@@ -392,7 +392,7 @@ public abstract class ProcessorAdapter {
                 ProductUtils.copyGeoCoding(geoRefProduct, product);
                 return product;
             }
-            if (sensorParam != null && sensorParam.equals("S2")) {
+            if (sensorParam != null && sensorParam.equals("MSI")) {
                 String pathString = getInputPath().toString();
                 if (pathString.endsWith("000001.nc")) {
                     CalvalusLogger.getLogger().info("Fixing product '" + pathString + "'");
