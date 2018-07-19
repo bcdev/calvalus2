@@ -6,10 +6,6 @@ import org.esa.snap.collocation.ResamplingType;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
@@ -103,17 +99,17 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
 //
 //        resultJD.addBand(temp.getBand("JD"));
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes"))))  {
-            br.lines().forEach(
-                    l -> {
-                        int x = Integer.parseInt(l.split(" ")[0]);
-                        int y = Integer.parseInt(l.split(" ")[1]);
-                        resultJD.getBand("JD").setPixelInt(x, y, -2);
-                    }
-            );
-        } catch (IOException e) {
-            throw new IllegalStateException("Programming error, must not come here", e);
-        }
+//        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes"))))  {
+//            br.lines().forEach(
+//                    l -> {
+//                        int x = Integer.parseInt(l.split(" ")[0]);
+//                        int y = Integer.parseInt(l.split(" ")[1]);
+//                        resultJD.getBand("JD").setPixelInt(x, y, -2);
+//                    }
+//            );
+//        } catch (IOException e) {
+//            throw new IllegalStateException("Programming error, must not come here", e);
+//        }
 
     }
 }
