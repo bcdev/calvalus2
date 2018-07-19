@@ -38,7 +38,7 @@ class JdImage extends SingleBandedOpImage {
     @Override
     protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
         if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
-            CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of JD image.");
+            CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of JD image of area '" + area + "'.");
         }
         float[] sourceJdArray = new float[destRect.width * destRect.height];
         float[] sourceClArray = new float[destRect.width * destRect.height];
