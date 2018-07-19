@@ -58,7 +58,7 @@ public class PixelFinaliseMapperTest {
     }
 
     private static void writeSubset(Product lcProduct, Product sourceProduct, int band) throws IOException {
-        Product product = new ModisPixelFinaliseMapper().remap(sourceProduct, "JD", lcProduct, band);
+        Product product = new ModisPixelFinaliseMapper().remap(sourceProduct, "JD", lcProduct, band, "");
         SubsetOp subsetOp = new SubsetOp();
         subsetOp.setParameterDefaultValues();
         subsetOp.setRegion(new Rectangle(10000, 10000, 4000, 4000));
@@ -77,7 +77,7 @@ public class PixelFinaliseMapperTest {
         Product lcProduct = ProductIO.readProduct("D:\\workspace\\temp\\collocate.dim");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
         final File localL3 = new File("D:\\workspace\\temp\\subset_0_of_L3_2016-11-01_2016-11-30.dim");
-        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "wumpel", lcProduct, 0);
+        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "wumpel", lcProduct, 0, "");
 
         ProductIO.writeProduct(product, "C:\\ssd\\test6.nc", "NetCDF4-CF");
     }
