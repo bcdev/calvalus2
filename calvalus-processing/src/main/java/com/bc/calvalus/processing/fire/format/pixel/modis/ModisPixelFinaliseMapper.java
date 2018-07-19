@@ -7,9 +7,14 @@ import org.esa.snap.core.datamodel.Product;
 public class ModisPixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
-    protected Product collocateWithSource(Product lcProduct, Product source) {
+    public Product collocateWithSource(Product lcProduct, Product source) {
         // no reprojection necessary
         return lcProduct;
+    }
+
+    @Override
+    protected String getCalvalusSensor() {
+        return "MODIS";
     }
 
     @Override

@@ -2,11 +2,13 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.S2Strategy;
+import com.bc.calvalus.processing.fire.format.pixel.modis.ModisPixelFinaliseMapper;
 import com.bc.calvalus.processing.fire.format.pixel.s2.S2PixelFinaliseMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,19 +40,31 @@ public class PixelFinaliseMapperTest {
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
 
-        Product lcProduct = ProductIO.readProduct("c:\\ssd\\s2-analysis\\pixel\\2010.nc");
+        Product lcProduct = ProductIO.readProduct("c:\\ssd\\modis-analysis\\pixel\\south_america-2005.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        final File localL3 = new File("C:\\ssd\\s2-analysis\\pixel\\new\\L3_2016-11-01_2016-11-30.nc");
+        final File localL3 = new File("C:\\ssd\\modis-analysis\\pixel\\L3_2003-09-01_2003-09-30.nc");
         Product sourceProduct = ProductIO.readProduct(localL3);
 
-        lcProduct = new S2PixelFinaliseMapper().collocateWithSource(lcProduct, sourceProduct);
+        lcProduct = new ModisPixelFinaliseMapper().collocateWithSource(lcProduct, sourceProduct);
 
-        Product product = new S2PixelFinaliseMapper().remap(sourceProduct, "JD", lcProduct, JD);
-        ProductIO.writeProduct(product, "C:\\ssd\\s2-analysis\\pixel\\test.nc", "NetCDF4-CF");
-        Product clproduct = new S2PixelFinaliseMapper().remap(sourceProduct, "CL", lcProduct, CL);
-        ProductIO.writeProduct(clproduct, "C:\\ssd\\s2-analysis\\pixel\\test-cl.nc", "NetCDF4-CF");
-        Product lcproduct = new S2PixelFinaliseMapper().remap(sourceProduct, "LC", lcProduct, LC);
-        ProductIO.writeProduct(lcproduct, "C:\\ssd\\s2-analysis\\pixel\\test-lc.nc", "NetCDF4-CF");
+        writeSubset(lcProduct, sourceProduct, JD);
+        writeSubset(lcProduct, sourceProduct, CL);
+        writeSubset(lcProduct, sourceProduct, LC);
+//        ProductIO.writeProduct(product, "C:\\ssd\\modis-analysis\\pixel\\test.nc", "NetCDF4-CF");
+//        Product clproduct = new S2PixelFinaliseMapper().remap(sourceProduct, "CL", lcProduct, CL);
+//        ProductIO.writeProduct(clproduct, "C:\\ssd\\modis-analysis\\pixel\\test-cl.nc", "NetCDF4-CF");
+//        Product lcproduct = new S2PixelFinaliseMapper().remap(sourceProduct, "LC", lcProduct, LC);
+//        ProductIO.writeProduct(lcproduct, "C:\\ssd\\modis-analysis\\pixel\\test-lc.nc", "NetCDF4-CF");
+    }
+
+    private static void writeSubset(Product lcProduct, Product sourceProduct, int band) throws IOException {
+        Product product = new ModisPixelFinaliseMapper().remap(sourceProduct, "JD", lcProduct, band);
+        SubsetOp subsetOp = new SubsetOp();
+        subsetOp.setParameterDefaultValues();
+        subsetOp.setRegion(new Rectangle(10000, 10000, 4000, 4000));
+        subsetOp.setSourceProduct(product);
+
+        ProductIO.writeProduct(subsetOp.getTargetProduct(), "C:\\ssd\\modis-analysis\\pixel\\test1" + band + ".nc", "NetCDF4-CF");
     }
 
     @Test
@@ -86,6 +100,11 @@ public class PixelFinaliseMapperTest {
             }
 
             @Override
+            protected String getCalvalusSensor() {
+                return "S2";
+            }
+
+            @Override
             protected Band getLcBand(Product lcProduct) {
                 return lcProduct.getBand("band_1");
             }
@@ -104,7 +123,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
+        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2");
 
         int neighbourValue = (int) positionAndValue.value;
         int newPixelIndex = positionAndValue.newPixelIndex;
@@ -125,7 +144,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(10, neighbourValue);
     }
 
@@ -144,7 +163,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(10, neighbourValue);
     }
 
@@ -160,7 +179,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(10, neighbourValue);
     }
 
@@ -179,7 +198,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(19712, 25344, 256, 256);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(-2, neighbourValue);
     }
 
@@ -197,7 +216,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(10, neighbourValue);
     }
 
@@ -213,7 +232,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(lcArray, 180); // all burnable
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(23, neighbourValue);
     }
 
@@ -234,7 +253,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).value;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2").value;
         assertEquals(24, neighbourValue);
     }
 
@@ -255,7 +274,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(10, 10);
-        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
+        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, "S2");
 
         int neighbourValue = (int) positionAndValue.value;
         int newPixelIndex = positionAndValue.newPixelIndex;
@@ -280,7 +299,7 @@ public class PixelFinaliseMapperTest {
 
 
         final Rectangle destRect = new Rectangle(10, 10);
-        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
+        PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false, "S2");
 
         int neighbourValue = (int) positionAndValue.value;
         int newPixelIndex = positionAndValue.newPixelIndex;

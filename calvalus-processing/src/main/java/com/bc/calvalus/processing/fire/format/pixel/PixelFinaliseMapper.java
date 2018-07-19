@@ -2,9 +2,11 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -64,31 +66,32 @@ public abstract class PixelFinaliseMapper extends Mapper {
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
 
-        String lcPath = context.getConfiguration().get(KEY_LC_PATH);
-        String version = context.getConfiguration().get(KEY_VERSION);
-        String areaString = context.getConfiguration().get(KEY_AREA_STRING); // <nicename>;<left>;<top>;<right>;<bottom>
+        Configuration configuration = context.getConfiguration();
+        String lcPath = configuration.get(KEY_LC_PATH);
+        String version = configuration.get(KEY_VERSION);
+        String areaString = configuration.get(KEY_AREA_STRING); // <nicename>;<left>;<top>;<right>;<bottom>
 
         ProductSplit inputSplit = (ProductSplit) context.getInputSplit();
 
         Path inputSplitLocation = inputSplit.getPath();
         LOG.info("Finalising file '" + inputSplitLocation + "'");
 
-        String year = context.getConfiguration().get("calvalus.year");
-        String month = context.getConfiguration().get("calvalus.month");
-        String template = context.getConfiguration().get("calvalus.sensor").equals("MSI") ? S2_TEMPLATE : MODIS_TEMPLATE;
+        String year = configuration.get("calvalus.year");
+        String month = configuration.get("calvalus.month");
+        String template = configuration.get("calvalus.sensor").equals("MSI") ? S2_TEMPLATE : MODIS_TEMPLATE;
 
         String baseFilename = createBaseFilename(year, month, version, areaString);
 
-        String outputDir = context.getConfiguration().get("calvalus.output.dir");
+        String outputDir = configuration.get("calvalus.output.dir");
         Path tifPath_JD = new Path(outputDir + "/" + baseFilename + "-JD.tif");
         Path tifPath_CL = new Path(outputDir + "/" + baseFilename + "-CL.tif");
         Path tifPath_LC = new Path(outputDir + "/" + baseFilename + "-LC.tif");
-        FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+        FileSystem fileSystem = FileSystem.get(configuration);
 
         Path[] outputPaths = new Path[]{tifPath_JD, tifPath_CL, tifPath_LC};
 
-        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
-        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), context.getConfiguration());
+        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, configuration);
+        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), configuration);
 
         Product source = ProductIO.readProduct(localL3);
 
@@ -99,9 +102,11 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product resultCL = remap(source, baseFilename, lcProduct, CL);
         Product resultLC = remap(source, baseFilename, lcProduct, LC);
 
+        applyFixes(resultJD);
+
         Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
-        FileSystem fs = outputPaths[0].getFileSystem(context.getConfiguration());
+        FileSystem fs = outputPaths[0].getFileSystem(configuration);
         for (int i = 0; i < results.length; i++) {
             CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/" + BAND_TYPES.length + "...");
             Path tifPath = outputPaths[i];
@@ -117,7 +122,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             geotiffWriter.writeProductNodes(result, localFilename);
             geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
             CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
-            FileUtil.copy(new File(localFilename), fs, tifPath, false, context.getConfiguration());
+            FileUtil.copy(new File(localFilename), fs, tifPath, false, configuration);
         }
 
         LOG.info("...done. Creating metadata...");
@@ -127,9 +132,13 @@ public abstract class PixelFinaliseMapper extends Mapper {
             try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
                 fw.write(metadata);
             }
-            FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
+            FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, configuration);
         }
         CalvalusLogger.getLogger().info("...done");
+    }
+
+    protected void applyFixes(Product resultJD) {
+
     }
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
@@ -146,18 +155,20 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Band sourceClBand = source.getBand("CL");
         Band sourceLcBand = getLcBand(lcProduct);
 
+        String sensor = getCalvalusSensor();
+
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand, sensor));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
-                clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler()));
+                clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler(), sensor));
                 break;
             case LC:
                 Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
-                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand, sourceClBand));
+                lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand, sourceClBand, sensor));
                 break;
             default:
                 throw new IllegalArgumentException("Programming error: invalid value '" + band + "' for band.");
@@ -166,6 +177,8 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         return target;
     }
+
+    protected abstract String getCalvalusSensor();
 
     protected abstract Band getLcBand(Product lcProduct);
 
@@ -211,7 +224,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         }
     }
 
-    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD) {
+    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD, String sensor) {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
@@ -234,9 +247,10 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     if (neighbourValue == 998) {
                         isCloudy = true;
                     }
-//                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
-                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemappingS2.isInBurnableLcClass(lcArray[newPixelIndex])) {
-//                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && LcRemapping.isInBurnableLcClass(lcArray[newPixelIndex])) {
+
+                    boolean inBurnableLcClass = isInBurnableLcClass(lcArray[newPixelIndex], sensor);
+
+                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && inBurnableLcClass) {
                         PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
                         if (values.containsKey((int) positionAndValue.value)) {
                             Integer[] v = new Integer[]{values.get((int) positionAndValue.value)[0] + 1, positionAndValue.newPixelIndex};
@@ -273,6 +287,17 @@ public abstract class PixelFinaliseMapper extends Mapper {
             }
         }
         return result;
+    }
+
+    private static boolean isInBurnableLcClass(int sourceLcClass, String sensor) {
+        switch (sensor) {
+            case "S2":
+                return LcRemappingS2.isInBurnableLcClass(sourceLcClass);
+            case "MODIS":
+                return LcRemapping.isInBurnableLcClass(sourceLcClass);
+            default:
+                throw new IllegalStateException("Unknown sensor '" + sensor + "'");
+        }
     }
 
     static class PositionAndValue {

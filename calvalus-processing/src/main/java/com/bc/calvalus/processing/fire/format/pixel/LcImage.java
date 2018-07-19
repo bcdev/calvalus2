@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.ProductData;
@@ -19,12 +20,14 @@ class LcImage extends SingleBandedOpImage {
     private final Band sourceLcBand;
     private final Band sourceJdBand;
     private final Band sourceClBand;
+    private final String sensor;
 
-    LcImage(Band sourceLcBand, Band sourceJdBand, Band sourceClBand) {
+    LcImage(Band sourceLcBand, Band sourceJdBand, Band sourceClBand, String sensor) {
         super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceLcBand = sourceLcBand;
         this.sourceJdBand = sourceJdBand;
         this.sourceClBand = sourceClBand;
+        this.sensor = sensor;
     }
 
     @Override
@@ -55,16 +58,18 @@ class LcImage extends SingleBandedOpImage {
                 int lcValue = lcData[pixelIndex];
                 float sourceCl = sourceClArray[pixelIndex];
 
-//                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
-                if (!LcRemappingS2.isInBurnableLcClass(lcData[pixelIndex])) {
-//                if (!LcRemapping.isInBurnableLcClass(lcData[pixelIndex])) {
-                    if (jdValue > 0) {
+                if (sensor.equals("S2")) {
+                    if (!LcRemappingS2.isInBurnableLcClass(lcData[pixelIndex]) && jdValue > 0) {
+                        jdValue = 0;
+                    }
+                } else {
+                    if (!LcRemapping.isInBurnableLcClass(lcData[pixelIndex]) && jdValue > 0) {
                         jdValue = 0;
                     }
                 }
 
                 if (Float.isNaN(jdValue) || jdValue == 999) {
-                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false);
+                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false, sensor);
                     lcValue = lcData[positionAndValue.newPixelIndex];
                     jdValue = positionAndValue.value;
                     sourceCl = sourceClArray[positionAndValue.newPixelIndex];

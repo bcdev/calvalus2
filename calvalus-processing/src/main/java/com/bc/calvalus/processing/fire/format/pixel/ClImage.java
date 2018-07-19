@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.ProductData;
@@ -20,13 +21,15 @@ class ClImage extends SingleBandedOpImage {
     private final Band sourceJdBand;
     private final Band lcBand;
     private final PixelFinaliseMapper.ClScaler clScaler;
+    private final String sensor;
 
-    ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand, PixelFinaliseMapper.ClScaler clScaler) {
+    ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand, PixelFinaliseMapper.ClScaler clScaler, String sensor) {
         super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceClBand = sourceClBand;
         this.sourceJdBand = sourceJdBand;
         this.lcBand = lcBand;
         this.clScaler = clScaler;
+        this.sensor = sensor;
     }
 
     @Override
@@ -49,20 +52,26 @@ class ClImage extends SingleBandedOpImage {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
 
                 float targetCl;
-                float sourceCl = sourceClArray[pixelIndex];
-                sourceCl = clScaler.scaleCl(sourceCl);
-                float jdValue = sourceJdArray[pixelIndex];
+                float sourceCl = sourceClArray[pixelIndex]; // NaN
+                sourceCl = clScaler.scaleCl(sourceCl); // NaN
+                float jdValue = sourceJdArray[pixelIndex];  // NaN
 
-//                if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex])) {
-//                if (!LcRemapping.isInBurnableLcClass(lcArray[pixelIndex])) {
-                    dest.setSample(x, y, 0, 0);
-                    pixelIndex++;
-                    continue;
+                if (sensor.equals("S2")) {
+                    if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex])) {
+                        dest.setSample(x, y, 0, 0);
+                        pixelIndex++;
+                        continue;
+                    }
+                } else {
+                    if (!LcRemapping.isInBurnableLcClass(lcArray[pixelIndex])) {
+                        dest.setSample(x, y, 0, 0);
+                        pixelIndex++;
+                        continue;
+                    }
                 }
 
                 if (Float.isNaN(jdValue) || jdValue == 999) {
-                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
+                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false, sensor);
                     if (positionAndValue.newPixelIndex != pixelIndex) {
                         // valid neighbour has been found, use it
                         targetCl = sourceClArray[positionAndValue.newPixelIndex];

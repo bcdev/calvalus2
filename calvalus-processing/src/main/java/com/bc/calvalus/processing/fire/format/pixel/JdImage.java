@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.PixelPos;
@@ -19,13 +20,15 @@ class JdImage extends SingleBandedOpImage {
 
     private final Band sourceJdBand;
     private final Band lcBand;
+    private final String sensor;
     private final Band sourceClBand;
 
-    JdImage(Band sourceJdBand, Band sourceClBand, Band lcBand) {
+    JdImage(Band sourceJdBand, Band sourceClBand, Band lcBand, String sensor) {
         super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceJdBand = sourceJdBand;
         this.sourceClBand = sourceClBand;
         this.lcBand = lcBand;
+        this.sensor = sensor;
     }
 
     @Override
@@ -54,19 +57,17 @@ class JdImage extends SingleBandedOpImage {
                 float sourceCl = sourceClArray[pixelIndex];
                 int sourceLcClass = lcArray[pixelIndex];
 
+                boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
+                sourceJd = checkForBurnability(sourceJd, sourceLcClass, notCloudy, sensor);
+
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {
-                    PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
+                    PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, sensor);
                     sourceJd = neighbourValue.value;
                     sourceCl = sourceClArray[neighbourValue.newPixelIndex];
                     sourceLcClass = lcArray[neighbourValue.newPixelIndex];
                 }
 
-                boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
-//                if (!LcRemappingS2.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex])) && notCloudy) {
-                if (!LcRemappingS2.isInBurnableLcClass(sourceLcClass) && notCloudy) {
-//                if (!LcRemapping.isInBurnableLcClass(sourceLcClass) && notCloudy) {
-                    sourceJd = -2;
-                }
+                sourceJd = checkForBurnability(sourceJd, sourceLcClass, notCloudy, sensor);
 
                 int targetJd;
                 if (sourceJd < 900) {
@@ -83,6 +84,25 @@ class JdImage extends SingleBandedOpImage {
 
                 pixelIndex++;
             }
+        }
+    }
+
+    private static float checkForBurnability(float sourceJd, int sourceLcClass, boolean notCloudy, String sensor) {
+        switch (sensor) {
+            case "S2":
+                if (!LcRemappingS2.isInBurnableLcClass(sourceLcClass) && notCloudy) {
+                    return -2;
+                } else {
+                    return sourceJd;
+                }
+            case "MODIS":
+                if (!LcRemapping.isInBurnableLcClass(sourceLcClass) && notCloudy) {
+                    return -2;
+                } else {
+                    return sourceJd;
+                }
+            default:
+                throw new IllegalStateException("Unknown sensor '" + sensor + "'");
         }
     }
 

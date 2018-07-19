@@ -20,6 +20,7 @@ public class LcRemappingS2Test {
         assertFalse(LcRemappingS2.isInBurnableLcClass(8));
         assertFalse(LcRemappingS2.isInBurnableLcClass(9));
         assertFalse(LcRemappingS2.isInBurnableLcClass(10));
+        assertFalse(LcRemapping.isInBurnableLcClass(LcRemapping.remap(210)));
 
 
     }
