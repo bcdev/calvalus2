@@ -392,6 +392,7 @@ public class PixelFinaliseMapperTest {
 
     @Test
     public void name() throws Exception {
-        System.out.println(new Rectangle(25344, 100000, 256, 256).contains(25347, 100001));
+        System.out.println(new Polygon(new int[]{11170, 11170, 8942, 9888, 10141, 10087, 10277, 11147}, new int[]{20407, 27816, 27816, 25623, 24088, 23259, 21898, 20271}, 8)
+        .contains(new Point(10705, 22652)));
     }
 }

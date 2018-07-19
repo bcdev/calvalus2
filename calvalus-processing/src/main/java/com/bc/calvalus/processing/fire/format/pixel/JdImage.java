@@ -91,7 +91,6 @@ class JdImage extends SingleBandedOpImage {
                     Point point = new Point(x, y);
                     if (geometry.contains(point)) {
                         int sample = dest.getSample(x, y, 0);
-                        CalvalusLogger.getLogger().info("masking pixel " + x + ", " + y + " with original value " + sample);
                         if (sample != -1) {
                             dest.setSample(x, y, 0, -2);
                         }
