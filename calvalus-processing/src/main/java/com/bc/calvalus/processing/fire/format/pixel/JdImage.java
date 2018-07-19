@@ -13,9 +13,7 @@ import javax.media.jai.PlanarImage;
 import java.awt.*;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.NumberFormat;
 
 class JdImage extends SingleBandedOpImage {
@@ -52,6 +50,9 @@ class JdImage extends SingleBandedOpImage {
         }
         int pixelIndex = 0;
         PixelPos pixelPos = new PixelPos();
+
+        Polygon geometry = new Polygon(new int[]{11170, 11170, 8942, 9888, 10141, 10087, 10277, 11147}, new int[]{20407, 27816, 27816, 25623, 24088, 23259, 21898, 20271}, 8);
+
         for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
                 pixelPos.x = x;
@@ -86,33 +87,20 @@ class JdImage extends SingleBandedOpImage {
 
                 dest.setSample(x, y, 0, targetJd);
 
+                if ("h38v20".equals(area)) {
+                    Point point = new Point(x, y);
+                    if (geometry.contains(point)) {
+                        int sample = dest.getSample(x, y, 0);
+                        CalvalusLogger.getLogger().info("masking pixel " + x + ", " + y + " with original value " + sample);
+                        if (sample != -1) {
+                            dest.setSample(x, y, 0, -2);
+                        }
+                    }
+                }
+
                 pixelIndex++;
             }
         }
-
-        if ("h38v20".equals(area)) {
-            CalvalusLogger.getLogger().info("masking out offending area");
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes")))) {
-                br
-                        .lines()
-                        .forEach(
-                                l -> {
-                                    int x = Integer.parseInt(l.split(" ")[0]);
-                                    int y = Integer.parseInt(l.split(" ")[1]);
-                                    if (destRect.contains(x, y)) {
-                                        int sample = dest.getSample(x, y, 0);
-                                        CalvalusLogger.getLogger().info("masking pixel " + x + ", " + y + " with original value " + sample);
-                                        if (sample != -1) {
-                                            dest.setSample(x, y, 0, -2);
-                                        }
-                                    }
-                                }
-                        );
-            } catch (IOException e) {
-                throw new IllegalStateException("Programming error, must not come here", e);
-            }
-        }
-
     }
 
     private static float checkForBurnability(float sourceJd, int sourceLcClass, boolean notCloudy, String sensor) {
