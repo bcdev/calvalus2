@@ -102,8 +102,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product resultCL = remap(source, baseFilename, lcProduct, CL);
         Product resultLC = remap(source, baseFilename, lcProduct, LC);
 
-        applyFixes(resultJD);
-
         Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
         FileSystem fs = outputPaths[0].getFileSystem(configuration);
@@ -135,10 +133,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
             FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, configuration);
         }
         CalvalusLogger.getLogger().info("...done");
-    }
-
-    protected void applyFixes(Product resultJD) {
-
     }
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
