@@ -93,7 +93,9 @@ class JdImage extends SingleBandedOpImage {
                     l -> {
                         int x = Integer.parseInt(l.split(" ")[0]);
                         int y = Integer.parseInt(l.split(" ")[1]);
-                        dest.setSample(x, y, 0, -2);
+                        if (dest.getSample(x, y, 0) != -1) {
+                            dest.setSample(x, y, 0, -2);
+                        }
                     }
             );
         } catch (IOException e) {
