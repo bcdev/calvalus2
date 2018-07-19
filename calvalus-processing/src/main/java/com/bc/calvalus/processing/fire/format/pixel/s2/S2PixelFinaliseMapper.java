@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.pixel.s2;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -94,7 +95,8 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
                 ProgressMonitor.NULL);
 
         if (productFeatures.isEmpty()) {
-            throw new IllegalStateException("The geometry is not contained in the product.");
+            CalvalusLogger.getLogger().info("The geometry is not contained in the product.");
+            return;
         }
 
         Product temp = new Product(resultJD.getName(), resultJD.getProductType(), resultJD.getSceneRasterWidth(), resultJD.getSceneRasterHeight());
