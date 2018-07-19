@@ -88,13 +88,15 @@ class JdImage extends SingleBandedOpImage {
             }
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes"))))  {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes")))) {
             br.lines().forEach(
                     l -> {
                         int x = Integer.parseInt(l.split(" ")[0]);
                         int y = Integer.parseInt(l.split(" ")[1]);
-                        if (dest.getSample(x, y, 0) != -1) {
-                            dest.setSample(x, y, 0, -2);
+                        if (destRect.contains(x, y)) {
+                            if (dest.getSample(x, y, 0) != -1) {
+                                dest.setSample(x, y, 0, -2);
+                            }
                         }
                     }
             );
