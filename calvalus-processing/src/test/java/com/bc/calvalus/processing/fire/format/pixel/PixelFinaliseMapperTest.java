@@ -389,4 +389,9 @@ public class PixelFinaliseMapperTest {
                 });
     }
 
+
+    @Test
+    public void name() throws Exception {
+        System.out.println(new Rectangle(25344, 100000, 256, 256).contains(25347, 100001));
+    }
 }

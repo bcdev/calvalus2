@@ -93,21 +93,16 @@ class JdImage extends SingleBandedOpImage {
         if ("h38v20".equals(area)) {
             CalvalusLogger.getLogger().info("masking out offending area");
             try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes")))) {
-                final int[] c = new int[] {0};
                 br
                         .lines()
                         .forEach(
                                 l -> {
-                                    c[0]++;
                                     int x = Integer.parseInt(l.split(" ")[0]);
                                     int y = Integer.parseInt(l.split(" ")[1]);
-                                    if (c[0] % 1000 == 0) {
-                                        CalvalusLogger.getLogger().info(destRect.toString());
-                                        CalvalusLogger.getLogger().info(x + ", " + y);
-                                        CalvalusLogger.getLogger().info("\n");
-                                    }
                                     if (destRect.contains(x, y)) {
-                                        if (dest.getSample(x, y, 0) != -1) {
+                                        int sample = dest.getSample(x, y, 0);
+                                        CalvalusLogger.getLogger().info("masking pixel " + x + ", " + y + " with original value " + sample);
+                                        if (sample != -1) {
                                             dest.setSample(x, y, 0, -2);
                                         }
                                     }
