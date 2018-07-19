@@ -13,7 +13,9 @@ import javax.media.jai.PlanarImage;
 import java.awt.*;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.NumberFormat;
 
 class JdImage extends SingleBandedOpImage {
@@ -85,6 +87,19 @@ class JdImage extends SingleBandedOpImage {
                 pixelIndex++;
             }
         }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes"))))  {
+            br.lines().forEach(
+                    l -> {
+                        int x = Integer.parseInt(l.split(" ")[0]);
+                        int y = Integer.parseInt(l.split(" ")[1]);
+                        dest.setSample(x, y, 0, -2);
+                    }
+            );
+        } catch (IOException e) {
+            throw new IllegalStateException("Programming error, must not come here", e);
+        }
+
     }
 
     private static float checkForBurnability(float sourceJd, int sourceLcClass, boolean notCloudy, String sensor) {
