@@ -98,9 +98,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product lcProduct = ProductIO.readProduct(localLC);
         lcProduct = collocateWithSource(lcProduct, source);
 
-        Product resultJD = remap(source, baseFilename, lcProduct, JD);
-        Product resultCL = remap(source, baseFilename, lcProduct, CL);
-        Product resultLC = remap(source, baseFilename, lcProduct, LC);
+        Product resultJD = remap(source, baseFilename, lcProduct, JD, areaString.split(";")[1]);
+        Product resultCL = remap(source, baseFilename, lcProduct, CL, null);
+        Product resultLC = remap(source, baseFilename, lcProduct, LC, null);
 
         Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
@@ -137,7 +137,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
 
-    protected Product remap(Product source, String baseFilename, Product lcProduct, int band) throws IOException {
+    protected Product remap(Product source, String baseFilename, Product lcProduct, int band, String area) throws IOException {
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
@@ -154,7 +154,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand, sensor));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand, sensor, area));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);

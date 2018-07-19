@@ -23,14 +23,16 @@ class JdImage extends SingleBandedOpImage {
     private final Band sourceJdBand;
     private final Band lcBand;
     private final String sensor;
+    private final String area;
     private final Band sourceClBand;
 
-    JdImage(Band sourceJdBand, Band sourceClBand, Band lcBand, String sensor) {
+    JdImage(Band sourceJdBand, Band sourceClBand, Band lcBand, String sensor, String area) {
         super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceJdBand = sourceJdBand;
         this.sourceClBand = sourceClBand;
         this.lcBand = lcBand;
         this.sensor = sensor;
+        this.area = area;
     }
 
     @Override
@@ -88,23 +90,32 @@ class JdImage extends SingleBandedOpImage {
             }
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes")))) {
-            br
-                    .lines()
-                    .filter(l -> !"".equals(l))
-                    .forEach(
-                            l -> {
-                                int x = Integer.parseInt(l.split(" ")[0]);
-                                int y = Integer.parseInt(l.split(" ")[1]);
-                                if (destRect.contains(x, y)) {
-                                    if (dest.getSample(x, y, 0) != -1) {
-                                        dest.setSample(x, y, 0, -2);
+        if ("h38v20".equals(area)) {
+            CalvalusLogger.getLogger().info("masking out offending area");
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("pixelposes")))) {
+                final int[] c = new int[] {0};
+                br
+                        .lines()
+                        .forEach(
+                                l -> {
+                                    c[0]++;
+                                    int x = Integer.parseInt(l.split(" ")[0]);
+                                    int y = Integer.parseInt(l.split(" ")[1]);
+                                    if (c[0] % 1000 == 0) {
+                                        CalvalusLogger.getLogger().info(destRect.toString());
+                                        CalvalusLogger.getLogger().info(x + ", " + y);
+                                        CalvalusLogger.getLogger().info("\n");
+                                    }
+                                    if (destRect.contains(x, y)) {
+                                        if (dest.getSample(x, y, 0) != -1) {
+                                            dest.setSample(x, y, 0, -2);
+                                        }
                                     }
                                 }
-                            }
-                    );
-        } catch (IOException e) {
-            throw new IllegalStateException("Programming error, must not come here", e);
+                        );
+            } catch (IOException e) {
+                throw new IllegalStateException("Programming error, must not come here", e);
+            }
         }
 
     }
