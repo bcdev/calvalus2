@@ -15,6 +15,8 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.text.NumberFormat;
 
+import static com.bc.calvalus.processing.fire.format.CommonUtils.checkForBurnability;
+
 class LcImage extends SingleBandedOpImage {
 
     private final Band sourceLcBand;
@@ -44,9 +46,9 @@ class LcImage extends SingleBandedOpImage {
             throw new IllegalStateException(e);
         }
 
-        int[] lcData = new int[destRect.width * destRect.height];
+        int[] lcArray = new int[destRect.width * destRect.height];
         try {
-            sourceLcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
+            sourceLcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcArray);
             sourceClBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, sourceClArray);
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -55,39 +57,47 @@ class LcImage extends SingleBandedOpImage {
         for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
                 float jdValue = jdArray[pixelIndex];
-                int lcValue = lcData[pixelIndex];
-                float sourceCl = sourceClArray[pixelIndex];
+                int lcValue = lcArray[pixelIndex];
 
                 if (sensor.equals("S2")) {
-                    if (!LcRemappingS2.isInBurnableLcClass(lcData[pixelIndex]) && jdValue > 0) {
-                        jdValue = 0;
+                    if (!LcRemappingS2.isInBurnableLcClass(lcValue)) {
+                        dest.setSample(x, y, 0, 0);
+                        pixelIndex++;
+                        continue;
                     }
                 } else {
-                    if (!LcRemapping.isInBurnableLcClass(lcData[pixelIndex]) && jdValue > 0) {
-                        jdValue = 0;
+                    if (!LcRemapping.isInBurnableLcClass(lcValue)) {
+                        dest.setSample(x, y, 0, 0);
+                        pixelIndex++;
+                        continue;
                     }
                 }
 
                 if (Float.isNaN(jdValue) || jdValue == 999) {
-                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false, sensor);
-                    lcValue = lcData[positionAndValue.newPixelIndex];
-                    jdValue = positionAndValue.value;
-                    sourceCl = sourceClArray[positionAndValue.newPixelIndex];
+                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(jdArray, lcArray, pixelIndex, destRect.width, false, sensor);
+                    if (positionAndValue.newPixelIndex != pixelIndex) {
+                        // valid neighbour has been found, use it
+                        jdValue = jdArray[positionAndValue.newPixelIndex];
+                        lcValue = lcArray[positionAndValue.newPixelIndex];
+                    } else {
+                        // no valid neighbour: JD will be -1 or -2, so set 0
+                        lcValue = 0;
+                    }
                 }
 
-                if (jdValue <= 0 || jdValue >= 997) {
-                    lcValue = 0;
-                }
+                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
+                jdValue = checkForBurnability(jdValue, lcValue, notCloudy, sensor);
 
-                if (sourceCl < 0.05) {
-                    lcValue = 0;
+                if (jdValue <= 0 || jdValue > 900) {
+                    // -> not burned for sure
+                    dest.setSample(x, y, 0, 0);
+                    pixelIndex++;
+                    continue;
                 }
-
-//                dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
-                // need to fix this in case S2 LC map is used
 
                 dest.setSample(x, y, 0, lcValue);
                 pixelIndex++;
+
             }
         }
     }

@@ -15,6 +15,8 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.text.NumberFormat;
 
+import static com.bc.calvalus.processing.fire.format.CommonUtils.checkForBurnability;
+
 class ClImage extends SingleBandedOpImage {
 
     private final Band sourceClBand;
@@ -51,10 +53,10 @@ class ClImage extends SingleBandedOpImage {
         for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
 
-                float targetCl;
-                float sourceCl = sourceClArray[pixelIndex]; // NaN
-                sourceCl = clScaler.scaleCl(sourceCl); // NaN
-                float jdValue = sourceJdArray[pixelIndex];  // NaN
+                float sourceCl = sourceClArray[pixelIndex];
+                float targetCl = clScaler.scaleCl(sourceCl);
+                int sourceLcClass = lcArray[pixelIndex];
+                float jdValue = sourceJdArray[pixelIndex];
 
                 if (sensor.equals("S2")) {
                     if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex])) {
@@ -75,17 +77,27 @@ class ClImage extends SingleBandedOpImage {
                     if (positionAndValue.newPixelIndex != pixelIndex) {
                         // valid neighbour has been found, use it
                         targetCl = sourceClArray[positionAndValue.newPixelIndex];
+                        targetCl = clScaler.scaleCl(targetCl);
+                        jdValue = sourceJdArray[positionAndValue.newPixelIndex];
+                        sourceLcClass = lcArray[positionAndValue.newPixelIndex];
                     } else {
-                        // no valid neighbour: use 0
+                        // no valid neighbour: use JD will be -1 or -2, so set 0
                         targetCl = 0;
                     }
-                    targetCl = clScaler.scaleCl(targetCl);
-                } else {
-                    if (jdValue >= 0 && jdValue < 900) {
-                        targetCl = sourceCl;
-                    } else {
-                        targetCl = 0;
-                    }
+                }
+
+                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
+                jdValue = checkForBurnability(jdValue, sourceLcClass, notCloudy, sensor);
+
+                if (jdValue < 0 || jdValue > 900) {
+                    dest.setSample(x, y, 0, (int) targetCl);
+                    pixelIndex++;
+                    continue;
+                }
+
+                if (targetCl == 0 && jdValue != -1 && jdValue != -2) {
+                    // should not come here, but does as algorithm is not 100% perfect
+                    targetCl = 1.0F;
                 }
 
                 dest.setSample(x, y, 0, (int) targetCl);

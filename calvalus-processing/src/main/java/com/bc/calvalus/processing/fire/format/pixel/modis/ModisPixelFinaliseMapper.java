@@ -19,8 +19,23 @@ public class ModisPixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
     protected ClScaler getClScaler() {
-        // no scaling necessary
-        return cl -> cl;
+        return cl -> {
+            if (cl < 5) {
+                return 0;
+            } else if (cl <= 14) {
+                return 50;
+            } else if (cl <= 23) {
+                return 60;
+            } else if (cl <= 32) {
+                return 70;
+            } else if (cl <= 41) {
+                return 80;
+            } else if (cl <= 50) {
+                return 90;
+            } else {
+                return 100;
+            }
+        };
     }
 
     @Override
@@ -30,6 +45,6 @@ public class ModisPixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
     protected Band getLcBand(Product lcProduct) {
-        return lcProduct.getBand("lccs_class");
+        return lcProduct.getBand("band_1");
     }
 }
