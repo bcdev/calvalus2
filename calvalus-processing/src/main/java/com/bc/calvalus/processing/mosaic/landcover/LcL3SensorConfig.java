@@ -721,7 +721,7 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public int getPeriod() {
-            return 2;
+            return 7;
         }
 
         @Override
