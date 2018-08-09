@@ -90,7 +90,7 @@ public class PixelFinaliseMapperTest {
             }
 
             @Override
-            protected String createBaseFilename(String year, String month, String version, String areaString) {
+            public String createBaseFilename(String year, String month, String version, String areaString) {
                 return "";
             }
 
@@ -335,6 +335,19 @@ public class PixelFinaliseMapperTest {
         }
     }
 
+
+    @Test
+    public void testCreateModisMetadata() throws Exception {
+        String targetDir = "c:\\ssd\\";
+        PixelProductArea area = new GlobalPixelProductAreaProvider().getArea(GlobalPixelProductAreaProvider.GlobalPixelProductArea.SOUTH_AMERICA.name());
+        String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
+        String baseFilename = new ModisPixelFinaliseMapper().createBaseFilename("2010" + "", "01", "FireCCI51", areaString);
+
+        String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.MODIS_TEMPLATE, "2010", "01", "FireCCI51", areaString);
+        try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
+            fw.write(metadata);
+        }
+    }
 
     private static MonthYear[] s2MonthYears() {
         ArrayList<MonthYear> monthYears = new ArrayList<>();

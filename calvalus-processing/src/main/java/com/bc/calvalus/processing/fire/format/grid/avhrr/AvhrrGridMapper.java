@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -74,11 +75,6 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected boolean maskUnmappablePixels() {
-        return false;
-    }
-
-    @Override
     protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
         for (float[] baValues : baInLc) {
@@ -87,6 +83,19 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
         if (lcAreaSumFraction > burnableFraction * 1.05) {
             throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetGridCellIndex + "!");
+        }
+    }
+
+    @Override
+    protected int getLcClassesCount() {
+        return LcRemapping.LC_CLASSES_COUNT;
+    }
+
+    @Override
+    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+        for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
+            boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
+            baInLc.get(currentLcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0F;
         }
     }
 
@@ -190,8 +199,8 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
-        return pixel > 0.0;
+    public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel, boolean isBurnable) {
+        return pixel > 0.0 && isBurnable;
     }
 
     @Override

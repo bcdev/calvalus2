@@ -250,6 +250,7 @@ public class S2Strategy implements SensorStrategy {
             h38v20,
             h38v21,
             h38v22,
+            h38v23,
             h39v13,
             h39v14,
             h39v15,

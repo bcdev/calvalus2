@@ -108,17 +108,17 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
                 if (isValidPixel) {
                     data.burnedPixels[pixelIndex] = sourceJD;
-                    float sourceCL;
-                    if (cl != null) {
-                        sourceCL = getFloatPixelValue(cl, key, pixelIndex);
-                    } else {
-                        sourceCL = 0.0F;
-                    }
-
-                    sourceCL = scale(sourceCL);
-
-                    data.probabilityOfBurn[pixelIndex] = sourceCL;
                 }
+
+                float sourceCL;
+                if (cl != null) {
+                    sourceCL = getFloatPixelValue(cl, key, pixelIndex);
+                } else {
+                    sourceCL = 0.0F;
+                }
+
+                sourceCL = scale(sourceCL);
+                data.probabilityOfBurn[pixelIndex] = sourceCL;
 
                 int sourceLC = getIntPixelValue(lc, key, pixelIndex);
                 data.burnable[pixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
@@ -142,7 +142,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     }
 
     private float scale(float cl) {
-        if (cl < 0.05) {
+        if (cl < 0.05 || cl > 1.0) {
             return 0.0F;
         } else if (cl <= 0.14) {
             return 0.5F;

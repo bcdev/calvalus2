@@ -55,6 +55,17 @@ public class AbstractGridMapperTest {
     @Test
     public void testIsValidPixel() throws Exception {
         AbstractGridMapper gridMapper = new AbstractGridMapper(-1, -1) {
+
+            @Override
+            protected int getLcClassesCount() {
+                return 0;
+            }
+
+            @Override
+            protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+
+            }
+
             @Override
             protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels) {
                 return 0;
@@ -70,20 +81,16 @@ public class AbstractGridMapperTest {
 
             }
 
-            @Override
-            protected boolean maskUnmappablePixels() {
-                return false;
-            }
         };
 
-        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 1));
-        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 7));
-        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 10));
-        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 14));
-        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 15));
-        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 16));
-        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 22));
-        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 31));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 1, true));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 7, true));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 10, true));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 14, true));
+        assertTrue(gridMapper.isActuallyBurnedPixel(1, 31, 15, true));
+        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 16, true));
+        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 22, true));
+        assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 31, true));
     }
 
     @Test

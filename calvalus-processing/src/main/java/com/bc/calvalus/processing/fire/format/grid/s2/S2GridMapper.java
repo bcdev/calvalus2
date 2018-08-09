@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -91,11 +92,6 @@ public class S2GridMapper extends AbstractGridMapper {
         GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, twoDegTile)), gridCells);
-    }
-
-    @Override
-    protected boolean maskUnmappablePixels() {
-        return false;
     }
 
     @Override
@@ -207,5 +203,18 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+    }
+
+    @Override
+    protected int getLcClassesCount() {
+        return 6;
+    }
+
+    @Override
+    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+        boolean inBurnableClass = LcRemappingS2.isInBurnableLcClass(sourceLc);
+        if (sourceLc <= baInLc.size()) {
+            baInLc.get(sourceLc - 1)[targetGridCellIndex] += inBurnableClass ? burnedArea : 0.0F;
+        }
     }
 }

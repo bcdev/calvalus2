@@ -154,7 +154,18 @@ public class ModisStrategy implements SensorStrategy {
             job.setInputFormatClass(PatternBasedInputFormat.class);
             job.setMapperClass(ModisPixelFinaliseMapper.class);
             int year = Integer.parseInt(getJobConfig().get("calvalus.year"));
-            job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + area.toLowerCase() + "_" + (year - 1) + ".nc");
+            int lcYear;
+            if (year <= 2016) {
+                if (year == 2000) {
+                    lcYear = 2000;
+                } else {
+                    lcYear = year - 1;
+                }
+            } else {
+                lcYear = 2015;
+            }
+            String lcPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + area.toLowerCase() + "_" + lcYear + ".nc";
+            job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, lcPath);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv5.1");
             PixelProductArea area = new ModisStrategy().getArea(job.getConfiguration().get("calvalus.area"));
             String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);

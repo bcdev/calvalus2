@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLASSES_COUNT;
-
 /**
  * Represents a set of target grid cells; each grid cell value is written into the final grid product.
  *
@@ -18,6 +16,7 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLA
  */
 public class GridCells implements Writable {
 
+    public int lcClassesCount;
     public float[] ba;
     public float[] patchNumber;
     public float[] errors;
@@ -52,6 +51,7 @@ public class GridCells implements Writable {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeInt(lcClassesCount);
         out.writeInt(bandSize);
         for (float v : ba) {
             out.writeFloat((int) v);
@@ -77,12 +77,13 @@ public class GridCells implements Writable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        lcClassesCount = in.readInt();
         int bandSize = in.readInt();
         ba = new float[bandSize];
         patchNumber = new float[bandSize];
         errors = new float[bandSize];
         baInLc = new ArrayList<>();
-        for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
+        for (int lcClass = 0; lcClass < lcClassesCount; lcClass++) {
             baInLc.add(new float[bandSize]);
         }
         coverage = new float[bandSize];

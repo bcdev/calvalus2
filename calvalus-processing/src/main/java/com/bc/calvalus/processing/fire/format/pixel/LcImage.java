@@ -38,7 +38,7 @@ class LcImage extends SingleBandedOpImage {
             CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of LC image.");
         }
         float[] jdArray = new float[destRect.width * destRect.height];
-        float[] sourceClArray = new float[destRect.width * destRect.height];
+        float[] clArray = new float[destRect.width * destRect.height];
 
         try {
             sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(jdArray));
@@ -49,7 +49,7 @@ class LcImage extends SingleBandedOpImage {
         int[] lcArray = new int[destRect.width * destRect.height];
         try {
             sourceLcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcArray);
-            sourceClBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, sourceClArray);
+            sourceClBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, clArray);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -58,6 +58,7 @@ class LcImage extends SingleBandedOpImage {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
                 float jdValue = jdArray[pixelIndex];
                 int lcValue = lcArray[pixelIndex];
+                float clValue = clArray[pixelIndex];
 
                 if (sensor.equals("S2")) {
                     if (!LcRemappingS2.isInBurnableLcClass(lcValue)) {
@@ -79,16 +80,19 @@ class LcImage extends SingleBandedOpImage {
                         // valid neighbour has been found, use it
                         jdValue = jdArray[positionAndValue.newPixelIndex];
                         lcValue = lcArray[positionAndValue.newPixelIndex];
+                        clValue = clArray[positionAndValue.newPixelIndex];
                     } else {
                         // no valid neighbour: JD will be -1 or -2, so set 0
-                        lcValue = 0;
+                        dest.setSample(x, y, 0, 0);
+                        pixelIndex++;
+                        continue;
                     }
                 }
 
-                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
-                jdValue = checkForBurnability(jdValue, lcValue, notCloudy, sensor);
+//                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
+                jdValue = checkForBurnability(jdValue, lcValue, sensor);
 
-                if (jdValue <= 0 || jdValue > 900) {
+                if (jdValue <= 0 || jdValue > 900 || clValue < 0.05F) {
                     // -> not burned for sure
                     dest.setSample(x, y, 0, 0);
                     pixelIndex++;

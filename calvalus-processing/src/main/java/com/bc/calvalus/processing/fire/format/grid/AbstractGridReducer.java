@@ -21,7 +21,6 @@ import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -76,6 +75,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             throw new IOException(e);
         }
     }
+
+    protected abstract void writeVegetationClassNames(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException;
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
@@ -157,44 +158,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(variable, new int[]{0, lcClassIndex, y, x}, values);
     }
 
-    private static void writeVegetationClassNames(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
-        Variable vegetationClass = ncFile.findVariable("vegetation_class_name");
-        List<String> names = new ArrayList<>();
-        names.add("Cropland, rainfed");
-        names.add("Cropland, irrigated or post-flooding");
-        names.add("Mosaic cropland (>50%) / natural vegetation (tree, shrub, herbaceous cover) (<50%)");
-        names.add("Mosaic natural vegetation (tree, shrub, herbaceous cover) (>50%) / cropland (<50%)");
-        names.add("Tree cover, broadleaved, evergreen, closed to open (>15%)");
-        names.add("Tree cover, broadleaved, deciduous, closed to open (>15%)");
-        names.add("Tree cover, needleleaved, evergreen, closed to open (>15%)");
-        names.add("Tree cover, needleleaved, deciduous, closed to open (>15%)");
-        names.add("Tree cover, mixed leaf type (broadleaved and needleleaved)");
-        names.add("Mosaic tree and shrub (>50%) / herbaceous cover (<50%)");
-        names.add("Mosaic herbaceous cover (>50%) / tree and shrub (<50%)");
-        names.add("Shrubland");
-        names.add("Grassland");
-        names.add("Lichens and mosses");
-        names.add("Sparse vegetation (tree, shrub, herbaceous cover) (<15%)");
-        names.add("Tree cover, flooded, fresh or brakish water");
-        names.add("Tree cover, flooded, saline water");
-        names.add("Shrub or herbaceous cover, flooded, fresh/saline/brakish water");
-        for (int i = 0; i < names.size(); i++) {
-            String name = names.get(i);
-            char[] array = name.toCharArray();
-            Array values = Array.factory(DataType.CHAR, new int[]{1, name.length()}, array);
-            ncFile.write(vegetationClass, new int[]{i, 0}, values);
-        }
-    }
-
-    private static void writeVegetationClasses(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
-        Variable vegetationClass = ncFile.findVariable("vegetation_class");
-        int[] array = new int[]{
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130,
-                140, 150, 160, 170, 180
-        };
-        Array values = Array.factory(DataType.INT, new int[]{18}, array);
-        ncFile.write(vegetationClass, values);
-    }
+    protected abstract void writeVegetationClasses(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException;
 
     private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
         Variable timeBnds = ncFile.findVariable("time_bnds");

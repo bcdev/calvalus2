@@ -86,8 +86,8 @@ class ClImage extends SingleBandedOpImage {
                     }
                 }
 
-                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
-                jdValue = checkForBurnability(jdValue, sourceLcClass, notCloudy, sensor);
+//                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
+                jdValue = checkForBurnability(jdValue, sourceLcClass, sensor);
 
                 if (jdValue < 0 || jdValue > 900) {
                     dest.setSample(x, y, 0, (int) targetCl);

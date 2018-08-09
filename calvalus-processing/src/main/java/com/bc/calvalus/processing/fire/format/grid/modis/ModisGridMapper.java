@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -142,11 +143,6 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected boolean maskUnmappablePixels() {
-        return false;
-    }
-
-    @Override
     protected void validate(float burnableAreaFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
         for (float[] baValues : baInLc) {
@@ -155,6 +151,19 @@ public class ModisGridMapper extends AbstractGridMapper {
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
         if (lcAreaSumFraction > burnableAreaFraction * 1.2) {
             throw new IllegalStateException("lcAreaSumFraction (" + lcAreaSumFraction + ") > burnableAreaFraction * 1.2 (" + burnableAreaFraction * 1.2 + ") in first half");
+        }
+    }
+
+    @Override
+    protected int getLcClassesCount() {
+        return LcRemapping.LC_CLASSES_COUNT;
+    }
+
+    @Override
+    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+        for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
+            boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
+            baInLc.get(currentLcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0F;
         }
     }
 

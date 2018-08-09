@@ -13,10 +13,10 @@ import java.util.UUID;
 
 public abstract class NcFileFactory {
 
-    public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
+    public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int lcClassesCount) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
 
-        ncFile.addDimension(null, "vegetation_class", 18);
+        ncFile.addDimension(null, "vegetation_class", lcClassesCount);
         ncFile.addDimension(null, "lat", 720);
         ncFile.addDimension(null, "lon", 1440);
         ncFile.addDimension(null, "nv", 2);

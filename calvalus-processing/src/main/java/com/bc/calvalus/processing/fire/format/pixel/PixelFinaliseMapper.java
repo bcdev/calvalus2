@@ -108,8 +108,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
         for (int i = 0; i < results.length; i++) {
             CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/" + BAND_TYPES.length + "...");
             Path tifPath = outputPaths[i];
+            Path alternativeTifPath = new Path(outputPaths[i].toString().replace("-Formatting", "-Formatting_format"));
 
-            if (fileSystem.exists(tifPath)) {
+            if (fileSystem.exists(tifPath) || fileSystem.exists(alternativeTifPath)) {
                 LOG.info("File '" + tifPath + "' already exists, skipping.");
                 continue;
             }
@@ -178,7 +179,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract ClScaler getClScaler();
 
-    protected abstract String createBaseFilename(String year, String month, String version, String areaString);
+    public abstract String createBaseFilename(String year, String month, String version, String areaString);
 
     static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
         String area = areaString.split(";")[1];
@@ -312,7 +313,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     }
 
-    private static final String MODIS_TEMPLATE = "" +
+    static final String MODIS_TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +
             "        xsi:schemaLocation=\"http://www.isotc211.org/2005/gmd http://schemas.opengis.net/iso/19139/20060504/gmd/gmd.xsd http://www.isotc211.org/2005/gmi http://www.isotc211.org/2005/gmi/gmi.xsd\"" +
@@ -446,7 +447,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    <gmd:identifier>" +
             "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString>${DOI}</gco:CharacterString>" +
+            "                                <gco:CharacterString>doi:10.5285/58f00d8814064b79a0c49662ad3af537</gco:CharacterString>" +
             "                            </gmd:code>" +
             "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +
@@ -492,7 +493,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "the month, or not taken into account in the burned area processing (non burnable). Data type = Byte; Number " +
             "of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover v1.6.1 (LC). N is the " +
+            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover v2.0.7 (LC). N is the " +
             "number of the land cover category in the reference " +
             "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: " +
             "10 = Cropland, rainfed; " +

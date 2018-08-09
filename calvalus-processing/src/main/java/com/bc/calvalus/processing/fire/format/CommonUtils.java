@@ -159,16 +159,16 @@ public class CommonUtils {
         throw new IllegalArgumentException("Illegal year: " + year);
     }
 
-    public static float checkForBurnability(float sourceJd, int sourceLcClass, boolean notCloudy, String sensor) {
+    public static float checkForBurnability(float sourceJd, int sourceLcClass, String sensor) {
         switch (sensor) {
             case "S2":
-                if (!LcRemappingS2.isInBurnableLcClass(sourceLcClass) && notCloudy) {
+                if (!LcRemappingS2.isInBurnableLcClass(sourceLcClass)) {
                     return -2;
                 } else {
                     return sourceJd;
                 }
             case "MODIS":
-                if (!LcRemapping.isInBurnableLcClass(sourceLcClass) && notCloudy) {
+                if (!LcRemapping.isInBurnableLcClass(sourceLcClass)) {
                     return -2;
                 } else {
                     return sourceJd;

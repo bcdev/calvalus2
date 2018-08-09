@@ -2,7 +2,11 @@ package com.bc.calvalus.processing.fire.format.grid.meris;
 
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
 import org.apache.hadoop.mapreduce.Reducer;
+import ucar.ma2.Array;
+import ucar.ma2.DataType;
+import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFileWriter;
+import ucar.nc2.Variable;
 
 import java.io.IOException;
 
@@ -49,13 +53,29 @@ public class MerisGridReducer extends AbstractGridReducer {
     }
 
     @Override
+    protected void writeVegetationClasses(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Variable vegetationClass = ncFile.findVariable("vegetation_class");
+        int[] array = new int[]{
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130,
+                140, 150, 160, 170, 180
+        };
+        Array values = Array.factory(DataType.INT, new int[]{18}, array);
+        ncFile.write(vegetationClass, values);
+    }
+
+    @Override
+    protected void writeVegetationClassNames(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+
+    }
+
+    @Override
     protected String getFilename(String year, String month, String version) {
         return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-f%s.nc", year, month, "01", version);
     }
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return merisNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays);
+        return merisNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18);
     }
 
     @Override

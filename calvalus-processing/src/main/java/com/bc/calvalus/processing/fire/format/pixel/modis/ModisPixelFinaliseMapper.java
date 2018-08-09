@@ -19,27 +19,28 @@ public class ModisPixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
     protected ClScaler getClScaler() {
-        return cl -> {
-            if (cl < 5) {
-                return 0;
-            } else if (cl <= 14) {
-                return 50;
-            } else if (cl <= 23) {
-                return 60;
-            } else if (cl <= 32) {
-                return 70;
-            } else if (cl <= 41) {
-                return 80;
-            } else if (cl <= 50) {
-                return 90;
-            } else {
-                return 100;
-            }
-        };
+        return cl -> cl;
+//        return cl -> {
+//            if (cl < 5) {
+//                return 0;
+//            } else if (cl <= 14) {
+//                return 50;
+//            } else if (cl <= 23) {
+//                return 60;
+//            } else if (cl <= 32) {
+//                return 70;
+//            } else if (cl <= 41) {
+//                return 80;
+//            } else if (cl <= 50) {
+//                return 90;
+//            } else {
+//                return 100;
+//            }
+//        };
     }
 
     @Override
-    protected String createBaseFilename(String year, String month, String version, String areaString) {
+    public String createBaseFilename(String year, String month, String version, String areaString) {
         return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0], version);
     }
 

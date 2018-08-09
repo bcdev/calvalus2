@@ -16,8 +16,9 @@ public class LcRemappingS2 {
             case 6: {
                 return true;
             }
+            default:
+                return false;
         }
-        return false;
     }
 
     public static int remap(int sourceLcClass) {

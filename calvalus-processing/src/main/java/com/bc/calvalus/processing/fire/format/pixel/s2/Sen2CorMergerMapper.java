@@ -99,7 +99,7 @@ public class Sen2CorMergerMapper extends Mapper {
     }
 
     private static void export(Configuration conf, String tile, String month, Product targetProduct) throws IOException {
-        String targetFile = String.format("BA-T%s-2016%s01T000001.nc", tile, month);
+        String targetFile = String.format("BA-T%s-2016%s01T000000.nc", tile, month);
         ProductIO.writeProduct(targetProduct, targetFile, "NetCDF4-CF");
         Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + tile + "/" + targetFile);
         FileUtil.copy(new File(targetFile), FileSystem.get(conf), targetPath, false, conf);
@@ -109,7 +109,7 @@ public class Sen2CorMergerMapper extends Mapper {
         CalvalusLogger.getLogger().info("No Sen2Cor data for tile " + tile + " in month " + month + " found, writing non-observed BA.");
 
         Product notObservedProduct = new Product("BA-T" + tile + "-2016" + month + "01T000001", "Non-observed-BA", 5490, 5490);
-        notObservedProduct.addBand("JD", "999");
+        notObservedProduct.addBand("JD", "998");
         notObservedProduct.addBand("CL", "0");
 
         FileStatus[] fileStatuses = new FileStatus[0];

@@ -392,19 +392,19 @@ public abstract class ProcessorAdapter {
                 ProductUtils.copyGeoCoding(geoRefProduct, product);
                 return product;
             }
-            if (sensorParam != null && sensorParam.equals("MSI")) {
-                String pathString = getInputPath().toString();
-                if (pathString.endsWith("000001.nc")) {
-                    CalvalusLogger.getLogger().info("Fixing product '" + pathString + "'");
-                    Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
-                    Product fixed = new Product(product.getName(), product.getProductType(), product.getSceneRasterWidth(), product.getSceneRasterHeight());
-                    ProductUtils.copyGeoCoding(product, fixed);
-                    ProductUtils.copyMetadata(product, fixed);
-                    fixed.addBand("JD", "998");
-                    fixed.addBand("CL", "0");
-                    return fixed;
-                }
-            }
+//            if (sensorParam != null && sensorParam.equals("MSI")) {
+//                String pathString = getInputPath().toString();
+//                if (pathString.endsWith("000001.nc")) {
+//                    CalvalusLogger.getLogger().info("Fixing product '" + pathString + "'");
+//                    Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+//                    Product fixed = new Product(product.getName(), product.getProductType(), product.getSceneRasterWidth(), product.getSceneRasterHeight());
+//                    ProductUtils.copyGeoCoding(product, fixed);
+//                    ProductUtils.copyMetadata(product, fixed);
+//                    fixed.addBand("JD", "998");
+//                    fixed.addBand("CL", "0");
+//                    return fixed;
+//                }
+//            }
 
             return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
         }

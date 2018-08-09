@@ -103,7 +103,7 @@ public class S2GridMapperTest {
         for (int i = 0; i < data.burnedPixels.length; i++) {
             areas += data.areas[i];
             float doy = data.burnedPixels[i];
-            if (new S2GridMapper().isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, doy)) {
+            if (new S2GridMapper().isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, doy, true)) {
                 numberOfBurnedPixels++;
             }
         }
@@ -294,5 +294,11 @@ public class S2GridMapperTest {
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
         assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1), 1E-6);
+    }
+
+    @Test
+    public void testGetErrorPerPixelRealValues() throws Exception {
+//        double probs = new double[];
+//        new S2GridMapper().getErrorPerPixel(probs, )
     }
 }

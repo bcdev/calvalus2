@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -50,7 +49,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         float[] burnableFraction = new float[targetRasterWidth * targetRasterHeight];
 
         List<float[]> baInLc = new ArrayList<>();
-        for (int c = 0; c < GridFormatUtils.LC_CLASSES_COUNT; c++) {
+        for (int c = 0; c < getLcClassesCount(); c++) {
             float[] baInLcBuffer = new float[targetRasterWidth * targetRasterHeight];
             Arrays.fill(baInLcBuffer, 0);
             baInLc.add(baInLcBuffer);
@@ -73,28 +72,15 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
-                    if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel)) {
+                    if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, data.burnable[i])) {
                         numberOfBurnedPixels++;
                         double burnedArea = scale(burnedPixel, data.areas[i]);
                         baValue += burnedArea;
-                        boolean hasLcClass = false;
-                        for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
-                            boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
-                            baInLc.get(lcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0;
-                            if (inLcClass) {
-                                hasLcClass = true;
-                            }
-                        }
-                        if (!hasLcClass && data.lcClasses[i] != 0) {
-//                            LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
-                            if (maskUnmappablePixels()) {
-                                baValue -= burnedArea;
-                            }
-                        }
+                        addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
                     }
 
                     burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
-                    coverageValue += data.statusPixels[i] == 1 && data.burnable[i] ? data.areas[i] : 0.0F;
+                    coverageValue += (data.statusPixels[i] == 1 && data.burnable[i]) ? data.areas[i] : 0.0;
                     areas[targetGridCellIndex] += data.areas[i];
                     validate(areas[targetGridCellIndex], targetGridCellIndex);
                 }
@@ -115,6 +101,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 targetGridCellIndex++;
                 pm.worked(1);
+
+
+                if (x == 0 && y == 0) {
+                    System.out.println(Arrays.toString(data.probabilityOfBurn));
+                    System.out.println(areas[targetGridCellIndex]);
+                    System.out.println(numberOfBurnedPixels);
+                }
+
             }
         }
 
@@ -124,6 +118,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         validate(ba, areas);
 
         GridCells gridCells = new GridCells();
+        gridCells.lcClassesCount = getLcClassesCount();
         gridCells.bandSize = targetRasterWidth * targetRasterHeight;
         gridCells.setBa(ba);
         gridCells.setPatchNumber(patchNumber);
@@ -135,6 +130,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         pm.done();
         return gridCells;
     }
+
+    protected abstract int getLcClassesCount();
+
+    protected abstract void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc);
 
     public final GridCells computeGridCells(int year, int month) throws IOException {
         return computeGridCells(year, month, ProgressMonitor.NULL);
@@ -154,8 +153,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
     protected abstract void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area);
 
-    protected abstract boolean maskUnmappablePixels();
-
     private static void validate(float[] ba, List<float[]> baInLc) {
         int baCount = (int) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).filter(i -> i != 0).count();
         if (baCount < ba.length * 0.05) {
@@ -172,7 +169,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             CalvalusLogger.getLogger().warning("Math.abs(baSum - baInLcSum) > baSum * 0.05:");
             CalvalusLogger.getLogger().warning("baSum = " + baSum);
             CalvalusLogger.getLogger().warning("baInLcSum " + baInLcSum);
-//            throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
+            throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
         }
     }
 
@@ -209,8 +206,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return area;
     }
 
-    public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel) {
-        return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
+    public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel, boolean isBurnable) {
+        return (pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA) && isBurnable;
     }
 
     public void setDataSource(FireGridDataSource dataSource) {

@@ -61,8 +61,8 @@ class JdImage extends SingleBandedOpImage {
                 float sourceCl = sourceClArray[pixelIndex];
                 int sourceLcClass = lcArray[pixelIndex];
 
-                boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
-                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, notCloudy, sensor);
+//                boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
+                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, sensor);
 
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {
                     PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, sensor);
@@ -71,7 +71,7 @@ class JdImage extends SingleBandedOpImage {
                     sourceLcClass = lcArray[neighbourValue.newPixelIndex];
                 }
 
-                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, notCloudy, sensor);
+                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, sensor);
 
                 int targetJd;
                 if (sourceJd < 900) {
