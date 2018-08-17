@@ -164,7 +164,7 @@ public class ModisStrategy implements SensorStrategy {
             } else {
                 lcYear = 2015;
             }
-            String lcPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + area.toLowerCase() + "_" + lcYear + ".nc";
+            String lcPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7_MODIS.tif";
             job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, lcPath);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv5.1");
             PixelProductArea area = new ModisStrategy().getArea(job.getConfiguration().get("calvalus.area"));

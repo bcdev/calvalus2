@@ -343,7 +343,7 @@ public class PixelFinaliseMapperTest {
         String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
         String baseFilename = new ModisPixelFinaliseMapper().createBaseFilename("2010" + "", "01", "FireCCI51", areaString);
 
-        String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.MODIS_TEMPLATE, "2010", "01", "FireCCI51", areaString);
+        String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.MODIS_TEMPLATE, "2010", "01", "fv5.1", areaString);
         try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
             fw.write(metadata);
         }

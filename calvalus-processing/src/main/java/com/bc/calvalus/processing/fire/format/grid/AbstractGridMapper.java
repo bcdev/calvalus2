@@ -102,13 +102,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 targetGridCellIndex++;
                 pm.worked(1);
 
-
-                if (x == 0 && y == 0) {
-                    System.out.println(Arrays.toString(data.probabilityOfBurn));
-                    System.out.println(areas[targetGridCellIndex]);
-                    System.out.println(numberOfBurnedPixels);
-                }
-
             }
         }
 

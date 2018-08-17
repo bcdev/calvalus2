@@ -90,14 +90,16 @@ class ClImage extends SingleBandedOpImage {
                 jdValue = checkForBurnability(jdValue, sourceLcClass, sensor);
 
                 if (jdValue < 0 || jdValue > 900) {
-                    dest.setSample(x, y, 0, (int) targetCl);
+                    dest.setSample(x, y, 0, 0.0F);
                     pixelIndex++;
                     continue;
                 }
 
-                if (targetCl == 0 && jdValue != -1 && jdValue != -2) {
-                    // should not come here, but does as algorithm is not 100% perfect
-                    targetCl = 1.0F;
+                if (sensor.equals("MODIS")) {
+                    if (targetCl == 0.0F && jdValue != -1 && jdValue != -2 && !Float.isNaN(jdValue)) {
+                        // should not come here, but does as algorithm is not 100% perfect
+                        targetCl = 1.0F;
+                    }
                 }
 
                 dest.setSample(x, y, 0, (int) targetCl);

@@ -57,6 +57,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
     public static final int LC = 2;
 
     private static final int[] BAND_TYPES = new int[]{JD, CL, LC};
+    private Configuration configuration;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -66,7 +67,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
 
-        Configuration configuration = context.getConfiguration();
+        configuration = context.getConfiguration();
         String lcPath = configuration.get(KEY_LC_PATH);
         String version = configuration.get(KEY_VERSION);
         String areaString = configuration.get(KEY_AREA_STRING); // <nicename>;<left>;<top>;<right>;<bottom>
@@ -138,7 +139,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
 
-    protected Product remap(Product source, String baseFilename, Product lcProduct, int band, String area) throws IOException {
+    protected Product remap(Product source, String baseFilename, Product lcProduct, int band, String area) {
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
@@ -155,7 +156,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand, sensor, area));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand, sensor, area, configuration));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
@@ -182,7 +183,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
     public abstract String createBaseFilename(String year, String month, String version, String areaString);
 
     static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
-        String area = areaString.split(";")[1];
+        String area = areaString.split(";")[0];
         String nicename = areaString.split(";")[1];
         String left = areaString.split(";")[2];
         String top = areaString.split(";")[3];
@@ -273,10 +274,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             // all neighbours are NaN or not burnable
 
             if (isJD) {
-                if (isCloudy) {
-                    return new PositionAndValue(pixelIndex, -1);
-                }
-                return new PositionAndValue(pixelIndex, -2);
+                return new PositionAndValue(pixelIndex, -1);
             } else {
                 return new PositionAndValue(pixelIndex, 0);
             }
@@ -412,7 +410,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel MODIS Burned Area product ${REPLACE_WITH_VERSION} – Zone ${zoneId}" +
+            "                        <gco:CharacterString>Fire_cci Pixel MODIS Burned Area product ${REPLACE_WITH_VERSION} – Area ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -433,7 +431,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2017-11-30</gco:Date>" +
+            "                                <gco:Date>2018-09-15</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -468,7 +466,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "<gco:CharacterString>" +
             "#[[" +
             "The product is a set of single-layer GeoTIFF files with the following naming convention: " +
-            "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-${xx.x}[-${layer}].tif. " +
+            "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}[-${layer}].tif. " +
             "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four " +
             "digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to 31. " +
             "For monthly products the date will be set to 01. " +
@@ -476,12 +474,12 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] " +
             "(That is 1 or more digits followed by optional . and another 1 or more digits.). ${layer} is the code for " +
             "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
-            "An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_AFRICA-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
+            "An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.0 available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.2 available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.0022457331 deg  (approx. 250m); " +
-            "Pixel value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned " +
+            "Pixel value = Day of the year, from 1 to 365 (or 366). A value of 0 is included when the pixel is not burned " +
             "in the month; a value of -1 is allocated to pixels that are not observed in the month; a value of -2 is " +
             "allocated to pixels that are not burnable (urban areas, bare areas, water bodies and permanent snow and " +
             "ice). Data type = Integer; Number of layers = 1; Data depth = 16" +
@@ -490,7 +488,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "value = 0 to 100, where the value is the probability in percentage that the pixel is actually burned, as a " +
             "result of the different steps of the burned area classification. The higher the value, the higher the " +
             "confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are not observed in " +
-            "the month, or not taken into account in the burned area processing (non burnable). Data type = Byte; Number " +
+            "the month, or not taken into account in the burned area processing (non-burnable). Data type = Byte; Number " +
             "of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover v2.0.7 (LC). N is the " +
@@ -844,7 +842,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel S2 Burned Area product ${REPLACE_WITH_VERSION} – Zone ${zoneId}" +
+            "                        <gco:CharacterString>Fire_cci Pixel MSI Burned Area product ${REPLACE_WITH_VERSION} – Area ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -865,7 +863,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2017-11-30</gco:Date>" +
+            "                                <gco:Date>2018-09-15</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -903,50 +901,34 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-${xx.x}[-${layer}].tif. " +
             "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four " +
             "digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to 31. " +
-            "For monthly products the date will be set to 01. " +
+            "For monthly products the date is set to 01. " +
             "${Indicative sensor} is MSI. ${Additional Segregator} is the AREA_${TILE_CODE} being the tile code " +
             "described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] " +
             "(That is 1 or more digits followed by optional . and another 1 or more digits.). ${layer} is the code for " +
             "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
             "An example is: 20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_h44v16-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.0 available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.2_PUG-MSI_v1.1" +
+            " available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.0022457331 deg  (approx. 250m); " +
-            "Pixel value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned " +
+            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00017966259deg (approx. 20m); " +
+            "Pixel value = Day of the year, from 1 to 365 (or 366). A value of 0 is included when the pixel is not burned " +
             "in the month; a value of -1 is allocated to pixels that are not observed in the month; a value of -2 is " +
-            "allocated to pixels that are not burnable (urban areas, bare areas, water bodies and permanent snow and " +
-            "ice). Data type = Integer; Number of layers = 1; Data depth = 16" +
+            "allocated to pixels that are not burnable (build up areas, bare areas, , snow and/or ice, open water). " +
+            "Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.0022457331 deg  (approx. 250m); Pixel " +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00017966259deg (approx. 20m); Pixel " +
             "value = 0 to 100, where the value is the probability in percentage that the pixel is actually burned, as a " +
             "result of the different steps of the burned area classification. The higher the value, the higher the " +
             "confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are not observed in " +
             "the month, or not taken into account in the burned area processing (non burnable). Data type = Byte; Number " +
             "of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover v1.6.1 (LC). N is the " +
-            "number of the land cover category in the reference " +
-            "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: " +
-            "10 = Cropland, rainfed; " +
-            "20 = Cropland, irrigated or post-flooding; " +
-            "30 = Mosaic cropland (&gt;50%) / natural vegetation (tree, shrub, herbaceous cover) (&lt;50%); " +
-            "40 = Mosaic natural vegetation (tree, shrub, herbaceous cover) (&gt;50%) / cropland (&lt;50%); " +
-            "50 = Tree cover, broadleaved, evergreen, closed to open (&gt;15%); " +
-            "60 = Tree cover, broadleaved, deciduous, closed to open (&gt;15%); " +
-            "70 = Tree cover, needleleaved, evergreen, closed to open (&gt;15%); " +
-            "80 = Tree cover, needleleaved, deciduous, closed to open (&gt;15%); " +
-            "90 = Tree cover, mixed leaf type (broadleaved and needleleaved); " +
-            "100 = Mosaic tree and shrub (&gt;50%) / herbaceous cover (&lt;50%); " +
-            "110 = Mosaic herbaceous cover (&gt;50%) / tree and shrub (&lt;50%); " +
-            "120 = Shrubland; " +
-            "130 = Grassland; " +
-            "140 = Lichens and mosses; " +
-            "150 = Sparse vegetation (tree, shrub, herbaceous cover) (&lt;15%); " +
-            "160 = Tree cover, flooded, fresh or brackish water; " +
-            "170 = Tree cover, flooded, saline water; " +
-            "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; " +
-            "Pixel Spacing = 0.0022457331 deg  (approx. 250m); Data type = Byte; Number of layers = 1; Data depth = 8" +
+            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI S2 prototype Land Cover map " +
+            "at 20m of Africa 2016. N is the number of the land cover categories in the reference map. It is only valid " +
+            "when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: " +
+            "1 – Trees cover area; 2 – Shrubs cover area; 3 – Grassland; 4 – Cropland; 5 – Vegetation aquatic or regularly flooded; 6 – Lichen Mosses / Sparse vegetation; " +
+            "Pixel Spacing = 0.00017966259deg  (approx. 20m); Data type = Byte; Number of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
@@ -1119,7 +1101,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:spatialResolution>" +
             "                <gmd:MD_Resolution>" +
             "                    <gmd:distance>" +
-            "                        <gco:Distance uom=\"degrees\">0.0022457331</gco:Distance>" +
+            "                        <gco:Distance uom=\"degrees\">0.00017966259</gco:Distance>" +
             "                    </gmd:distance>" +
             "                </gmd:MD_Resolution>" +
             "            </gmd:spatialResolution>" +

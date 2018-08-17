@@ -79,7 +79,7 @@ class LcImage extends SingleBandedOpImage {
                     if (positionAndValue.newPixelIndex != pixelIndex) {
                         // valid neighbour has been found, use it
                         jdValue = jdArray[positionAndValue.newPixelIndex];
-                        lcValue = lcArray[positionAndValue.newPixelIndex];
+                        lcValue = lcArray[pixelIndex]; // use original pixel index to be consistent with original LC image
                         clValue = clArray[positionAndValue.newPixelIndex];
                     } else {
                         // no valid neighbour: JD will be -1 or -2, so set 0
@@ -92,7 +92,7 @@ class LcImage extends SingleBandedOpImage {
 //                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
                 jdValue = checkForBurnability(jdValue, lcValue, sensor);
 
-                if (jdValue <= 0 || jdValue > 900 || clValue < 0.05F) {
+                if (jdValue <= 0 || jdValue > 900) {
                     // -> not burned for sure
                     dest.setSample(x, y, 0, 0);
                     pixelIndex++;
