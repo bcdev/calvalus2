@@ -478,6 +478,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             "PROBAV-1000m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "PROBAV-300m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
+            "PROBAV-333m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MSI-20m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "MSI-10m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
@@ -512,6 +513,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             case "VEGETATION-300m":
             case "PROBAV-1000m":
             case "PROBAV-300m":
+            case "PROBAV-333m":
                 return SeasonalCompositingReducer.PROBA_BANDS;
             case "MSI-20m":
                 return SeasonalCompositingReducer.MSI_BANDS;

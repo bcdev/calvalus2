@@ -463,7 +463,7 @@ public abstract class LcL3SensorConfig {
         }
         @Override
         public String getGroundResolution() {
-            return "300m";
+            return "333m";
         }
 
         @Override
@@ -539,7 +539,7 @@ public abstract class LcL3SensorConfig {
             varIndexes[j++] = getVariableIndex(varCtx, "status");
             for (int i = 0; i < BANDNAMES.length; i++) {
                 String bandSuffix = BANDNAMES[i];
-                varIndexes[j++] = getVariableIndex(varCtx, "sdr_" + bandSuffix);
+                varIndexes[j++] = getVariableIndex(varCtx, /*"sdr_" +*/ bandSuffix);
             }
             varIndexes[j++] = getVariableIndex(varCtx, "ndvi");
             return varIndexes;

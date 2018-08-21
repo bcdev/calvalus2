@@ -162,7 +162,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         } catch (BindingException e) {
             throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
-        final int resolution = mosaicHeight == 972000 ? 20 : mosaicHeight == 64800 ? 300 : mosaicHeight == 16200 ? 1000 : mosaicHeight == 20160 ? 1000 : 19440000 / mosaicHeight;
+        final int resolution = mosaicHeight == 972000 ? 20 : mosaicHeight == 64800 ? 300 : mosaicHeight == 64800 ? 300 : mosaicHeight == 16200 ? 1000 : mosaicHeight == 20160 ? 1000 : mosaicHeight == 60480 ? 333 : 19440000 / mosaicHeight;
         final int numTileRows = "MSI".equals(sensor) || "AGRI".equals(sensor) ? 180*5 : 36;
         final int numTileColumns = 2 * numTileRows;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72*5 = 2700
@@ -186,6 +186,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
          }
 
         final String version = conf.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
+        final double pixelRef = conf.getDouble("calvalus.lc.pixelref", "PROBAV".equals(sensor) ? 0.5 : 0.0);
         final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%dm-P%d%s-%s-%s%s-v%s",
                                                     sensor, resolution,
                                                     "MSI".equals(sensor) || "AGRI".equals(sensor) ? noOfDays : noOfDays / 7, "MSI".equals(sensor) || "AGRI".equals(sensor) ? "D" : "W",
@@ -201,7 +202,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                                      pixelArea.width, pixelArea.height,
                                      -180.0D + pixelSize * (double) pixelArea.x, 90.0D - pixelSize * (double) pixelArea.y,
                                      pixelSize, pixelSize,
-                                     0.0D, 0.0D);
+                                     pixelRef, pixelRef);
             dimapOutput.setSceneGeoCoding(outputGeoCoding);
         } catch (FactoryException | TransformException e) {
             throw new IllegalArgumentException("failed to create CRS geocoding: " + e.getMessage(), e);

@@ -108,7 +108,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
             String tileName = "MSI".equals(sensor) || "AGRI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
             String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "VEGETATION".equals(sensor) ? "PROBA-V S1 TOC V101" : "PROBAV".equals(sensor) ? "PROBA-V S1 TOC V101" : "MSI".equals(sensor) || "AGRI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
-            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "1000m".equals(spatialResolution) ? "0.0133344" : "0.011112";
+            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "333m".equals(spatialResolution) ? "0.002976" : "20m".equals(spatialResolution) ? "0.0001852" : "1000m".equals(spatialResolution) ? "0.0133344" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
             // global attributes
@@ -154,7 +154,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                         "SR netcdf-bin 4.1.3 nccopy -k 4");
             } else if ("VEGETATION".equals(sensor) || "PROBAV".equals(sensor)) {
                 writeable.addGlobalAttribute("history", "INPUT PROBA-V S1 TOC\n" +
-                        "Resample resolution="+spatialResolution+",upsampling=Nearest\n" +
+//                        "Resample resolution="+spatialResolution+",upsampling=Nearest\n" +
                         "SNAP 7.0-SNAPSHOT\n" +
                         "SR Calvalus 2.15-SNAPSHOT LCL3\n" +
                         "SR SNAP 7.0\n" +
