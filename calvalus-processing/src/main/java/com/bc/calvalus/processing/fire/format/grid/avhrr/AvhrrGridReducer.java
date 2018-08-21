@@ -35,7 +35,7 @@ public class AvhrrGridReducer extends AbstractGridReducer {
     }
 
     @Override
-    protected void writeVegetationClassNames(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void writeVegetationClassNames(NetcdfFileWriter ncFile) {
 
     }
 
@@ -55,7 +55,7 @@ public class AvhrrGridReducer extends AbstractGridReducer {
         if (month.length() < 2) {
             month = "0" + month;
         }
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-AVHRR-LTDR-f%s.nc", year, month, "01", version);
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-AVHRR-LTDR-fv%s.nc", year, month, "01", version);
     }
 
     @Override

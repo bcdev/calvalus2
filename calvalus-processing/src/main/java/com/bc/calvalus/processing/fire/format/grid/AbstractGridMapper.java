@@ -91,7 +91,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
                 validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
 
-                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], numberOfBurnedPixels);
+                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], numberOfBurnedPixels, baValue);
 
                 for (int i = 0; i < errors.length; i++) {
                     if (ba[i] < 0.00001) {
@@ -140,7 +140,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, float burnedArea);
 
     protected abstract void predict(float[] ba, double[] areas, float[] originalErrors);
 

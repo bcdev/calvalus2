@@ -107,7 +107,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels, float burnedArea) {
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (p < 0) {

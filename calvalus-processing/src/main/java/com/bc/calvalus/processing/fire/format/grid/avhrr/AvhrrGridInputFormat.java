@@ -48,15 +48,6 @@ public class AvhrrGridInputFormat extends InputFormat {
         collocateOp.setSlaveProduct(subsetOp.getTargetProduct());
         collocateOp.setResamplingType(ResamplingType.NEAREST_NEIGHBOUR);
 
-
-//        ReprojectionOp reprojectionOp2 = new ReprojectionOp();
-//        reprojectionOp2.setSourceProduct(lcProduct);
-//        reprojectionOp2.setParameterDefaultValues();
-//        reprojectionOp2.setParameter("crs", "EPSG:4326");
-//        reprojectionOp2.setParameter("width", "7200");
-//        reprojectionOp2.setParameter("height", "3600");
-//        reprojectionOp2.setParameter("width", "28800");
-//        reprojectionOp2.setParameter("height", "14400");
         ProductIO.writeProduct(collocateOp.getTargetProduct(), "c:\\ssd\\ltdr\\lc.nc", "NetCDF4-CF");
     }
 
@@ -66,7 +57,7 @@ public class AvhrrGridInputFormat extends InputFormat {
         String year = conf.get("calvalus.year");
         String month = conf.get("calvalus.month");
         List<InputSplit> splits = new ArrayList<>(1);
-        String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/avhrr-ba/BA_" + year + "_" + month + "_.*tif";
+        String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/avhrr-ba/BA_" + year + "_" + month + "_.*_WGS.tif";
         FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, conf);
         List<FileStatus> fileStatusList = Arrays.asList(fileStatuses);
         fileStatusList.sort(Comparator.comparing(o -> o.getPath().getName()));
@@ -76,7 +67,7 @@ public class AvhrrGridInputFormat extends InputFormat {
         return splits;
     }
 
-    private void addSplit(List<FileStatus> fileStatuses, List<InputSplit> splits, int index) throws IOException {
+    private void addSplit(List<FileStatus> fileStatuses, List<InputSplit> splits, int index) {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {

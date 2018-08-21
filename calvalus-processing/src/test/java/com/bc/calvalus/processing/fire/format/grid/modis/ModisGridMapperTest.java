@@ -49,7 +49,7 @@ public class ModisGridMapperTest {
             p[i] = p0[i];
         }
 
-        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 0, 2085);
+        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 0, 2085, 0);
         assertEquals(10.0, errorPerPixel, 6.7479032E7);
     }
 }

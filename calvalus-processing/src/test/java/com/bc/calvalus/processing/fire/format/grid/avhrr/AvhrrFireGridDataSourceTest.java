@@ -1,12 +1,18 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
+import org.esa.snap.collocation.CollocateOp;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -95,191 +101,57 @@ public class AvhrrFireGridDataSourceTest {
     }
 
     @Test
+    @Ignore
     public void acceptanceTestGetData() throws Exception {
         Product porcProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage.tif");
         Product uncProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Uncertainty.tif");
         Product lcProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\lc-avhrr.nc");
-        for (int y = 0; y < 80; y++) {
-            for (int x = 0; x < 80; x++) {
-                SourceData data = new AvhrrFireGridDataSource(porcProduct, lcProduct, uncProduct, 113).readPixels(x, y);
+        AvhrrFireGridDataSource source = new AvhrrFireGridDataSource(porcProduct, lcProduct, uncProduct, 81);
+        SourceData data = source.readPixels(15, 3);
+
+        float baValue = 0.0F;
+        double coverageValue = 0.0F;
+        double burnableFractionValue = 0.0;
+
+        int numberOfBurnedPixels = 0;
+
+        for (int i = 0; i < data.burnedPixels.length; i++) {
+            float burnedPixel = data.burnedPixels[i];
+            if (burnedPixel > 0.0 && data.burnable[i]) {
+                numberOfBurnedPixels++;
+                double burnedArea = burnedPixel * data.areas[i];
+                baValue += burnedArea;
+//                addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
             }
+
+            burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
+            coverageValue += (data.statusPixels[i] == 1 && data.burnable[i]) ? data.areas[i] : 0.0;
         }
+
+        System.out.println(baValue);
+
     }
 
     @Test
-    public void name() throws Exception {
-        HashMap<String, Integer> map = new HashMap<>();
+    @Ignore
+    public void writeTestProduct() throws IOException, FactoryException, TransformException {
+        Product product = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage.tif");
+        ReprojectionOp reprojectionOp = new ReprojectionOp();
+        reprojectionOp.setSourceProduct(product);
+        reprojectionOp.setParameterDefaultValues();
+        reprojectionOp.setParameter("crs", "EPSG:4326");
 
-        for (String tileyear : tileyears) {
-            String tile = tileyear.split("\\.")[0];
-            int year = Integer.parseInt(tileyear.split("\\.")[1]);
-            if (!map.containsKey(tile) || map.get(tile) > year) {
-                map.put(tile, year);
-            }
-        }
+        Product product1 = new Product("name", "type", 7200, 3600);
+        product1.addBand("name", "1");
+        product1.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 7200, 3600, -180.0, 90.0, 360.0 / 7200.0, 180.0 / 3600.0));
+        CollocateOp collocateOp = new CollocateOp();
+        collocateOp.setMasterProduct(product1);
+        collocateOp.setSlaveProduct(product);
+        collocateOp.setParameterDefaultValues();
 
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
-            System.out.println(entry.getKey() + ": " + entry.getValue());
-        }
+        Product reprojectedProduct = collocateOp.getTargetProduct();
 
+        ProductIO.writeProduct(reprojectedProduct, "c:\\ssd\\avhrr\\porc-repro2.nc", "NetCDF4-CF");
     }
 
-
-    String[] tileyears = new String[]{
-            "h20v01.2015",
-            "h20v01.2016",
-            "h20v01.2017",
-            "h21v01.2017",
-            "h19v02.2004",
-            "h19v02.2006",
-            "h19v02.2007",
-            "h19v02.2010",
-            "h19v02.2012",
-            "h19v02.2013",
-            "h19v02.2014",
-            "h19v02.2015",
-            "h19v02.2016",
-            "h19v02.2017",
-            "h20v02.2015",
-            "h20v02.2016",
-            "h20v02.2017",
-            "h21v02.2014",
-            "h21v02.2015",
-            "h21v02.2016",
-            "h21v02.2017",
-            "h22v02.2014",
-            "h22v02.2016",
-            "h22v02.2017",
-            "h23v02.2013",
-            "h23v02.2014",
-            "h23v02.2015",
-            "h23v02.2016",
-            "h23v02.2017",
-            "h24v02.2016",
-            "h24v02.2017",
-            "h20v03.2010",
-            "h20v03.2011",
-            "h20v03.2012",
-            "h20v03.2013",
-            "h20v03.2014",
-            "h20v03.2015",
-            "h20v03.2016",
-            "h20v03.2017",
-            "h21v03.2007",
-            "h21v03.2008",
-            "h21v03.2009",
-            "h21v03.2010",
-            "h21v03.2011",
-            "h21v03.2012",
-            "h21v03.2014",
-            "h21v03.2015",
-            "h21v03.2016",
-            "h21v03.2017",
-            "h22v03.2008",
-            "h22v03.2009",
-            "h22v03.2010",
-            "h22v03.2011",
-            "h22v03.2012",
-            "h22v03.2013",
-            "h22v03.2014",
-            "h22v03.2015",
-            "h22v03.2016",
-            "h22v03.2017",
-            "h23v03.2009",
-            "h23v03.2010",
-            "h23v03.2011",
-            "h23v03.2012",
-            "h23v03.2014",
-            "h23v03.2015",
-            "h23v03.2016",
-            "h23v03.2017",
-            "h24v03.2012",
-            "h24v03.2013",
-            "h24v03.2014",
-            "h24v03.2015",
-            "h24v03.2016",
-            "h24v03.2017",
-            "h25v03.2011",
-            "h25v03.2012",
-            "h25v03.2013",
-            "h25v03.2014",
-            "h25v03.2015",
-            "h25v03.2016",
-            "h25v03.2017",
-            "h26v03.2017",
-            "h21v04.2010",
-            "h21v04.2011",
-            "h21v04.2012",
-            "h21v04.2013",
-            "h21v04.2014",
-            "h21v04.2015",
-            "h21v04.2016",
-            "h21v04.2017",
-            "h22v04.2012",
-            "h22v04.2013",
-            "h22v04.2014",
-            "h22v04.2015",
-            "h22v04.2016",
-            "h22v04.2017",
-            "h23v04.2012",
-            "h23v04.2013",
-            "h23v04.2014",
-            "h23v04.2016",
-            "h23v04.2017",
-            "h25v04.2012",
-            "h25v04.2013",
-            "h25v04.2015",
-            "h25v04.2016",
-            "h25v04.2017",
-            "h26v04.2010",
-            "h26v04.2011",
-            "h26v04.2012",
-            "h26v04.2013",
-            "h26v04.2015",
-            "h26v04.2016",
-            "h26v04.2017",
-            "h27v04.2013",
-            "h27v04.2014",
-            "h27v04.2015",
-            "h27v04.2016",
-            "h27v04.2017",
-            "h21v05.2014",
-            "h21v05.2015",
-            "h21v05.2016",
-            "h21v05.2017",
-            "h27v05.2016",
-            "h27v05.2017",
-            "h24v06.2016",
-            "h24v06.2017",
-            "h25v06.2013",
-            "h25v06.2014",
-            "h25v06.2015",
-            "h25v06.2016",
-            "h25v06.2017",
-            "h27v06.2016",
-            "h27v06.2017",
-            "h28v06.2017",
-            "h25v07.2015",
-            "h25v07.2016",
-            "h25v07.2017",
-            "h27v07.2010",
-            "h27v07.2011",
-            "h27v07.2012",
-            "h27v07.2013",
-            "h27v07.2014",
-            "h27v07.2015",
-            "h27v07.2016",
-            "h27v07.2017",
-            "h28v07.2012",
-            "h28v07.2013",
-            "h28v07.2014",
-            "h28v07.2015",
-            "h28v07.2016",
-            "h28v07.2017",
-            "h31v07.2000",
-            "h32v07.2000",
-            "h23v08.2000",
-            "h28v09.2017",
-            "h29v09.2016"
-    };
 }

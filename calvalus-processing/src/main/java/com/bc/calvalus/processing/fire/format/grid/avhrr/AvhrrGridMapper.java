@@ -8,15 +8,20 @@ import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
+import org.esa.snap.collocation.CollocateOp;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Runs the fire AVHRR formatting grid mapper.
@@ -43,15 +48,15 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         LOG.info("paths=" + Arrays.toString(paths));
         int tileIndex = Integer.parseInt(paths[3].getName());
 
-//        File datesProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-//        Product datesProduct = reproject(ProductIO.readProduct(datesProductFile));
         File porcProductFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-        Product porcProduct = reproject(ProductIO.readProduct(porcProductFile));
+        Product porcProduct = ProductIO.readProduct(porcProductFile);
         File uncProductFile = CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration());
-        Product uncProduct = reproject(ProductIO.readProduct(uncProductFile));
+        Product uncProduct = ProductIO.readProduct(uncProductFile);
 
-        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr.nc"), context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(lcFile);
+        String lcYear = year <= 1993 ? "1992" : year >= 2016 ? "2015" : "" + (year - 1);
+
+        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7.tif"), context.getConfiguration());
+        Product lcProduct = reproject(ProductIO.readProduct(lcFile));
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
@@ -67,11 +72,22 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     private Product reproject(Product product) {
-        ReprojectionOp reprojectionOp = new ReprojectionOp();
-        reprojectionOp.setSourceProduct(product);
-        reprojectionOp.setParameterDefaultValues();
-        reprojectionOp.setParameter("crs", "EPSG:4326");
-        return reprojectionOp.getTargetProduct();
+        Product dummyCrsProduct = new Product("dummy", "dummy", 7200, 3600);
+        dummyCrsProduct.addBand("dummy", "1");
+        try {
+            dummyCrsProduct.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 7200, 3600, -180.0, 90.0, 360.0 / 7200.0, 180.0 / 3600.0));
+        } catch (FactoryException | TransformException e) {
+            throw new IllegalStateException("Programming error, see nested exception", e);
+        }
+        CollocateOp collocateOp = new CollocateOp();
+        collocateOp.setMasterProduct(dummyCrsProduct);
+        collocateOp.setSlaveProduct(product);
+        collocateOp.setParameterDefaultValues();
+
+        Product reprojectedProduct = collocateOp.getTargetProduct();
+        reprojectedProduct.removeBand(reprojectedProduct.getBand("dummy_M"));
+        reprojectedProduct.getBand("band_1_S").setName("band_1");
+        return reprojectedProduct;
     }
 
     @Override
@@ -100,98 +116,121 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels) {
-        double sum_pb = 0.0;
-        for (double p : probabilityOfBurn) {
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            sum_pb += p;
-        }
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, float burnedArea) {
+        /*
+        1. Extract the number of pixels of 0.05deg that are classified as burned in the grid cell.
+            It should be just the count of the pixels with value 1 to 366 inside the grid cell.
+            N = count(pixels with JD>0)
+        */
 
-        double S = numberOfBurnedPixels / sum_pb;
-        if (Double.isNaN(S) || Double.isInfinite(S)) {
-            return 0;
+        int N = numberOfBurnedPixels;
+        if (N == 0) {
+            return 0.0F;
         }
-
-        double[] pb_i_star = new double[probabilityOfBurn.length];
-
-        for (int i = 0; i < probabilityOfBurn.length; i++) {
-            double pb_i = probabilityOfBurn[i];
-            if (Double.isNaN(pb_i)) {
-                continue;
-            }
-            if (pb_i > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            pb_i_star[i] = pb_i * S;
-        }
-
-        double checksum = 0.0;
-        for (double v : pb_i_star) {
-            checksum += v;
-        }
-
-        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0005) {
-            throw new IllegalArgumentException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0005", checksum, numberOfBurnedPixels));
-        }
-
-        double var_c = 0.0;
-        int count = 0;
-        for (double p : pb_i_star) {
-            var_c += p * (1 - p);
-//            var_c += Math.abs(p * (1 - p));
-            count++;
-        }
-
-        if (count == 0) {
-            return 0;
-        }
-        if (count == 1) {
-            return 1;
-        }
-
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) averageArea;
+        AtomicReference<Double> n = new AtomicReference<>(0.0);
 
         /*
-        double[] p_b = correct(probabilityOfBurn);
+        2.  Calculate the probability of burn of each pixel as:
+            pb_i = value of confidence level of pixel  / 100
+            (because the confidence level is expressed as %, to transform it to a 0-1 range)
+         */
 
-        double sum_c = 0.0;
-        int count = 0;
-        for (double p : p_b) {
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            var_c += p * (1.0 - p);
-            sum_c += p;
-            count++;
-        }
-        if (count == 0) {
-            return 0;
-        }
-        if (count == 1) {
-            return 1;
+        // TS: no, the confidence value actually is in a 0-1 range, so I skip this step.
+
+        /*
+        3.  Extract the value of CF: as the CF value will be the same in all the pixels within the same grid cell and
+            month, you can just extract the value of 1 pixel, and that will be enough.
+            CF = correction factor of each pixel, indicating the proportion of the area of the pixel actually burned.
+            This value is included in each pixel that is burned, but it is the same for each grid cell and month.
+            It is in the range 0 – 1.
+         */
+
+        // TS: no formula, but I assume: CF = area / burned_area
+
+        double CF = area / burnedArea;
+
+        /*
+        4.  sum_pb: pb_i.sum()*CF
+            (this must be the sum of all the probabilities of all the pixels. Use ALL probability values inside the grid
+             cell, not only the ones corresponding to the pixels that have been burned. I am multiplying CF in this step
+             instead of dividing it in each pixel, as José suggested. Mathematically it is the same, and in this case the
+             value of S will already include the CF correction).
+         */
+
+        double sum_pb = Arrays.stream(probabilityOfBurn).filter(v -> v >= 0).sum();
+
+        sum_pb = sum_pb * CF;
+
+        /*
+        5.  Calculate S:
+            S = N / sum_pb
+         */
+
+        double S = N / sum_pb;
+
+        /*
+        6.  Then for each pixel calculate the corrected probability:
+            pb_i’= pb_i * S   (remember that CF is already applied here)
+         */
+
+        double[] pb_star = new double[(int) Arrays.stream(probabilityOfBurn).filter(d -> d >= 0).count()];
+        final AtomicReference<Integer> targetIndex = new AtomicReference<>(0);
+        Arrays.stream(probabilityOfBurn)
+                .filter(pb_i -> pb_i >= 0)
+                .forEach(
+                        pb_i -> {
+                            pb_star[targetIndex.get()] = pb_i * S;
+                            n.set((n.get() + 1));
+                            targetIndex.set(targetIndex.get() + 1);
+                        }
+                );
+
+        /*
+
+        7.  Verification step: sum(pb_i’) = number_of_burn_pixels/CF .
+         */
+
+        double sum_pb_star = Arrays.stream(pb_star).sum();
+
+        if (Math.abs(sum_pb_star - numberOfBurnedPixels / CF) > 1E5) {
+            LOG.info("" + N);
+            LOG.info("" + CF);
+            LOG.info("" + sum_pb);
+            LOG.info("" + S);
+            LOG.info("" + sum_pb_star);
+
+            throw new IllegalStateException("Error in standard error computation");
         }
 
-        float sqrt = (float) Math.sqrt(var_c * (count / (count - 1.0)));
-        return sqrt * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+        /*
+        8.  For each grid cell:
+            a. var() = (pb_i’ (1-pb_i’)).sum()
+            b. standard_error() = sqrt(var(c) *(n/(n-1)) * A
+         */
 
-        */
+        double var_c = Arrays.stream(pb_star)
+                .map(pb_star_i -> pb_star_i * (1 - pb_star_i))
+                .sum();
+
+        double A = area;
+
+        float returnValue = (float) (Math.sqrt(var_c * (n.get() / (n.get() - 1))) * A);
+
+        if ((burnedArea > 0 && Math.abs(returnValue) < 0) || Float.isNaN(returnValue)) {
+            LOG.info("" + N);
+            LOG.info("" + CF);
+            LOG.info("" + sum_pb);
+            LOG.info("" + S);
+            LOG.info("" + sum_pb_star);
+            LOG.info("" + var_c);
+            LOG.info("" + A);
+            LOG.info("" + n.get());
+            LOG.info(Arrays.toString(probabilityOfBurn));
+            LOG.info(Arrays.toString(pb_star));
+            throw new IllegalStateException("Suspicious error value: " + returnValue);
+        }
+
+        return returnValue;
     }
 
     @Override

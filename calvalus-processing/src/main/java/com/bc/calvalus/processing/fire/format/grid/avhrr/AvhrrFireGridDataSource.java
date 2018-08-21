@@ -45,17 +45,17 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         AreaCalculator areaCalculator = new AreaCalculator(porcProduct.getSceneGeoCoding());
         Band pc = porcProduct.getBand("band_1");
         Band cl = uncProduct.getBand("band_1");
-        Band lc = lcProduct.getBand("lccs_class");
+        Band lc = lcProduct.getBand("band_1");
 
         for (int sourceY = 0; sourceY < data.height; sourceY++) {
-            for (int sourceX = 0; sourceX < data.height; sourceX++) {
+            for (int sourceX = 0; sourceX < data.width; sourceX++) {
 
                 int sourcePixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
+
                 float sourcePC = getFloatPixelValue(pc, "porcentage", sourcePixelIndex);
                 int targetPixelIndex = sourceY * 5 + sourceX;
                 if (isValidPixel(sourcePC)) {
-                    float sourceCL = getFloatPixelValue(cl, "confidence", sourcePixelIndex);
-                    sourceCL = scale(sourceCL);
+                    float sourceCL = getFloatPixelValue(cl, "confidence", sourcePixelIndex) / 100.0F;
                     data.burnedPixels[targetPixelIndex] = sourcePC;
                     data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 }
@@ -63,11 +63,15 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[targetPixelIndex] = sourceLC;
 
-                if (sourcePC != -1) { // has data or is unburnable -> observed pixel
+                if (sourcePC >= 0) { // has data -> observed pixel
                     data.statusPixels[targetPixelIndex] = 1;
                 }
 
-                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourcePixelIndex % porcProduct.getSceneRasterWidth(), sourcePixelIndex / porcProduct.getSceneRasterWidth(), porcProduct.getSceneRasterWidth(), porcProduct.getSceneRasterHeight());
+                int x1 = sourcePixelIndex % porcProduct.getSceneRasterWidth();
+                int y1 = sourcePixelIndex / porcProduct.getSceneRasterWidth();
+                int width = porcProduct.getSceneRasterWidth();
+                int height = porcProduct.getSceneRasterHeight();
+                data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(x1, y1, width, height);
             }
         }
 
@@ -99,24 +103,6 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 + gridXOffset
                 + innerYOffset
                 + innerXOffset;
-    }
-
-    private float scale(float cl) {
-        if (cl < 5) {
-            return 0.0F;
-        } else if (cl <= 14) {
-            return 0.5F;
-        } else if (cl <= 23) {
-            return 0.6F;
-        } else if (cl <= 32) {
-            return 0.7F;
-        } else if (cl <= 41) {
-            return 0.8F;
-        } else if (cl <= 50) {
-            return 0.9F;
-        } else {
-            return 1.0F;
-        }
     }
 
 }
