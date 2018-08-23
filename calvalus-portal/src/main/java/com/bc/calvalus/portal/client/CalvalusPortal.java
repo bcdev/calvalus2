@@ -61,6 +61,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 "vicariousCalibrationView",
                 "matchupComparisonView",
                 "l2ToL3ComparisonView",
+                "qlView",
                 "regionsView",
                 "requestsView",
                 "bundlesView",
@@ -287,6 +288,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             return new OrderMACProductionView(this);
         case "l2ToL3ComparisonView":
             return new OrderL2toL3ProductionView(this);
+        case "qlView":
+            return new OrderQLProductionView(this);
         case "regionsView":
             return new ManageRegionsView(this);
         case "bundlesView":

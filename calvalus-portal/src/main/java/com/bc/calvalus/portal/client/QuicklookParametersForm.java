@@ -234,15 +234,15 @@ public class QuicklookParametersForm extends Composite {
         colorPalette.setSelectedIndex(0);
     }
 
-    public void setProcessorVariables(String... processorVariables) {
+    public void setBandNames(String... bandNames) {
         bandNameListBox.clear();
         bandNameListBox.addItem("<custom>");
         bandNameListBox.setSelectedIndex(0);
-        if (processorVariables == null)
+        if (bandNames == null)
             return;
 
-        for (String processorVariable : processorVariables) {
-            bandNameListBox.addItem(processorVariable);
+        for (String bandName : bandNames) {
+            bandNameListBox.addItem(bandName);
         }
     }
 
