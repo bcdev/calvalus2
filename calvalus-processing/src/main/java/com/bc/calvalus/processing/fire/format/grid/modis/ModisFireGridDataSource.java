@@ -62,8 +62,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             Band jd = product.getBand("classification");
             Band cl = product.getBand("uncertainty");
-            Band numbObsFirstHalf = product.getBand("numObs1");
-            Band numbObsSecondHalf = product.getBand("numObs2");
+            Band numbObs = product.getBand("numObs1");
             Band lc = lcProduct.getBand("lccs_class");
 
             TreeSet<String> sourcePixelPoses = new TreeSet<>((o1, o2) -> {
@@ -103,10 +102,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
-                int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, tile, pixelIndex);
-                int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, tile, pixelIndex);
-                data.statusPixels[pixelIndex] = remap(sourceStatusFirstHalf, data.statusPixels[pixelIndex]);
-                data.statusPixels[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixels[pixelIndex]);
+                int sourceStatus = getIntPixelValue(numbObs, tile, pixelIndex);
+                data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
 
                 data.areas[pixelIndex] = MODIS_AREA_SIZE;
             }
