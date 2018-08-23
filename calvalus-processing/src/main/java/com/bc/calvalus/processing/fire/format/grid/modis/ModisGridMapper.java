@@ -62,7 +62,6 @@ public class ModisGridMapper extends AbstractGridMapper {
                 Product product = new Product(paths[i].getName(), "dummy", 4800, 4800);
                 product.addBand("classification", "0", ProductData.TYPE_INT16);
                 product.addBand("numObs1", "3", ProductData.TYPE_UINT8);
-                product.addBand("numObs2", "3", ProductData.TYPE_UINT8);
                 sourceProducts[productIndex] = product;
             } else {
                 File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
@@ -74,7 +73,7 @@ public class ModisGridMapper extends AbstractGridMapper {
                     Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
                     ProductUtils.copyGeoCoding(p, temp);
                     CommonUtils.fixH18Band(p, temp, "classification");
-                    CommonUtils.fixH18BandByte(p, temp, "numObs");
+                    CommonUtils.fixH18BandByte(p, temp, "numObs1");
                     if (p.containsBand("uncertainty")) {
                         CommonUtils.fixH18BandUInt8(p, temp, "uncertainty");
                     }
