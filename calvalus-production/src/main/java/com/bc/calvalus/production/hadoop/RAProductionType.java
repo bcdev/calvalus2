@@ -75,7 +75,6 @@ public class RAProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String[] raConfigXmlAndRegion = getRAConfigXmlAndRegion(productionRequest);
 
-        productionRequest.getInteger("periodLength"); // test, if set
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, null);
         if (dateRanges.size() == 0) {
             throw new ProductionException("No time ranges specified.");
