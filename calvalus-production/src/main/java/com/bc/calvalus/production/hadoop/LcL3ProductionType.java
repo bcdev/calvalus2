@@ -34,7 +34,6 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.core.datamodel.ProductData;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -167,6 +166,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             }
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("calvalus.lc.resolution", resolution);
+            jobConfigSr.set("spatialResolution", spatialResolution);
             //jobConfigSr.set("mapred.job.priority", "NORMAL");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " SR", jobConfigSr));
