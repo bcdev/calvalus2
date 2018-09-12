@@ -27,15 +27,20 @@ public class ModisLCSplitter {
     public static void main(String[] args) throws IOException {
         FileSystem fileSystem = FileSystems.getDefault();
 
-        String modisInputPath = "C:\\ssd\\modis-reference";
+        String modisRefPath = "d:\\workspace\\fire-cci\\modis-for-lc";
         String outputPath = "D:\\workspace\\fire-cci\\splitted-lc-data\\modis";
 
-        String[] years = {"2000", "2005", "2010"};
+        List<String> years = new ArrayList<>();
+        for (int y = 2000; y < 2016; y++) {
+            years.add("" + y);
+
+        }
         List<Runnable> tasks = new ArrayList<>();
 
         for (String year : years) {
-            Path lcInputPath = fileSystem.getPath("D:\\workspace\\fire-cci\\lc-data-to-split", "ESACCI-LC-L4-LCCS-Map-300m-P5Y-" + year + "-v1.6.1.nc");
+            Path lcInputPath = fileSystem.getPath("C:\\ssd\\lc4modis\\", "ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + year + "-v2.0.7_MODIS.tif");
             Product lcInputProduct = ProductIO.readProduct(lcInputPath.toFile());
+            lcInputProduct.getBand("band_1").setName("lccs_class");
             ReprojectionOp reprojectionOp = new ReprojectionOp();
             File wktFile = new File(ModisLCSplitter.class.getResource("modis-wkt").getPath());
             reprojectionOp.setParameter("wktFile", wktFile);
@@ -50,20 +55,9 @@ public class ModisLCSplitter {
             resamplingOp.setParameterDefaultValues();
             resamplingOp.setSourceProduct(lcProduct);
 
-            String[] tiles = new String[]{
-//                    "h08v08", "h08v09", "h09v08", "h09v09", "h10v10", "h11v08", "h11v09", "h11v10", "h11v11", "h11v12", "h12v08", "h12v09", "h12v10", "h12v11", "h12v12", "h13v08", "h13v09", "h13v10", "h13v11", "h13v12", "h13v14", "h14v09", "h14v10", "h14v11", "h14v14"
-                    "h15v01"
-            };
-
-            Files.list(Paths.get(modisInputPath)).filter(path -> path.toString().endsWith(".hdf")).filter((Path path) -> {
-                for (String tile : tiles) {
-                    if (path.toString().contains(tile)) {
-                        return true;
-                    }
-                }
-                return false;
-            }).forEach(
-                    path -> tasks.add(() -> {
+            Files.list(Paths.get(modisRefPath)).filter(path -> path.toString().endsWith(".hdf")).forEach(
+//                    path -> tasks.add(() -> {
+                    path -> {
                         try {
                             Product reference = ProductIO.readProduct(path.toFile());
                             String tile = reference.getName();
@@ -74,6 +68,8 @@ public class ModisLCSplitter {
                                 System.out.println("Already existing tile: " + tile);
                                 return;
                             }
+
+                            System.out.println("Running " + tile + "/" + year);
 
                             SubsetOp subsetOp = new SubsetOp();
                             subsetOp.setRegion(new Rectangle(x * 4800, y * 4800, 4800, 4800));
@@ -87,8 +83,7 @@ public class ModisLCSplitter {
                         } catch (IOException e) {
                             throw new IllegalStateException(e);
                         }
-                    })
-            );
+                    });
         }
 
         ExecutorService exec = Executors.newFixedThreadPool(1);

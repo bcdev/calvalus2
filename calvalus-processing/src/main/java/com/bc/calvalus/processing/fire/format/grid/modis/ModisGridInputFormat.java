@@ -81,7 +81,7 @@ public class ModisGridInputFormat extends InputFormat {
                 }
                 Collections.addAll(fileStatuses, elements);
             }
-            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.lcYear(Integer.parseInt(year)), targetCell, inputTiles, tilesWithBurnedData);
+            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.modisLcYear(Integer.parseInt(year)), targetCell, inputTiles, tilesWithBurnedData);
         }
 
         if (Boolean.parseBoolean(conf.get("calvalus.onlyCheck", "true"))) {

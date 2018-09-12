@@ -95,9 +95,9 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
+    protected void validate(float burnableFraction, List<double[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
-        for (float[] baValues : baInLc) {
+        for (double[] baValues : baInLc) {
             lcAreaSum += baValues[targetGridCellIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
@@ -107,7 +107,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels, float burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels, double burnedArea) {
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (p < 0) {
@@ -202,7 +202,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+    protected void predict(double[] ba, double[] areas, float[] originalErrors) {
     }
 
     @Override
@@ -211,7 +211,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+    protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
         boolean inBurnableClass = LcRemappingS2.isInBurnableLcClass(sourceLc);
         if (sourceLc <= baInLc.size()) {
             baInLc.get(sourceLc - 1)[targetGridCellIndex] += inBurnableClass ? burnedArea : 0.0F;

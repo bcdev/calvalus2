@@ -225,7 +225,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
         int[] yDirections = new int[]{-1, 0, 1};
 
         SortedMap<Integer, Integer[]> values = new TreeMap<>();
-        boolean isCloudy = false;
 
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
@@ -240,9 +239,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
                         continue;
                     }
                     float neighbourValue = jdData[newPixelIndex];
-                    if (neighbourValue == 998) {
-                        isCloudy = true;
-                    }
 
                     boolean inBurnableLcClass = isInBurnableLcClass(lcArray[newPixelIndex], sensor);
 

@@ -142,9 +142,9 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableAreaFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
+    protected void validate(float burnableAreaFraction, List<double[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
-        for (float[] baValues : baInLc) {
+        for (double[] baValues : baInLc) {
             lcAreaSum += baValues[targetGridCellIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
@@ -159,15 +159,25 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+    protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+        int count = 0;
         for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
             boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
-            baInLc.get(currentLcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0F;
+            if (inLcClass) {
+                baInLc.get(currentLcClass)[targetGridCellIndex] += burnedArea;
+                count++;
+            }
+        }
+        if (count != 1) {
+            throw new IllegalStateException("Burned area added to " + count + " LC classes!\n" +
+                    "targetGridCellIndex=" + targetGridCellIndex + "\n" +
+                    "burnedArea=" + burnedArea + "\n" +
+                    "sourceLc=" + sourceLc);
         }
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, float burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (Double.isNaN(p)) {
@@ -300,7 +310,7 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+    protected void predict(double[] ba, double[] areas, float[] originalErrors) {
         // just keep the original errors
     }
 

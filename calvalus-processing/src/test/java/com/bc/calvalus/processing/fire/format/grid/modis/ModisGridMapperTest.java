@@ -39,7 +39,8 @@ public class ModisGridMapperTest {
     }
 
     @Test
-    public void testStandardError() throws Exception {
+    @Ignore
+    public void acceptanceTestStandardError() throws Exception {
         Product product = ProductIO.readProduct("c:\\ssd\\modis-analysis\\burned_2006_1_h19v09.nc");
         Band uncertainty = product.getBand("uncertainty");
         uncertainty.readRasterDataFully(ProgressMonitor.NULL);
@@ -52,4 +53,5 @@ public class ModisGridMapperTest {
         float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 0, 2085, 0);
         assertEquals(10.0, errorPerPixel, 6.7479032E7);
     }
+
 }

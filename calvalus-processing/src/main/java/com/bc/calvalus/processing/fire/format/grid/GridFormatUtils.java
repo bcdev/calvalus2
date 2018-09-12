@@ -64,7 +64,7 @@ public class GridFormatUtils {
                     sourceProduct.containsPixel(pixelPosLL) ||
                     sourceProduct.containsPixel(pixelPosLR) ||
                     sourceProduct.containsPixel(pixelPosUR)
-                    ) {
+            ) {
                 indices.add(i);
             }
         }
@@ -98,5 +98,15 @@ public class GridFormatUtils {
                 return "2010";
         }
         throw new IllegalArgumentException("Illegal year: " + year);
+    }
+
+    public static String modisLcYear(int year) {
+        if (year == 2000) {
+            return "2000";
+        }
+        if (year >= 2016) {
+            return "2015";
+        }
+        return "" + (year - 1);
     }
 }

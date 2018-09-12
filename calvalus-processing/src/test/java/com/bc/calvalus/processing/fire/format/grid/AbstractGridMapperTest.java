@@ -62,22 +62,22 @@ public class AbstractGridMapperTest {
             }
 
             @Override
-            protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+            protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
 
             }
 
             @Override
-            protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, float burnedArea) {
+            protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
                 return 0;
             }
 
             @Override
-            protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+            protected void predict(double[] ba, double[] areas, float[] originalErrors) {
 
             }
 
             @Override
-            protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
+            protected void validate(float burnableFraction, List<double[]> baInLc, int targetGridCellIndex, double area) {
 
             }
 
@@ -137,18 +137,18 @@ public class AbstractGridMapperTest {
         GridCells gridCells = mapper.computeGridCells(2016, 1);
         Product product = new Product("test", "test", 8, 8);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Float(gridCells.ba));
+        ba1.setData(new ProductData.Double(gridCells.ba));
         Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
         pa1.setData(new ProductData.Float(gridCells.patchNumber));
         Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
         co1.setData(new ProductData.Float(gridCells.coverage));
         Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
         er1.setData(new ProductData.Float(gridCells.errors));
-        List<float[]> baInLcFirstHalf = gridCells.baInLc;
+        List<double[]> baInLcFirstHalf = gridCells.baInLc;
         for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-            float[] floats = baInLcFirstHalf.get(i);
+            double[] floats = baInLcFirstHalf.get(i);
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
-            lcBand.setData(new ProductData.Float(floats));
+            lcBand.setData(new ProductData.Double(floats));
         }
 
         Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);
@@ -207,18 +207,18 @@ public class AbstractGridMapperTest {
         GridCells gridCells = mapper.computeGridCells(2006, 3);
         Product product = new Product("test", "test", 1, 1);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Float(gridCells.ba));
+        ba1.setData(new ProductData.Double(gridCells.ba));
         Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
         pa1.setData(new ProductData.Float(gridCells.patchNumber));
         Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
         co1.setData(new ProductData.Float(gridCells.coverage));
         Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
         er1.setData(new ProductData.Float(gridCells.errors));
-        List<float[]> baInLcFirstHalf = gridCells.baInLc;
+        List<double[]> baInLcFirstHalf = gridCells.baInLc;
         for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-            float[] floats = baInLcFirstHalf.get(i);
+            double[] floats = baInLcFirstHalf.get(i);
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
-            lcBand.setData(new ProductData.Float(floats));
+            lcBand.setData(new ProductData.Double(floats));
         }
 
         Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);

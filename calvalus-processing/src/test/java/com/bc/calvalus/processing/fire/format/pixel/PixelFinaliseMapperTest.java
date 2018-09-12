@@ -67,6 +67,7 @@ public class PixelFinaliseMapperTest {
         ProductIO.writeProduct(subsetOp.getTargetProduct(), "C:\\ssd\\modis-analysis\\pixel\\test1" + band + ".nc", "NetCDF4-CF");
     }
 
+    @Ignore
     @Test
     public void testRemap2() throws Exception {
         System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");

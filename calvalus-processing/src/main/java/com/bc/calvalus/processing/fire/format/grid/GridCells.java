@@ -17,15 +17,15 @@ import java.util.List;
 public class GridCells implements Writable {
 
     public int lcClassesCount;
-    public float[] ba;
+    public double[] ba;
     public float[] patchNumber;
     public float[] errors;
-    public List<float[]> baInLc;
+    public List<double[]> baInLc;
     public float[] coverage;
     public float[] burnableFraction;
     public int bandSize;
 
-    void setBa(float[] ba) {
+    void setBa(double[] ba) {
         this.ba = ba;
     }
 
@@ -37,7 +37,7 @@ public class GridCells implements Writable {
         this.errors = errors;
     }
 
-    void setBaInLc(List<float[]> baInLc) {
+    void setBaInLc(List<double[]> baInLc) {
         this.baInLc = baInLc;
     }
 
@@ -53,8 +53,8 @@ public class GridCells implements Writable {
     public void write(DataOutput out) throws IOException {
         out.writeInt(lcClassesCount);
         out.writeInt(bandSize);
-        for (float v : ba) {
-            out.writeFloat((int) v);
+        for (double v : ba) {
+            out.writeDouble((int) v);
         }
         for (float v : patchNumber) {
             out.writeFloat(v);
@@ -62,9 +62,10 @@ public class GridCells implements Writable {
         for (float v : errors) {
             out.writeFloat((int) v);
         }
-        for (float[] lcClass : baInLc) {
-            for (float value : lcClass) {
-                out.writeFloat((int) value);
+        for (double[] lcClass : baInLc) {
+            for (double value : lcClass) {
+//                out.writeFloat((int) value);
+                out.writeDouble(value);
             }
         }
         for (float v : coverage) {
@@ -79,18 +80,18 @@ public class GridCells implements Writable {
     public void readFields(DataInput in) throws IOException {
         lcClassesCount = in.readInt();
         int bandSize = in.readInt();
-        ba = new float[bandSize];
+        ba = new double[bandSize];
         patchNumber = new float[bandSize];
         errors = new float[bandSize];
         baInLc = new ArrayList<>();
         for (int lcClass = 0; lcClass < lcClassesCount; lcClass++) {
-            baInLc.add(new float[bandSize]);
+            baInLc.add(new double[bandSize]);
         }
         coverage = new float[bandSize];
         burnableFraction = new float[bandSize];
 
         for (int i = 0; i < bandSize; i++) {
-            ba[i] = in.readFloat();
+            ba[i] = in.readDouble();
         }
         for (int i = 0; i < bandSize; i++) {
             patchNumber[i] = in.readFloat();
@@ -98,9 +99,9 @@ public class GridCells implements Writable {
         for (int i = 0; i < bandSize; i++) {
             errors[i] = in.readFloat();
         }
-        for (float[] lcClass : baInLc) {
+        for (double[] lcClass : baInLc) {
             for (int i = 0; i < lcClass.length; i++) {
-                lcClass[i] = in.readFloat();
+                lcClass[i] = in.readDouble();
             }
         }
         for (int i = 0; i < bandSize; i++) {

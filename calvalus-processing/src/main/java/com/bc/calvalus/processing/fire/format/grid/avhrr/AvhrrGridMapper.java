@@ -91,9 +91,9 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
+    protected void validate(float burnableFraction, List<double[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
-        for (float[] baValues : baInLc) {
+        for (double[] baValues : baInLc) {
             lcAreaSum += baValues[targetGridCellIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
@@ -108,7 +108,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+    protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
         for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
             boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
             baInLc.get(currentLcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0F;
@@ -116,7 +116,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, float burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
         /*
         1. Extract the number of pixels of 0.05deg that are classified as burned in the grid cell.
             It should be just the count of the pixels with value 1 to 366 inside the grid cell.
@@ -234,7 +234,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+    protected void predict(double[] ba, double[] areas, float[] originalErrors) {
     }
 
     @Override

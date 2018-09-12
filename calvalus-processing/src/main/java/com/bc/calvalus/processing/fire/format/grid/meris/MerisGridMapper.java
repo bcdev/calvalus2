@@ -106,7 +106,7 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area) {
+    protected void validate(float burnableFraction, List<double[]> baInLc, int targetGridCellIndex, double area) {
         // no burnable fraction computed for MERIS dataset
     }
 
@@ -116,7 +116,7 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
+    protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
         for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
             boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
             baInLc.get(currentLcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0F;
@@ -124,13 +124,13 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int num, float burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int num, double burnedArea) {
         // getting pixels for areas instead, see MerisGridMapper#predict
         return Float.NaN;
     }
 
     @Override
-    protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+    protected void predict(double[] ba, double[] areas, float[] originalErrors) {
         try {
             float[] errors = errorPredictor.predictError(ba, areas);
             System.arraycopy(errors, 0, originalErrors, 0, errors.length);

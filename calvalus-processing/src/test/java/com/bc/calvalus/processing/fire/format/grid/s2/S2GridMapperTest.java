@@ -43,7 +43,7 @@ public class S2GridMapperTest {
         s2GridMapper.setDataSource(dataSource);
         GridCells gridCells = s2GridMapper.computeGridCells(2016, 1);
 
-        float[] burnedArea = gridCells.ba;
+        double[] burnedArea = gridCells.ba;
         float[] patchNumbers = gridCells.patchNumber;
         float[] errors = gridCells.errors;
         float[] coverage = gridCells.coverage;

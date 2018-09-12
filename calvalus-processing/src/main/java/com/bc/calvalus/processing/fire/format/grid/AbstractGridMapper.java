@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.IntStream;
 
 public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCells> {
 
@@ -42,16 +41,16 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
         double[] areas = new double[targetRasterWidth * targetRasterHeight];
-        float[] ba = new float[targetRasterWidth * targetRasterHeight];
+        double[] ba = new double[targetRasterWidth * targetRasterHeight];
         float[] coverage = new float[targetRasterWidth * targetRasterHeight];
         float[] patchNumber = new float[targetRasterWidth * targetRasterHeight];
         float[] errors = new float[targetRasterWidth * targetRasterHeight];
         float[] burnableFraction = new float[targetRasterWidth * targetRasterHeight];
 
-        List<float[]> baInLc = new ArrayList<>();
+        List<double[]> baInLc = new ArrayList<>();
         for (int c = 0; c < getLcClassesCount(); c++) {
-            float[] baInLcBuffer = new float[targetRasterWidth * targetRasterHeight];
-            Arrays.fill(baInLcBuffer, 0);
+            double[] baInLcBuffer = new double[targetRasterWidth * targetRasterHeight];
+            Arrays.fill(baInLcBuffer, 0.0);
             baInLc.add(baInLcBuffer);
         }
 
@@ -64,7 +63,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     targetGridCellIndex++;
                     continue;
                 }
-                float baValue = 0.0F;
+                double baValue = 0.0F;
                 double coverageValue = 0.0F;
                 double burnableFractionValue = 0.0;
 
@@ -126,13 +125,13 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
     protected abstract int getLcClassesCount();
 
-    protected abstract void addBaInLandCover(List<float[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc);
+    protected abstract void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc);
 
     public final GridCells computeGridCells(int year, int month) throws IOException {
         return computeGridCells(year, month, ProgressMonitor.NULL);
     }
 
-    private void validate(float[] ba, double[] areas) {
+    private void validate(double[] ba, double[] areas) {
         for (int i = 0; i < ba.length; i++) {
             if (ba[i] > areas[i] * 1.001) {
                 throw new IllegalStateException("BA (" + ba[i] + ") > area (" + areas[i] + ") at pixel index " + i);
@@ -140,13 +139,30 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, float burnedArea);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea);
 
-    protected abstract void predict(float[] ba, double[] areas, float[] originalErrors);
+    protected abstract void predict(double[] ba, double[] areas, float[] originalErrors);
 
-    protected abstract void validate(float burnableFraction, List<float[]> baInLc, int targetGridCellIndex, double area);
+    protected abstract void validate(float burnableFraction, List<double[]> baInLc, int targetGridCellIndex, double area);
 
-    private static void validate(float[] ba, List<float[]> baInLc) {
+    private static void validate(double[] ba, List<double[]> baInLc) {
+        for (int i = 0; i < ba.length; i++) {
+            double v = ba[i];
+            double baInLcSum = 0.0F;
+            for (double[] floats : baInLc) {
+                baInLcSum += floats[i];
+            }
+            if (Math.abs(v - baInLcSum) > 0.05 * v) {
+                CalvalusLogger.getLogger().warning("Math.abs(baSum - baInLcSum) > baSum * 0.05:");
+                CalvalusLogger.getLogger().warning("baSum = " + v);
+                CalvalusLogger.getLogger().warning("baInLcSum " + baInLcSum);
+                CalvalusLogger.getLogger().warning("targetGridCellIndex " + i);
+                throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
+            }
+        }
+
+        /*
+
         int baCount = (int) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).filter(i -> i != 0).count();
         if (baCount < ba.length * 0.05) {
             // don't throw an error for too few observations
@@ -164,9 +180,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             CalvalusLogger.getLogger().warning("baInLcSum " + baInLcSum);
             throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
         }
+
+        */
     }
 
-    private static void validate(float[] errors, float[] ba) {
+    private static void validate(float[] errors, double[] ba) {
         for (int i = 0; i < errors.length; i++) {
             float error = errors[i];
             // todo - check!
