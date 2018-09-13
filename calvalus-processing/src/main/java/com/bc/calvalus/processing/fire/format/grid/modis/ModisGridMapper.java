@@ -6,6 +6,9 @@ import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import com.google.gson.Gson;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -16,6 +19,7 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -31,6 +35,7 @@ import java.util.zip.ZipFile;
 public class ModisGridMapper extends AbstractGridMapper {
 
     public static final int WINDOW_SIZE = 32;
+    private Context context;
 
     public ModisGridMapper() {
         super(WINDOW_SIZE, WINDOW_SIZE);
@@ -40,6 +45,7 @@ public class ModisGridMapper extends AbstractGridMapper {
     public void run(Context context) throws IOException, InterruptedException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
+        this.context = context;
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
@@ -178,6 +184,22 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
+        Gson gson = new Gson();
+        try (FileWriter fw = new FileWriter("prob-burn.json")) {
+            gson.toJson(probabilityOfBurn, fw);
+            File fileLocation = new File("./" + "prob-burn.json");
+            Path path = new Path("hdfs://calvalus/calvalus/home/thomas/fire/prob-burn.json");
+            FileSystem fs = path.getFileSystem(context.getConfiguration());
+            if (!fs.exists(path)) {
+                FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        System.out.println(area);
+        System.out.println(numberOfBurnedPixels);
+        System.out.println(burnedArea);
+
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (Double.isNaN(p)) {
