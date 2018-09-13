@@ -66,9 +66,6 @@ public class ModisGridInputFormat extends InputFormat {
         List<InputSplit> splits = new ArrayList<>(tilesLut.size());
 
         for (String targetCell : tilesLut.keySet()) {
-            if (!targetCell.equals("416,512")) {
-                continue;
-            }
             List<FileStatus> fileStatuses = new ArrayList<>();
             Set<String> inputTiles = tilesLut.get(targetCell);
             List<String> tilesWithBurnedData = new ArrayList<>();
