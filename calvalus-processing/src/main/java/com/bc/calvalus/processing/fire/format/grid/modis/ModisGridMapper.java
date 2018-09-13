@@ -6,8 +6,6 @@ import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -18,9 +16,7 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,30 +180,13 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
-        try (FileOutputStream fos = new FileOutputStream("prob-burn.json")) {
-            try {
-                ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeObject(probabilityOfBurn);
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-            File fileLocation = new File("./" + "prob-burn.json");
-            Path path = new Path("hdfs://calvalus/calvalus/home/thomas/fire/prob-burn.json");
-            FileSystem fs = path.getFileSystem(context.getConfiguration());
-            if (!fs.exists(path)) {
-                FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        System.out.println(probabilityOfBurn.length);
-        System.out.println(area);
-        System.out.println(numberOfBurnedPixels);
-        System.out.println(burnedArea);
+        double[] values = Arrays.stream(probabilityOfBurn)
+                .map(d -> d == 0 ? 1 : d )
+                .filter(d -> d >= 1 && d <= 100)
+                .map(operand -> operand / 100.0).toArray();
 
         double sum_pb = 0.0;
-        for (double p : probabilityOfBurn) {
+        for (double p : values) {
             if (Double.isNaN(p)) {
                 continue;
             }
@@ -223,10 +202,10 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         double S = numberOfBurnedPixels / sum_pb;
 
-        double[] pb_i_star = new double[probabilityOfBurn.length];
+        double[] pb_i_star = new double[values.length];
 
-        for (int i = 0; i < probabilityOfBurn.length; i++) {
-            double pb_i = probabilityOfBurn[i];
+        for (int i = 0; i < values.length; i++) {
+            double pb_i = values[i];
             if (Double.isNaN(pb_i)) {
                 continue;
             }
@@ -272,69 +251,6 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
 
-        /*
-        double[] p_b = correct(probabilityOfBurn);
-
-        double sum_c = 0.0;
-        int count = 0;
-        for (double p : p_b) {
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            var_c += p * (1.0 - p);
-            sum_c += p;
-            count++;
-        }
-        if (count == 0) {
-            return 0;
-        }
-        if (count == 1) {
-            return 1;
-        }
-
-        float sqrt = (float) Math.sqrt(var_c * (count / (count - 1.0)));
-        return sqrt * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
-
-        */
-    }
-
-    private double[] correct(double[] probabilityOfBurn) {
-        /*
-            Correct standard error:
-            S = numberburn_pixels / sum_pb
-            pb' = pb/S
-            Then use this pb' for the std err calculation.
-        */
-
-        int numberburn_pixels = 0;
-        double sum_pb = 0.0;
-        for (double p : probabilityOfBurn) {
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            numberburn_pixels++;
-            sum_pb += p;
-        }
-        double S = numberburn_pixels / sum_pb;
-        double[] result = new double[probabilityOfBurn.length];
-        for (int i = 0; i < probabilityOfBurn.length; i++) {
-            result[i] = probabilityOfBurn[i] / S;
-        }
-        return result;
     }
 
     @Override
