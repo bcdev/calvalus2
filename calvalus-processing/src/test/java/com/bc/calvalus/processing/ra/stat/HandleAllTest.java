@@ -28,12 +28,12 @@ public class HandleAllTest {
         assertEquals(-1, three.current());
         assertArrayEquals(new int[]{0,1,2}, three.remaining());
         assertArrayEquals(new int[]{0,1,2}, three.remaining());
-        assertArrayEquals(new int[]{}, three.next(0));
+        assertArrayEquals(new int[]{}, three.preceedingUnhandledIndices(0));
         assertEquals(0, three.current());
-        assertArrayEquals(new int[]{1}, three.next(2));
+        assertArrayEquals(new int[]{1}, three.preceedingUnhandledIndices(2));
         assertEquals(2, three.current());
         try {
-            three.next(3);
+            three.preceedingUnhandledIndices(3);
             fail();
         } catch (IllegalArgumentException iae) {
             assertEquals("nextIndex(3) >= numItems(3)", iae.getMessage());
@@ -42,7 +42,7 @@ public class HandleAllTest {
 
         three.reset();
         assertEquals(-1, three.current());
-        assertArrayEquals(new int[]{0,1}, three.next(2));
+        assertArrayEquals(new int[]{0,1}, three.preceedingUnhandledIndices(2));
         assertEquals(2, three.current());
     }
 }
