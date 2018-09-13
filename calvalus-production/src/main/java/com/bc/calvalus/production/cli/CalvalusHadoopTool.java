@@ -12,6 +12,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.JobStatus;
@@ -109,9 +111,10 @@ public class CalvalusHadoopTool {
             } else {
 
                 String requestPath = String.valueOf(commandLine.getArgList().get(0));
+                boolean overwriteOutput = commandLine.hasOption("overwrite");
                 Map<String, String> commandLineParameters = CalvalusHadoopRequestConverter.collectCommandLineParameters(commandLine);
                 final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName);
-                RunningJob runningJob = calvalusHadoopTool.exec(userName, requestPath, commandLineParameters, configParameters);
+                RunningJob runningJob = calvalusHadoopTool.exec(userName, requestPath, commandLineParameters, configParameters, overwriteOutput);
 
                 if (commandLine.hasOption("async")) {
                     System.out.println(runningJob.getID());
@@ -136,7 +139,7 @@ public class CalvalusHadoopTool {
 
     /** Compose and submit Hadoop job, monitor progress (synchronous) or print ID (asynchronous) */
 
-    public RunningJob exec(String userName, String requestPath, Map<String, String> commandLineParameters, Map<Object,Object> configParameters)
+    public RunningJob exec(String userName, String requestPath, Map<String, String> commandLineParameters, Map<Object, Object> configParameters, boolean overwriteOutput)
             throws IOException, InterruptedException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, org.jdom2.JDOMException, GeneralSecurityException, ParserConfigurationException, SAXException, XMLEncryptionException {
 
         String auth = commandLineParameters.getOrDefault("auth", (String) configParameters.getOrDefault("auth", "unix"));
@@ -144,6 +147,9 @@ public class CalvalusHadoopTool {
 
         JobConf jobConf = requestConverter.createJob(requestPath, commandLineParameters, configParameters, hook);
 
+        if (overwriteOutput) {
+            hadoopConnection.deleteOutputDir(jobConf);
+        }
         RunningJob runningJob = hadoopConnection.submitJob(jobConf);
         LOG.info("Production successfully ordered with ID " + runningJob.getID());
 
@@ -281,6 +287,10 @@ public class CalvalusHadoopTool {
                                   .withLongOpt("debug")
                                   .withDescription("Debug mode, print stack trace of exception.")
                                   .create("e"));
+        options.addOption(OptionBuilder
+                                  .withLongOpt("overwrite")
+                                  .withDescription("Delete target directory before submission.")
+                                  .create("o"));
         options.addOption(OptionBuilder
                                   .withLongOpt("async")
                                   .withDescription("Asynchronous mode, submission.")

@@ -130,6 +130,7 @@ public class RAProductionType extends HadoopProductionType {
                 geometries.add(geometry);
                 names.add(namedRegion.name);
             }
+            regionsIterator.close();
             if (names.isEmpty()) {
                 throw new ProductionException("No region defined");
             }
