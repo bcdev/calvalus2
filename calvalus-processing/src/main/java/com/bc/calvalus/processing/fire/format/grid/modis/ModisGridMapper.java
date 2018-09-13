@@ -196,6 +196,8 @@ public class ModisGridMapper extends AbstractGridMapper {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+
+        System.out.println(probabilityOfBurn.length);
         System.out.println(area);
         System.out.println(numberOfBurnedPixels);
         System.out.println(burnedArea);
