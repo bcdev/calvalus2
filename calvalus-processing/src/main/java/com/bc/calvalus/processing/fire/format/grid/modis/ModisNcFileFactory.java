@@ -26,7 +26,7 @@ class ModisNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSource() {
-        return "MODIS MOD09GQ Collection 6, MODIS MOD09GA Collection 6, MODIS MCD14ML Collection 6, ESA CCI Land Cover dataset v1.6.1";
+        return "MODIS MOD09GQ Collection 6, MODIS MOD09GA Collection 6, MODIS MCD14ML Collection 6, ESA CCI Land Cover dataset v2.0.7";
     }
 
     @Override
@@ -36,7 +36,7 @@ class ModisNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getDoi() {
-        return "10.5285/f1c9c7aa210d4564bd61ed1a81d51130";
+        return "10.5285/3628cb2fdba443588155e15dee8e5352";
     }
 
     @Override
