@@ -6,7 +6,6 @@ import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
-import com.google.gson.Gson;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -19,8 +18,9 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,9 +184,13 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
-        Gson gson = new Gson();
-        try (FileWriter fw = new FileWriter("prob-burn.json")) {
-            gson.toJson(probabilityOfBurn, fw);
+        try (FileOutputStream fos = new FileOutputStream("prob-burn.json")) {
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeObject(probabilityOfBurn);
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
             File fileLocation = new File("./" + "prob-burn.json");
             Path path = new Path("hdfs://calvalus/calvalus/home/thomas/fire/prob-burn.json");
             FileSystem fs = path.getFileSystem(context.getConfiguration());
