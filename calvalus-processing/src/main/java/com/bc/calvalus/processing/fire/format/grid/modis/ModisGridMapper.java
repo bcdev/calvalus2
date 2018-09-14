@@ -31,7 +31,6 @@ import java.util.zip.ZipFile;
 public class ModisGridMapper extends AbstractGridMapper {
 
     public static final int WINDOW_SIZE = 32;
-    private Context context;
 
     public ModisGridMapper() {
         super(WINDOW_SIZE, WINDOW_SIZE);
@@ -41,7 +40,6 @@ public class ModisGridMapper extends AbstractGridMapper {
     public void run(Context context) throws IOException, InterruptedException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        this.context = context;
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
@@ -91,8 +89,6 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
-        int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
-        int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
         String[] xCoords = getXCoords(targetCell);
         List<ZipFile> geoLookupTables = new ArrayList<>();

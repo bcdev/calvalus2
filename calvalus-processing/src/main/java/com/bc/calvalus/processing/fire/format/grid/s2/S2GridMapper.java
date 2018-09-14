@@ -5,6 +5,8 @@ import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -12,7 +14,9 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +32,7 @@ public class S2GridMapper extends AbstractGridMapper {
 
     private static final int GRID_CELLS_PER_DEGREE = 4;
     private static final int NUM_GRID_CELLS = 2;
+    private Context context;
 
     protected S2GridMapper() {
         super(NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE, NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE);
@@ -36,6 +41,7 @@ public class S2GridMapper extends AbstractGridMapper {
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
+        this.context = context;
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
@@ -108,6 +114,23 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels, double burnedArea) {
+        try (FileOutputStream fos = new FileOutputStream("prob-burn.json")) {
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeObject(probabilityOfBurn);
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+            File fileLocation = new File("./" + "prob-burn.json");
+            Path path = new Path("hdfs://calvalus/calvalus/home/thomas/fire/prob-burn-s2.json");
+            FileSystem fs = path.getFileSystem(context.getConfiguration());
+            if (!fs.exists(path)) {
+                FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
             if (p < 0) {

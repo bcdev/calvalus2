@@ -63,6 +63,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     targetGridCellIndex++;
                     continue;
                 }
+                if (targetGridCellIndex != 0) {
+                    targetGridCellIndex++;
+                    continue;
+                }
                 double baValue = 0.0F;
                 double coverageValue = 0.0F;
                 double burnableFractionValue = 0.0;
