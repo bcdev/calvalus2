@@ -9,12 +9,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipFile;
 
 import static org.junit.Assert.assertEquals;
@@ -298,7 +300,17 @@ public class S2GridMapperTest {
 
     @Test
     public void testGetErrorPerPixelRealValues() throws Exception {
-//        double probs = new double[];
-//        new S2GridMapper().getErrorPerPixel(probs, )
+        double[] probBurn;
+        try (GZIPInputStream zis = new GZIPInputStream(getClass().getResourceAsStream("prob-burn-s2.dat.gz"))) {
+            ObjectInputStream iis = new ObjectInputStream(zis);
+            probBurn = (double[]) iis.readObject();
+        }
+
+        double area = 7.671923035701257E8;
+        int numBurned = 567875;
+
+        float errorPerPixel = new S2GridMapper().getErrorPerPixel(probBurn, area, numBurned, 0);
+        System.out.println(String.format("%.12f", errorPerPixel));
+        assertEquals(14483.97949F, errorPerPixel, 1E-5);
     }
 }

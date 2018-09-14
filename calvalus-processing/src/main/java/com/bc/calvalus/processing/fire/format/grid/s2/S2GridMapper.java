@@ -5,8 +5,6 @@ import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -14,9 +12,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,75 +112,25 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double averageArea, int numberOfBurnedPixels, double burnedArea) {
-        try (FileOutputStream fos = new FileOutputStream("prob-burn.json")) {
-            try {
-                ObjectOutputStream oos = new ObjectOutputStream(fos);
-                oos.writeObject(probabilityOfBurn);
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
-            File fileLocation = new File("./" + "prob-burn.json");
-            Path path = new Path("hdfs://calvalus/calvalus/home/thomas/fire/prob-burn-s2.json");
-            FileSystem fs = path.getFileSystem(context.getConfiguration());
-            if (!fs.exists(path)) {
-                FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
+        double[] values = Arrays.stream(probabilityOfBurn)
+                .map(d -> d == 0 ? 0.01 : d)
+                .filter(d -> d >= 0.01 && d <= 1.0)
+                .toArray();
 
-        System.out.println(averageArea);
-        System.out.println(numberOfBurnedPixels);
-
-        double sum_pb = 0.0;
-        for (double p : probabilityOfBurn) {
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            sum_pb += p;
-        }
-
+        double sum_pb = Arrays.stream(values).sum();
         double S = numberOfBurnedPixels / sum_pb;
-        if (Double.isNaN(S) || Double.isInfinite(S)) {
-            return 0;
-        }
+        double[] pb_i_star = Arrays.stream(values).map(d -> d * S).toArray();
+        double checksum = Arrays.stream(pb_i_star).sum();
 
-        double[] pb_i_star = new double[probabilityOfBurn.length];
-
-        for (int i = 0; i < probabilityOfBurn.length; i++) {
-            double pb_i = probabilityOfBurn[i];
-            if (Double.isNaN(pb_i)) {
-                continue;
-            }
-            if (pb_i > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            pb_i_star[i] = pb_i * S;
-        }
-
-        double checksum = 0.0;
-        for (double v : pb_i_star) {
-            checksum += v;
-        }
-
-        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0005) {
-            throw new IllegalArgumentException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0005", checksum, numberOfBurnedPixels));
+        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
+            throw new IllegalStateException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
         }
 
         double var_c = 0.0;
         int count = 0;
         for (double p : pb_i_star) {
             var_c += p * (1 - p);
-//            var_c += Math.abs(p * (1 - p));
             count++;
         }
 
@@ -195,39 +141,7 @@ public class S2GridMapper extends AbstractGridMapper {
             return 1;
         }
 
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) averageArea;
-
-        /*
-        double[] p_b = correct(probabilityOfBurn);
-
-        double sum_c = 0.0;
-        int count = 0;
-        for (double p : p_b) {
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            var_c += p * (1.0 - p);
-            sum_c += p;
-            count++;
-        }
-        if (count == 0) {
-            return 0;
-        }
-        if (count == 1) {
-            return 1;
-        }
-
-        float sqrt = (float) Math.sqrt(var_c * (count / (count - 1.0)));
-        return sqrt * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
-
-        */
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) (area / probabilityOfBurn.length);
     }
 
     @Override
