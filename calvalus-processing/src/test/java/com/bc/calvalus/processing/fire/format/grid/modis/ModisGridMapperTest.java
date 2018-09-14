@@ -10,11 +10,15 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ModisGridMapperTest {
 
@@ -54,4 +58,22 @@ public class ModisGridMapperTest {
         assertEquals(10.0, errorPerPixel, 6.7479032E7);
     }
 
+    @Test
+    public void accteptanceTestGetStandardError() {
+        double[] probBurn = new double[0];
+        try (GZIPInputStream zis = new GZIPInputStream(getClass().getResourceAsStream("prob-burn.dat.gz"))) {
+            ObjectInputStream iis = new ObjectInputStream(zis);
+            probBurn = (double[]) iis.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        double area = 5.730849930136291E8;
+        int numBurned = 17;
+        double burnedArea = 912299.3614788534;
+
+        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(probBurn, area, numBurned, burnedArea);
+        assertEquals(221265.02F, errorPerPixel, 1E-5);
+    }
 }
