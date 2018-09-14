@@ -57,6 +57,8 @@ public class S2GridMapper extends AbstractGridMapper {
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
+        ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+        pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight + paths.length - 1);
         for (int i = 0; i < paths.length - 1; i++) {
             String utmTile = paths[i].getName().substring(4, 9);
             String localGeoLookupFileName = twoDegTile + "-" + utmTile + ".zip";
@@ -84,6 +86,7 @@ public class S2GridMapper extends AbstractGridMapper {
             }
             lcProducts.add(lcProduct);
             LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 1)));
+            pm.worked(1);
         }
 
 
@@ -95,7 +98,7 @@ public class S2GridMapper extends AbstractGridMapper {
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
         setDataSource(dataSource);
-        GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
+        GridCells gridCells = computeGridCells(year, month, pm);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, twoDegTile)), gridCells);
     }
@@ -130,6 +133,9 @@ public class S2GridMapper extends AbstractGridMapper {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+
+        System.out.println(averageArea);
+        System.out.println(numberOfBurnedPixels);
 
         double sum_pb = 0.0;
         for (double p : probabilityOfBurn) {
