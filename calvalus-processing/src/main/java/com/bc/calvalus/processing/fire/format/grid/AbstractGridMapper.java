@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCells> {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
-    private final int targetRasterWidth;
-    private final int targetRasterHeight;
+    protected final int targetRasterWidth;
+    protected final int targetRasterHeight;
     private FireGridDataSource dataSource;
 
     protected AbstractGridMapper(int targetRasterWidth, int targetRasterHeight) {
@@ -30,7 +30,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
      */
     public final GridCells computeGridCells(int year, int month, ProgressMonitor pm) throws IOException {
         LOG.info("Computing grid cells...");
-        pm.beginTask("Computing grid cells...", targetRasterWidth * targetRasterHeight);
         if (dataSource == null) {
             throw new NullPointerException("dataSource == null");
         }
@@ -58,12 +57,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
                 System.gc();
-                SourceData data = dataSource.readPixels(x, y);
-                if (data == null) {
+                if (targetGridCellIndex != 0) {
                     targetGridCellIndex++;
                     continue;
                 }
-                if (targetGridCellIndex != 0) {
+                SourceData data = dataSource.readPixels(x, y);
+                if (data == null) {
                     targetGridCellIndex++;
                     continue;
                 }

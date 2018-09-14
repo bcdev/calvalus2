@@ -56,6 +56,10 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         Product[] sourceProducts = new Product[numProducts];
         Product[] lcProducts = new Product[numProducts];
+
+        ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+        pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight + paths.length - 1);
+
         int productIndex = 0;
         for (int i = 0; i < paths.length - 1; i += 2) {
             if (paths[i].getName().contains("dummy")) {
@@ -85,6 +89,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             lcProducts[productIndex] = ProductIO.readProduct(lcProductFile);
 
             productIndex++;
+            pm.worked(1);
         }
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
@@ -103,7 +108,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
         setDataSource(dataSource);
-        GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
+        GridCells gridCells = computeGridCells(year, month, pm);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCells);
     }
