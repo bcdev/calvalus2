@@ -24,7 +24,6 @@
         <slf4j.version>1.7.21</slf4j.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
-        <openjpeg.version>[6.0.0,7.0.0-SNAPSHOT]</openjpeg.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
