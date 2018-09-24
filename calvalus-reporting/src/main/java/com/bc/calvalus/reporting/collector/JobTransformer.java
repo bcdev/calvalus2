@@ -1,8 +1,8 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.collector.exception.JobTransformerException;
-import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;

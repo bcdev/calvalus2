@@ -4,9 +4,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.calvalus.reporting.restservice.io.JSONExtractor;
-import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 
 import java.util.List;

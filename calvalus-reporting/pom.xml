@@ -43,18 +43,6 @@
             <artifactId>snap-core</artifactId>
         </dependency>
 
-        <!-- BC WPS dependencies-->
-        <dependency>
-            <groupId>com.bc.wps</groupId>
-            <artifactId>bc-wps-commons</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- required as part of using Servlet 3 spec without any additional configs in web.xml -->
         <!-- ref: http://stackoverflow.com/a/26721737/2676893 -->
         <dependency>

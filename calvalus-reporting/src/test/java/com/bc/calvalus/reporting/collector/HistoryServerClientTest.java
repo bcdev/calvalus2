@@ -1,6 +1,6 @@
 package com.bc.calvalus.reporting.collector;
 
-import com.bc.wps.utilities.PropertiesWrapper;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.junit.*;

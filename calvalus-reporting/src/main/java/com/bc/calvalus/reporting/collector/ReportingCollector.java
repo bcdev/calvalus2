@@ -1,6 +1,7 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.collector.exception.JobReportsException;
 import com.bc.calvalus.reporting.collector.exception.JobTransformerException;
 import com.bc.calvalus.reporting.collector.exception.ServerConnectionException;
@@ -9,7 +10,6 @@ import com.bc.calvalus.reporting.collector.types.JobConf;
 import com.bc.calvalus.reporting.collector.types.JobCounters;
 import com.bc.calvalus.reporting.collector.types.JobDetailType;
 import com.bc.calvalus.reporting.collector.types.Jobs;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 
 import javax.xml.bind.JAXBContext;

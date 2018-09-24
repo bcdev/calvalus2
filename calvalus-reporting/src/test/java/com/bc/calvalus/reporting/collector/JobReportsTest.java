@@ -3,8 +3,8 @@ package com.bc.calvalus.reporting.collector;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.collector.exception.JobReportsException;
-import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
 import org.junit.rules.*;

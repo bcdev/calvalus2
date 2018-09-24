@@ -1,8 +1,8 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.collector.exception.ServerConnectionException;
-import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;

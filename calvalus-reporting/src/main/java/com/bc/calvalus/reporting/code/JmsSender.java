@@ -1,6 +1,6 @@
 package com.bc.calvalus.reporting.code;
 
-import com.bc.wps.utilities.PropertiesWrapper;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 
 import javax.jms.JMSException;
 import java.io.IOException;

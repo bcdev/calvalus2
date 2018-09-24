@@ -1,7 +1,7 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.wps.utilities.PropertiesWrapper;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

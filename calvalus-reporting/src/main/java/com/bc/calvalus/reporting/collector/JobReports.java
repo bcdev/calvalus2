@@ -1,10 +1,10 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.collector.exception.JobReportsException;
 import com.bc.calvalus.reporting.collector.exception.JobReportsFileException;
 import com.bc.calvalus.reporting.collector.types.JobDetailType;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 
 import java.io.BufferedWriter;

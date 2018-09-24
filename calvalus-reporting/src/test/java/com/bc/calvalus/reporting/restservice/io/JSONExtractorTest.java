@@ -5,8 +5,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
 
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import com.bc.calvalus.reporting.common.UsageStatistic;
-import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.runner.*;
 

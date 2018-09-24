@@ -3,7 +3,7 @@ package com.bc.calvalus.reporting.collector;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.bc.wps.utilities.PropertiesWrapper;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import org.apache.commons.io.IOUtils;
 import org.junit.*;
 

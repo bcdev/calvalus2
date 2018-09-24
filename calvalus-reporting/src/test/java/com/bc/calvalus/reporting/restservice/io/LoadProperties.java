@@ -1,6 +1,6 @@
 package com.bc.calvalus.reporting.restservice.io;
 
-import com.bc.wps.utilities.PropertiesWrapper;
+import com.bc.calvalus.commons.util.PropertiesWrapper;
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
 import org.junit.runners.*;
