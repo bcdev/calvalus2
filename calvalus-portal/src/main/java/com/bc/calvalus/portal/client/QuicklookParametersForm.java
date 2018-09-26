@@ -18,15 +18,20 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoColorPalette;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.TextBox;
@@ -51,7 +56,21 @@ public class QuicklookParametersForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
+    private static int instanceCounter = 0;
+    private int radioGroupId = 0;
+
+    private static final String CUSTOM_BAND = "<custom>";
+
+    private static final String BANDNAME_LISTBOX_ROW = "bandNameListBoxRow";
+
     private final PortalContext portal;
+
+    @UiField
+    HTMLPanel singleBandPanel;
+    @UiField
+    HTMLPanel multiBandPanel;
+    @UiField
+    HTMLPanel moreOptionsPanel;
 
     @UiField
     RadioButton quicklookNone;
@@ -62,6 +81,8 @@ public class QuicklookParametersForm extends Composite {
 
     @UiField
     ListBox bandNameListBox;
+    @UiField
+    Label bandNameRowLabel;
     @UiField
     TextBox bandName;
     @UiField
@@ -95,31 +116,51 @@ public class QuicklookParametersForm extends Composite {
     @UiField
     CheckBox legendEnabled;
 
-    private DtoColorPalette[] availableColorPalettes;
+    private DtoColorPalette[] availableColorPalettes = null;
+    private Boolean pageLoaded = false;
+    private String[] availableBandNames = null;
 
     public QuicklookParametersForm(PortalContext portalContext) {
         this.portal = portalContext;
 
         initWidget(uiBinder.createAndBindUi(this));
 
+        instanceCounter++;
+        radioGroupId = instanceCounter;
+
+        //give radio group a unique name for each instance
+        quicklookNone.setName("quicklookSelection" + radioGroupId);
+        quicklookSingleBand.setName("quicklookSelection" + radioGroupId);
+        quicklookMultiBand.setName("quicklookSelection" + radioGroupId);
+
         quicklookNone.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> event) {
-                setQuicklookNone();
+                if (event.getValue())
+                    quicklookNoneChangeHandler();
             }
         });
 
         quicklookSingleBand.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> event) {
-                setQuicklookSingleBandEnabled();
+                if (event.getValue())
+                    quicklookSingleBandChangeHandler();
             }
         });
 
         quicklookMultiBand.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> event) {
-                setQuicklookMultiBandEnabled();
+                if (event.getValue())
+                    quicklookMultiBandChangeHandler();
+            }
+        });
+
+        bandName.addValueChangeHandler(new ValueChangeHandler<String>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<String> event) {
+                bandNameChangeHandler();
             }
         });
 
@@ -132,82 +173,83 @@ public class QuicklookParametersForm extends Composite {
 
         setAvailableImageTypes();
         setColorPalettes();
+    }
 
-        quicklookNone.setValue(true);
-        setQuicklookNone();
+    @Override
+    protected void onLoad() {
+        //give HTML element a unique id for each instance
+        Element element = DOM.getElementById(BANDNAME_LISTBOX_ROW);
+        element.setId(BANDNAME_LISTBOX_ROW + radioGroupId);
+
+        this.pageLoaded = true;
+        quicklookNone.setValue(true, true);
+        buildBandNameListBox();
+    }
+
+    private void bandNameChangeHandler() {
+        // band name field changed, reset list box index and call it's handler
+        int itemCount = bandNameListBox.getItemCount();
+        String bandNameValue = bandName.getValue();
+        bandNameListBox.setSelectedIndex(0);
+        for (int i = 0; i < itemCount; i++) {
+            String listBand = bandNameListBox.getValue(i);
+            if (listBand != null && listBand.equals(bandNameValue)) {
+                bandNameListBox.setSelectedIndex(i);
+                break;
+            }
+        }
+        bandNameListBoxChangeHandler();
     }
 
     private void bandNameListBoxChangeHandler() {
+        if (!pageLoaded)
+            return;
+
         int selectedIndex = bandNameListBox.getSelectedIndex();
-        if (selectedIndex == 0) {
-          bandName.setEnabled(true);
-        } else if (selectedIndex > 0) {
-          bandName.setValue(bandNameListBox.getValue(selectedIndex));
-          bandName.setEnabled(false);
+        Element element = DOM.getElementById(BANDNAME_LISTBOX_ROW + radioGroupId);
+        if (!quicklookSingleBand.getValue() || selectedIndex < 0) {
+            // single band not selected OR no values in listbox
+            // enable bandName textbox, make drop down list invisible
+            bandNameRowLabel.setText("Band name:");
+            bandName.setEnabled(true);
+            if (element != null)
+                element.getStyle().setDisplay(Style.Display.NONE);
+        } else {
+            // single band is selected AND values in listbox
+            // make drop down list visible
+            if (element != null)
+                element.getStyle().setDisplay(Style.Display.TABLE_ROW);
+            bandNameRowLabel.setText("");
+            if (selectedIndex == 0) {
+                // custom band name option selected
+                // enable bandName textbox
+                bandName.setEnabled(true);
+            } else if (selectedIndex > 0) {
+                // band name (sourced from processor) selected
+                // disable bandName textbox
+                bandName.setValue(bandNameListBox.getValue(selectedIndex));
+                bandName.setEnabled(false);
+            }
         }
     }
 
-    private void setQuicklookNone() {
-        bandNameListBox.setEnabled(false);
-        bandName.setEnabled(false);
-        colorPalette.setEnabled(false);
-
-        rgbaExpressionsRedBand.setEnabled(false);
-        rgbaExpressionsGreenBand.setEnabled(false);
-        rgbaExpressionsBlueBand.setEnabled(false);
-        rgbaExpressionsAlphaBand.setEnabled(false);
-        rgbaMinSamples.setEnabled(false);
-        rgbaMaxSamples.setEnabled(false);
-
-        imageType.setEnabled(false);
-        overlayURL.setEnabled(false);
-        maskOverlays.setEnabled(false);
-        subSamplingX.setEnabled(false);
-        subSamplingY.setEnabled(false);
-        backgroundColor.setEnabled(false);
-        legendEnabled.setEnabled(false);
+    private void quicklookNoneChangeHandler() {
+        singleBandPanel.setVisible(false);
+        multiBandPanel.setVisible(false);
+        moreOptionsPanel.setVisible(false);
     }
 
-    private void setQuicklookSingleBandEnabled() {
-        bandNameListBox.setEnabled(true);
-        bandNameListBoxChangeHandler();
-        colorPalette.setEnabled(true);
-
-        rgbaExpressionsRedBand.setEnabled(false);
-        rgbaExpressionsGreenBand.setEnabled(false);
-        rgbaExpressionsBlueBand.setEnabled(false);
-        rgbaExpressionsAlphaBand.setEnabled(false);
-        rgbaMinSamples.setEnabled(false);
-        rgbaMaxSamples.setEnabled(false);
-
-        imageType.setEnabled(true);
-        overlayURL.setEnabled(true);
-        maskOverlays.setEnabled(true);
-        subSamplingX.setEnabled(true);
-        subSamplingY.setEnabled(true);
-        backgroundColor.setEnabled(true);
-        legendEnabled.setEnabled(true);
+    private void quicklookSingleBandChangeHandler() {
+        singleBandPanel.setVisible(true);
+        multiBandPanel.setVisible(false);
+        moreOptionsPanel.setVisible(true);
+        bandNameChangeHandler();
     }
 
-    private void setQuicklookMultiBandEnabled() {
-        bandNameListBox.setEnabled(false);
-        bandName.setEnabled(false);
-        colorPalette.setEnabled(false);
-
-        rgbaExpressionsRedBand.setEnabled(true);
-        rgbaExpressionsGreenBand.setEnabled(true);
-        rgbaExpressionsBlueBand.setEnabled(true);
-        rgbaExpressionsAlphaBand.setEnabled(true);
-        rgbaMinSamples.setEnabled(true);
-        rgbaMaxSamples.setEnabled(true);
-
-        imageType.setEnabled(true);
-        overlayURL.setEnabled(true);
-        maskOverlays.setEnabled(true);
-        subSamplingX.setEnabled(true);
-        subSamplingY.setEnabled(true);
-        backgroundColor.setEnabled(true);
-        legendEnabled.setEnabled(true);
+    private void quicklookMultiBandChangeHandler() {
+        singleBandPanel.setVisible(false);
+        multiBandPanel.setVisible(true);
+        moreOptionsPanel.setVisible(true);
     }
 
     public void setAvailableImageTypes() {
@@ -228,22 +270,30 @@ public class QuicklookParametersForm extends Composite {
         this.availableColorPalettes = portal.getColorPalettes();
         colorPalette.clear();
         colorPalette.addItem("");
-        for (DtoColorPalette dtoColorPalette : this.availableColorPalettes ) {
+        for (DtoColorPalette dtoColorPalette : this.availableColorPalettes) {
             colorPalette.addItem(dtoColorPalette.getQualifiedName(), dtoColorPalette.getCpdURL());
         }
         colorPalette.setSelectedIndex(0);
     }
 
     public void setBandNames(String... bandNames) {
+        this.availableBandNames = bandNames;
+        buildBandNameListBox();
+    }
+
+    private void buildBandNameListBox() {
         bandNameListBox.clear();
-        bandNameListBox.addItem("<custom>");
-        bandNameListBox.setSelectedIndex(0);
-        if (bandNames == null)
+        if (!pageLoaded)
             return;
 
-        for (String bandName : bandNames) {
-            bandNameListBox.addItem(bandName);
+        if (availableBandNames != null && availableBandNames.length > 0) {
+            bandNameListBox.addItem(CUSTOM_BAND);
+            bandNameListBox.setSelectedIndex(0);
+            for (String bandName : this.availableBandNames) {
+                bandNameListBox.addItem(bandName);
+            }
         }
+        bandNameChangeHandler();
     }
 
     public Map<String, String> getValueMap() {
@@ -295,7 +345,7 @@ public class QuicklookParametersForm extends Composite {
         // legendEnabled
         Boolean legendEnabledValue = legendEnabled.getValue();
         String legendEnabledXML = "";
-        if (legendEnabled.getValue()) {
+        if (legendEnabledValue) {
             legendEnabledXML = indentXML + "<legendEnabled>true</legendEnabled>\n";
         }
 
@@ -398,7 +448,7 @@ public class QuicklookParametersForm extends Composite {
     public void setValues(Map<String, String> parameters) {
         String quicklookParametersValue = parameters.get("calvalus.ql.parameters");
         if (quicklookParametersValue == null || quicklookParametersValue.isEmpty()) {
-            quicklookNone.setValue(true, true);
+
 
             bandName.setValue(null);
             colorPalette.setSelectedIndex(0);
@@ -416,23 +466,20 @@ public class QuicklookParametersForm extends Composite {
             subSamplingX.setValue(null);
             maskOverlays.setValue(null);
             legendEnabled.setValue(false);
+
+            // set no quicklook radio button in GUI
+            quicklookNone.setValue(true, true);
         } else {
             Document dom = XMLParser.parse(quicklookParametersValue);
 
-            // bandName
+            // bandName 
             String bandNameValue = getTagValue(dom, "bandName");
             if (bandNameValue != null) {
-                quicklookSingleBand.setValue(true, true);
                 bandName.setValue(bandNameValue);
-                int itemCount = bandNameListBox.getItemCount();
-                for (int i = 0; i < itemCount; i++) {
-                    String listBand = bandNameListBox.getValue(i);
-                    if (listBand != null && listBand.equals(bandNameValue)) {
-                        bandNameListBox.setSelectedIndex(i);
-                        bandName.setEnabled(false);
-                        break;
-                    }
-                }
+
+                // As bandName has a value, assume this is a single band
+                // Therefore, set single band radio button in GUI
+                quicklookSingleBand.setValue(true, true);
             }
 
             // color palette
@@ -440,9 +487,9 @@ public class QuicklookParametersForm extends Composite {
             if (cpdURLValue == null || this.availableColorPalettes == null) {
                 colorPalette.setSelectedIndex(0);
             } else {
-                for (int i=0; i < this.availableColorPalettes.length; i++ ) {
-                    if( this.availableColorPalettes[i].getCpdURL().equals(cpdURLValue) ) {
-                        colorPalette.setSelectedIndex(i+1);
+                for (int i = 0; i < this.availableColorPalettes.length; i++) {
+                    if (this.availableColorPalettes[i].getCpdURL().equals(cpdURLValue)) {
+                        colorPalette.setSelectedIndex(i + 1);
                         break;
                     }
                 }
@@ -457,6 +504,9 @@ public class QuicklookParametersForm extends Composite {
                 rgbaExpressionsGreenBand.setValue(numTokens > 1 ? tokens[1] : null);
                 rgbaExpressionsBlueBand.setValue(numTokens > 2 ? tokens[2] : null);
                 rgbaExpressionsAlphaBand.setValue(numTokens > 3 ? tokens[3] : null);
+
+                // As RGBAExpressions has a value, assume this is a multi band,
+                // Therefore, set multi band radio button in GUI
                 quicklookMultiBand.setValue(true, true);
             } else {
                 rgbaExpressionsRedBand.setValue(null);
@@ -537,3 +587,4 @@ public class QuicklookParametersForm extends Composite {
         return null;
     }
 }
+
