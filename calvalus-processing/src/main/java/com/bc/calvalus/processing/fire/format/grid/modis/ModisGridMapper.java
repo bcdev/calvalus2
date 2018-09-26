@@ -250,7 +250,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             return 1;
         }
 
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+        return (float) (Math.sqrt(var_c * (count / (count - 1.0))) * ModisFireGridDataSource.MODIS_AREA_SIZE);
 
     }
 

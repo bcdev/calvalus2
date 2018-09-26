@@ -137,7 +137,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             }
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION));
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), GridFormatUtils.make2Dims(data.burnable, DIMENSION, DIMENSION));
 
         return data;
     }

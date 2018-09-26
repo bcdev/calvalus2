@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.make2Dims;
 import static org.junit.Assert.assertEquals;
@@ -32,7 +33,15 @@ public class AbstractFireGridDataSourceTest {
                 0, 0, 0, 0,
                 0, 0, 0, 0
         };
-        assertEquals(0, dataSource.getPatchNumbers(make2Dims(pixels)));
+
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
+        };
+
+        assertEquals(0, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -43,7 +52,30 @@ public class AbstractFireGridDataSourceTest {
                 1, 0, 0, 0,
                 1, 0, 0, 1
         };
-        assertEquals(3, dataSource.getPatchNumbers(make2Dims(pixels)));
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
+        };
+        assertEquals(3, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
+    }
+
+    @Test
+    public void testGetPatches_Not_all_burnable() throws Exception {
+        float[] pixels = {
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 0, 0, 0,
+                1, 0, 0, 1
+        };
+        boolean[] burnable = {
+                true, true, true, false,
+                true, true, true, false,
+                true, true, true, true,
+                true, true, true, true
+        };
+        assertEquals(2, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -54,7 +86,13 @@ public class AbstractFireGridDataSourceTest {
                 0, 1, 1, 0,
                 0, 0, 0, 0
         };
-        assertEquals(1, dataSource.getPatchNumbers(make2Dims(pixels)));
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
+        };
+        assertEquals(1, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -65,15 +103,23 @@ public class AbstractFireGridDataSourceTest {
                 0, 1, 1, 0,
                 0, 0, 0, 1
         };
-        assertEquals(4, dataSource.getPatchNumbers(make2Dims(pixels)));
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
+        };
+        assertEquals(4, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
-    public void testGetPatches_Large() throws Exception {
+    public void testGetPatches_Large() {
         float[] pixels = new float[90 * 90];
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (int) (Math.random() * 2);
         }
-        dataSource.getPatchNumbers(make2Dims(pixels));
+        boolean[] burnable = new boolean[90 * 90];
+        Arrays.fill(burnable, true);
+        dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable));
     }
 }

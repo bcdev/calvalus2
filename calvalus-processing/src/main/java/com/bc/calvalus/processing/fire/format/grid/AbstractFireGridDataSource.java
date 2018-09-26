@@ -38,11 +38,11 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         this.doyLastOfMonth = doyLastOfMonth;
     }
 
-    public int getPatchNumbers(float[][] pixels) {
+    public int getPatchNumbers(float[][] pixels, boolean[][] burnable) {
         int patchCount = 0;
         for (int i = 0; i < pixels.length; i++) {
             for (int j = 0; j < pixels[i].length; j++) {
-                if (clearObjects(pixels, i, j)) {
+                if (clearObjects(pixels, burnable, i, j)) {
                     patchCount++;
                 }
             }
@@ -85,16 +85,16 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         }
     }
 
-    private boolean clearObjects(float[][] array, int x, int y) {
+    private boolean clearObjects(float[][] array, boolean[][] burnable, int x, int y) {
         if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
             return false;
         }
-        if (isBurned(array[x][y])) {
+        if (burnable[x][y] && isBurned(array[x][y])) {
             array[x][y] = 0;
-            clearObjects(array, x - 1, y);
-            clearObjects(array, x + 1, y);
-            clearObjects(array, x, y - 1);
-            clearObjects(array, x, y + 1);
+            clearObjects(array, burnable, x - 1, y);
+            clearObjects(array, burnable, x + 1, y);
+            clearObjects(array, burnable, x, y - 1);
+            clearObjects(array, burnable, x, y + 1);
             return true;
         }
         return false;

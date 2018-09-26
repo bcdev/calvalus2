@@ -109,7 +109,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             }
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800));
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.burnable, 4800, 4800));
 
         return data;
     }

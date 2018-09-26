@@ -30,6 +30,23 @@ public class GridFormatUtils {
         return result;
     }
 
+    public static boolean[][] make2Dims(boolean[] pixels) {
+        int length = pixels.length;
+        if ((int) (Math.sqrt(length) + 0.5) * (int) (Math.sqrt(length) + 0.5) != length) {
+            throw new IllegalArgumentException();
+        }
+        int size = (int) Math.sqrt(length);
+        return make2Dims(pixels, size, size);
+    }
+
+    public static boolean[][] make2Dims(boolean[] pixels, int width, int height) {
+        boolean[][] result = new boolean[width][height];
+        for (int r = 0; r < height; r++) {
+            System.arraycopy(pixels, r * width, result[r], 0, width);
+        }
+        return result;
+    }
+
     public static List<Integer> getMatchingProductIndices(String tile, Product[] sourceProducts, int x, int y) {
         if (x > 7 || y > 7 || x < 0 || y < 0) {
             throw new IllegalArgumentException("x > 7 || y > 7 || x < 0 || y < 0: x=" + x + ", y=" + y);
