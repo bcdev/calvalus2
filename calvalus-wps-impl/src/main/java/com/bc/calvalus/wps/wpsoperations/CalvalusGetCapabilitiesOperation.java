@@ -65,32 +65,32 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
     }
 
     OperationsMetadata getOperationsMetadata() {
-        OperationsMetadata operationsMetadata = new OperationsMetadata();
+        final OperationsMetadata operationsMetadata = new OperationsMetadata();
 
         Operation getCapabilitiesOperation = new Operation();
         getCapabilitiesOperation.setName("GetCapabilities");
         DCP getCapabilitiesDcp = getGetDcp(PropertiesWrapper.get("wps.get.request.url"));
         getCapabilitiesOperation.getDCP().add(getCapabilitiesDcp);
+        operationsMetadata.getOperation().add(getCapabilitiesOperation);
 
         Operation describeProcessOperation = new Operation();
         describeProcessOperation.setName("DescribeProcess");
         DCP describeProcessDcp = getGetDcp(PropertiesWrapper.get("wps.get.request.url"));
         describeProcessOperation.getDCP().add(describeProcessDcp);
+        operationsMetadata.getOperation().add(describeProcessOperation);
 
         Operation executeOperation = new Operation();
         executeOperation.setName("Execute");
         DCP executeDcp = getPostDcp(PropertiesWrapper.get("wps.post.request.url"));
         executeOperation.getDCP().add(executeDcp);
+        operationsMetadata.getOperation().add(executeOperation);
 
         Operation getStatusOperation = new Operation();
         getStatusOperation.setName("GetStatus");
         DCP getStatusDcp = getGetDcp(PropertiesWrapper.get("wps.get.request.url"));
         getStatusOperation.getDCP().add(getStatusDcp);
-
-        operationsMetadata.getOperation().add(getCapabilitiesOperation);
-        operationsMetadata.getOperation().add(describeProcessOperation);
-        operationsMetadata.getOperation().add(executeOperation);
         operationsMetadata.getOperation().add(getStatusOperation);
+
 
         return operationsMetadata;
     }
@@ -192,11 +192,13 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
     }
 
     private DCP getGetDcp(String serviceUrl) {
-        DCP describeProcessDcp = new DCP();
-        HTTP describeProcessHttp = new HTTP();
-        RequestMethodType describeProcessRequestMethod = new RequestMethodType();
+        final RequestMethodType describeProcessRequestMethod = new RequestMethodType();
         describeProcessRequestMethod.setHref(serviceUrl);
+
+        final HTTP describeProcessHttp = new HTTP();
         describeProcessHttp.setGet(describeProcessRequestMethod);
+
+        final DCP describeProcessDcp = new DCP();
         describeProcessDcp.setHTTP(describeProcessHttp);
         return describeProcessDcp;
     }
