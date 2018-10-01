@@ -146,6 +146,14 @@
             <param-value>ticket</param-value>
         </init-param>
         <init-param>
+            <param-name>injectInputSelectionServlet</param-name>
+            <param-value>https://processing.code-de.org/injectInputSelection</param-value>
+        </init-param>
+        <init-param>
+            <param-name>processingServerName</param-name>
+            <param-value>https://processing.code-de.org</param-value>
+        </init-param>
+        <init-param>
             <param-name>redirectAfterValidation</param-name>
             <param-value>true</param-value>
         </init-param>
