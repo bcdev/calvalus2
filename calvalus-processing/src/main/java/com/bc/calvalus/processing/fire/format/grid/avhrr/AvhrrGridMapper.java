@@ -179,6 +179,9 @@ public class AvhrrGridMapper extends AbstractGridMapper {
                 .filter(pb_i -> pb_i >= 0)
                 .forEach(
                         pb_i -> {
+                            if (pb_i == 0) {
+                                pb_i = 0.000000000000001;
+                            }
                             pb_star[targetIndex.get()] = pb_i * S;
                             n.set((n.get() + 1));
                             targetIndex.set(targetIndex.get() + 1);
