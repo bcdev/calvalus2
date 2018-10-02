@@ -60,7 +60,7 @@ public abstract class NcFileFactory {
         Variable observedAreaFractionVar = ncFile.addVariable(null, "fraction_of_observed_area", DataType.FLOAT, "time lat lon");
         observedAreaFractionVar.addAttribute(new Attribute("units", "1"));
         observedAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of observed area"));
-        observedAreaFractionVar.addAttribute(new Attribute("comment", "'The fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of lack of input data (non-existing images for that location and period), cloud cover, haze or pixels that fell below the quality thresholds of the algorithm."));
+        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of lack of input data (non-existing data for that location and period)."));
         Variable numberOfPatchesVar = ncFile.addVariable(null, "number_of_patches", DataType.FLOAT, "time lat lon");
         numberOfPatchesVar.addAttribute(new Attribute("units", "1"));
         numberOfPatchesVar.addAttribute(new Attribute("long_name", "number of burn patches"));

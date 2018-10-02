@@ -43,6 +43,6 @@ public class S2NcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSummary() {
-        return "The grid product is the result of summing up burned area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in biweekly composites. The attributes stored are sum of burned area, standard error, fraction of burnable area, fraction of observed area, number of patches and the burned area for 18 land cover classes of LC_cci.";
+        return "The grid product is the result of summing up burned area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in monthly composites. The attributes stored are sum of burned area, standard error, fraction of burnable area, fraction of observed area, number of patches and the burned area for 18 land cover classes of LC_cci.";
     }
 }
