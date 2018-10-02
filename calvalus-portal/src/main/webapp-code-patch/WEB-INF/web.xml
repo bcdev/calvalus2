@@ -155,7 +155,7 @@
         </init-param>
         <init-param>
             <param-name>redirectAfterValidation</param-name>
-            <param-value>true</param-value>
+            <param-value>false</param-value>
         </init-param>
         <init-param>
             <param-name>calvalus.crypt.samlkey-private-key</param-name>
