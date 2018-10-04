@@ -100,8 +100,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             AreaCalculator areaCalculator = new AreaCalculator(product.getSceneGeoCoding());
             GeoPos minGeoPos = new GeoPos();
             GeoPos maxGeoPos = new GeoPos();
-            product.getSceneGeoCoding().getGeoPos(new PixelPos(0, 0), minGeoPos);
-            product.getSceneGeoCoding().getGeoPos(new PixelPos(DIMENSION - 1, DIMENSION - 1), maxGeoPos);
+            product.getSceneGeoCoding().getGeoPos(new PixelPos(0, DIMENSION - 1), minGeoPos);
+            product.getSceneGeoCoding().getGeoPos(new PixelPos(DIMENSION - 1, 0), maxGeoPos);
             Band jd = product.getBand("JD");
             Band cl = product.getBand("CL");
             Band lc = lcProduct.getBand("lccs_class");
@@ -409,7 +409,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         if (sourceLon == targetLon0) {
             targetPixelX = 0;
         } else {
-            targetPixelX = (int) Math.round(sourcePixelX * (0.25 / Math.abs(sourceLon - targetLon0)));
             targetPixelX = (int) Math.round(sourcePixelX * (1.0 / Math.abs(sourceLon - targetLon0)));
         }
         if (targetPixelX >= DIMENSION) {
@@ -420,7 +419,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         if (sourceLat == targetLat0) {
             targetPixelY = 0;
         } else {
-            targetPixelY = (int) Math.round(sourcePixelY * (0.25 / Math.abs(sourceLat - targetLat0)));
             targetPixelY = (int) Math.round(sourcePixelY * (1.0 / Math.abs(sourceLat - targetLat0)));
         }
         if (targetPixelY >= DIMENSION) {

@@ -15,6 +15,7 @@ public class S2FireGridDataSourceTest {
 
     @Test
     public void testGetTargetPixel() {
-        System.out.println(S2FireGridDataSource.getTargetPixel(3000, 1000, 30, 31, 4, 5, 31, 4.5));
+        System.out.println(S2FireGridDataSource.getTargetPixel(0, 0, 32, 33, 4, 3, 32, 4));
+
     }
 }
