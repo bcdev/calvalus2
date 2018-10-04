@@ -7,21 +7,18 @@ import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.getMatchingProductIndices;
@@ -61,7 +58,68 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();
 
-        int targetPixelIndex = 0;
+        int lon0 = Integer.parseInt(tile.split("y")[0].replace("x", ""));
+        int lat0 = Integer.parseInt(tile.split("y")[1].replace("y", ""));
+        double pixelSize = 0.25 / 5490.0;
+        PixelPos sourcePixelPos = new PixelPos();
+        GeoPos targetGeoPos = new GeoPos();
+
+        for (int targetPixelIndex = 0; targetPixelIndex < 5490; targetPixelIndex++) {
+            targetGeoPos.lat = lat0 + targetPixelIndex * pixelSize;
+            targetGeoPos.lon = lon0 + targetPixelIndex * pixelSize;
+
+            for (Integer i : productIndices) {
+                Product product = sourceProducts[i];
+                Product lcProduct = lcProducts[i];
+
+                AreaCalculator areaCalculator = new AreaCalculator(product.getSceneGeoCoding());
+                Band jd = product.getBand("JD");
+                Band cl = product.getBand("CL");
+                Band lc = lcProduct.getBand("lccs_class");
+
+                product.getSceneGeoCoding().getPixelPos(targetGeoPos, sourcePixelPos);
+                if (!sourcePixelPos.isValid()) {
+                    continue;
+                }
+                int sourcePixelIndex = (int) sourcePixelPos.y * DIMENSION + (int) sourcePixelPos.x;
+
+                String key = product.getName();
+
+                int sourceJD = (int) getFloatPixelValue(jd, key, sourcePixelIndex);
+                boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+                if (isValidPixel) {
+                    // set burned pixel value consistently with CL value -- both if burned pixel is valid
+                    data.burnedPixels[targetPixelIndex] = sourceJD;
+
+                    float sourceCL;
+                    if (cl != null) {
+                        sourceCL = getFloatPixelValue(cl, key, sourcePixelIndex);
+                    } else {
+                        sourceCL = 0.0F;
+                    }
+
+                    sourceCL = scale(sourceCL);
+                    data.probabilityOfBurn[sourcePixelIndex] = sourceCL;
+                }
+
+                int sourceLC = getIntPixelValue(lc, key, sourcePixelIndex);
+                data.burnable[sourcePixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
+                data.lcClasses[sourcePixelIndex] = sourceLC;
+                if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
+                    int productJD = getProductJD(product);
+                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, productJD)) {
+                        data.statusPixels[sourcePixelIndex] = 1;
+                    }
+                }
+
+                if (data.areas[sourcePixelIndex] == GridFormatUtils.NO_AREA) {
+                    data.areas[sourcePixelIndex] = areaCalculator.calculatePixelSize((int) sourcePixelPos.x, (int) sourcePixelPos.y, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
+                }
+
+            }
+        }
+
+/*
 
         for (Integer i : productIndices) {
             Product product = sourceProducts[i];
@@ -111,7 +169,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
                 if (isValidPixel) {
                     // set burned pixel value consistently with CL value -- both if burned pixel is valid
-                    data.burnedPixels[targetPixelIndex] = sourceJD;
+                    data.burnedPixels[sourcePixelIndex] = sourceJD;
 
                     float sourceCL;
                     if (cl != null) {
@@ -121,25 +179,26 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                     }
 
                     sourceCL = scale(sourceCL);
-                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
+                    data.probabilityOfBurn[sourcePixelIndex] = sourceCL;
                 }
 
                 int sourceLC = getIntPixelValue(lc, key, sourcePixelIndex);
-                data.burnable[targetPixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
-                data.lcClasses[targetPixelIndex] = sourceLC;
+                data.burnable[sourcePixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
+                data.lcClasses[sourcePixelIndex] = sourceLC;
                 if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
                     int productJD = getProductJD(product);
                     if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, productJD)) {
-                        data.statusPixels[targetPixelIndex] = 1;
+                        data.statusPixels[sourcePixelIndex] = 1;
                     }
                 }
 
-                if (data.areas[targetPixelIndex] == GridFormatUtils.NO_AREA) {
-                    data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
+                if (data.areas[sourcePixelIndex] == GridFormatUtils.NO_AREA) {
+                    data.areas[sourcePixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
                 }
-                targetPixelIndex++;
             }
         }
+
+*/
 
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), GridFormatUtils.make2Dims(data.burnable, DIMENSION, DIMENSION));
 
