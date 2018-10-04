@@ -115,6 +115,14 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
                 int sourcePixelIndex = y0 * DIMENSION + x0;
                 int targetPixelIndex = getTargetPixel(x0, y0, minGeoPos.lon, minGeoPos.lat, maxGeoPos.lon, maxGeoPos.lat, lon0, lat0);
+                if (targetPixelIndex > DIMENSION * DIMENSION) {
+                    targetPixelIndex = DIMENSION * DIMENSION - 1;
+                    System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
+                }
+                if (targetPixelIndex < 0) {
+                    targetPixelIndex = 0;
+                    System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
+                }
 
                 int sourceJD = (int) getFloatPixelValue(jd, key, sourcePixelIndex);
                 boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
@@ -400,13 +408,13 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     static int getTargetPixel(int sourcePixelX, int sourcePixelY, double minLon, double maxLon, double minLat, double maxLat, double targetLon0, double targetLat0) {
         // first: get geo position of sourcePixel
 
-        double sourceLon = minLon + (maxLon - minLon) * sourcePixelX / DIMENSION;
-        double sourceLat = minLat + (maxLat - minLat) * sourcePixelY / DIMENSION;
+        double sourceLon = Math.abs(minLon + (maxLon - minLon) * sourcePixelX / DIMENSION);
+        double sourceLat = Math.abs(minLat + (maxLat - minLat) * sourcePixelY / DIMENSION);
 
         // second: get target pixel position of geo position
 
-        int targetPixelX = (int) (DIMENSION / (Math.abs(targetLon0 - sourceLon)));
-        int targetPixelY = (int) (DIMENSION / (Math.abs(targetLat0 - sourceLat)));
+        int targetPixelX = (int) (((targetLon0 + 0.25 - targetLon0) / (sourceLon - targetLon0)) * DIMENSION);
+        int targetPixelY = (int) (((targetLat0 + 0.25 - targetLat0) / (sourceLat - targetLat0)) * DIMENSION);
 
         // third reformat as pixel index
 
