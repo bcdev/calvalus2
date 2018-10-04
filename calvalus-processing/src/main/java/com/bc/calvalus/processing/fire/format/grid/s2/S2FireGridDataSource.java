@@ -117,8 +117,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 int targetPixelIndex = getTargetPixel(x0, y0, minGeoPos.lon, minGeoPos.lat, maxGeoPos.lon, maxGeoPos.lat, lon0, lat0);
                 if (targetPixelIndex > DIMENSION * DIMENSION) {
                     System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
-                    targetPixelIndex = DIMENSION * DIMENSION - 1;
                     System.out.println("x0 = " + x0);
+                    System.out.println("y0 = " + y0);
                     System.out.println("minGeoPos.lon = " + minGeoPos.lon);
                     System.out.println("minGeoPos.lat = " + minGeoPos.lat);
                     System.out.println("maxGeoPos.lon = " + maxGeoPos.lon);
@@ -129,6 +129,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 if (targetPixelIndex < 0) {
                     System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
                     System.out.println("x0 = " + x0);
+                    System.out.println("y0 = " + y0);
                     System.out.println("minGeoPos.lon = " + minGeoPos.lon);
                     System.out.println("minGeoPos.lat = " + minGeoPos.lat);
                     System.out.println("maxGeoPos.lon = " + maxGeoPos.lon);
@@ -424,10 +425,27 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         double sourceLon = Math.abs(minLon + (maxLon - minLon) * sourcePixelX / DIMENSION);
         double sourceLat = Math.abs(minLat + (maxLat - minLat) * sourcePixelY / DIMENSION);
 
-        // second: get target pixel position of geo position
+        // second: get target pixel position from geo position
 
-        int targetPixelX = (int) (((targetLon0 + 0.25 - targetLon0) / (sourceLon - targetLon0)) * DIMENSION);
-        int targetPixelY = (int) (((targetLat0 + 0.25 - targetLat0) / (sourceLat - targetLat0)) * DIMENSION);
+        int targetPixelX;
+        if (sourceLon == targetLon0) {
+            targetPixelX = 0;
+        } else {
+            targetPixelX = (int) (sourcePixelX * (0.25 / Math.abs(sourceLon - targetLon0)));
+        }
+        if (targetPixelX > DIMENSION) {
+            targetPixelX = DIMENSION;
+        }
+
+        int targetPixelY;
+        if (sourceLat == targetLat0) {
+            targetPixelY = 0;
+        } else {
+            targetPixelY = (int) (sourcePixelY * (0.25 / Math.abs(sourceLat - targetLat0)));
+        }
+        if (targetPixelY > DIMENSION) {
+            targetPixelY = DIMENSION;
+        }
 
         // third reformat as pixel index
 
