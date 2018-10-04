@@ -115,28 +115,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
                 int sourcePixelIndex = y0 * DIMENSION + x0;
                 int targetPixelIndex = getTargetPixel(x0, y0, minGeoPos.lon, minGeoPos.lat, maxGeoPos.lon, maxGeoPos.lat, lon0, lat0);
-                if (targetPixelIndex > DIMENSION * DIMENSION) {
-                    System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
-                    System.out.println("x0 = " + x0);
-                    System.out.println("y0 = " + y0);
-                    System.out.println("minGeoPos.lon = " + minGeoPos.lon);
-                    System.out.println("minGeoPos.lat = " + minGeoPos.lat);
-                    System.out.println("maxGeoPos.lon = " + maxGeoPos.lon);
-                    System.out.println("maxGeoPos.lat = " + maxGeoPos.lat);
-                    System.out.println("lon0 = " + lon0);
-                    System.out.println("lat0 = " + lat0);
-                }
-                if (targetPixelIndex < 0) {
-                    System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
-                    System.out.println("x0 = " + x0);
-                    System.out.println("y0 = " + y0);
-                    System.out.println("minGeoPos.lon = " + minGeoPos.lon);
-                    System.out.println("minGeoPos.lat = " + minGeoPos.lat);
-                    System.out.println("maxGeoPos.lon = " + maxGeoPos.lon);
-                    System.out.println("maxGeoPos.lat = " + maxGeoPos.lat);
-                    System.out.println("lon0 = " + lon0);
-                    System.out.println("lat0 = " + lat0);
-                }
 
                 int sourceJD = (int) getFloatPixelValue(jd, key, sourcePixelIndex);
                 boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
@@ -431,7 +409,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         if (sourceLon == targetLon0) {
             targetPixelX = 0;
         } else {
-            targetPixelX = (int) (sourcePixelX * (0.25 / Math.abs(sourceLon - targetLon0)));
+            targetPixelX = (int) Math.round(sourcePixelX * (0.25 / Math.abs(sourceLon - targetLon0)));
+            targetPixelX = (int) Math.round(sourcePixelX * (1.0 / Math.abs(sourceLon - targetLon0)));
         }
         if (targetPixelX >= DIMENSION) {
             targetPixelX = DIMENSION - 1;
@@ -441,7 +420,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         if (sourceLat == targetLat0) {
             targetPixelY = 0;
         } else {
-            targetPixelY = (int) (sourcePixelY * (0.25 / Math.abs(sourceLat - targetLat0)));
+            targetPixelY = (int) Math.round(sourcePixelY * (0.25 / Math.abs(sourceLat - targetLat0)));
+            targetPixelY = (int) Math.round(sourcePixelY * (1.0 / Math.abs(sourceLat - targetLat0)));
         }
         if (targetPixelY >= DIMENSION) {
             targetPixelY = DIMENSION - 1;
