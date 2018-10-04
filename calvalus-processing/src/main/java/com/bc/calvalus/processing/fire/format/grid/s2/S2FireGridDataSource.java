@@ -1,28 +1,29 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.gpf.common.MergeOp;
-import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.getMatchingProductIndices;
@@ -62,11 +63,93 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();
 
-        // tile == x210y94
-        int lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", ""));
-        int lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", ""));
-        double pixelSize = 0.25 / 5490.0;
+        // e.g. tile == x210y94
+        double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 0.25;
+        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + y * 0.25;
 
+        for (Integer i : productIndices) {
+            Product product = sourceProducts[i];
+            Product lcProduct = lcProducts[i];
+            ZipFile geoLookupTable = null;
+            for (ZipFile lookupTable : geoLookupTables) {
+                if (lookupTable.getName().matches(".*" + product.getName().substring(4, 9) + ".*")) {
+                    geoLookupTable = lookupTable;
+                    break;
+                }
+            }
+            if (geoLookupTable == null) {
+                throw new IllegalStateException("No geo-lookup table for ");
+            }
+
+            ZipEntry currentEntry = null;
+            Enumeration<? extends ZipEntry> entries = geoLookupTable.entries();
+            String utmTile = product.getName().substring(4, 9);
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = entries.nextElement();
+                if (zipEntry.getName().matches(tile + "-" + utmTile + "-" + x + "-" + y + "\\.dat")) {
+                    currentEntry = zipEntry;
+                    break;
+                }
+            }
+            if (currentEntry == null) {
+                throw new IllegalStateException("Zip entry '" + tile + "-" + utmTile + "-" + x + "-" + y + ".dat' not found in " + geoLookupTable.getName() + "; check the auxiliary data.");
+            }
+            BufferedReader br = new BufferedReader(new InputStreamReader(geoLookupTable.getInputStream(currentEntry), StandardCharsets.UTF_8));
+
+            String line;
+            AreaCalculator areaCalculator = new AreaCalculator(product.getSceneGeoCoding());
+            GeoPos minGeoPos = new GeoPos();
+            GeoPos maxGeoPos = new GeoPos();
+            product.getSceneGeoCoding().getGeoPos(new PixelPos(0, 0), minGeoPos);
+            product.getSceneGeoCoding().getGeoPos(new PixelPos(DIMENSION - 1, DIMENSION - 1), maxGeoPos);
+            Band jd = product.getBand("JD");
+            Band cl = product.getBand("CL");
+            Band lc = lcProduct.getBand("lccs_class");
+
+            String key = product.getName();
+
+            while ((line = br.readLine()) != null) {
+                String[] splitLine = line.split(" ");
+                int x0 = Integer.parseInt(splitLine[2]);
+                int y0 = Integer.parseInt(splitLine[3]);
+
+                int sourcePixelIndex = y0 * DIMENSION + x0;
+                int targetPixelIndex = getTargetPixel(x0, y0, minGeoPos.lon, minGeoPos.lat, maxGeoPos.lon, maxGeoPos.lat, lon0, lat0);
+
+                int sourceJD = (int) getFloatPixelValue(jd, key, sourcePixelIndex);
+                boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+                if (isValidPixel) {
+                    // set burned pixel value consistently with CL value -- both if burned pixel is valid
+                    data.burnedPixels[targetPixelIndex] = sourceJD;
+
+                    float sourceCL;
+                    if (cl != null) {
+                        sourceCL = getFloatPixelValue(cl, key, sourcePixelIndex);
+                    } else {
+                        sourceCL = 0.0F;
+                    }
+
+                    sourceCL = scale(sourceCL);
+                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
+                }
+
+                int sourceLC = getIntPixelValue(lc, key, sourcePixelIndex);
+                data.burnable[targetPixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
+                data.lcClasses[targetPixelIndex] = sourceLC;
+                if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
+                    int productJD = getProductJD(product);
+                    if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, productJD)) {
+                        data.statusPixels[targetPixelIndex] = 1;
+                    }
+                }
+
+                if (data.areas[targetPixelIndex] == GridFormatUtils.NO_AREA) {
+                    data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
+                }
+            }
+        }
+
+        /*
         Product mergeProduct = new Product("temp", "temp", DIMENSION, DIMENSION);
         try {
             mergeProduct.setSceneGeoCoding(new CrsGeoCoding(
@@ -312,6 +395,22 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         }
         jdExpression.append(" 0");
         return jdExpression;
+    }
+
+    static int getTargetPixel(int sourcePixelX, int sourcePixelY, double minLon, double maxLon, double minLat, double maxLat, double targetLon0, double targetLat0) {
+        // first: get geo position of sourcePixel
+
+        double sourceLon = minLon + (maxLon - minLon) * sourcePixelX / DIMENSION;
+        double sourceLat = minLat + (maxLat - minLat) * sourcePixelY / DIMENSION;
+
+        // second: get target pixel position of geo position
+
+        int targetPixelX = (int) (DIMENSION / (Math.abs(targetLon0 - sourceLon)));
+        int targetPixelY = (int) (DIMENSION / (Math.abs(targetLat0 - sourceLat)));
+
+        // third reformat as pixel index
+
+        return targetPixelY * DIMENSION + targetPixelX;
     }
 
     private float scale(float cl) {
