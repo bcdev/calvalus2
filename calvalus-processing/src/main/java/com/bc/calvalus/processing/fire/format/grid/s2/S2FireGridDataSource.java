@@ -1,21 +1,25 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.gpf.common.MergeOp;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -62,10 +66,101 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         int lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", ""));
         int lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", ""));
         double pixelSize = 0.25 / 5490.0;
+
+        Product mergeProduct = new Product("temp", "temp", DIMENSION, DIMENSION);
+        try {
+            mergeProduct.setSceneGeoCoding(new CrsGeoCoding(
+                    DefaultGeographicCRS.WGS84, DIMENSION, DIMENSION, lon0, lat0, pixelSize, pixelSize
+            ));
+        } catch (FactoryException | TransformException e) {
+            throw new IllegalStateException(e);
+        }
+
+        List<Product> reprojectedSourceProducts = new ArrayList<>();
+
+        int productIndex = 0;
+        for (Integer i : productIndices) {
+            ReprojectionOp reprojectionOp = new ReprojectionOp();
+            reprojectionOp.setParameterDefaultValues();
+            reprojectionOp.setSourceProduct("collocationProduct", mergeProduct);
+            reprojectionOp.setSourceProduct(sourceProducts[i]);
+            Product targetProduct = reprojectionOp.getTargetProduct();
+            reprojectedSourceProducts.add(targetProduct);
+            targetProduct.getBand("JD").setName("JD_" + productIndex);
+            targetProduct.getBand("CL").setName("CL_" + productIndex);
+            productIndex++;
+        }
+
+        MergeOp mergeOp = new MergeOp();
+        mergeOp.setParameterDefaultValues();
+        mergeOp.setSourceProduct("masterProduct", reprojectedSourceProducts.get(0));
+        Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
+        System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
+        mergeOp.setSourceProducts(productsToMerge);
+        Product mergedProduct = mergeOp.getTargetProduct();
+        StringBuilder jdExpression = new StringBuilder();
+        for (int i = 0; i < productIndex; i++) {
+            jdExpression.append("(JD_" + i + " > 0) ? JD_" + i + " : ");
+        }
+        jdExpression.append(" 0");
+        StringBuilder clExpression = new StringBuilder();
+        for (int i = 0; i < productIndex; i++) {
+            clExpression.append("(CL_" + i + " > 0) ? CL_" + i + " : ");
+        }
+        clExpression.append(" 0");
+        mergedProduct.addBand("merged_JD", jdExpression.toString());
+        mergedProduct.addBand("merged_CL", clExpression.toString());
+
+        for (int pixelIndex = 0; pixelIndex < DIMENSION * DIMENSION; pixelIndex++) {
+            Band jd = mergedProduct.getBand("merged_JD");
+            Band cl = mergedProduct.getBand("merged_CL");
+//            Band lc = lcProduct.getBand("lccs_class");
+
+            String key = mergedProduct.getName();
+
+            int sourceJD = (int) getFloatPixelValue(jd, key, pixelIndex);
+            boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+            if (isValidPixel) {
+                // set burned pixel value consistently with CL value -- both if burned pixel is valid
+                data.burnedPixels[pixelIndex] = sourceJD;
+
+                float sourceCL;
+                if (cl != null) {
+                    sourceCL = getFloatPixelValue(cl, key, pixelIndex);
+                } else {
+                    sourceCL = 0.0F;
+                }
+
+                sourceCL = scale(sourceCL);
+                data.probabilityOfBurn[pixelIndex] = sourceCL;
+            }
+
+//            int sourceLC = getIntPixelValue(lc, key, pixelIndex);
+//            data.burnable[pixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
+//            data.lcClasses[pixelIndex] = sourceLC;
+            if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
+                int productJD = getProductJD(sourceProducts[0]);
+                if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, productJD)) {
+                    data.statusPixels[pixelIndex] = 1;
+                }
+            }
+
+            if (data.areas[pixelIndex] == GridFormatUtils.NO_AREA) {
+                AreaCalculator areaCalculator = new AreaCalculator(mergedProduct.getSceneGeoCoding());
+                data.areas[pixelIndex] = areaCalculator.calculatePixelSize(pixelIndex % DIMENSION, pixelIndex / DIMENSION, DIMENSION - 1, DIMENSION - 1);
+            }
+
+        }
+
+/*
         PixelPos sourcePixelPos = new PixelPos();
         GeoPos targetGeoPos = new GeoPos();
 
         for (int targetPixelIndex = 0; targetPixelIndex < DIMENSION * DIMENSION; targetPixelIndex++) {
+            if (targetPixelIndex % DIMENSION == 0) {
+                System.out.println(targetPixelIndex);
+            }
+
             targetGeoPos.lat = lat0 + (float) targetPixelIndex / (float) DIMENSION * pixelSize;
             targetGeoPos.lon = lon0 + (float) targetPixelIndex % (float) DIMENSION * pixelSize;
 
@@ -119,6 +214,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
             }
         }
+*/
+
 
 /*
 
