@@ -93,32 +93,15 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         Product mergedProduct = null;
 
-        try {
-            MergeOp mergeOp = new MergeOp();
-            mergeOp.setParameterDefaultValues();
-            Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
-            System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
-            mergeOp.setSourceProducts(productsToMerge);
-            Product product = reprojectedSourceProducts.get(0);
-            System.out.println(product.getName());
-            mergeOp.setSourceProduct("masterProduct", product);
-            mergedProduct = mergeOp.getTargetProduct();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (mergedProduct == null) {
-
-            MergeOp mergeOp = new MergeOp();
-            mergeOp.setParameterDefaultValues();
-            Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
-            System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
-            mergeOp.setSourceProducts(productsToMerge);
-            Product product = reprojectedSourceProducts.get(0);
-            System.out.println(product.getName());
-            mergeOp.setParameter("masterProduct", product);
-            mergedProduct = mergeOp.getTargetProduct();
-        }
+        MergeOp mergeOp = new MergeOp();
+        mergeOp.setParameterDefaultValues();
+        Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
+        System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
+        mergeOp.setSourceProducts(productsToMerge);
+        Product product = reprojectedSourceProducts.get(0);
+        System.out.println(product.getName());
+        mergeOp.setSourceProduct("masterProduct", product);
+        mergedProduct = mergeOp.getTargetProduct();
 
         StringBuilder jdExpression = getExpression(productCount, "JD");
         StringBuilder clExpression = getExpression(productCount, "CL");
@@ -127,6 +110,9 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         mergedProduct.addBand("merged_CL", clExpression.toString());
 
         for (int pixelIndex = 0; pixelIndex < DIMENSION * DIMENSION; pixelIndex++) {
+            if (pixelIndex % DIMENSION == 0) {
+                System.out.println(pixelIndex / DIMENSION);
+            }
             Band jd = mergedProduct.getBand("merged_JD");
             Band cl = mergedProduct.getBand("merged_CL");
 //            Band lc = lcProduct.getBand("lccs_class");
