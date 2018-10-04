@@ -78,36 +78,35 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         List<Product> reprojectedSourceProducts = new ArrayList<>();
 
-        int productIndex = 0;
+        int productCount = 0;
         for (Integer i : productIndices) {
             ReprojectionOp reprojectionOp = new ReprojectionOp();
             reprojectionOp.setParameterDefaultValues();
             reprojectionOp.setSourceProduct("collocationProduct", mergeProduct);
             reprojectionOp.setSourceProduct(sourceProducts[i]);
             Product targetProduct = reprojectionOp.getTargetProduct();
+            targetProduct.getBand("JD").setName("JD_" + productCount);
+            targetProduct.getBand("CL").setName("CL_" + productCount);
+            productCount++;
             reprojectedSourceProducts.add(targetProduct);
-            targetProduct.getBand("JD").setName("JD_" + productIndex);
-            targetProduct.getBand("CL").setName("CL_" + productIndex);
-            productIndex++;
+            System.out.println("added " + targetProduct.getName() + "; " + productCount);
+        }
+
+        System.out.println(reprojectedSourceProducts.size());
+        for (Product reprojectedSourceProduct : reprojectedSourceProducts) {
+            System.out.println(reprojectedSourceProduct.getName());
         }
 
         MergeOp mergeOp = new MergeOp();
-        mergeOp.setParameterDefaultValues();
         mergeOp.setSourceProduct("masterProduct", reprojectedSourceProducts.get(0));
         Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
         System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
         mergeOp.setSourceProducts(productsToMerge);
         Product mergedProduct = mergeOp.getTargetProduct();
-        StringBuilder jdExpression = new StringBuilder();
-        for (int i = 0; i < productIndex; i++) {
-            jdExpression.append("(JD_" + i + " > 0) ? JD_" + i + " : ");
-        }
-        jdExpression.append(" 0");
-        StringBuilder clExpression = new StringBuilder();
-        for (int i = 0; i < productIndex; i++) {
-            clExpression.append("(CL_" + i + " > 0) ? CL_" + i + " : ");
-        }
-        clExpression.append(" 0");
+
+        StringBuilder jdExpression = getExpression(productCount, "JD");
+        StringBuilder clExpression = getExpression(productCount, "CL");
+
         mergedProduct.addBand("merged_JD", jdExpression.toString());
         mergedProduct.addBand("merged_CL", clExpression.toString());
 
@@ -301,6 +300,16 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, DIMENSION, DIMENSION), GridFormatUtils.make2Dims(data.burnable, DIMENSION, DIMENSION));
 
         return data;
+    }
+
+    static StringBuilder getExpression(int productIndex, String s) {
+        StringBuilder jdExpression = new StringBuilder();
+        for (int i = 0; i < productIndex; i++) {
+            final String band = s + "_" + i;
+            jdExpression.append("(" + band + " > 0 and " + band + " < 997) ? " + band + " : ");
+        }
+        jdExpression.append(" 0");
+        return jdExpression;
     }
 
     private float scale(float cl) {
