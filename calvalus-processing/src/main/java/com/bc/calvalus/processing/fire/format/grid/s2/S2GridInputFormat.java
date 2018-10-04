@@ -34,7 +34,7 @@ public class S2GridInputFormat extends InputFormat {
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
         List<InputSplit> splits = new ArrayList<>(1000);
 
-        String tilePattern = "35NRC|35NRD|35NRE|36NTH|36NTJ|36NTK|36NUH|36NUJ|36NUK";
+        String tilePattern = "36NUJ|36NUK";
 
 //        for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
 //            String tilePattern = entry.getValue().toString();
