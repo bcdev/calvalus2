@@ -433,8 +433,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         } else {
             targetPixelX = (int) (sourcePixelX * (0.25 / Math.abs(sourceLon - targetLon0)));
         }
-        if (targetPixelX > DIMENSION) {
-            targetPixelX = DIMENSION;
+        if (targetPixelX >= DIMENSION) {
+            targetPixelX = DIMENSION - 1;
         }
 
         int targetPixelY;
@@ -443,11 +443,11 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         } else {
             targetPixelY = (int) (sourcePixelY * (0.25 / Math.abs(sourceLat - targetLat0)));
         }
-        if (targetPixelY > DIMENSION) {
-            targetPixelY = DIMENSION;
+        if (targetPixelY >= DIMENSION) {
+            targetPixelY = DIMENSION - 1;
         }
 
-        // third reformat as pixel index
+        // third: reformat as pixel index
 
         return targetPixelY * DIMENSION + targetPixelX;
     }
