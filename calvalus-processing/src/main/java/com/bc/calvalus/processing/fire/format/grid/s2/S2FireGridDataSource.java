@@ -64,7 +64,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         PixelPos sourcePixelPos = new PixelPos();
         GeoPos targetGeoPos = new GeoPos();
 
-        for (int targetPixelIndex = 0; targetPixelIndex < 5490; targetPixelIndex++) {
+        for (int targetPixelIndex = 0; targetPixelIndex < DIMENSION * DIMENSION; targetPixelIndex++) {
             targetGeoPos.lat = lat0 + targetPixelIndex * pixelSize;
             targetGeoPos.lon = lon0 + targetPixelIndex * pixelSize;
 
