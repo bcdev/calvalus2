@@ -116,12 +116,25 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 int sourcePixelIndex = y0 * DIMENSION + x0;
                 int targetPixelIndex = getTargetPixel(x0, y0, minGeoPos.lon, minGeoPos.lat, maxGeoPos.lon, maxGeoPos.lat, lon0, lat0);
                 if (targetPixelIndex > DIMENSION * DIMENSION) {
-                    targetPixelIndex = DIMENSION * DIMENSION - 1;
                     System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
+                    targetPixelIndex = DIMENSION * DIMENSION - 1;
+                    System.out.println("x0 = " + x0);
+                    System.out.println("minGeoPos.lon = " + minGeoPos.lon);
+                    System.out.println("minGeoPos.lat = " + minGeoPos.lat);
+                    System.out.println("maxGeoPos.lon = " + maxGeoPos.lon);
+                    System.out.println("maxGeoPos.lat = " + maxGeoPos.lat);
+                    System.out.println("lon0 = " + lon0);
+                    System.out.println("lat0 = " + lat0);
                 }
                 if (targetPixelIndex < 0) {
-                    targetPixelIndex = 0;
                     System.out.println("targetPixelIndex " + targetPixelIndex + " out of target range");
+                    System.out.println("x0 = " + x0);
+                    System.out.println("minGeoPos.lon = " + minGeoPos.lon);
+                    System.out.println("minGeoPos.lat = " + minGeoPos.lat);
+                    System.out.println("maxGeoPos.lon = " + maxGeoPos.lon);
+                    System.out.println("maxGeoPos.lat = " + maxGeoPos.lat);
+                    System.out.println("lon0 = " + lon0);
+                    System.out.println("lat0 = " + lat0);
                 }
 
                 int sourceJD = (int) getFloatPixelValue(jd, key, sourcePixelIndex);
