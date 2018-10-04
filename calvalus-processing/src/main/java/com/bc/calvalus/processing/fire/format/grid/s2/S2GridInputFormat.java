@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -34,19 +33,23 @@ public class S2GridInputFormat extends InputFormat {
         Properties tiles = new Properties();
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
         List<InputSplit> splits = new ArrayList<>(1000);
-        for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
-            String tilePattern = entry.getValue().toString();
+
+        String tilePattern = "35NRC|35NRD|35NRE|36NTH|36NTJ|36NTK|36NUH|36NUJ|36NUK";
+
+//        for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
+//            String tilePattern = entry.getValue().toString();
             String[] utmTiles = tilePattern.split("\\|");
             List<FileStatus> fileStatuses = new ArrayList<>();
             for (String utmTile : utmTiles) {
                 String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + utmTile + "/BA-.*" + year + month + ".*nc";
                 Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
             }
-            if (fileStatuses.size() == 0) {
-                continue;
-            }
-            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, entry.getKey().toString());
-        }
+//            if (fileStatuses.size() == 0) {
+//                continue;
+//            }
+        addSplit(fileStatuses.toArray(new FileStatus[0]), splits, "x210y94");
+//            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, entry.getKey().toString());
+//        }
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }

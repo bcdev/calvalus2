@@ -57,11 +57,42 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
                 System.gc();
+
+                if (targetGridCellIndex != 15) {
+                    targetGridCellIndex++;
+                    continue;
+                }
+
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     targetGridCellIndex++;
                     continue;
                 }
+
+                List<Integer> poses = new ArrayList<>();
+                float[] burnedPixels = data.burnedPixels;
+                for (int i = 0; i < burnedPixels.length; i++) {
+                    float d = burnedPixels[i];
+                    if (d > 0.0 && d < 367) {
+                        poses.add(i);
+                    }
+                }
+
+                double[] burnedToPrint = new double[poses.size()];
+                double[] areasToPrint = new double[poses.size()];
+                boolean[] burnableToPrint = new boolean[poses.size()];
+                for (int i = 0; i < poses.size(); i++) {
+                    Integer pos = poses.get(i);
+                    burnedToPrint[i] = data.burnedPixels[pos];
+                    areasToPrint[i] = data.areas[pos];
+                    burnableToPrint[i] = data.burnable[pos];
+                }
+
+                System.out.println(Arrays.toString(burnedToPrint));
+                System.out.println(Arrays.toString(areasToPrint));
+                System.out.println(Arrays.toString(burnableToPrint));
+                System.out.println(data.patchCount);
+
                 double baValue = 0.0F;
                 double coverageValue = 0.0F;
                 double burnableFractionValue = 0.0;

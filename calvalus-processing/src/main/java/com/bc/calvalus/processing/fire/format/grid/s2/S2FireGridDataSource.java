@@ -13,6 +13,7 @@ import org.esa.snap.core.gpf.GPF;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
@@ -60,6 +61,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();
 
+        int targetPixelIndex = 0;
+
         for (Integer i : productIndices) {
             Product product = sourceProducts[i];
             Product lcProduct = lcProducts[i];
@@ -87,7 +90,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             if (currentEntry == null) {
                 throw new IllegalStateException("Zip entry '" + tile + "-" + utmTile + "-" + x + "-" + y + ".dat' not found in " + geoLookupTable.getName() + "; check the auxiliary data.");
             }
-            BufferedReader br = new BufferedReader(new InputStreamReader(geoLookupTable.getInputStream(currentEntry), "UTF-8"));
+            BufferedReader br = new BufferedReader(new InputStreamReader(geoLookupTable.getInputStream(currentEntry), StandardCharsets.UTF_8));
 
             String line;
             AreaCalculator areaCalculator = new AreaCalculator(product.getSceneGeoCoding());
@@ -102,38 +105,39 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 int x0 = Integer.parseInt(splitLine[2]);
                 int y0 = Integer.parseInt(splitLine[3]);
 
-                int pixelIndex = y0 * DIMENSION + x0;
+                int sourcePixelIndex = y0 * DIMENSION + x0;
 
-                int sourceJD = (int) getFloatPixelValue(jd, key, pixelIndex);
+                int sourceJD = (int) getFloatPixelValue(jd, key, sourcePixelIndex);
                 boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
                 if (isValidPixel) {
                     // set burned pixel value consistently with CL value -- both if burned pixel is valid
-                    data.burnedPixels[pixelIndex] = sourceJD;
+                    data.burnedPixels[targetPixelIndex] = sourceJD;
 
                     float sourceCL;
                     if (cl != null) {
-                        sourceCL = getFloatPixelValue(cl, key, pixelIndex);
+                        sourceCL = getFloatPixelValue(cl, key, sourcePixelIndex);
                     } else {
                         sourceCL = 0.0F;
                     }
 
                     sourceCL = scale(sourceCL);
-                    data.probabilityOfBurn[pixelIndex] = sourceCL;
+                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 }
 
-                int sourceLC = getIntPixelValue(lc, key, pixelIndex);
-                data.burnable[pixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
-                data.lcClasses[pixelIndex] = sourceLC;
+                int sourceLC = getIntPixelValue(lc, key, sourcePixelIndex);
+                data.burnable[targetPixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
+                data.lcClasses[targetPixelIndex] = sourceLC;
                 if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
                     int productJD = getProductJD(product);
                     if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, productJD)) {
-                        data.statusPixels[pixelIndex] = 1;
+                        data.statusPixels[targetPixelIndex] = 1;
                     }
                 }
 
-                if (data.areas[pixelIndex] == GridFormatUtils.NO_AREA) {
-                    data.areas[pixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
+                if (data.areas[targetPixelIndex] == GridFormatUtils.NO_AREA) {
+                    data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
                 }
+                targetPixelIndex++;
             }
         }
 
