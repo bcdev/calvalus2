@@ -58,8 +58,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         SourceData data = new SourceData(DIMENSION, DIMENSION);
         data.reset();
 
-        int lon0 = Integer.parseInt(tile.split("y")[0].replace("x", ""));
-        int lat0 = Integer.parseInt(tile.split("y")[1].replace("y", ""));
+        int lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", ""));
+        int lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", ""));
         double pixelSize = 0.25 / 5490.0;
         PixelPos sourcePixelPos = new PixelPos();
         GeoPos targetGeoPos = new GeoPos();
