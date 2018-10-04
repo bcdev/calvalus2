@@ -89,20 +89,36 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             targetProduct.getBand("CL").setName("CL_" + productCount);
             productCount++;
             reprojectedSourceProducts.add(targetProduct);
-            System.out.println("added " + targetProduct.getName() + "; " + productCount);
         }
 
-        System.out.println(reprojectedSourceProducts.size());
-        for (Product reprojectedSourceProduct : reprojectedSourceProducts) {
-            System.out.println(reprojectedSourceProduct.getName());
+        Product mergedProduct = null;
+
+        try {
+            MergeOp mergeOp = new MergeOp();
+            mergeOp.setParameterDefaultValues();
+            Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
+            System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
+            mergeOp.setSourceProducts(productsToMerge);
+            Product product = reprojectedSourceProducts.get(0);
+            System.out.println(product.getName());
+            mergeOp.setSourceProduct("masterProduct", product);
+            mergedProduct = mergeOp.getTargetProduct();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        MergeOp mergeOp = new MergeOp();
-        mergeOp.setSourceProduct("masterProduct", reprojectedSourceProducts.get(0));
-        Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
-        System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
-        mergeOp.setSourceProducts(productsToMerge);
-        Product mergedProduct = mergeOp.getTargetProduct();
+        if (mergedProduct == null) {
+
+            MergeOp mergeOp = new MergeOp();
+            mergeOp.setParameterDefaultValues();
+            Product[] productsToMerge = new Product[reprojectedSourceProducts.size() - 1];
+            System.arraycopy(reprojectedSourceProducts.toArray(new Product[0]), 1, productsToMerge, 0, reprojectedSourceProducts.size() - 1);
+            mergeOp.setSourceProducts(productsToMerge);
+            Product product = reprojectedSourceProducts.get(0);
+            System.out.println(product.getName());
+            mergeOp.setParameter("masterProduct", product);
+            mergedProduct = mergeOp.getTargetProduct();
+        }
 
         StringBuilder jdExpression = getExpression(productCount, "JD");
         StringBuilder clExpression = getExpression(productCount, "CL");
