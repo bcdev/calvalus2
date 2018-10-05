@@ -25,9 +25,9 @@ public class SourceData {
         this.height = height;
         burnedPixels = new float[width * height];
         areas = new double[width * height];
-        statusPixels = new int[width * height];
+//        statusPixels = new int[width * height];
         lcClasses = new int[width * height];
-        burnable = new boolean[width * height];
+//        burnable = new boolean[width * height];
         probabilityOfBurn = new double[width * height];
     }
 
@@ -35,8 +35,8 @@ public class SourceData {
         Arrays.fill(burnedPixels, NO_DATA);
         Arrays.fill(lcClasses, 0);
         Arrays.fill(areas, NO_AREA);
-        Arrays.fill(statusPixels, 0);
-        Arrays.fill(burnable, false);
+//        Arrays.fill(statusPixels, 0);
+//        Arrays.fill(burnable, false);
         Arrays.fill(probabilityOfBurn, 0.0);
 
     }

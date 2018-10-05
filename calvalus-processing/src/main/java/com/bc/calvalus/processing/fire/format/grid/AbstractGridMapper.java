@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -58,40 +59,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             for (int x = 0; x < targetRasterWidth; x++) {
                 System.gc();
 
-                if (targetGridCellIndex != 15) {
-                    targetGridCellIndex++;
-                    continue;
-                }
-
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     targetGridCellIndex++;
                     continue;
                 }
-
-                List<Integer> poses = new ArrayList<>();
-                float[] burnedPixels = data.burnedPixels;
-                for (int i = 0; i < burnedPixels.length; i++) {
-                    float d = burnedPixels[i];
-                    if (d > 0.0 && d < 367) {
-                        poses.add(i);
-                    }
-                }
-
-                double[] burnedToPrint = new double[poses.size()];
-                double[] areasToPrint = new double[poses.size()];
-                boolean[] burnableToPrint = new boolean[poses.size()];
-                for (int i = 0; i < poses.size(); i++) {
-                    Integer pos = poses.get(i);
-                    burnedToPrint[i] = data.burnedPixels[pos];
-                    areasToPrint[i] = data.areas[pos];
-                    burnableToPrint[i] = data.burnable[pos];
-                }
-
-                System.out.println(Arrays.toString(burnedToPrint));
-                System.out.println(Arrays.toString(areasToPrint));
-                System.out.println(Arrays.toString(burnableToPrint));
-                System.out.println(data.patchCount);
 
                 double baValue = 0.0F;
                 double coverageValue = 0.0F;
@@ -101,15 +73,18 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
-                    if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, data.burnable[i])) {
+                    boolean isBurnable = LcRemappingS2.isInBurnableLcClass(data.lcClasses[i]);
+                    if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
                         numberOfBurnedPixels++;
                         double burnedArea = scale(burnedPixel, data.areas[i]);
                         baValue += burnedArea;
                         addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
                     }
 
-                    burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
-                    coverageValue += (data.statusPixels[i] == 1 && data.burnable[i]) ? data.areas[i] : 0.0;
+//                    burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
+                    burnableFractionValue += isBurnable ? data.areas[i] : 0.0;
+                    boolean hasBeenObserved = data.burnedPixels[i] >= 0;
+                    coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
                     areas[targetGridCellIndex] += data.areas[i];
                     validate(areas[targetGridCellIndex], targetGridCellIndex);
                 }

@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.ProductData;
@@ -36,6 +37,18 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
     @Override
     public void setDoyLastOfMonth(int doyLastOfMonth) {
         this.doyLastOfMonth = doyLastOfMonth;
+    }
+
+    public int getPatchNumbers(float[][] pixels, int[][] lcClass) {
+        int patchCount = 0;
+        for (int i = 0; i < pixels.length; i++) {
+            for (int j = 0; j < pixels[i].length; j++) {
+                if (clearObjects(pixels, lcClass, i, j)) {
+                    patchCount++;
+                }
+            }
+        }
+        return patchCount;
     }
 
     public int getPatchNumbers(float[][] pixels, boolean[][] burnable) {
@@ -83,6 +96,22 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
             currentMinY = pixelIndexY - pixelIndexY % cacheSize;
             bandToMinY.put(key, currentMinY);
         }
+    }
+
+    private boolean clearObjects(float[][] array, int[][] lcClass, int x, int y) {
+        if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
+            return false;
+        }
+        boolean burnable = LcRemappingS2.isInBurnableLcClass(lcClass[x][y]);
+        if (burnable && isBurned(array[x][y])) {
+            array[x][y] = 0;
+            clearObjects(array, lcClass, x - 1, y);
+            clearObjects(array, lcClass, x + 1, y);
+            clearObjects(array, lcClass, x, y - 1);
+            clearObjects(array, lcClass, x, y + 1);
+            return true;
+        }
+        return false;
     }
 
     private boolean clearObjects(float[][] array, boolean[][] burnable, int x, int y) {

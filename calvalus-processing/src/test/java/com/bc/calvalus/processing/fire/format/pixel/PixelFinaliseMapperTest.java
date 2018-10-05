@@ -332,7 +332,6 @@ public class PixelFinaliseMapperTest {
                     }
                 }
             }
-            break;
         }
     }
 
@@ -342,12 +341,19 @@ public class PixelFinaliseMapperTest {
         String targetDir = "c:\\ssd\\";
         PixelProductArea area = new GlobalPixelProductAreaProvider().getArea(GlobalPixelProductAreaProvider.GlobalPixelProductArea.SOUTH_AMERICA.name());
         String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
-        String baseFilename = new ModisPixelFinaliseMapper().createBaseFilename("2010" + "", "01", "FireCCI51", areaString);
 
-        String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.MODIS_TEMPLATE, "2010", "01", "fv5.1", areaString);
-        try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
-            fw.write(metadata);
+        for (int i = 2001; i < 2016; i++) {
+            for (int m = 1; m < 13; m++) {
+                String year = i + "";
+                String month = m < 10 ? "0" + m : "" + m;
+                String baseFilename = new ModisPixelFinaliseMapper().createBaseFilename(year, month, "FireCCI51", areaString);
+                String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.MODIS_TEMPLATE, year, month, "fv5.1", areaString);
+                try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
+                    fw.write(metadata);
+                }
+            }
         }
+
     }
 
     private static MonthYear[] s2MonthYears() {
@@ -407,6 +413,6 @@ public class PixelFinaliseMapperTest {
     @Test
     public void name() throws Exception {
         System.out.println(new Polygon(new int[]{11170, 11170, 8942, 9888, 10141, 10087, 10277, 11147}, new int[]{20407, 27816, 27816, 25623, 24088, 23259, 21898, 20271}, 8)
-        .contains(new Point(10705, 22652)));
+                .contains(new Point(10705, 22652)));
     }
 }

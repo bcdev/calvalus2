@@ -3,6 +3,8 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.S2Strategy;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -14,6 +16,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,30 +31,76 @@ public class S2GridInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        String year = conf.get("calvalus.year");
         String month = conf.get("calvalus.month");
         Properties tiles = new Properties();
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
         List<InputSplit> splits = new ArrayList<>(1000);
 
-        String tilePattern = "35NRC|35NRD|35NRE|36NTH|36NTJ|36NTK|36NUH|36NUJ|36NUK";
+//        for (Object twoDegTile : new Object[]{"x210y94"}) {
+        int count = 1;
+        for (Object twoDegTile : tiles.keySet()) {
 
-//        for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
-//            String tilePattern = entry.getValue().toString();
-            String[] utmTiles = tilePattern.split("\\|");
-            List<FileStatus> fileStatuses = new ArrayList<>();
-            for (String utmTile : utmTiles) {
-                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + utmTile + "/BA-.*" + year + month + ".*nc";
-                Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
+            String tile = twoDegTile.toString();
+            int tileX = Integer.parseInt(tile.split("y")[0].substring(1));
+            int tileY = Integer.parseInt(tile.split("y")[1]);
+            for (int k = 0; k < 4; k++) {
+                System.out.println("Finding splits for tile " + count + "/" + tiles.keySet().size());
+                String oneDegTile;
+                switch (k) {
+                    case 0:
+                        oneDegTile = twoDegTile.toString();
+                        break;
+                    case 1:
+                        oneDegTile = "x" + (tileX + 1) + "y" + tileY;
+                        break;
+                    case 2:
+                        oneDegTile = "x" + (tileX + 1) + "y" + (tileY + 1);
+                        break;
+                    case 3:
+                        oneDegTile = "x" + tileX + "y" + (tileY + 1);
+                        break;
+                    default:
+                        throw new IllegalStateException("Will never come here.");
+                }
+
+                S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[] areas = getAreas(oneDegTile);
+                List<FileStatus> fileStatuses = new ArrayList<>();
+                for (S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea area : areas) {
+                    String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-pixel/" + area.name() + "-2016-" + month + "-Fire-Pixel-Formatting.*/.*tif";
+                    Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
+                }
+                if (fileStatuses.size() == 0) {
+                    continue;
+                }
+                addSplit(fileStatuses.toArray(new FileStatus[0]), splits, oneDegTile);
             }
-//            if (fileStatuses.size() == 0) {
-//                continue;
-//            }
-        addSplit(fileStatuses.toArray(new FileStatus[0]), splits, "x210y94");
-//            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, entry.getKey().toString());
-//        }
+        }
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
+    }
+
+    static S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[] getAreas(Object oneDegTile) {
+        String tile = oneDegTile.toString();
+        int tileX = Integer.parseInt(tile.split("y")[0].substring(1));
+        int tileY = Integer.parseInt(tile.split("y")[1]);
+
+        PixelProductArea[] allAreas = new S2Strategy().getAllAreas();
+        List<PixelProductArea> areas = new ArrayList<>();
+
+        for (PixelProductArea area : allAreas) {
+            Rectangle refRectangle = new Rectangle(area.left, area.bottom, 5, 5);
+            Rectangle rectangle = new Rectangle(tileX, tileY, 1, 1);
+            if (rectangle.intersects(refRectangle)) {
+                areas.add(area);
+            }
+        }
+
+        S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[] result = new S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[areas.size()];
+        for (int i = 0; i < areas.size(); i++) {
+            PixelProductArea area = areas.get(i);
+            result[i] = S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea.valueOf(area.nicename);
+        }
+        return result;
     }
 
     private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, String twoDegreeTile) throws IOException {
@@ -78,7 +127,9 @@ public class S2GridInputFormat extends InputFormat {
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
     }
 
+    @Override
     public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
         return new NoRecordReader();
     }
+
 }

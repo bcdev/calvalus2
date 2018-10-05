@@ -195,13 +195,13 @@ public abstract class PixelFinaliseMapper extends Mapper {
         VelocityContext velocityContext = new VelocityContext();
         velocityContext.put("UUID", UUID.randomUUID().toString());
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
-        velocityContext.put("zoneId", area);
+        velocityContext.put("zoneId", nicename);
         velocityContext.put("zoneName", nicename);
         velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
         velocityContext.put("westLon", Integer.parseInt(left) - 180);
         velocityContext.put("eastLon", Integer.parseInt(right) - 180);
-        velocityContext.put("northLat", 90 - Integer.parseInt(top));
-        velocityContext.put("southLat", 90 - Integer.parseInt(bottom));
+        velocityContext.put("northLat", Integer.parseInt(top) - 90);
+        velocityContext.put("southLat", Integer.parseInt(bottom) - 90);
         velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
         velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
 

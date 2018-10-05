@@ -208,9 +208,9 @@ public class S2Strategy implements SensorStrategy {
         }
     }
 
-    private static class S2PixelProductAreaProvider implements PixelProductAreaProvider {
+    public static class S2PixelProductAreaProvider implements PixelProductAreaProvider {
 
-        private enum S2PixelProductArea {
+        public enum S2PixelProductArea {
             h31v14,
             h31v15,
             h32v13,

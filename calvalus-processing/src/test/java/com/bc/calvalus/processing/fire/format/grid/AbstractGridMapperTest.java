@@ -131,7 +131,7 @@ public class AbstractGridMapperTest {
             }
         });
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("v40h98", products.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("v40h98", products.toArray(new Product[0]), null, lcProducts.toArray(new Product[0]));
         mapper.setDataSource(dataSource);
 
         GridCells gridCells = mapper.computeGridCells(2016, 1);

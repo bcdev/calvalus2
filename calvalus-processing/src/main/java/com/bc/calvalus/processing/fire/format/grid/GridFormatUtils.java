@@ -13,6 +13,23 @@ public class GridFormatUtils {
     public static final int NO_AREA = 0;
     public static double S2_GRID_PIXELSIZE = 0.0001810432608;
 
+    public static int[][] make2Dims(int[] pixels) {
+        int length = pixels.length;
+        if ((int) (Math.sqrt(length) + 0.5) * (int) (Math.sqrt(length) + 0.5) != length) {
+            throw new IllegalArgumentException();
+        }
+        int size = (int) Math.sqrt(length);
+        return make2Dims(pixels, size, size);
+    }
+
+    public static int[][] make2Dims(int[] pixels, int width, int height) {
+        int[][] result = new int[height][width];
+        for (int r = 0; r < height; r++) {
+            System.arraycopy(pixels, r * width, result[r], 0, width);
+        }
+        return result;
+    }
+
     public static float[][] make2Dims(float[] pixels) {
         int length = pixels.length;
         if ((int) (Math.sqrt(length) + 0.5) * (int) (Math.sqrt(length) + 0.5) != length) {
@@ -23,7 +40,7 @@ public class GridFormatUtils {
     }
 
     public static float[][] make2Dims(float[] pixels, int width, int height) {
-        float[][] result = new float[width][height];
+        float[][] result = new float[height][width];
         for (int r = 0; r < height; r++) {
             System.arraycopy(pixels, r * width, result[r], 0, width);
         }
@@ -40,7 +57,7 @@ public class GridFormatUtils {
     }
 
     public static boolean[][] make2Dims(boolean[] pixels, int width, int height) {
-        boolean[][] result = new boolean[width][height];
+        boolean[][] result = new boolean[height][width];
         for (int r = 0; r < height; r++) {
             System.arraycopy(pixels, r * width, result[r], 0, width);
         }

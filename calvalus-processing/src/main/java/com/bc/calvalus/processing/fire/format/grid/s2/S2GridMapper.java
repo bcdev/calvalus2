@@ -10,14 +10,15 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 /**
  * Runs the fire S2 formatting grid mapper.
@@ -27,7 +28,7 @@ import java.util.zip.ZipFile;
 public class S2GridMapper extends AbstractGridMapper {
 
     private static final int GRID_CELLS_PER_DEGREE = 4;
-    private static final int NUM_GRID_CELLS = 2;
+    private static final int NUM_GRID_CELLS = 1;
     private Context context;
 
     protected S2GridMapper() {
@@ -48,55 +49,47 @@ public class S2GridMapper extends AbstractGridMapper {
         }
         LOG.info("paths=" + Arrays.toString(paths));
 
-        List<ZipFile> geoLookupTables = new ArrayList<>();
-        String twoDegTile = paths[paths.length - 1].getName();
+        String oneDegTile = paths[paths.length - 1].getName();
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
+        List<Product> clProducts = new ArrayList<>();
         ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight + paths.length - 1);
         for (int i = 0; i < paths.length - 1; i++) {
-            String utmTile = paths[i].getName().substring(4, 9);
-            String localGeoLookupFileName = twoDegTile + "-" + utmTile + ".zip";
-            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-geolookup/" + localGeoLookupFileName);
-            if (!new File(localGeoLookupFileName).exists()) {
-                File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
-                geoLookupTables.add(new ZipFile(localGeoLookup));
+            File productFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+            Product product = ProductIO.readProduct(productFile);
+            if (product == null) {
+                throw new IllegalStateException("Product " + productFile + " is broken.");
             }
-            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            Product sourceProduct = ProductIO.readProduct(sourceProductFile);
-            sourceProducts.add(sourceProduct);
+            if (productFile.getName().contains("JD")) {
+                sourceProducts.add(product);
+            } else if (productFile.getName().contains("CL")) {
+                clProducts.add(product);
+            } else if (productFile.getName().contains("LC")) {
+                lcProducts.add(product);
+            } else {
+                throw new IllegalStateException("Unknown product: " + productFile.getName());
+            }
 
-            if (sourceProduct == null) {
-                throw new IllegalStateException("Product " + sourceProductFile + " is broken.");
-            }
-
-            Path lcPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2-from-s2/lc-2010-T" + utmTile + ".nc");
-            File lcFile = new File(".", lcPath.getName());
-            if (!lcFile.exists()) {
-                CalvalusProductIO.copyFileToLocal(lcPath, lcFile, context.getConfiguration());
-            }
-            Product lcProduct = ProductIO.readProduct(lcFile);
-            if (lcProduct == null) {
-                throw new IllegalStateException("LC Product " + lcFile + " is broken.");
-            }
-            lcProducts.add(lcProduct);
+            sourceProducts.sort(Comparator.comparing(ProductNode::getName));
+            clProducts.sort(Comparator.comparing(ProductNode::getName));
+            lcProducts.sort(Comparator.comparing(ProductNode::getName));
             LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 1)));
             pm.worked(1);
         }
 
-
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource(twoDegTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource(oneDegTile, sourceProducts.toArray(new Product[0]), clProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]));
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
         setDataSource(dataSource);
         GridCells gridCells = computeGridCells(year, month, pm);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, twoDegTile)), gridCells);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, oneDegTile)), gridCells);
     }
 
     @Override

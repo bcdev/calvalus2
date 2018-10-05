@@ -14,7 +14,7 @@ import java.io.IOException;
 
 public class S2GridReducer extends AbstractGridReducer {
 
-    private static final int S2_CHUNK_SIZE = 8;
+    private static final int S2_CHUNK_SIZE = 4;
     private final NcFileFactory s2NcFileFactory;
 
     public S2GridReducer() {
@@ -57,8 +57,16 @@ public class S2GridReducer extends AbstractGridReducer {
 
     @Override
     protected int getX(String key) {
+        key = key.split("-")[2]; // x210y40
+        String xPart = key.split("y")[0].substring(1); // 210
+        return Integer.parseInt(xPart) * 4;
+    }
+
+    @Override
+    protected int getY(String key) {
         key = key.split("-")[2];
-        return Integer.parseInt(key.split("y")[0].substring(1)) * 4;
+        int y = Integer.parseInt(key.split("y")[1]);
+        return (180 - y) * 4;
     }
 
     @Override
@@ -104,13 +112,6 @@ public class S2GridReducer extends AbstractGridReducer {
             ncFile.write(vegetationClass, new int[]{i, 0}, values);
         }
         */
-    }
-
-    @Override
-    protected int getY(String key) {
-        key = key.split("-")[2];
-        int y = Integer.parseInt(key.split("y")[1]);
-        return (180 - y) * 4;
     }
 
 }

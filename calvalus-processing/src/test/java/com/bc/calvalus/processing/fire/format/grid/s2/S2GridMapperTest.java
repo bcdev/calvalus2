@@ -36,7 +36,7 @@ public class S2GridMapperTest {
         List<Product>[] products = getProducts("30NUN");
         List<ZipFile> geoLookupTables = getGeoLookupTables("x174y98", "30NUN");
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("x174y98", products[0].toArray(new Product[0]), products[1].toArray(new Product[0]), geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("x174y98", products[0].toArray(new Product[0]), null, products[1].toArray(new Product[0]));
 
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
@@ -93,7 +93,7 @@ public class S2GridMapperTest {
         List<Product>[] products = getProducts("35MLS");
         List<ZipFile> geoLookupTables = getGeoLookupTables("x204y88", "35MLS");
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("x204y88", products[0].toArray(new Product[0]), products[1].toArray(new Product[0]), geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("x204y88", products[0].toArray(new Product[0]), null, products[1].toArray(new Product[0]));
 
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
@@ -130,7 +130,7 @@ public class S2GridMapperTest {
         List<Product>[] products = getProducts("28PBA");
         List<ZipFile> geoLookupTables = getGeoLookupTables("x162y106", "28PBA");
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("x162y106", products[0].toArray(new Product[0]), products[1].toArray(new Product[0]), geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("x162y106", products[0].toArray(new Product[0]), null, products[1].toArray(new Product[0]));
 
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
