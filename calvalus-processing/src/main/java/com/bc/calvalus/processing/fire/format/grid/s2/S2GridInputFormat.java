@@ -32,7 +32,6 @@ public class S2GridInputFormat extends InputFormat {
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
         List<InputSplit> splits = new ArrayList<>(1000);
 
-//        for (Object twoDegTile : new Object[]{"x210y94"}) {
         int count = 1;
         for (Object twoDegTile : tiles.keySet()) {
 
@@ -61,6 +60,7 @@ public class S2GridInputFormat extends InputFormat {
 
                 S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[] areas = getAreas(oneDegTile);
                 addSplit(areas, splits, oneDegTile);
+                count++;
             }
         }
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
