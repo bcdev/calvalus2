@@ -53,12 +53,15 @@ public class S2GridMapper extends AbstractGridMapper {
         List<File> paths = new ArrayList<>();
         for (int i = 0; i < fakePaths.length - 1; i++) {
             Path path = fakePaths[i];
+            System.out.println(path.getName());
             String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-pixel/" + path.getName() + "-2016-" + month + "-Fire-Pixel-Formatting.*/.*tif";
+            System.out.println(inputPathPattern);
             FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, context.getConfiguration());
             for (FileStatus fileStatus : fileStatuses) {
                 File file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), context.getConfiguration());
                 paths.add(file);
             }
+            System.out.println(paths.size());
         }
 
         String oneDegTile = fakePaths[fakePaths.length - 1].getName();
