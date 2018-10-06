@@ -39,7 +39,7 @@ public class S2GridInputFormat extends InputFormat {
             int tileX = Integer.parseInt(tile.split("y")[0].substring(1));
             int tileY = Integer.parseInt(tile.split("y")[1]);
             for (int k = 0; k < 4; k++) {
-                System.out.println("Finding splits for tile " + count + "/" + tiles.keySet().size());
+                System.out.println("Finding splits for tile " + count + "/" + tiles.keySet().size() * 4);
                 String oneDegTile;
                 switch (k) {
                     case 0:

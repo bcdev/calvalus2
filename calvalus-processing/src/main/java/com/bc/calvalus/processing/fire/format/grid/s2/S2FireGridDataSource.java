@@ -48,7 +48,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         // e.g. tile == x210y94
         double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 0.25;
-        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + y * 0.25;
+        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - y * 0.25;
 
         int totalWidth = 0;
         int totalHeight = 0;
@@ -83,9 +83,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             AreaCalculator areaCalculator = new AreaCalculator(jdSubset.getSceneGeoCoding());
 
             for (int lineIndex = 0; lineIndex < jdSubset.getSceneRasterHeight(); lineIndex++) {
-                if (lineIndex % 250 == 0) {
-                    System.out.println((lineIndex + 1) + "/" + jdSubset.getSceneRasterHeight());
-                }
                 int width = jdSubset.getSceneRasterWidth();
 
                 int[] jdPixels = new int[width];
