@@ -48,7 +48,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         // e.g. tile == x210y94
         double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 0.25;
-        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - y * 0.25;
+        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) - y * 0.25;
 
         int totalWidth = 0;
         int totalHeight = 0;
