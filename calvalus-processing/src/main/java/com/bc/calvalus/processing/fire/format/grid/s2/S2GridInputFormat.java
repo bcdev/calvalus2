@@ -1,13 +1,10 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.S2Strategy;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -19,7 +16,6 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -64,15 +60,7 @@ public class S2GridInputFormat extends InputFormat {
                 }
 
                 S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[] areas = getAreas(oneDegTile);
-                List<FileStatus> fileStatuses = new ArrayList<>();
-                for (S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea area : areas) {
-                    String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-pixel/" + area.name() + "-2016-" + month + "-Fire-Pixel-Formatting.*/.*tif";
-                    Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
-                }
-                if (fileStatuses.size() == 0) {
-                    continue;
-                }
-                addSplit(fileStatuses.toArray(new FileStatus[0]), splits, oneDegTile);
+                addSplit(areas, splits, oneDegTile);
             }
         }
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
@@ -103,13 +91,12 @@ public class S2GridInputFormat extends InputFormat {
         return result;
     }
 
-    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, String twoDegreeTile) throws IOException {
+    private void addSplit(S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea[] areas, List<InputSplit> splits, String twoDegreeTile) {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
-        for (FileStatus fileStatus : fileStatuses) {
-            Path path = fileStatus.getPath();
-            filePaths.add(path);
-            fileLengths.add(fileStatus.getLen());
+        for (S2Strategy.S2PixelProductAreaProvider.S2PixelProductArea area : areas) {
+            filePaths.add(new Path(area.name()));
+            fileLengths.add(0L);
         }
         filePaths.add(new Path(twoDegreeTile));
         fileLengths.add(0L);
@@ -118,17 +105,8 @@ public class S2GridInputFormat extends InputFormat {
         splits.add(combineFileSplit);
     }
 
-    private FileStatus[] getFileStatuses(String inputPathPatterns,
-                                         Configuration conf) throws IOException {
-
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
-    }
-
     @Override
-    public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+    public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) {
         return new NoRecordReader();
     }
 

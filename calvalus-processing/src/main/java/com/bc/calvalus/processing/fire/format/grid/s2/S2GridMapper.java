@@ -1,10 +1,14 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
+import com.bc.calvalus.commons.InputPathResolver;
+import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -29,7 +33,6 @@ public class S2GridMapper extends AbstractGridMapper {
 
     private static final int GRID_CELLS_PER_DEGREE = 4;
     private static final int NUM_GRID_CELLS = 1;
-    private Context context;
 
     protected S2GridMapper() {
         super(NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE, NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE);
@@ -37,27 +40,35 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-
-        this.context = context;
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
-        Path[] paths = inputSplit.getPaths();
-        if (paths.length == 1) {
+        Path[] fakePaths = inputSplit.getPaths();
+        if (fakePaths.length == 1) {
             return;
         }
-        LOG.info("paths=" + Arrays.toString(paths));
+        LOG.info("paths=" + Arrays.toString(fakePaths));
 
-        String oneDegTile = paths[paths.length - 1].getName();
+        List<File> paths = new ArrayList<>();
+        for (int i = 0; i < fakePaths.length - 1; i++) {
+            Path path = fakePaths[i];
+            String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-pixel/" + path.getName() + "-2016-" + month + "-Fire-Pixel-Formatting.*/.*tif";
+            FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, context.getConfiguration());
+            for (FileStatus fileStatus : fileStatuses) {
+                File file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), context.getConfiguration());
+                paths.add(file);
+            }
+        }
+
+        String oneDegTile = fakePaths[fakePaths.length - 1].getName();
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
         List<Product> clProducts = new ArrayList<>();
         ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight + paths.length - 1);
-        for (int i = 0; i < paths.length - 1; i++) {
-            File productFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+        pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight);
+        for (File productFile : paths) {
             Product product = ProductIO.readProduct(productFile);
             if (product == null) {
                 throw new IllegalStateException("Product " + productFile + " is broken.");
@@ -75,8 +86,6 @@ public class S2GridMapper extends AbstractGridMapper {
             sourceProducts.sort(Comparator.comparing(ProductNode::getName));
             clProducts.sort(Comparator.comparing(ProductNode::getName));
             lcProducts.sort(Comparator.comparing(ProductNode::getName));
-            LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 1)));
-            pm.worked(1);
         }
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
@@ -153,4 +162,12 @@ public class S2GridMapper extends AbstractGridMapper {
             baInLc.get(sourceLc - 1)[targetGridCellIndex] += inBurnableClass ? burnedArea : 0.0F;
         }
     }
+
+    private FileStatus[] getFileStatuses(String inputPathPatterns, Configuration conf) throws IOException {
+        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
+        InputPathResolver inputPathResolver = new InputPathResolver();
+        List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
+        return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
+    }
+
 }
