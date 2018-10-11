@@ -96,6 +96,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 patchNumber[targetGridCellIndex] = data.patchCount;
 
                 if (mustHandleCoverageSpecifially(x)) {
+                    LOG.info("Handling LC specially.");
                     burnableFractionValue = getSpecialBurnableFractionValue(x, y);
                     coverageValue = specialCoverageValue;
                 }
