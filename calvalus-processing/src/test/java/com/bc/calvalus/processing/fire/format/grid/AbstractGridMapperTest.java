@@ -206,7 +206,7 @@ public class AbstractGridMapperTest {
         ZipFile geoLookupTable = new ZipFile("C:\\ssd\\modis-analysis\\geoluts\\modis-geo-luts-000x.zip");
         geoLookupTables.add(geoLookupTable);
         String targetTile = "3,92";
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, geoLookupTables, targetTile);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, targetTile);
         mapper.setDataSource(dataSource);
 
         GridCells gridCells = mapper.computeGridCells(2006, 3);

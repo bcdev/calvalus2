@@ -33,7 +33,7 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1},
                 new Product[]{lcProduct1},
-                geoLookupTables, "765,340");
+                "765,340");
 
         dataSource.setDoyFirstOfMonth(1);
         dataSource.setDoyLastOfMonth(31);
@@ -124,7 +124,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1, product2},
                 new Product[]{lcProduct1, lcProduct2},
-                geoLookupTables,
                 "1408,480");
 
         dataSource.setDoyFirstOfMonth(335);
@@ -151,7 +150,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product3},
                 new Product[]{lcProduct3},
-                null,
                 null);
 
         dataSource.setDoyFirstOfMonth(121);
@@ -217,7 +215,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product},
                 new Product[]{lcProduct},
-                geoLookupTables,
                 "384,256");
 
         dataSource.setDoyFirstOfMonth(335);
