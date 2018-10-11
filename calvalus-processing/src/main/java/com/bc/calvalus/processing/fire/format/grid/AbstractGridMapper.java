@@ -56,6 +56,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
+
+                if (y != 10 || x != 0) {
+                    continue;
+                }
+
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     targetGridCellIndex++;
@@ -179,27 +184,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             }
         }
 
-        /*
-
-        int baCount = (int) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).filter(i -> i != 0).count();
-        if (baCount < ba.length * 0.05) {
-            // don't throw an error for too few observations
-            return;
-        }
-
-        float baSum = (float) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).sum();
-        float baInLcSum = 0;
-        for (float[] floats : baInLc) {
-            baInLcSum += IntStream.range(0, floats.length).mapToDouble(i -> floats[i]).sum();
-        }
-        if (Math.abs(baSum - baInLcSum) > baSum * 0.05) {
-            CalvalusLogger.getLogger().warning("Math.abs(baSum - baInLcSum) > baSum * 0.05:");
-            CalvalusLogger.getLogger().warning("baSum = " + baSum);
-            CalvalusLogger.getLogger().warning("baInLcSum " + baInLcSum);
-            throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
-        }
-
-        */
     }
 
     private static void validate(float[] errors, double[] ba) {

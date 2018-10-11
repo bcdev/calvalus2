@@ -17,8 +17,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
@@ -26,14 +24,12 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final Product[] products;
     private final Product[] lcProducts;
     private final String targetCell; // "800,312"
-    private final SortedSet<Long> alreadyVisitedPixelPoses;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(4800, 4800);
         this.products = products;
         this.lcProducts = lcProducts;
         this.targetCell = targetCell;
-        this.alreadyVisitedPixelPoses = new TreeSet<>();
     }
 
     @Override
@@ -68,19 +64,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band numbObs = product.getBand("numObs1");
             Band lc = lcProduct.getBand("lccs_class");
 
-            /*
-            TreeSet<String> sourcePixelPoses = new TreeSet<>((o1, o2) -> {
-                int y1 = Integer.parseInt(o1.split(",")[1]);
-                int y2 = Integer.parseInt(o2.split(",")[1]);
-                if (y1 == y) {
-                    return 0;
-                } else if (y1 < y2) {
-                    return -1;
-                } else return 1;
-            });
-            sourcePixelPoses.addAll(geoLookupTable.get(tile));
-*/
-
             float[] jdPixels = new float[4800 * 4800];
             jd.readPixels(0, 0, 4800, 4800, jdPixels);
 
@@ -96,8 +79,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             int[] lcPixels = new int[4800 * 4800];
             lc.readPixels(0, 0, 4800, 4800, lcPixels);
 
-            Set<String> tileStrings = geoLookupTable.get(tile);
-            for (String sourcePixelPos : tileStrings) {
+            for (String sourcePixelPos : geoLookupTable.get(tile)) {
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
@@ -111,38 +93,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
             }
 
-/*
-            for (String sourcePixelPos : sourcePixelPoses) {
-                String[] sppSplit = sourcePixelPos.split(",");
-                int x0 = Integer.parseInt(sppSplit[0]);
-                int y0 = Integer.parseInt(sppSplit[1]);
-                long key = createKey(tile, x0, y0);
-                if (alreadyVisitedPixelPoses.contains(key)) {
-                    continue;
-                }
-                alreadyVisitedPixelPoses.add(key);
-                int pixelIndex = y0 * 4800 + x0;
-                int sourceJD = (int) getFloatPixelValue(jd, tile, pixelIndex);
-                if (isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD)) {
-                    data.burnedPixels[pixelIndex] = sourceJD;
-                }
-
-                float sourceCL;
-                if (cl != null) {
-                    sourceCL = getFloatPixelValue(cl, tile, pixelIndex) / 100.0F;
-                } else {
-                    sourceCL = 0.0F;
-                }
-                data.probabilityOfBurn[pixelIndex] = sourceCL;
-
-                int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
-                data.lcClasses[pixelIndex] = sourceLC;
-                int sourceStatus = getIntPixelValue(numbObs, tile, pixelIndex);
-                data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
-
-                data.areas[pixelIndex] = MODIS_AREA_SIZE;
-            }
-            */
         }
 
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.lcClasses, 4800, 4800), LcRemapping::isInBurnableLcClass);
