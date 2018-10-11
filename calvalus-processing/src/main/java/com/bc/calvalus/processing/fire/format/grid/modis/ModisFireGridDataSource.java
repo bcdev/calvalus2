@@ -42,10 +42,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         int targetCellX = x + Integer.parseInt(targetCell.split(",")[0]);
         int targetCellY = y + Integer.parseInt(targetCell.split(",")[1]);
 
-        System.out.println(Instant.now().toString() + " get geo table");
 
         HashMap<String, Set<String>> geoLookupTable = getGeoLookupTable(targetCellX, targetCellY);
-        System.out.println(Instant.now().toString() + " make source data");
 
         SourceData data = new SourceData(4800, 4800);
         data.reset();
@@ -56,7 +54,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             return data;
         }
 
-        System.out.println(Instant.now().toString() + " starting product loop");
         for (int i = 0; i < products.length; i++) {
             Product product = products[i];
             Product lcProduct = lcProducts[i];
@@ -99,9 +96,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             int[] lcPixels = new int[4800 * 4800];
             lc.readPixels(0, 0, 4800, 4800, lcPixels);
 
-            System.out.println(Instant.now().toString() + " getting tile strings");
             Set<String> tileStrings = geoLookupTable.get(tile);
-            System.out.println(Instant.now().toString() + " done");
             for (String sourcePixelPos : tileStrings) {
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
