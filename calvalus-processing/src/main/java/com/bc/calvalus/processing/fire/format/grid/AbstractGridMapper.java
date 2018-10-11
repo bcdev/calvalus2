@@ -57,10 +57,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
 
-                if (y != 10 || x != 0) {
-                    continue;
-                }
-
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     targetGridCellIndex++;

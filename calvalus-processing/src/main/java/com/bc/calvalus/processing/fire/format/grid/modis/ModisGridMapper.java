@@ -325,7 +325,6 @@ public class ModisGridMapper extends AbstractGridMapper {
             throw new IllegalStateException(e);
         }
 
-        System.out.println(geometry.toString());
         subsetOp.setGeoRegion(geometry);
         subsetOp.setSourceProduct(lcProduct);
         Product lcSubset = subsetOp.getTargetProduct();
@@ -346,8 +345,6 @@ public class ModisGridMapper extends AbstractGridMapper {
                 pixelIndex++;
             }
         }
-
-        System.out.println(burnableFractionSum);
 
         return burnableFractionSum;
     }
