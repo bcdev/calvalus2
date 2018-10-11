@@ -93,6 +93,10 @@ public class Majority implements Resampling {
         for (double[] doubles : samples) {
             for (double aDouble : doubles) {
                 Double key = aDouble;
+                // only consider burnable classes
+                if (key < 10 || key > 180) {
+                    continue;
+                }
                 if (valueCountMap.containsKey(key)) {
                     valueCountMap.put(key, valueCountMap.get(key) + 1);
                 } else {
@@ -108,7 +112,9 @@ public class Majority implements Resampling {
             }
         }
 
-
+        if (maxEntry == null) {
+            return 210.0; // unburnable
+        }
         return maxEntry.getKey();
     }
 
