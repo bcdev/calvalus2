@@ -56,9 +56,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
-                LOG.info("Reading pixels");
                 SourceData data = dataSource.readPixels(x, y);
-                LOG.info("done");
                 if (data == null) {
                     targetGridCellIndex++;
                     continue;
@@ -71,7 +69,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 int numberOfBurnedPixels = 0;
 
-                LOG.info("Loop over read pixels...");
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
                     boolean isBurnable = isBurnable(data.lcClasses[i]);
@@ -89,17 +86,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     areas[targetGridCellIndex] += data.areas[i];
                     validate(areas[targetGridCellIndex], targetGridCellIndex);
                 }
-                LOG.info("...done");
 
                 ba[targetGridCellIndex] = baValue;
                 patchNumber[targetGridCellIndex] = data.patchCount;
 
-                LOG.info("Extra LC handling...");
                 if (mustHandleCoverageSpecifially(x)) {
                     burnableFractionValue = getSpecialBurnableFractionValue(x, y);
                     coverageValue = specialCoverageValue;
                 }
-                LOG.info("done.");
                 coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
                 burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
                 validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);

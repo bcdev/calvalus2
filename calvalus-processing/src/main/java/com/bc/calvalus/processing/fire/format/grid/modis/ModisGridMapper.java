@@ -202,19 +202,12 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     @Override
     protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
-        int count = 0;
         for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
             boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
             if (inLcClass) {
                 baInLc.get(currentLcClass)[targetGridCellIndex] += burnedArea;
-                count++;
+                return;
             }
-        }
-        if (count != 1) {
-            throw new IllegalStateException("Burned area added to " + count + " LC classes!\n" +
-                    "targetGridCellIndex=" + targetGridCellIndex + "\n" +
-                    "burnedArea=" + burnedArea + "\n" +
-                    "sourceLc=" + sourceLc);
         }
     }
 
