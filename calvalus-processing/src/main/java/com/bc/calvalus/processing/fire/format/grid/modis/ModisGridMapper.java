@@ -312,8 +312,8 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         SubsetOp subsetOp = new SubsetOp();
         Geometry geometry;
-        int lon0 = (int) (Integer.parseInt(targetCell.split(",")[0]) / 4 + x * 0.25) - 180;
-        int lat0 = 90 - (int) (Integer.parseInt(targetCell.split(",")[1]) / 4 + y * 0.25);
+        double lon0 = (Integer.parseInt(targetCell.split(",")[0]) / 4.0 + x * 0.25) - 180.0;
+        double lat0 = 90.0 - (Integer.parseInt(targetCell.split(",")[1]) / 4.0 + y * 0.25);
         try {
             geometry = new WKTReader().read(String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))",
                     lon0, lat0,
