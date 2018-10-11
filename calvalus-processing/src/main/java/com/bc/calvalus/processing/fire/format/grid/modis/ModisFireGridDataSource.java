@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
@@ -129,7 +130,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY) throws IOException {
         Gson gson = new Gson();
         String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX < 10 ? "0" + targetCellX : targetCellX, targetCellY);
-        try (InputStream lutStream = Files.newInputStream(Paths.get(lutName))) {
+        Path path = Paths.get(lutName);
+        if (!Files.exists(path)) {
+            return null;
+        }
+        try (InputStream lutStream = Files.newInputStream(path)) {
             return gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
         }
     }
