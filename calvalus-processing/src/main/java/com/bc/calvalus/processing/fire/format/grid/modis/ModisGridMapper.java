@@ -31,8 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -143,8 +141,6 @@ public class ModisGridMapper extends AbstractGridMapper {
             }
         }
         LOG.info("...done.");
-
-        Files.list(Paths.get(".")).forEach(p -> LOG.info(p.toString()));
 
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
