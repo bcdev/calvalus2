@@ -56,8 +56,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
-                System.gc();
-
                 LOG.info("Reading pixels");
                 SourceData data = dataSource.readPixels(x, y);
                 LOG.info("done");
@@ -247,7 +245,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     }
 
     public boolean isActuallyBurnedPixel(int doyFirstOfMonth, int doyLastOfMonth, float pixel, boolean isBurnable) {
-        return (pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA) && isBurnable;
+        return (pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth) && isBurnable;
     }
 
     public void setDataSource(FireGridDataSource dataSource) {
