@@ -8,6 +8,8 @@ import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
@@ -24,11 +26,19 @@ import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
@@ -118,7 +128,25 @@ public class ModisGridMapper extends AbstractGridMapper {
             geoLookupTables.add(new ZipFile(localGeoLookup));
         }
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, geoLookupTables, targetCell);
+        LOG.info("Unzipping all geo-lookup tables for this target grid cell...");
+        for (ZipFile geoLookupTable : geoLookupTables) {
+            Enumeration<? extends ZipEntry> entries = geoLookupTable.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                try (InputStream lutStream = geoLookupTable.getInputStream(entry)) {
+                    GeoLutCreator.GeoLut geoLut = new Gson().fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
+                    try (Writer writer = new FileWriter(entry.getName())) {
+                        Gson gson = new GsonBuilder().create();
+                        gson.toJson(geoLut, writer);
+                    }
+                }
+            }
+        }
+        LOG.info("...done.");
+
+        Files.list(Paths.get(".")).forEach(p -> LOG.info(p.toString()));
+
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 

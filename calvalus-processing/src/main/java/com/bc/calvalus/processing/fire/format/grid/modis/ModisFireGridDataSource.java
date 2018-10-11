@@ -11,30 +11,27 @@ import org.esa.snap.core.datamodel.Product;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     public static final double MODIS_AREA_SIZE = 53664.6683222854702276;
     private final Product[] products;
     private final Product[] lcProducts;
-    private final List<ZipFile> geoLookupTables;
     private final String targetCell; // "800,312"
     private final SortedSet<Long> alreadyVisitedPixelPoses;
 
-    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, List<ZipFile> geoLookupTables, String targetCell) {
+    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(4800, 4800);
         this.products = products;
         this.lcProducts = lcProducts;
-        this.geoLookupTables = geoLookupTables;
         this.targetCell = targetCell;
         this.alreadyVisitedPixelPoses = new TreeSet<>();
     }
@@ -45,7 +42,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         int targetCellX = x + Integer.parseInt(targetCell.split(",")[0]);
         int targetCellY = y + Integer.parseInt(targetCell.split(",")[1]);
 
-        HashMap<String, Set<String>> geoLookupTable = getGeoLookupTable(targetCellX, targetCellY, geoLookupTables);
+        HashMap<String, Set<String>> geoLookupTable = getGeoLookupTable(targetCellX, targetCellY);
 
         SourceData data = new SourceData(4800, 4800);
         data.reset();
@@ -178,22 +175,10 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return Long.parseLong(tileX + tileY + xPart + yPart);
     }
 
-    private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY, List<ZipFile> geoLookupTables) throws IOException {
+    private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY) throws IOException {
         Gson gson = new Gson();
         String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX < 10 ? "0" + targetCellX : targetCellX, targetCellY);
-        ZipEntry entry = null;
-        ZipFile geoLookupTableFile = null;
-        for (ZipFile geoLookupTable0 : geoLookupTables) {
-            entry = geoLookupTable0.getEntry(lutName);
-            geoLookupTableFile = geoLookupTable0;
-            if (entry != null) {
-                break;
-            }
-        }
-        if (entry == null) {
-            return null;
-        }
-        try (InputStream lutStream = geoLookupTableFile.getInputStream(entry)) {
+        try (InputStream lutStream = Files.newInputStream(Paths.get(lutName))) {
             return gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
         }
     }
