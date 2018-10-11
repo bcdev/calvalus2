@@ -325,8 +325,8 @@ public class PixelFinaliseMapperTest {
                 for (int month = 1; month <= 12; month++) {
                     String monthPad = month < 10 ? "0" + month : "" + month;
                     String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.top + ";" + area.right + ";" + area.bottom;
-                    String baseFilename = new S2PixelFinaliseMapper().createBaseFilename(year + "", monthPad, "FireCCISFD1", areaString);
-                    String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.S2_TEMPLATE, year + "", monthPad, "FireCCISFD1", areaString);
+                    String baseFilename = new S2PixelFinaliseMapper().createBaseFilename(year + "", monthPad, "fv1.1", areaString);
+                    String metadata = PixelFinaliseMapper.createMetadata(PixelFinaliseMapper.S2_TEMPLATE, year + "", monthPad, "fv1.1", areaString);
                     try (FileWriter fw = new FileWriter(targetDir + "\\" + baseFilename + ".xml")) {
                         fw.write(metadata);
                     }

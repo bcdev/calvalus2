@@ -5,9 +5,11 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.common.SubsetOp;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
@@ -115,37 +117,6 @@ public class S2GridMapperTest {
         float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, numberOfBurnedPixels, 0);
         assertEquals(11063.7255859375, errorPerPixel, 1E-5);
         assertEquals(40, data.patchCount);
-    }
-
-    @Test
-    @Ignore
-    public void acceptanceTest_3() throws IOException {
-        /* prerequisites:
-            1 burned area file for tile 28PBA
-            the LC file corresponding to that tile
-            the geo-lookup file x162y106-28PBA.zip
-        */
-        int doyFirstOfMonth = Year.of(2016).atMonth(1).atDay(1).getDayOfYear();
-        int doyLastOfMonth = Year.of(2016).atMonth(1).atDay(Year.of(2016).atMonth(1).lengthOfMonth()).getDayOfYear();
-        List<Product>[] products = getProducts("28PBA");
-        List<ZipFile> geoLookupTables = getGeoLookupTables("x162y106", "28PBA");
-
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("x162y106", products[0].toArray(new Product[0]), null, products[1].toArray(new Product[0]));
-
-        dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
-        dataSource.setDoyLastOfMonth(doyLastOfMonth);
-        SourceData data = dataSource.readPixels(4, 6);
-
-        double areas = 0.0;
-        double burnableFractionValue = 0.0;
-
-        for (int i = 0; i < data.burnedPixels.length; i++) {
-            areas += data.areas[i];
-            burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
-        }
-
-        double burnableFraction = getFraction(burnableFractionValue, areas);
-        areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
     }
 
     protected static float getFraction(double value, double area) {
@@ -312,5 +283,21 @@ public class S2GridMapperTest {
         float errorPerPixel = new S2GridMapper().getErrorPerPixel(probBurn, area, numBurned, 0);
         System.out.println(String.format("%.12f", errorPerPixel));
         assertEquals(14483.97949F, errorPerPixel, 1E-5);
+    }
+
+    @Test
+    public void name() throws IOException {
+        Product product = ProductIO.readProduct("C:\\ssd\\2016.nc");
+        for (int y = 0; y <= product.getSceneRasterHeight(); y += 5000) {
+            for (int x = 0; x <= product.getSceneRasterWidth(); x += 5000) {
+                System.out.println("Handling product " + " LC_" + x + "_" + y + ".nc...");
+
+                SubsetOp subsetOp = new SubsetOp();
+                subsetOp.setRegion(new Rectangle(x, y, Math.min(x, product.getSceneRasterWidth()), Math.min(y, product.getSceneRasterHeight())));
+                subsetOp.setSourceProduct(product);
+                ProductIO.writeProduct(subsetOp.getSourceProduct(), "D:\\workspace\\fire-cci\\s2-lc\\LC_" + x + "_" + y + ".nc", "NetCDF4-CF");
+            }
+        }
+        System.out.print("...done");
     }
 }

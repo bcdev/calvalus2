@@ -57,6 +57,11 @@ public class AbstractGridMapperTest {
         AbstractGridMapper gridMapper = new AbstractGridMapper(-1, -1) {
 
             @Override
+            protected boolean isBurnable(int lcClass) {
+                return false;
+            }
+
+            @Override
             protected int getLcClassesCount() {
                 return 0;
             }

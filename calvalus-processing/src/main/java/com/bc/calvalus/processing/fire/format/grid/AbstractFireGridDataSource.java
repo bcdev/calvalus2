@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.ProductData;
@@ -8,6 +7,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import java.io.IOException;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
 
@@ -39,23 +39,11 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         this.doyLastOfMonth = doyLastOfMonth;
     }
 
-    public int getPatchNumbers(float[][] pixels, int[][] lcClass) {
+    public int getPatchNumbers(float[][] pixels, int[][] lcClass, Function<Integer, Boolean> isInBurnableClass) {
         int patchCount = 0;
         for (int i = 0; i < pixels.length; i++) {
             for (int j = 0; j < pixels[i].length; j++) {
-                if (clearObjects(pixels, lcClass, i, j)) {
-                    patchCount++;
-                }
-            }
-        }
-        return patchCount;
-    }
-
-    public int getPatchNumbers(float[][] pixels, boolean[][] burnable) {
-        int patchCount = 0;
-        for (int i = 0; i < pixels.length; i++) {
-            for (int j = 0; j < pixels[i].length; j++) {
-                if (clearObjects(pixels, burnable, i, j)) {
+                if (clearObjects(pixels, lcClass, i, j, isInBurnableClass)) {
                     patchCount++;
                 }
             }
@@ -98,32 +86,17 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         }
     }
 
-    private boolean clearObjects(float[][] array, int[][] lcClass, int x, int y) {
+    private boolean clearObjects(float[][] array, int[][] lcClass, int x, int y, Function<Integer, Boolean> isInBurnableClass) {
         if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
             return false;
         }
-        boolean burnable = LcRemappingS2.isInBurnableLcClass(lcClass[x][y]);
+        boolean burnable = isInBurnableClass.apply(lcClass[x][y]);
         if (burnable && isBurned(array[x][y])) {
             array[x][y] = 0;
-            clearObjects(array, lcClass, x - 1, y);
-            clearObjects(array, lcClass, x + 1, y);
-            clearObjects(array, lcClass, x, y - 1);
-            clearObjects(array, lcClass, x, y + 1);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean clearObjects(float[][] array, boolean[][] burnable, int x, int y) {
-        if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
-            return false;
-        }
-        if (burnable[x][y] && isBurned(array[x][y])) {
-            array[x][y] = 0;
-            clearObjects(array, burnable, x - 1, y);
-            clearObjects(array, burnable, x + 1, y);
-            clearObjects(array, burnable, x, y - 1);
-            clearObjects(array, burnable, x, y + 1);
+            clearObjects(array, lcClass, x - 1, y, isInBurnableClass);
+            clearObjects(array, lcClass, x + 1, y, isInBurnableClass);
+            clearObjects(array, lcClass, x, y - 1, isInBurnableClass);
+            clearObjects(array, lcClass, x, y + 1, isInBurnableClass);
             return true;
         }
         return false;

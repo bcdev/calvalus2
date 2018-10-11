@@ -114,13 +114,13 @@ public class GridCells implements Writable {
 
     @Override
     public String toString() {
-        return "GridCells{" +
-                "ba=" + Arrays.toString(ba) +
-                ", patchNumber=" + Arrays.toString(patchNumber) +
-                ", errors=" + Arrays.toString(errors) +
-                ", baInLc=" + baInLc +
-                ", coverage=" + Arrays.toString(coverage) +
-                ", burnable=" + Arrays.toString(burnableFraction) +
+        return "GridCells{" + "\n" +
+                "ba=" + Arrays.toString(ba) + "\n" +
+                ", patchNumber=" + Arrays.toString(patchNumber) + "\n" +
+                ", errors=" + Arrays.toString(errors) + "\n" +
+                ", baInLc=" + baInLc + "\n" +
+                ", coverage=" + Arrays.toString(coverage) + "\n" +
+                ", burnable=" + Arrays.toString(burnableFraction) + "\n" +
                 '}';
     }
 }

@@ -123,7 +123,7 @@ public class ModisGridReducer extends AbstractGridReducer {
 
     @Override
     protected String getFilename(String year, String month, String version) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MODIS-f%s.nc", year, month, "01", version);
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MODIS-fv1.1.nc", year, month, "01", version);
     }
 
     @Override

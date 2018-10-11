@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -67,13 +66,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 double baValue = 0.0F;
                 double coverageValue = 0.0F;
+                double specialCoverageValue = 0.0F;
                 double burnableFractionValue = 0.0;
 
                 int numberOfBurnedPixels = 0;
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
-                    boolean isBurnable = LcRemappingS2.isInBurnableLcClass(data.lcClasses[i]);
+                    boolean isBurnable = isBurnable(data.lcClasses[i]);
                     if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
                         numberOfBurnedPixels++;
                         double burnedArea = scale(burnedPixel, data.areas[i]);
@@ -81,16 +81,22 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
                     }
 
-//                    burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
                     burnableFractionValue += isBurnable ? data.areas[i] : 0.0;
-                    boolean hasBeenObserved = data.burnedPixels[i] >= 0;
+                    boolean hasBeenObserved = data.statusPixels[i] != 0;
                     coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
+                    specialCoverageValue += hasBeenObserved ? data.areas[i] : 0.0;
                     areas[targetGridCellIndex] += data.areas[i];
                     validate(areas[targetGridCellIndex], targetGridCellIndex);
                 }
 
                 ba[targetGridCellIndex] = baValue;
                 patchNumber[targetGridCellIndex] = data.patchCount;
+
+
+                if (mustHandleCoverageSpecifially(x)) {
+                    burnableFractionValue = getSpecialBurnableFractionValue(x, y);
+                    coverageValue = specialCoverageValue;
+                }
                 coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
                 burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
                 validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
@@ -126,6 +132,16 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         LOG.info("...done.");
         pm.done();
         return gridCells;
+    }
+
+    protected abstract boolean isBurnable(int lcClass);
+
+    protected double getSpecialBurnableFractionValue(int x, int y) throws IOException {
+        throw new IllegalStateException("This must not be called.");
+    }
+
+    protected boolean mustHandleCoverageSpecifially(int x) {
+        return false;
     }
 
     protected abstract int getLcClassesCount();
@@ -213,7 +229,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     public static float getFraction(double value, double area) {
         float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
         if (Float.isNaN(fraction)) {
-            fraction = 0.0F;
+            return 0.0F;
+        }
+        if (fraction < 0.0001) { // -	If FBA < 0.0001, then FBA = 0
+            return 0.0F;
         }
         return fraction;
     }

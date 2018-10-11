@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.collocation.CollocateOp;
 import org.esa.snap.core.dataio.ProductIO;
@@ -117,15 +118,15 @@ public class AvhrrFireGridDataSourceTest {
 
         for (int i = 0; i < data.burnedPixels.length; i++) {
             float burnedPixel = data.burnedPixels[i];
-            if (burnedPixel > 0.0 && data.burnable[i]) {
+            if (burnedPixel > 0.0 && LcRemapping.isInBurnableLcClass(data.lcClasses[i])) {
                 numberOfBurnedPixels++;
                 double burnedArea = burnedPixel * data.areas[i];
                 baValue += burnedArea;
 //                addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
             }
 
-            burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
-            coverageValue += (data.statusPixels[i] == 1 && data.burnable[i]) ? data.areas[i] : 0.0;
+            burnableFractionValue += LcRemapping.isInBurnableLcClass(data.lcClasses[i]) ? data.areas[i] : 0.0;
+            coverageValue += (data.statusPixels[i] == 1 && LcRemapping.isInBurnableLcClass(data.lcClasses[i])) ? data.areas[i] : 0.0;
         }
 
         System.out.println(baValue);

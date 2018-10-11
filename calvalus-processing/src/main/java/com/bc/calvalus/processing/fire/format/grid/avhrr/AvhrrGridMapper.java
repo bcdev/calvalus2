@@ -8,7 +8,6 @@ import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
-import org.esa.snap.collocation.CollocateOp;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
@@ -79,7 +78,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         } catch (FactoryException | TransformException e) {
             throw new IllegalStateException("Programming error, see nested exception", e);
         }
-        CollocateOp collocateOp = new CollocateOp();
+        CollocationOp collocateOp = new CollocationOp();
         collocateOp.setMasterProduct(dummyCrsProduct);
         collocateOp.setSlaveProduct(product);
         collocateOp.setParameterDefaultValues();
@@ -248,5 +247,10 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     @Override
     protected double scale(float burnedPixel, double area) {
         return burnedPixel * area;
+    }
+
+    @Override
+    protected boolean isBurnable(int lcClass) {
+        return LcRemapping.isInBurnableLcClass(lcClass);
     }
 }

@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
@@ -12,6 +13,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.common.SubsetOp;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -46,9 +48,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().info("All products:");
         CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
-        // e.g. tile == x210y94
         double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 0.25;
-        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) - y * 0.25;
+        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - (y + 1) * 0.25;
 
         int totalWidth = 0;
         int totalHeight = 0;
@@ -74,11 +75,11 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
             Product clSubset = getSubset(lon0, lat0, clProduct);
-            Product lcSubset = getSubset(lon0, lat0, lcProduct);
+            Product lcSubset = getLcSubset(jdSubset, lcProduct);
 
             Band jd = jdSubset.getBand("JD");
             Band cl = clSubset.getBand("CL");
-            Band lc = lcSubset.getBand("LC");
+            Band lc = lcSubset.getBand("band_1");
 
             AreaCalculator areaCalculator = new AreaCalculator(jdSubset.getSceneGeoCoding());
 
@@ -107,23 +108,29 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                         data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                     }
 
-//                        data.burnable[targetPixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
                     data.lcClasses[targetPixelIndex] = sourceLC;
-//                        if (sourceJD >= 0) { // neither no-data, nor water, nor cloud -> observed pixel
-//                            data.statusPixels[targetPixelIndex] = 1;
-//                        } else {
-//                            data.statusPixels[targetPixelIndex] = 0;
-//                        }
+                    if (sourceJD >= 0) { // neither no-data, nor water, nor cloud -> observed pixel
+                        data.statusPixels[targetPixelIndex] = 1;
+                    } else {
+                        data.statusPixels[targetPixelIndex] = 0;
+                    }
 
                     data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(x0, lineIndex, width - 1, jdSubset.getSceneRasterHeight() - 1);
                     targetPixelIndex++;
                 }
             }
-
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.lcClasses, totalWidth, totalHeight));
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.lcClasses, totalWidth, totalHeight), LcRemappingS2::isInBurnableLcClass);
         return data;
+    }
+
+    private Product getLcSubset(Product sourceProduct, Product lcProduct) {
+        ReprojectionOp reprojectionOp = new ReprojectionOp();
+        reprojectionOp.setSourceProduct("collocationProduct", sourceProduct);
+        reprojectionOp.setSourceProduct(lcProduct);
+        reprojectionOp.setParameterDefaultValues();
+        return reprojectionOp.getTargetProduct();
     }
 
 

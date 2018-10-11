@@ -66,7 +66,7 @@ public class S2GridReducer extends AbstractGridReducer {
     protected int getY(String key) {
         key = key.split("-")[2];
         int y = Integer.parseInt(key.split("y")[1]);
-        return (180 - y) * 4;
+        return (180 - y - 1) * 4;
     }
 
     @Override

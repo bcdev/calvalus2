@@ -838,7 +838,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel MSI Burned Area product ${REPLACE_WITH_VERSION} – Area ${zoneId}" +
+            "                        <gco:CharacterString>Fire_cci Pixel MSI Burned Area product fv1.1 – Area ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -902,7 +902,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] " +
             "(That is 1 or more digits followed by optional . and another 1 or more digits.). ${layer} is the code for " +
             "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
-            "An example is: 20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_h44v16-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
+            "An example is: 20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_h44v16-fv1.1-JD.tif.]]#" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.2_PUG-MSI_v1.1" +
             " available at: www.esa-fire-cci.org/documents" +

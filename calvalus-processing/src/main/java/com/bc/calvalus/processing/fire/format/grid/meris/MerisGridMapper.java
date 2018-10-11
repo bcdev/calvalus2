@@ -111,6 +111,11 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
+    protected boolean isBurnable(int lcClass) {
+        return LcRemapping.isInBurnableLcClass(lcClass);
+    }
+
+    @Override
     protected int getLcClassesCount() {
         return LcRemapping.LC_CLASSES_COUNT;
     }

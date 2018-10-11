@@ -184,8 +184,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     private static void writeTime(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
         Variable time = ncFile.findVariable("time");
         double firstDayAsJD = getFirstDayAsJD(year, month);
-        double centralDayAsJD = firstDayAsJD + (month.equals("02") ? 13 : 14);
-        double[] array = new double[]{centralDayAsJD};
+        double[] array = new double[]{firstDayAsJD};
         Array values = Array.factory(DataType.DOUBLE, new int[]{1}, array);
         ncFile.write(time, values);
     }

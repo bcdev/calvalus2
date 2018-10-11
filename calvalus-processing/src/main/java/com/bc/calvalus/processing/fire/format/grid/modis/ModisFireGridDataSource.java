@@ -11,6 +11,8 @@ import org.esa.snap.core.datamodel.Product;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +31,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final SortedSet<Long> alreadyVisitedPixelPoses;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, List<ZipFile> geoLookupTables, String targetCell) {
-        super(480, 4800);
+        super(4800, 4800);
         this.products = products;
         this.lcProducts = lcProducts;
         this.geoLookupTables = geoLookupTables;
@@ -39,6 +41,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
+        System.out.println(Instant.now().toString() + " Reading data for pixel " + x + "," + y + "...");
         int targetCellX = x + Integer.parseInt(targetCell.split(",")[0]);
         int targetCellY = y + Integer.parseInt(targetCell.split(",")[1]);
 
@@ -46,6 +49,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         SourceData data = new SourceData(4800, 4800);
         data.reset();
+
+        Arrays.fill(data.areas, MODIS_AREA_SIZE);
 
         if (geoLookupTable == null) {
             return data;
@@ -76,6 +81,41 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             });
             sourcePixelPoses.addAll(geoLookupTable.get(tile));
 
+            System.out.println(Instant.now().toString() + " Reading from files...");
+            float[] jdPixels = new float[4800 * 4800];
+            jd.readPixels(0, 0, 4800, 4800, jdPixels);
+
+            float[] clPixels = null;
+            if (cl != null) {
+                clPixels = new float[4800 * 4800];
+                cl.readPixels(0, 0, 4800, 4800, clPixels);
+            }
+
+            int[] numObsPixels = new int[4800 * 4800];
+            numbObs.readPixels(0, 0, 4800, 4800, numObsPixels);
+
+            int[] lcPixels = new int[4800 * 4800];
+            lc.readPixels(0, 0, 4800, 4800, lcPixels);
+
+            System.out.println(Instant.now().toString() + " ...done. Copying into arrays...");
+
+            for (String sourcePixelPos : sourcePixelPoses) {
+                String[] sppSplit = sourcePixelPos.split(",");
+                int x0 = Integer.parseInt(sppSplit[0]);
+                int y0 = Integer.parseInt(sppSplit[1]);
+                int pixelIndex = y0 * 4800 + x0;
+
+                data.burnedPixels[pixelIndex] = jdPixels[pixelIndex];
+                data.probabilityOfBurn[pixelIndex] = clPixels != null ? clPixels[pixelIndex] : 0.0F;
+                int sourceLC = lcPixels[pixelIndex];
+                data.lcClasses[pixelIndex] = sourceLC;
+                int sourceStatus = numObsPixels[pixelIndex];
+                data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
+            }
+
+            System.out.println(Instant.now().toString() + " ...done.");
+
+/*
             for (String sourcePixelPos : sourcePixelPoses) {
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
@@ -100,16 +140,16 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 data.probabilityOfBurn[pixelIndex] = sourceCL;
 
                 int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
-                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
                 int sourceStatus = getIntPixelValue(numbObs, tile, pixelIndex);
                 data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
 
                 data.areas[pixelIndex] = MODIS_AREA_SIZE;
             }
+            */
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.burnable, 4800, 4800));
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.lcClasses, 4800, 4800), LcRemapping::isInBurnableLcClass);
 
         return data;
     }
