@@ -70,6 +70,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band numbObs = product.getBand("numObs1");
             Band lc = lcProduct.getBand("lccs_class");
 
+            /*
             TreeSet<String> sourcePixelPoses = new TreeSet<>((o1, o2) -> {
                 int y1 = Integer.parseInt(o1.split(",")[1]);
                 int y2 = Integer.parseInt(o2.split(",")[1]);
@@ -80,8 +81,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 } else return 1;
             });
             sourcePixelPoses.addAll(geoLookupTable.get(tile));
+*/
 
-            System.out.println(Instant.now().toString() + " Reading from files...");
             float[] jdPixels = new float[4800 * 4800];
             jd.readPixels(0, 0, 4800, 4800, jdPixels);
 
@@ -97,9 +98,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             int[] lcPixels = new int[4800 * 4800];
             lc.readPixels(0, 0, 4800, 4800, lcPixels);
 
-            System.out.println(Instant.now().toString() + " ...done. Copying into arrays...");
-
-            for (String sourcePixelPos : sourcePixelPoses) {
+//            for (String sourcePixelPos : sourcePixelPoses) {
+            for (String sourcePixelPos : geoLookupTable.get(tile)) {
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
@@ -112,8 +112,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int sourceStatus = numObsPixels[pixelIndex];
                 data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
             }
-
-            System.out.println(Instant.now().toString() + " ...done.");
 
 /*
             for (String sourcePixelPos : sourcePixelPoses) {
