@@ -331,13 +331,6 @@ public class ModisGridMapper extends AbstractGridMapper {
         Product lcSubset = subsetOp.getTargetProduct();
         AreaCalculator areaCalculator = new AreaCalculator(lcSubset.getSceneGeoCoding());
 
-        ProductIO.writeProduct(lcSubset, "lcSubset.nc", "NetCDF4-CF");
-        try {
-            Thread.sleep(1000*60*10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         double burnableFractionSum = 0.0;
         Band lcBand = lcSubset.getBand("band_1");
         int width = lcBand.getRasterWidth();
