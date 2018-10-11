@@ -74,7 +74,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         Product dummyCrsProduct = new Product("dummy", "dummy", 7200, 3600);
         dummyCrsProduct.addBand("dummy", "1");
         try {
-            dummyCrsProduct.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 7200, 3600, -180.0, 90.0, 360.0 / 7200.0, 180.0 / 3600.0));
+            dummyCrsProduct.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 7200, 3600, -180.0, 90.0, 360.0 / 7200.0, 180.0 / 3600.0, 0.0, 0.0));
         } catch (FactoryException | TransformException e) {
             throw new IllegalStateException("Programming error, see nested exception", e);
         }
