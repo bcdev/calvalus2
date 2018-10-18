@@ -76,7 +76,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             }
 
             Product clSubset = getSubset(lon0, lat0, clProduct);
-            Product lcSubset = getLcSubset(jdSubset, lcProduct);
+            Product lcSubset = getSubset(lon0, lat0, lcProduct);
+//            Product lcSubset = getLcSubset(jdSubset, lcProduct);
 
             Band jd = jdSubset.getBand("JD");
             Band cl = clSubset.getBand("CL");
