@@ -10,6 +10,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.common.SubsetOp;
@@ -83,7 +85,12 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
             AreaCalculator areaCalculator = new AreaCalculator(jdSubset.getSceneGeoCoding());
 
+            PixelPos pixelPos = new PixelPos();
+            GeoPos geoPos = new GeoPos();
             for (int lineIndex = 0; lineIndex < jdSubset.getSceneRasterHeight(); lineIndex++) {
+                pixelPos.x = 0;
+                pixelPos.y = lineIndex;
+                lc.getGeoCoding().getGeoPos(pixelPos, geoPos);
                 int width = jdSubset.getSceneRasterWidth();
 
                 int[] jdPixels = new int[width];
@@ -94,11 +101,15 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 cl.readPixels(0, lineIndex, width, 1, clPixels);
                 lc.readPixels(0, lineIndex, width, 1, lcPixels);
 
-                for (int x0 = 0; x0 < lcPixels.length; x0++) {
+                if (geoPos.lat < -34.84) {
+                    Arrays.fill(lcPixels, 10);
+                }
+
+                for (int x0 = 0; x0 < width; x0++) {
                     int sourceJD = jdPixels[x0];
                     float sourceCL = clPixels[x0];
                     int sourceLC = lcPixels[x0];
-
+                    data.burnable[targetPixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
                     boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
                     if (isValidPixel) {
                         // set burned pixel value consistently with CL value -- both if burned pixel is valid
@@ -121,7 +132,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             }
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.lcClasses, totalWidth, totalHeight), LcRemappingS2::isInBurnableLcClass);
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.burnable, totalWidth, totalHeight));
         return data;
     }
 

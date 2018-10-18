@@ -20,7 +20,7 @@ public class InputTileFinder {
 
         System.setProperty("snap.dataio.netcdf.metadataElementLimit", "0");
 
-        Product refProductSinusoidal = ProductIO.readProduct("c:\\ssd\\modis\\sinusoidal-ref.dim");
+        Product refProductSinusoidal = ProductIO.readProduct("sinusoidal-ref.dim");
         GeoCoding geoCoding = refProductSinusoidal.getSceneGeoCoding();
 
         GeoPos ul = new GeoPos();
@@ -32,45 +32,44 @@ public class InputTileFinder {
 
         TileLut tileLut = new TileLut();
 
-        for (int y = 0; y < 720; y += ModisGridMapper.WINDOW_SIZE) {
-            for (int x = 0; x < 1440; x += ModisGridMapper.WINDOW_SIZE) {
-                Set<String> inputTiles = new HashSet<>();
+        Set<String> inputTiles = new HashSet<>();
 
-                for (int y0 = 0; y0 < ModisGridMapper.WINDOW_SIZE; y0++) {
-                    for (int x0 = 0; x0 < ModisGridMapper.WINDOW_SIZE; x0++) {
-                        ul.setLocation(90 - (y + y0) * 0.25, -180 + (x + x0) * 0.25);
-                        ur.setLocation(90 - (y + y0) * 0.25, -180 + (x + x0 + 1) * 0.25);
-                        ll.setLocation(90 - (y + y0 + 1) * 0.25, -180 + (x + x0) * 0.25);
-                        lr.setLocation(90 - (y + y0 + 1) * 0.25, -180 + (x + x0 + 1) * 0.25);
+        int x = Integer.parseInt(args[0]);
+        int y = Integer.parseInt(args[1]);
 
-                        geoCoding.getPixelPos(ul, pp);
-                        String inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
-                        if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
-                            inputTiles.add(inputTile);
-                        }
-                        geoCoding.getPixelPos(ur, pp);
-                        inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
-                        if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
-                            inputTiles.add(inputTile);
-                        }
-                        geoCoding.getPixelPos(lr, pp);
-                        inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
-                        if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
-                            inputTiles.add(inputTile);
-                        }
-                        geoCoding.getPixelPos(ll, pp);
-                        inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
-                        if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
-                            inputTiles.add(inputTile);
-                        }
-                    }
+        for (int y0 = 0; y0 < ModisGridMapper.WINDOW_SIZE; y0++) {
+            for (int x0 = 0; x0 < ModisGridMapper.WINDOW_SIZE; x0++) {
+                ul.setLocation(90 - (y + y0) * 0.25, -180 + (x + x0) * 0.25);
+                ur.setLocation(90 - (y + y0) * 0.25, -180 + (x + x0 + 1) * 0.25);
+                ll.setLocation(90 - (y + y0 + 1) * 0.25, -180 + (x + x0) * 0.25);
+                lr.setLocation(90 - (y + y0 + 1) * 0.25, -180 + (x + x0 + 1) * 0.25);
+
+                geoCoding.getPixelPos(ul, pp);
+                String inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
+                if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
+                    inputTiles.add(inputTile);
                 }
-                tileLut.put("" + x + "," + y, inputTiles);
+                geoCoding.getPixelPos(ur, pp);
+                inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
+                if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
+                    inputTiles.add(inputTile);
+                }
+                geoCoding.getPixelPos(lr, pp);
+                inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
+                if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
+                    inputTiles.add(inputTile);
+                }
+                geoCoding.getPixelPos(ll, pp);
+                inputTile = String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40);
+                if (Arrays.asList(allValidInputTiles).contains(inputTile)) {
+                    inputTiles.add(inputTile);
+                }
             }
         }
+        tileLut.put("" + x + "," + y, inputTiles);
 
         Gson gson = new Gson();
-        try (FileWriter fw = new FileWriter("c:\\ssd\\modis-tiles-lut.txt")) {
+        try (FileWriter fw = new FileWriter("inputTiles.txt")) {
             gson.toJson(tileLut, fw);
         }
     }

@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
@@ -60,6 +61,7 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 }
                 int sourceLC = getIntPixelValue(lc, "landcover", sourcePixelIndex);
                 data.lcClasses[targetPixelIndex] = sourceLC;
+                data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
 
                 if (sourcePC >= 0) { // has data -> observed pixel
                     data.statusPixels[targetPixelIndex] = 1;

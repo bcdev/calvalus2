@@ -56,6 +56,9 @@ public class AvhrrGridInputFormat extends InputFormat {
         Configuration conf = context.getConfiguration();
         String year = conf.get("calvalus.year");
         String month = conf.get("calvalus.month");
+        if (Integer.parseInt(month) < 10) {
+            month = "" + Integer.parseInt(month);
+        }
         List<InputSplit> splits = new ArrayList<>(1);
         String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/avhrr-ba/BA_" + year + "_" + month + "_.*_WGS.tif";
         FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, conf);

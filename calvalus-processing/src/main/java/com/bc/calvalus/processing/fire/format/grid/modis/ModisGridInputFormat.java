@@ -3,13 +3,11 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
-import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.hadoop.ProgressSplit;
 import com.google.gson.Gson;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -22,8 +20,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -57,62 +53,21 @@ public class ModisGridInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        String year = conf.get("calvalus.year");
-        String month = conf.get("calvalus.month");
-        String singleMonth = Integer.toString(Integer.parseInt(conf.get("calvalus.month")));
-        TileLut tilesLut;
         File modisTilesFile = new File("modis-tiles-lut.txt");
-        tilesLut = getTilesLut(modisTilesFile);
+        TileLut tilesLut = getTilesLut(modisTilesFile);
         List<InputSplit> splits = new ArrayList<>(tilesLut.size());
 
         for (String targetCell : tilesLut.keySet()) {
-            List<FileStatus> fileStatuses = new ArrayList<>();
-            Set<String> inputTiles = tilesLut.get(targetCell);
-            List<String> tilesWithBurnedData = new ArrayList<>();
-            for (String inputTile : inputTiles) {
-                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + year + "/" + month + "/burned_" + year + "_" + singleMonth + "_" + inputTile + ".nc";
-                FileStatus[] elements = getFileStatuses(inputPathPattern, conf);
-                if (elements.length > 0) {
-                    tilesWithBurnedData.add(inputTile);
-                } else {
-                    if (Arrays.asList(expectedInputTiles).contains(inputTile)) {
-                        throw new IllegalStateException("Missing file: burned_" + year + "_" + singleMonth + "_" + inputTile + ".nc");
-                    }
-                }
-                Collections.addAll(fileStatuses, elements);
-            }
-            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.modisLcYear(Integer.parseInt(year)), targetCell, inputTiles, tilesWithBurnedData);
-        }
-
-        if (Boolean.parseBoolean(conf.get("calvalus.onlyCheck", "true"))) {
-            throw new IllegalStateException("Only performed the check, produced no input splits.");
+            addSplit(targetCell, splits);
         }
 
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
-    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String lcYear, String targetCell, Set<String> inputTiles, List<String> tilesWithBurnedData) throws IOException {
+    private void addSplit(String targetCell, List<InputSplit> splits) {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
-        for (String inputTile : inputTiles) {
-            if (tilesWithBurnedData.contains(inputTile)) {
-                for (FileStatus fileStatus : fileStatuses) {
-                    Path path = fileStatus.getPath();
-                    if (path.getName().contains(inputTile)) {
-                        filePaths.add(path);
-                        fileLengths.add(fileStatus.getLen());
-                    }
-                }
-            } else {
-                filePaths.add(new Path("dummyburned_year_month_" + inputTile));
-                fileLengths.add(0L);
-            }
-            String lcInputPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + String.format("%s-%s.nc", inputTile, lcYear);
-            FileStatus lcPath = FileSystem.get(conf).getFileStatus(new Path(lcInputPath));
-            filePaths.add(lcPath.getPath());
-            fileLengths.add(lcPath.getLen());
-        }
         filePaths.add(new Path(targetCell));
         fileLengths.add(0L);
         CombineFileSplit combineFileSplit = new ProgressableCombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),

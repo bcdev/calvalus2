@@ -1,7 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
-import com.bc.calvalus.processing.fire.format.grid.modis.ModisFireGridDataSource;
-import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import org.esa.snap.core.dataio.ProductIO;
@@ -57,11 +55,6 @@ public class AbstractGridMapperTest {
         AbstractGridMapper gridMapper = new AbstractGridMapper(-1, -1) {
 
             @Override
-            protected boolean isBurnable(int lcClass) {
-                return false;
-            }
-
-            @Override
             protected int getLcClassesCount() {
                 return 0;
             }
@@ -96,11 +89,6 @@ public class AbstractGridMapperTest {
         assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 16, true));
         assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 22, true));
         assertFalse(gridMapper.isActuallyBurnedPixel(32, 60, 31, true));
-    }
-
-    @Test
-    public void testGetFraction() throws Exception {
-        System.out.println(AbstractGridMapper.getFraction(1, 1000));
     }
 
     @Ignore
@@ -190,48 +178,9 @@ public class AbstractGridMapperTest {
         }
     }
 
-    @Ignore
     @Test
-    public void acceptanceTestModisGridFormat() throws Exception {
-        List<Product> products = new ArrayList<>();
-        products.add(ProductIO.readProduct("C:\\ssd\\modis-analysis\\burned_2006_3_h10v02.nc"));
+    public void name() {
+        System.out.println(1.0 / 0.0);
 
-        AbstractGridMapper mapper = new ModisGridMapper();
-        File lcFile = new File("C:\\ssd\\modis-analysis\\h10v02-2000.nc");
-        Product lcProduct = ProductIO.readProduct(lcFile);
-
-        Product[] products1 = products.toArray(new Product[0]);
-        Product[] lcProducts = {lcProduct};
-        ArrayList<ZipFile> geoLookupTables = new ArrayList<>();
-        ZipFile geoLookupTable = new ZipFile("C:\\ssd\\modis-analysis\\geoluts\\modis-geo-luts-000x.zip");
-        geoLookupTables.add(geoLookupTable);
-        String targetTile = "3,92";
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, targetTile);
-        mapper.setDataSource(dataSource);
-
-        GridCells gridCells = mapper.computeGridCells(2006, 3);
-        Product product = new Product("test", "test", 1, 1);
-        Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
-        ba1.setData(new ProductData.Double(gridCells.ba));
-        Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
-        pa1.setData(new ProductData.Float(gridCells.patchNumber));
-        Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
-        co1.setData(new ProductData.Float(gridCells.coverage));
-        Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
-        er1.setData(new ProductData.Float(gridCells.errors));
-        List<double[]> baInLcFirstHalf = gridCells.baInLc;
-        for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-            double[] floats = baInLcFirstHalf.get(i);
-            Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
-            lcBand.setData(new ProductData.Double(floats));
-        }
-
-        Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);
-        buf.setData(new ProductData.Float(gridCells.burnableFraction));
-
-        product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 8, 8, -14, 14, 0.25, 0.25, 0.0, 0.0));
-
-        ProductIO.writeProduct(product, "c:\\ssd\\modis-grid-format.nc", "NetCDF-CF");
     }
-
 }

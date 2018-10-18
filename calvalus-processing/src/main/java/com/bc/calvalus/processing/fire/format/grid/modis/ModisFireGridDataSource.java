@@ -5,157 +5,158 @@ import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
-import com.google.gson.Gson;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.gpf.common.SubsetOp;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.logging.Logger;
+import java.util.Arrays;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
-    public static final double MODIS_AREA_SIZE = 53664.6683222854702276;
-    private final Product[] products;
+    static final double MODIS_AREA_SIZE = 53664.6683222854702276;
     private final Product[] lcProducts;
-    private final String targetCell; // "800,312"
-    private static final Logger LOG = CalvalusLogger.getLogger();
-    private final SortedSet<Long> alreadyVisitedPixelPoses;
+    private final String tile;
+    private final Product[] sourceProducts;
+    private final Product[] clProducts;
 
-    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
-        super(4800, 4800);
-        this.products = products;
+    public ModisFireGridDataSource(String tile, Product sourceProducts[], Product[] clProducts, Product[] lcProducts) {
+        super(-1, -1);
+        this.tile = tile;
+        this.sourceProducts = sourceProducts;
+        this.clProducts = clProducts;
         this.lcProducts = lcProducts;
-        this.targetCell = targetCell;
-        this.alreadyVisitedPixelPoses = new TreeSet<>();
     }
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
-        LOG.info("Reading data for pixel " + x + "," + y + "...");
-        int targetCellX = x + Integer.parseInt(targetCell.split(",")[0]);
-        int targetCellY = y + Integer.parseInt(targetCell.split(",")[1]);
+        CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        HashMap<String, Set<String>> geoLookupTable = getGeoLookupTable(targetCellX, targetCellY);
+        CalvalusLogger.getLogger().info("All products:");
+        CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
-        SourceData data = new SourceData(4800, 4800);
+        double lon0 = getLon(x, tile);
+        double lat0 = getLat(y, tile);
+
+        int totalWidth = 0;
+        int totalHeight = 0;
+
+        for (Product sourceProduct : sourceProducts) {
+
+            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+
+            totalWidth += jdSubset.getSceneRasterWidth();
+            totalHeight += jdSubset.getSceneRasterHeight();
+        }
+
+        SourceData data = new SourceData(totalWidth, totalHeight);
         data.reset();
 
-        if (geoLookupTable == null) {
-            return data;
-        }
+        int targetPixelIndex = 0;
+        for (int i = 0; i < sourceProducts.length; i++) {
 
-        for (int i = 0; i < products.length; i++) {
-            Product product = products[i];
+            Product sourceProduct = sourceProducts[i];
+            Product clProduct = clProducts[i];
             Product lcProduct = lcProducts[i];
-            String tile = product.getName().split("_")[3].substring(0, 6);
 
-            if (!geoLookupTable.containsKey(tile)) {
-                continue;
-            }
+            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+            Product clSubset = getSubset(lon0, lat0, clProduct);
+            Product lcSubset = getLcSubset(jdSubset, lcProduct);
 
-            Band jd = product.getBand("classification");
-            Band cl = product.getBand("uncertainty");
-            Band numbObs = product.getBand("numObs1");
-            Band lc = lcProduct.getBand("lccs_class");
+            Band jd = jdSubset.getBand("JD");
+            Band cl = clSubset.getBand("CL");
+            Band lc = lcSubset.getBand("band_1");
 
-            float[] jdPixels = new float[4800 * 4800];
-            jd.readPixels(0, 0, 4800, 4800, jdPixels);
+            PixelPos pixelPos = new PixelPos();
+            GeoPos geoPos = new GeoPos();
+            for (int lineIndex = 0; lineIndex < jdSubset.getSceneRasterHeight(); lineIndex++) {
+                pixelPos.x = 0;
+                pixelPos.y = lineIndex;
+                lc.getGeoCoding().getGeoPos(pixelPos, geoPos);
+                int width = jdSubset.getSceneRasterWidth();
 
-            float[] clPixels = null;
-            if (cl != null) {
-                clPixels = new float[4800 * 4800];
-                cl.readPixels(0, 0, 4800, 4800, clPixels);
-            }
+                int[] jdPixels = new int[width];
+                float[] clPixels = new float[width];
+                int[] lcPixels = new int[width];
 
-            int[] numObsPixels = new int[4800 * 4800];
-            numbObs.readPixels(0, 0, 4800, 4800, numObsPixels);
+                jd.readPixels(0, lineIndex, width, 1, jdPixels);
+                cl.readPixels(0, lineIndex, width, 1, clPixels);
+                lc.readPixels(0, lineIndex, width, 1, lcPixels);
 
-            int[] lcPixels = new int[4800 * 4800];
-            lc.readPixels(0, 0, 4800, 4800, lcPixels);
-
-            for (String sourcePixelPos : geoLookupTable.get(tile)) {
-                String[] sppSplit = sourcePixelPos.split(",");
-                int x0 = Integer.parseInt(sppSplit[0]);
-                int y0 = Integer.parseInt(sppSplit[1]);
-                int pixelIndex = y0 * 4800 + x0;
-
-                long key = createKey(tile, x0, y0);
-                if (alreadyVisitedPixelPoses.contains(key)) {
-                    continue;
+                if (geoPos.lat < -34.84) {
+                    Arrays.fill(lcPixels, 10);
                 }
-                alreadyVisitedPixelPoses.add(key);
 
-                data.burnedPixels[pixelIndex] = jdPixels[pixelIndex];
-                data.probabilityOfBurn[pixelIndex] = clPixels != null ? clPixels[pixelIndex] : 0.0F;
-                int sourceLC = lcPixels[pixelIndex];
-                data.lcClasses[pixelIndex] = sourceLC;
-                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                int sourceStatus = numObsPixels[pixelIndex];
-                data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
-                data.areas[pixelIndex] = MODIS_AREA_SIZE;
+                for (int x0 = 0; x0 < width; x0++) {
+                    int sourceJD = jdPixels[x0];
+                    float sourceCL = clPixels[x0];
+                    int sourceLC = lcPixels[x0];
+                    data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                    boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
+                    if (isValidPixel) {
+                        // set burned pixel value consistently with CL value -- both if burned pixel is valid
+                        data.burnedPixels[targetPixelIndex] = sourceJD;
+                        data.probabilityOfBurn[targetPixelIndex] = sourceCL;
+                    }
+
+                    data.lcClasses[targetPixelIndex] = sourceLC;
+                    if (sourceJD >= 0) { // neither no-data, nor water, nor cloud -> observed pixel
+                        data.statusPixels[targetPixelIndex] = 1;
+                    } else {
+                        data.statusPixels[targetPixelIndex] = 0;
+                    }
+
+                    data.areas[targetPixelIndex] = MODIS_AREA_SIZE;
+                    targetPixelIndex++;
+                }
             }
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.burnable, 4800, 4800));
-
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.burnable, totalWidth, totalHeight));
         return data;
     }
 
-    static long createKey(String tile, int x0, int y0) {
-        String tileX = tile.substring(1, 3);
-        String tileY = tile.substring(4, 6);
-        String yPart;
-        if (y0 < 10) {
-            yPart = "000" + y0;
-        } else if (y0 < 100) {
-            yPart = "00" + y0;
-        } else if (y0 < 1000) {
-            yPart = "0" + y0;
-        } else {
-            yPart = "" + y0;
-        }
-        String xPart;
-        if (x0 < 10) {
-            xPart = "000" + x0;
-        } else if (x0 < 100) {
-            xPart = "00" + x0;
-        } else if (x0 < 1000) {
-            xPart = "0" + x0;
-        } else {
-            xPart = "" + x0;
-        }
-        return Long.parseLong(tileX + tileY + xPart + yPart);
+    protected static double getLat(int y, String tile) {
+        return 90 - Integer.parseInt(tile.split(",")[1]) / 4.0 - y * 0.25;
     }
 
-    private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY) throws IOException {
-        Gson gson = new Gson();
-        String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX < 10 ? "0" + targetCellX : targetCellX, targetCellY);
-        Path path = Paths.get(lutName);
-        if (!Files.exists(path)) {
-            return null;
-        }
-        try (InputStream lutStream = Files.newInputStream(path)) {
-            return gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
-        }
+    protected static double getLon(int x, String tile) {
+        return -180 + Integer.parseInt(tile.split(",")[0]) / 4.0 + x * 0.25;
     }
 
-    private int remap(int status, int oldStatus) {
-        // 0 = Observed, 3=Not-observed and 4=Unburnable
-        boolean nothingSetBefore = oldStatus == 0;
-        if (nothingSetBefore) {
-            return status == 3 ? -1 : 1;
-        } else {
-            return oldStatus == -1 ? (status == 3 ? -1 : 1) : 1;
-        }
+    private Product getLcSubset(Product sourceProduct, Product lcProduct) {
+        ReprojectionOp reprojectionOp = new ReprojectionOp();
+        reprojectionOp.setSourceProduct("collocationProduct", sourceProduct);
+        reprojectionOp.setSourceProduct(lcProduct);
+        reprojectionOp.setParameterDefaultValues();
+        return reprojectionOp.getTargetProduct();
     }
 
+
+    private Product getSubset(double lon0, double lat0, Product sourceProduct) {
+        SubsetOp subsetOp = new SubsetOp();
+        Geometry geometry;
+        try {
+            geometry = new WKTReader().read(String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))",
+                    lon0, lat0,
+                    lon0 + 0.25, lat0,
+                    lon0 + 0.25, lat0 + 0.25,
+                    lon0, lat0 + 0.25,
+                    lon0, lat0));
+        } catch (ParseException e) {
+            throw new IllegalStateException(e);
+        }
+
+        subsetOp.setGeoRegion(geometry);
+        subsetOp.setSourceProduct(sourceProduct);
+        return subsetOp.getTargetProduct();
+    }
 }

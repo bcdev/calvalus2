@@ -33,7 +33,7 @@ public class GeoLutCreator {
 
         for (int i = 2; i < args.length; i++) {
             String refProductFilename = args[i];
-            String tile = refProductFilename.split("\\.")[0];
+            String tile = refProductFilename.split("\\.")[0].split("\\\\")[4];
 
             Product refProduct = ProductIO.readProduct(refProductFilename);
             GeoCoding refGeoCoding = refProduct.getSceneGeoCoding();

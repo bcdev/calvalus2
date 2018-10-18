@@ -1,15 +1,21 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class AvhrrGridMapperTest {
 
+    private AvhrrGridMapper avhrrGridMapper;
+
+    @Before
+    public void setUp() throws Exception {
+        avhrrGridMapper = new AvhrrGridMapper();
+    }
+
     @Test
     public void testGetStandardError() {
-
-        AvhrrGridMapper avhrrGridMapper = new AvhrrGridMapper();
 
         assertEquals(4224449.0, avhrrGridMapper.getErrorPerPixel(new double[]{
                 0.3166666626930237, 0.46666666865348816, 0.3616666793823242, 0.20000000298023224, 0.24666668474674225,
@@ -19,5 +25,13 @@ public class AvhrrGridMapperTest {
                 0.15000000596046448, 0.22499999403953552, 0.2683333456516266, 0.21166667342185974, 0.22833333909511566
         }, 7.630264085335622E8, 1, 22452.89648F), 1E-6);
 
+    }
+
+    @Test
+    public void testGetStandardError2() {
+        double totalArea = 5.856306447976106E8;
+        double[] probBurn = new double[]{0.1616666615009308, 0.15833333134651184, 0.2516666650772095, 0.23000000417232513, 0.24833333492279053, 0.27000001072883606, 0.2516666650772095, 0.25999999046325684, 0.23999999463558197, 0.20499999821186066, 0.27666667103767395, 0.22833333909511566, 0.21833333373069763, 0.273333340883255, 0.20666666328907013, 0.1366666704416275, 0.25833332538604736, 0.2666666805744171, 0.2983333468437195, 0.2933333218097687, 0.5299999713897705, 0.3916666805744171, 0.44166669249534607, 0.20000000298023224, 0.16500000655651093};
+        double burnedArea = 9444343.0100321323489;
+        System.out.println(avhrrGridMapper.getErrorPerPixel(probBurn, totalArea, 1, burnedArea));
     }
 }

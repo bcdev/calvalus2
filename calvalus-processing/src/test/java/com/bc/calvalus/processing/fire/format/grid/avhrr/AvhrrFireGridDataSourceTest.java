@@ -1,11 +1,15 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
 import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
 import org.esa.snap.collocation.CollocateOp;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Ignore;
@@ -13,7 +17,9 @@ import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -155,4 +161,77 @@ public class AvhrrFireGridDataSourceTest {
         ProductIO.writeProduct(reprojectedProduct, "c:\\ssd\\avhrr\\porc-repro2.nc", "NetCDF4-CF");
     }
 
+
+    @Test
+    public void name() throws IOException, ParseException {
+        Product product = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage_WGS.tif");
+        Product product2 = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Uncertainty_WGS.tif");
+        SubsetOp subsetOp = new SubsetOp();
+        subsetOp.setGeoRegion(new WKTReader().read("POLYGON ((-64.25 -40.75, -64. -40.75, -64. -41, -64.25 -41, -64.25 -40.75))"));
+        subsetOp.setSourceProduct(product);
+        Product subset1 = subsetOp.getTargetProduct();
+
+        SubsetOp subsetOp2 = new SubsetOp();
+        subsetOp2.setGeoRegion(new WKTReader().read("POLYGON ((-64.25 -40.75, -64. -40.75, -64. -41, -64.25 -41, -64.25 -40.75))"));
+        subsetOp2.setSourceProduct(product2);
+        Product subset2 = subsetOp2.getTargetProduct();
+
+        File lcFile = new File("C:\\ssd\\avhrr\\ESACCI-LC-L4-LCCS-Map-300m-P1Y-1999-v2.0.7.tif");
+        Product lcProduct = ProductIO.readProduct(lcFile);
+        CollocationOp collocateOp = new CollocationOp();
+        collocateOp.setMasterProduct(subset1);
+        collocateOp.setSlaveProduct(lcProduct);
+        collocateOp.setParameterDefaultValues();
+
+        Product reprojectedProduct = collocateOp.getTargetProduct();
+        reprojectedProduct.getBand("band_1_S").setName("band_1");
+
+        int sourcePixelIndex = 0;
+        int width = subset1.getSceneRasterWidth();
+        int height = subset1.getSceneRasterHeight();
+
+        float[] porc = new float[width * height];
+        subset1.getBand("band_1").readPixels(0, 0, width, height, porc);
+        float[] confidence = new float[width * height];
+        subset2.getBand("band_1").readPixels(0, 0, width, height, confidence);
+        int[] lc = new int[width * height];
+        reprojectedProduct.getBand("band_1").readPixels(0, 0, width, height, lc);
+
+        AreaCalculator areaCalculator = new AreaCalculator(subset1.getSceneGeoCoding());
+        SourceData data = new SourceData(width, height);
+        for (int sourceY = 0; sourceY < data.height; sourceY++) {
+            for (int sourceX = 0; sourceX < data.width; sourceX++) {
+                float sourcePC = porc[sourcePixelIndex];
+                if (isValidPixel(sourcePC)) {
+                    float sourceCL = confidence[sourcePixelIndex] / 100.0F;
+                    data.burnedPixels[sourcePixelIndex] = sourcePC;
+                    data.probabilityOfBurn[sourcePixelIndex] = sourceCL;
+                }
+                int sourceLC = lc[sourcePixelIndex];
+                data.lcClasses[sourcePixelIndex] = sourceLC;
+                data.burnable[sourcePixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+
+                if (sourcePC >= 0) { // has data -> observed pixel
+                    data.statusPixels[sourcePixelIndex] = 1;
+                }
+
+                int x1 = sourcePixelIndex % width;
+                int y1 = sourcePixelIndex / width;
+                data.areas[sourcePixelIndex] = areaCalculator.calculatePixelSize(x1, y1, width, height);
+                sourcePixelIndex++;
+            }
+        }
+
+        Product sourceData = data.makeProduct();
+        System.out.println(Arrays.stream(data.areas).sum());
+        System.out.println(Arrays.toString(data.probabilityOfBurn));
+
+//        ProductIO.writeProduct(sourceData, "C:\\ssd\\avhrr.nc", "NetCDF4-CF");
+
+    }
+
+
+    private boolean isValidPixel(float sourcePC) {
+        return sourcePC != -1.0 && sourcePC != -2.0;
+    }
 }

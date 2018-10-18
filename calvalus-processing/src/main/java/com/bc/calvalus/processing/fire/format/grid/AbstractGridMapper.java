@@ -72,7 +72,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
-                    boolean isBurnable = isBurnable(data.lcClasses[i]);
+                    boolean isBurnable = data.burnable[i];
                     if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
                         numberOfBurnedPixels++;
                         double burnedArea = scale(burnedPixel, data.areas[i]);
@@ -81,7 +81,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     }
 
                     burnableFractionValue += isBurnable ? data.areas[i] : 0.0;
-                    boolean hasBeenObserved = data.statusPixels[i] != 0;
+                    boolean hasBeenObserved = data.statusPixels[i] == 1;
                     coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
                     specialCoverageValue += hasBeenObserved ? data.areas[i] : 0.0;
                     areas[targetGridCellIndex] += data.areas[i];
@@ -93,12 +93,26 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 if (mustHandleCoverageSpecifially(x)) {
                     LOG.info("Handling LC specially.");
-                    burnableFractionValue = getSpecialBurnableFractionValue(x, y);
+                    LOG.info("specialCoverageValue=" + specialCoverageValue);
+                    double[] areaAndSpecialBurnableFractionValue = getAreaAndSpecialBurnableFractionValue(x, y);
+                    areas[targetGridCellIndex] = areaAndSpecialBurnableFractionValue[0];
+                    burnableFractionValue = areaAndSpecialBurnableFractionValue[1];
+
+                    LOG.info("areas=" + areas[targetGridCellIndex]);
+                    LOG.info("burnableFractionValue=" + burnableFractionValue);
+
                     coverageValue = specialCoverageValue;
                 }
-                coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
-                burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
-                validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
+
+                if (isInBrokenLCZone(x, y)) {
+                    coverage[targetGridCellIndex] = 0;
+                    burnableFraction[targetGridCellIndex] = 0;
+                } else {
+                    coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
+                    burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
+                    validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
+                }
+
 
                 errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], numberOfBurnedPixels, baValue);
 
@@ -133,9 +147,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return gridCells;
     }
 
-    protected abstract boolean isBurnable(int lcClass);
+    protected boolean isInBrokenLCZone(int x, int y) {
+        return false;
+    }
 
-    protected double getSpecialBurnableFractionValue(int x, int y) throws IOException {
+    protected double[] getAreaAndSpecialBurnableFractionValue(int x, int y) throws IOException {
         throw new IllegalStateException("This must not be called.");
     }
 
@@ -204,12 +220,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    public static float getFraction(double value, double area) {
-        float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
-        if (Float.isNaN(fraction)) {
+    public float getFraction(double value, double area) {
+        if (area < 0.0001) {
             return 0.0F;
         }
-        if (fraction < 0.0001) { // -	If FBA < 0.0001, then FBA = 0
+        float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
+        if (Float.isNaN(fraction) || area == 0.0) {
             return 0.0F;
         }
         return fraction;

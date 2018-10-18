@@ -34,6 +34,7 @@ public class S2GridMapper extends AbstractGridMapper {
 
     private static final int GRID_CELLS_PER_DEGREE = 4;
     private static final int NUM_GRID_CELLS = 1;
+    private String oneDegTile;
 
     protected S2GridMapper() {
         super(NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE, NUM_GRID_CELLS * GRID_CELLS_PER_DEGREE);
@@ -91,7 +92,7 @@ public class S2GridMapper extends AbstractGridMapper {
         Product lcProduct = ProductIO.readProduct(lcFile);
         LOG.info(tmpLc.length() + "");
 
-        String oneDegTile = fakePaths[fakePaths.length - 1].getName();
+        oneDegTile = fakePaths[fakePaths.length - 1].getName();
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
@@ -180,11 +181,6 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected boolean isBurnable(int lcClass) {
-        return LcRemappingS2.isInBurnableLcClass(lcClass);
-    }
-
-    @Override
     protected int getLcClassesCount() {
         return 6;
     }
@@ -195,6 +191,35 @@ public class S2GridMapper extends AbstractGridMapper {
         if (sourceLc <= baInLc.size()) {
             baInLc.get(sourceLc - 1)[targetGridCellIndex] += inBurnableClass ? burnedArea : 0.0F;
         }
+    }
+
+    @Override
+    protected boolean isInBrokenLCZone(int x, int y) {
+        int targetGridCellX = 4 * Integer.parseInt(oneDegTile.split("y")[0].replace("x", ""));
+        int targetGridCellY = 720 - 4 * Integer.parseInt(oneDegTile.split("y")[1]);
+        return
+                (targetGridCellX == 767 && targetGridCellY == 414)
+                        || (targetGridCellX == 767 && targetGridCellY == 415)
+                        || (targetGridCellX == 767 && targetGridCellY == 416)
+                        || (targetGridCellX == 767 && targetGridCellY == 417)
+                        || (targetGridCellX == 767 && targetGridCellY == 418)
+                        || (targetGridCellX == 767 && targetGridCellY == 419)
+                        || (targetGridCellX == 766 && targetGridCellY == 418)
+                        || (targetGridCellX == 766 && targetGridCellY == 419)
+                        || (targetGridCellX == 923 && targetGridCellY == 323)
+                        || (targetGridCellX == 924 && targetGridCellY == 323)
+                        || (targetGridCellX == 925 && targetGridCellY == 323)
+                        || (targetGridCellX == 916 && targetGridCellY == 440)
+                        || (targetGridCellX == 819 && targetGridCellY == 497)
+                        || (targetGridCellX == 819 && targetGridCellY == 498)
+                        || (targetGridCellX == 770 && targetGridCellY == 440)
+                        || (targetGridCellX == 766 && targetGridCellY == 382)
+                        || (targetGridCellX == 767 && targetGridCellY == 382)
+                        || (targetGridCellX == 663 && targetGridCellY == 323)
+                        || (targetGridCellX == 664 && targetGridCellY == 323)
+                        || (targetGridCellX == 648 && targetGridCellY == 300)
+                        || (targetGridCellX == 747 && targetGridCellY == 300)
+                        || (targetGridCellX == 748 && targetGridCellY == 300);
     }
 
     private FileStatus[] getFileStatuses(String inputPathPatterns, Configuration conf) throws IOException {

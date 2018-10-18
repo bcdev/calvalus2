@@ -41,10 +41,10 @@ public class AvhrrGridMapper extends AbstractGridMapper {
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();
+        LOG.info("paths=" + Arrays.toString(paths));
         if (paths.length != 4) {
             throw new IllegalStateException("Expecting dates, porcentage, uncertainty file, and tileIndex.");
         }
-        LOG.info("paths=" + Arrays.toString(paths));
         int tileIndex = Integer.parseInt(paths[3].getName());
 
         File porcProductFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
@@ -249,8 +249,4 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         return burnedPixel * area;
     }
 
-    @Override
-    protected boolean isBurnable(int lcClass) {
-        return LcRemapping.isInBurnableLcClass(lcClass);
-    }
 }

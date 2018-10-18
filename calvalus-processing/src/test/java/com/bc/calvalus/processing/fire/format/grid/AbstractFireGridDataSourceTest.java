@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
-import com.bc.calvalus.processing.fire.format.LcRemapping;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,14 +34,14 @@ public class AbstractFireGridDataSourceTest {
                 0, 0, 0, 0
         };
 
-        int[] lcClass = {
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
         };
 
-        assertEquals(0, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(lcClass), LcRemapping::isInBurnableLcClass));
+        assertEquals(0, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -53,13 +52,13 @@ public class AbstractFireGridDataSourceTest {
                 1, 0, 0, 0,
                 1, 0, 0, 1
         };
-        int[] lcClass = {
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
         };
-        assertEquals(3, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(lcClass), LcRemapping::isInBurnableLcClass));
+        assertEquals(3, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -70,13 +69,13 @@ public class AbstractFireGridDataSourceTest {
                 1, 0, 0, 0,
                 1, 0, 0, 1
         };
-        int[] lcClass = {
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10
+        boolean[] burnable = {
+                true, true, true, false,
+                true, true, true, false,
+                true, true, true, true,
+                true, true, true, true
         };
-        assertEquals(2, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(lcClass), LcRemapping::isInBurnableLcClass));
+        assertEquals(2, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -87,13 +86,13 @@ public class AbstractFireGridDataSourceTest {
                 0, 1, 1, 0,
                 0, 0, 0, 0
         };
-        int[] lcClass = {
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
         };
-        assertEquals(1, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(lcClass), LcRemapping::isInBurnableLcClass));
+        assertEquals(1, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -104,13 +103,13 @@ public class AbstractFireGridDataSourceTest {
                 0, 1, 1, 0,
                 0, 0, 0, 1
         };
-        int[] lcClass = {
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10,
-                10, 10, 10, 10
+        boolean[] burnable = {
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true,
+                true, true, true, true
         };
-        assertEquals(4, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(lcClass), LcRemapping::isInBurnableLcClass));
+        assertEquals(4, dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable)));
     }
 
     @Test
@@ -119,8 +118,8 @@ public class AbstractFireGridDataSourceTest {
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (int) (Math.random() * 2);
         }
-        int[] lcClass = new int[90 * 90];
-        Arrays.fill(lcClass, 10);
-        dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(lcClass), LcRemapping::isInBurnableLcClass);
+        boolean[] burnable = new boolean[90 * 90];
+        Arrays.fill(burnable, true);
+        dataSource.getPatchNumbers(make2Dims(pixels), GridFormatUtils.make2Dims(burnable));
     }
 }

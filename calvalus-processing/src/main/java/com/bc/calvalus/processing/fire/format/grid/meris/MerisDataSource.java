@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.meris;
 
-import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
@@ -64,7 +63,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
         if (computeBA) {
             Band baBand = sourceProduct.getBand("band_1");
             baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.burnedPixels);
-            data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), GridFormatUtils.make2Dims(data.lcClasses), LcRemapping::isInBurnableLcClass);
+            data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), GridFormatUtils.make2Dims(data.burnable));
             Band lcClassification = lcProduct.getBand("lcclass");
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }
