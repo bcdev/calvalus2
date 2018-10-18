@@ -12,6 +12,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 
@@ -51,6 +52,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         for (Product sourceProduct : sourceProducts) {
 
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+            if (jdSubset == null) {
+                return null;
+            }
 
             totalWidth += jdSubset.getSceneRasterWidth();
             totalHeight += jdSubset.getSceneRasterHeight();
@@ -150,6 +154,14 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         subsetOp.setGeoRegion(geometry);
         subsetOp.setSourceProduct(sourceProduct);
-        return subsetOp.getTargetProduct();
+        Product targetProduct = null;
+        try {
+            targetProduct = subsetOp.getTargetProduct();
+        } catch (OperatorException exception) {
+            if (exception.getMessage().contains("No intersection with source product boundary")) {
+                return null;
+            }
+        }
+        return targetProduct;
     }
 }
