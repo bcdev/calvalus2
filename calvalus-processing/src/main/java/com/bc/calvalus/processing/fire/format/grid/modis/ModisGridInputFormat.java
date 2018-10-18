@@ -24,9 +24,9 @@ public class ModisGridInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         List<InputSplit> splits = new ArrayList<>();
 
-        for (int y = 0; y < 90; y++) {
-            for (int x = 0; x < 90; x++) {
-                addSplit(x * 16 + "," + y * 16, splits);
+        for (int y = 0; y < 20; y++) {
+            for (int x = 0; x < 40; x++) {
+                addSplit(x * 36 + "," + y * 36, splits);
             }
         }
 
