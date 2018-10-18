@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
@@ -14,10 +15,11 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.logging.Logger;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
@@ -25,27 +27,27 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final Product[] products;
     private final Product[] lcProducts;
     private final String targetCell; // "800,312"
+    private static final Logger LOG = CalvalusLogger.getLogger();
+    private final SortedSet<Long> alreadyVisitedPixelPoses;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(4800, 4800);
         this.products = products;
         this.lcProducts = lcProducts;
         this.targetCell = targetCell;
+        this.alreadyVisitedPixelPoses = new TreeSet<>();
     }
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
-        System.out.println(Instant.now().toString() + " Reading data for pixel " + x + "," + y + "...");
+        LOG.info("Reading data for pixel " + x + "," + y + "...");
         int targetCellX = x + Integer.parseInt(targetCell.split(",")[0]);
         int targetCellY = y + Integer.parseInt(targetCell.split(",")[1]);
-
 
         HashMap<String, Set<String>> geoLookupTable = getGeoLookupTable(targetCellX, targetCellY);
 
         SourceData data = new SourceData(4800, 4800);
         data.reset();
-
-        Arrays.fill(data.areas, MODIS_AREA_SIZE);
 
         if (geoLookupTable == null) {
             return data;
@@ -86,17 +88,24 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int y0 = Integer.parseInt(sppSplit[1]);
                 int pixelIndex = y0 * 4800 + x0;
 
+                long key = createKey(tile, x0, y0);
+                if (alreadyVisitedPixelPoses.contains(key)) {
+                    continue;
+                }
+                alreadyVisitedPixelPoses.add(key);
+
                 data.burnedPixels[pixelIndex] = jdPixels[pixelIndex];
                 data.probabilityOfBurn[pixelIndex] = clPixels != null ? clPixels[pixelIndex] : 0.0F;
                 int sourceLC = lcPixels[pixelIndex];
                 data.lcClasses[pixelIndex] = sourceLC;
+                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 int sourceStatus = numObsPixels[pixelIndex];
                 data.statusPixels[pixelIndex] = remap(sourceStatus, data.statusPixels[pixelIndex]);
+                data.areas[pixelIndex] = MODIS_AREA_SIZE;
             }
-
         }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.lcClasses, 4800, 4800), LcRemapping::isInBurnableLcClass);
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.burnable, 4800, 4800));
 
         return data;
     }
