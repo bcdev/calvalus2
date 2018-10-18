@@ -87,7 +87,6 @@ public class ModisGridMapper extends AbstractGridMapper {
         Product lcProduct = ProductIO.readProduct(lcFile);
 
         List<Product> sourceProducts = new ArrayList<>();
-        List<Product> lcProducts = new ArrayList<>();
         List<Product> clProducts = new ArrayList<>();
         for (File productFile : paths) {
             Product product = ProductIO.readProduct(productFile);
@@ -106,12 +105,10 @@ public class ModisGridMapper extends AbstractGridMapper {
             clProducts.sort(Comparator.comparing(ProductNode::getName));
         }
 
-        lcProducts.add(lcProduct);
-
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(targetCell, sourceProducts.toArray(new Product[0]), clProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]));
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(targetCell, sourceProducts.toArray(new Product[0]), clProducts.toArray(new Product[0]), lcProduct);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 

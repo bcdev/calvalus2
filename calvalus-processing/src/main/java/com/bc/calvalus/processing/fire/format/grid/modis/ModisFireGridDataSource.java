@@ -22,17 +22,17 @@ import java.util.Arrays;
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     static final double MODIS_AREA_SIZE = 53664.6683222854702276;
-    private final Product[] lcProducts;
+    private final Product lcProduct;
     private final String tile;
     private final Product[] sourceProducts;
     private final Product[] clProducts;
 
-    public ModisFireGridDataSource(String tile, Product sourceProducts[], Product[] clProducts, Product[] lcProducts) {
+    public ModisFireGridDataSource(String tile, Product sourceProducts[], Product[] clProducts, Product lcProduct) {
         super(-1, -1);
         this.tile = tile;
         this.sourceProducts = sourceProducts;
         this.clProducts = clProducts;
-        this.lcProducts = lcProducts;
+        this.lcProduct = lcProduct;
     }
 
     @Override
@@ -68,7 +68,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             Product sourceProduct = sourceProducts[i];
             Product clProduct = clProducts[i];
-            Product lcProduct = lcProducts[i];
 
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
 
