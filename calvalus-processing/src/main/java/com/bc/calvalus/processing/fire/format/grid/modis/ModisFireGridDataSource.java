@@ -9,7 +9,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
@@ -76,11 +75,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band lc = lcSubset.getBand("band_1");
 
             PixelPos pixelPos = new PixelPos();
-            GeoPos geoPos = new GeoPos();
             for (int lineIndex = 0; lineIndex < jdSubset.getSceneRasterHeight(); lineIndex++) {
                 pixelPos.x = 0;
                 pixelPos.y = lineIndex;
-                lc.getGeoCoding().getGeoPos(pixelPos, geoPos);
                 int width = jdSubset.getSceneRasterWidth();
 
                 int[] jdPixels = new int[width];
@@ -90,10 +87,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 jd.readPixels(0, lineIndex, width, 1, jdPixels);
                 cl.readPixels(0, lineIndex, width, 1, clPixels);
                 lc.readPixels(0, lineIndex, width, 1, lcPixels);
-
-                if (geoPos.lat < -34.84) {
-                    Arrays.fill(lcPixels, 10);
-                }
 
                 for (int x0 = 0; x0 < width; x0++) {
                     int sourceJD = jdPixels[x0];

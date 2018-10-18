@@ -72,14 +72,13 @@ public class ModisGridMapper extends AbstractGridMapper {
         pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight);
 
         List<File> paths = new ArrayList<>();
-        for (int i = 0; i < fakePaths.length - 1; i++) {
-            String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-pixel/.*-" + year + "-" + m + "-Fire-Pixel-Formatting.*/.*tif";
-            FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, context.getConfiguration());
-            for (FileStatus fileStatus : fileStatuses) {
-                if (!fileStatus.getPath().getName().contains("LC")) {
-                    File file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), context.getConfiguration());
-                    paths.add(file);
-                }
+        String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-pixel/.*-" + year + "-" + m + "-Fire-Pixel-Formatting.*/.*tif";
+        LOG.info("Copying data according to pattern " + inputPathPattern);
+        FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, context.getConfiguration());
+        for (FileStatus fileStatus : fileStatuses) {
+            if (!fileStatus.getPath().getName().contains("LC")) {
+                File file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), context.getConfiguration());
+                paths.add(file);
             }
         }
 
