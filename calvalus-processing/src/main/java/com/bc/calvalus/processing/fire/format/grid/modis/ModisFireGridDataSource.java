@@ -14,7 +14,7 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.common.SubsetOp;
-import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.esa.snap.core.gpf.common.resample.ResamplingOp;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -135,11 +135,18 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     }
 
     private Product getLcSubset(Product sourceProduct, Product lcProduct) {
-        ReprojectionOp reprojectionOp = new ReprojectionOp();
-        reprojectionOp.setSourceProduct("collocationProduct", sourceProduct);
-        reprojectionOp.setSourceProduct(lcProduct);
-        reprojectionOp.setParameterDefaultValues();
-        return reprojectionOp.getTargetProduct();
+        ResamplingOp resamplingOp = new ResamplingOp();
+        resamplingOp.setParameterDefaultValues();
+        resamplingOp.setSourceProduct(lcProduct);
+        resamplingOp.setParameter("targetWidth", sourceProduct.getSceneRasterWidth());
+        resamplingOp.setParameter("targetHeight", sourceProduct.getSceneRasterHeight());
+        return resamplingOp.getTargetProduct();
+
+//        ReprojectionOp reprojectionOp = new ReprojectionOp();
+//        reprojectionOp.setSourceProduct("collocationProduct", sourceProduct);
+//        reprojectionOp.setSourceProduct(lcProduct);
+//        reprojectionOp.setParameterDefaultValues();
+//        return reprojectionOp.getTargetProduct();
     }
 
 
