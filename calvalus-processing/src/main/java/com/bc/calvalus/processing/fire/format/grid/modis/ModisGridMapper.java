@@ -83,7 +83,8 @@ public class ModisGridMapper extends AbstractGridMapper {
         }
 
         String lcYear = GridFormatUtils.modisLcYear(year);
-        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7_MODIS.tif"), context.getConfiguration());
+//        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7_MODIS.tif"), context.getConfiguration());
+        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7.tif"), context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcFile);
 
         List<Product> sourceProducts = new ArrayList<>();
