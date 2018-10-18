@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class ModisGridMapper extends AbstractGridMapper {
 
-    public static final int WINDOW_SIZE = 32;
+    public static final int WINDOW_SIZE = 16;
     private String targetCell;
     private Configuration configuration;
     private Product lcProduct;
