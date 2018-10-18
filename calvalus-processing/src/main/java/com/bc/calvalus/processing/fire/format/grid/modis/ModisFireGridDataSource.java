@@ -53,7 +53,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
             if (jdSubset == null) {
-                return null;
+                continue;
             }
 
             totalWidth += jdSubset.getSceneRasterWidth();
@@ -71,6 +71,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Product lcProduct = lcProducts[i];
 
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+
+            if (jdSubset == null) {
+                continue;
+            }
+
             Product clSubset = getSubset(lon0, lat0, clProduct);
             Product lcSubset = getLcSubset(jdSubset, lcProduct);
 
