@@ -161,7 +161,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
         float[] f = new float[baInClass.length];
         for (int i = 0; i < baInClass.length; i++) {
-            f[i] = (float) baInClass[i];
+            f[i] = (int) baInClass[i];
         }
 
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, targetWidth, targetHeight}, f);
