@@ -44,7 +44,7 @@ public class ModisGridInputFormat extends InputFormat {
         splits.add(combineFileSplit);
     }
 
-    public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
+    public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) {
         return new NoRecordReader();
     }
 

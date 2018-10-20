@@ -11,7 +11,8 @@ public class GlobalPixelProductAreaProvider implements SensorStrategy.PixelProdu
         EUROPE(154, 7, 233, 65, "3", "Europe"),
         ASIA(233, 7, 360, 90, "4", "Asia"),
         AFRICA(154, 65, 233, 130, "5", "Africa"),
-        AUSTRALIA(275, 90, 360, 143, "6", "Australia");
+        AUSTRALIA(275, 90, 360, 143, "6", "Australia"),
+        GREENLAND(130, 7, 154, 40, "7", "Greenland");
 
         final int left;
         final int top;

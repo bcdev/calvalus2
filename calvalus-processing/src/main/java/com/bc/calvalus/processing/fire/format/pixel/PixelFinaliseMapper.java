@@ -106,7 +106,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
         FileSystem fs = outputPaths[0].getFileSystem(configuration);
-        for (int i = 0; i < results.length; i++) {
+        for (int i = 0; i < results.length - 1; i++) {
             CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/" + BAND_TYPES.length + "...");
             Path tifPath = outputPaths[i];
             Path alternativeTifPath = new Path(outputPaths[i].toString().replace("-Formatting", "-Formatting_format"));

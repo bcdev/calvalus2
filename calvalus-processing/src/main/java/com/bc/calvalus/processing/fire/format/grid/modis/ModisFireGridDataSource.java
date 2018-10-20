@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
@@ -17,7 +16,6 @@ import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.gpf.common.resample.ResamplingOp;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
@@ -37,11 +35,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
-        CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-
-        CalvalusLogger.getLogger().info("All products:");
-        CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
         double lon0 = getLon(x, tile);
         double lat0 = getLat(y, tile);
