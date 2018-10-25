@@ -223,7 +223,7 @@ public class ExecuteRequestExtractorTest {
                "             version=\"1.0.0\"\n" +
                "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
                "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
-               "\t\t\t xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\"\n" +
+               "\t\t\t xmlns:cal=\"http://www.brockmann-consult.de/bc-wps/calwpsL3Parameters-schema.xsd\"\n" +
                "             xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
                "             xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n" +
                "             xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
@@ -324,7 +324,7 @@ public class ExecuteRequestExtractorTest {
                "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
                "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
                "             xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-               "             xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\">\n" +
+               "             xmlns:cal=\"http://www.brockmann-consult.de/bc-wps/calwpsL3Parameters-schema.xsd\">\n" +
                "\n" +
                "    <ows:Identifier>urbantep-timescan~1.0~Idepix.Sentinel2</ows:Identifier>\n" +
                "\n" +
@@ -498,7 +498,7 @@ public class ExecuteRequestExtractorTest {
                "             version=\"1.0.0\"\n" +
                "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
                "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
-               "\t\t\t xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\"\n" +
+               "\t\t\t xmlns:cal=\"http://www.brockmann-consult.de/bc-wps/calwpsL3Parameters-schema.xsd\"\n" +
                "             xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n" +
                "\n" +
                "\t<ows:Identifier>case2-regional~1.5.3~Meris.Case2Regional</ows:Identifier>\n" +
@@ -529,7 +529,7 @@ public class ExecuteRequestExtractorTest {
                "             version=\"1.0.0\"\n" +
                "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
                "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
-               "             xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\"\n" +
+               "             xmlns:cal=\"http://www.brockmann-consult.de/bc-wps/calwpsL3Parameters-schema.xsd\"\n" +
                "             xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n" +
                "\n" +
                "\t<ows:Identifier>urbantep-subsetting~1.0~Subset</ows:Identifier>\n" +

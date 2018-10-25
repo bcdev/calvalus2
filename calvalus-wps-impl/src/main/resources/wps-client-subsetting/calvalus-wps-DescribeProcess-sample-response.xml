@@ -55,12 +55,12 @@
                 <wps:ComplexData>
                     <wps:Default>
                         <wps:Format>
-                            <Schema>http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd</Schema>
+                            <Schema>http://www.brockmann-consult.de/bc-wps/calwpsL3Parameters-schema.xsd</Schema>
                         </wps:Format>
                     </wps:Default>
                     <wps:Supported>
                         <wps:Format>
-                            <Schema>http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd</Schema>
+                            <Schema>http://www.brockmann-consult.de/bc-wps/calwpsL3Parameters-schema.xsd</Schema>
                         </wps:Format>
                     </wps:Supported>
                 </wps:ComplexData>
