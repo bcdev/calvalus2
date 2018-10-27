@@ -97,6 +97,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             int width = jdSubset.getSceneRasterWidth();
 
+//            if (x == 12 && y == 0) {
+//                ProductIO.writeProduct(lcSubset1, "lc_subset_" + jdSubset.getName() + ".nc", "NetCDF4-CF");
+//                ProductIO.writeProduct(jdSubset, "jd_subset_" + jdSubset.getName() + ".nc", "NetCDF4-CF");
+//            }
+
             for (int lineIndex = 0; lineIndex < jdSubset.getSceneRasterHeight(); lineIndex++) {
 
                 int[] jdPixels = new int[width];
@@ -116,7 +121,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 lc.readPixels(0, lineIndex, width, 1, lcPixels);
 
                 for (int x0 = 0; x0 < width; x0++) {
-                    if (lcMaskPixels[x0] == 0) {
+                    if (lcMaskPixels[x0] != 0) {
                         continue;
                     }
                     int sourceJD = jdPixels[x0];
@@ -144,6 +149,16 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 }
             }
         }
+
+
+//        if (x == 12 && y == 0) {
+//            try {
+//                Thread.sleep(1000*60*10);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.burnable, totalWidth, totalHeight));
         return data;
     }
