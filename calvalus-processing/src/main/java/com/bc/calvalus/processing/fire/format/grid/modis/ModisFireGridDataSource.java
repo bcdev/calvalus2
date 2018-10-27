@@ -93,10 +93,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band cl = jdSubset.getBand("uncertainty");
             Band no = jdSubset.getBand("numObs1");
 
-            addMask(lon0, lat0, lc);
-            addMask(lon0, lat0, jd);
-            LOG.info("lc.isValidMaskImageSet()=" + lc.isValidMaskImageSet());
-            LOG.info("jd.isValidMaskImageSet()=" + jd.isValidMaskImageSet());
+            Mask mask = addMask(lon0, lat0, lc);
 
             int width = jdSubset.getSceneRasterWidth();
 
@@ -107,6 +104,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int[] lcPixels = new int[width];
                 int[] numObsPixels = new int[width];
 
+                int[] lcMaskPixels = new int[width];
+                mask.readPixels(0, lineIndex, width, 1, lcMaskPixels);
+                LOG.info(Arrays.toString(lcMaskPixels));
                 jd.readPixels(0, lineIndex, width, 1, jdPixels);
                 if (cl != null) {
                     cl.readPixels(0, lineIndex, width, 1, clPixels);
@@ -117,6 +117,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 lc.readPixels(0, lineIndex, width, 1, lcPixels);
 
                 for (int x0 = 0; x0 < width; x0++) {
+                    if (lcMaskPixels[x0] == 0) {
+                        continue;
+                    }
                     int sourceJD = jdPixels[x0];
                     float sourceCL = clPixels[x0];
                     int sourceLC = lcPixels[x0];
@@ -146,11 +149,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return data;
     }
 
-    protected static void addMask(double lon0, double lat0, Band lc) {
-        Mask mask = new Mask("mask", lc.getRasterWidth(), lc.getRasterHeight(), Mask.VectorDataType.INSTANCE);
-        Mask.VectorDataType.setVectorData(mask, createVDN(getWktString(lon0, lat0), lc.getProduct()));
-        lc.getProduct().getMaskGroup().add(mask);
-        lc.setValidPixelExpression("mask == 1");
+    protected static Mask addMask(double lon0, double lat0, Band band) {
+        Mask mask = new Mask("mask", band.getRasterWidth(), band.getRasterHeight(), Mask.VectorDataType.INSTANCE);
+        Mask.VectorDataType.setVectorData(mask, createVDN(getWktString(lon0, lat0), band.getProduct()));
+        band.getProduct().getMaskGroup().add(mask);
+        return mask;
     }
 
     private static VectorDataNode createVDN(String wkt, Product p) {
