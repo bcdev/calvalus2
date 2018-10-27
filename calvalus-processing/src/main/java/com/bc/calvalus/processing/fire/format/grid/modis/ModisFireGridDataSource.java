@@ -153,6 +153,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         Mask mask = new Mask("mask", band.getRasterWidth(), band.getRasterHeight(), Mask.VectorDataType.INSTANCE);
         Mask.VectorDataType.setVectorData(mask, createVDN(getWktString(lon0, lat0), band.getProduct()));
         band.getProduct().getMaskGroup().add(mask);
+        mask.setOwner(band.getProduct());
         return mask;
     }
 
