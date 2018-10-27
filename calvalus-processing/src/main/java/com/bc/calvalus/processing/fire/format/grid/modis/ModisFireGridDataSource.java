@@ -35,15 +35,15 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     public static final double MODIS_AREA_SIZE = 53664.6683222854702276;
     private final Product[] products;
-    private final Product lcProduct;
+    private final Product[] lcProducts;
     private final String targetCell; // "800,312"
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public ModisFireGridDataSource(Product[] products, Product lcProduct, String targetCell) {
+    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(-1, -1);
         this.products = products;
         Arrays.sort(products, Comparator.comparing(ProductNode::getName));
-        this.lcProduct = lcProduct;
+        this.lcProducts = lcProducts;
         this.targetCell = targetCell;
     }
 
@@ -56,61 +56,59 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         double lon0 = getLeftLon(x, targetCell);
         double lat0 = getTopLat(y, targetCell);
 
-        int totalWidth = 0;
-        int totalHeight = 0;
+//        int totalWidth = 0;
+//        int totalHeight = 0;
 
-        for (Product sourceProduct : products) {
-            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
-            if (jdSubset != null && jdSubset.getSceneRasterWidth() > 1 && jdSubset.getSceneRasterHeight() > 1) {
-                totalWidth += jdSubset.getSceneRasterWidth();
-                totalHeight += jdSubset.getSceneRasterHeight();
-            }
-        }
+//        for (Product sourceProduct : products) {
+//            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+//            if (jdSubset != null && jdSubset.getSceneRasterWidth() > 1 && jdSubset.getSceneRasterHeight() > 1) {
+//                totalWidth += jdSubset.getSceneRasterWidth();
+//                totalHeight += jdSubset.getSceneRasterHeight();
+//            }
+//        }
 
-        if (totalHeight == 0 || totalWidth == 0) {
-            // grid cell is covered by water completely - that's fine.
-            LOG.warning("Completely covered by water? x=" + x + ", y=" + y);
-            return null;
-        }
-
-        SourceData data = new SourceData(totalWidth, totalHeight);
-        data.reset();
-        Arrays.fill(data.areas, MODIS_AREA_SIZE);
+//        if (totalHeight == 0 || totalWidth == 0) {
+           //  grid cell is covered by water completely - that's fine.
+//            LOG.warning("Completely covered by water? x=" + x + ", y=" + y);
+//            return null;
+//        }
 
         int targetPixelIndex = 0;
 
-        for (Product sourceProduct : products) {
-            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
-            if (jdSubset == null || jdSubset.getSceneRasterWidth() <= 1 || jdSubset.getSceneRasterHeight() <= 1) {
-                continue;
-            }
+        SourceData data = new SourceData(4800, 4800);
+        data.reset();
 
-//            Product lcSubset = getSubset(lon0, lat0, lcProduct);
-            Product lcSubset1 = getLcSubset(jdSubset, lcProduct);
-
-            Band lc = lcSubset1.getBand("band_1");
-            Band jd = jdSubset.getBand("classification");
-            Band cl = jdSubset.getBand("uncertainty");
-            Band no = jdSubset.getBand("numObs1");
-
-            Mask mask = addMask(lon0, lat0, lc);
-
-            int width = jdSubset.getSceneRasterWidth();
-
-//            if (x == 12 && y == 0) {
-//                ProductIO.writeProduct(lcSubset1, "lc_subset_" + jdSubset.getName() + ".nc", "NetCDF4-CF");
-//                ProductIO.writeProduct(jdSubset, "jd_subset_" + jdSubset.getName() + ".nc", "NetCDF4-CF");
+        for (int i = 0; i < products.length; i++) {
+            Product sourceProduct = products[i];
+            Product lcProduct = lcProducts[i];
+//            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+//            if (jdSubset == null || jdSubset.getSceneRasterWidth() <= 1 || jdSubset.getSceneRasterHeight() <= 1) {
+//                continue;
 //            }
 
-            for (int lineIndex = 0; lineIndex < jdSubset.getSceneRasterHeight(); lineIndex++) {
+//            Product lcSubset = getSubset(lon0, lat0, lcProducts);
+//            Product lcSubset1 = getLcSubset(jdSubset, lcProducts);
+
+
+            Mask mask = addMask(lon0, lat0, sourceProduct);
+
+            Band lc = lcProduct.getBand("band_1");
+            Band jd = sourceProduct.getBand("classification");
+            Band cl = sourceProduct.getBand("uncertainty");
+            Band no = sourceProduct.getBand("numObs1");
+
+            int width = sourceProduct.getSceneRasterWidth();
+
+            for (int lineIndex = 0; lineIndex < sourceProduct.getSceneRasterHeight(); lineIndex++) {
 
                 int[] jdPixels = new int[width];
                 float[] clPixels = new float[width];
                 int[] lcPixels = new int[width];
                 int[] numObsPixels = new int[width];
 
-                int[] lcMaskPixels = new int[width];
-                mask.readPixels(0, lineIndex, width, 1, lcMaskPixels);
+                int[] maskPixels = new int[width];
+                mask.readPixels(0, lineIndex, width, 1, maskPixels);
+
                 jd.readPixels(0, lineIndex, width, 1, jdPixels);
                 if (cl != null) {
                     cl.readPixels(0, lineIndex, width, 1, clPixels);
@@ -121,7 +119,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 lc.readPixels(0, lineIndex, width, 1, lcPixels);
 
                 for (int x0 = 0; x0 < width; x0++) {
-                    if (lcMaskPixels[x0] != 0) {
+                    if (maskPixels[x0] == 0) {
                         continue;
                     }
                     int sourceJD = jdPixels[x0];
@@ -150,7 +148,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             }
         }
 
-
 //        if (x == 12 && y == 0) {
 //            try {
 //                Thread.sleep(1000*60*10);
@@ -159,18 +156,18 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 //            }
 //        }
 
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.burnable, totalWidth, totalHeight));
+        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), GridFormatUtils.make2Dims(data.burnable, 4800, 4800));
         return data;
     }
 
-    private static Mask addMask(double lon0, double lat0, Band band) {
-        Mask mask = new Mask("mask", band.getRasterWidth(), band.getRasterHeight(), Mask.VectorDataType.INSTANCE);
-        VectorDataNode vdn = createVDN(getWktString(lon0, lat0), band.getProduct());
+    private static Mask addMask(double lon0, double lat0, Product jd) {
+        Mask mask = new Mask("mask", jd.getSceneRasterWidth(), jd.getSceneRasterHeight(), Mask.VectorDataType.INSTANCE);
+        VectorDataNode vdn = createVDN(getWktString(lon0, lat0), jd);
         Mask.VectorDataType.setVectorData(mask, vdn);
-        band.getProduct().getMaskGroup().add(mask);
-        band.getProduct().getVectorDataGroup().add(vdn);
-        vdn.setOwner(band.getProduct());
-        mask.setOwner(band.getProduct());
+        jd.getMaskGroup().add(mask);
+        jd.getVectorDataGroup().add(vdn);
+        vdn.setOwner(jd);
+        mask.setOwner(jd);
         return mask;
     }
 

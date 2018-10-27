@@ -40,7 +40,6 @@ public class ModisGridMapper extends AbstractGridMapper {
     public static final int WINDOW_SIZE = 32;
     private String targetCell;
     private Configuration configuration;
-    private Product lcProduct;
 
     public ModisGridMapper() {
         super(WINDOW_SIZE, WINDOW_SIZE);
@@ -69,10 +68,12 @@ public class ModisGridMapper extends AbstractGridMapper {
         int numProducts = paths.length - 1;
 
         Product[] sourceProducts = new Product[numProducts];
+        Product[] lcProducts = new Product[numProducts];
 
         ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight + paths.length - 1);
 
+        String lcYear = GridFormatUtils.modisLcYear(year);
         int productIndex = 0;
         for (int i = 0; i < paths.length - 1; i++) {
             if (paths[i].getName().contains("dummy")) {
@@ -84,6 +85,8 @@ public class ModisGridMapper extends AbstractGridMapper {
                 Product geoCodingProduct = ProductIO.readProduct(geoCodingFile);
                 ProductUtils.copyGeoCoding(geoCodingProduct, product);
                 sourceProducts[productIndex] = product;
+                File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/" + tile + "-" + lcYear + ".nc"), context.getConfiguration());
+                lcProducts[productIndex] = ProductIO.readProduct(lcFile);
             } else {
                 File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
                 Product p = ProductIO.readProduct(sourceProductFile);
@@ -106,21 +109,18 @@ public class ModisGridMapper extends AbstractGridMapper {
                     p = temp;
                 }
                 sourceProducts[productIndex] = p;
+                File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/" + tile + "-" + lcYear + ".nc"), context.getConfiguration());
+                lcProducts[productIndex] = ProductIO.readProduct(lcFile);
             }
 
             productIndex++;
             pm.worked(1);
         }
 
-        String lcYear = GridFormatUtils.modisLcYear(year);
-        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7.tif"), context.getConfiguration());
-
-        lcProduct = ProductIO.readProduct(lcFile);
-
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProduct, targetCell);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
@@ -277,12 +277,8 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected double getSpecialBurnableFractionValue(int x, int y) throws IOException {
+    protected double getSpecialBurnableFractionValue(int x, int y, Product lcProduct) throws IOException {
         // return sum of all burnable areas for the given grid cell
-
-        if (lcProduct == null) {
-            throw new IllegalStateException("No LC product, something's wrongly implemented.");
-        }
 
         SubsetOp subsetOp = new SubsetOp();
         Geometry geometry;

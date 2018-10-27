@@ -5,6 +5,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.snap.core.datamodel.Product;
 
 import java.io.IOException;
 import java.time.Year;
@@ -95,7 +96,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 //                if (mustHandleCoverageSpecifially(x)) {
                     LOG.info("Handling LC specially.");
                     LOG.info("specialCoverageValue=" + specialCoverageValue);
-                    burnableFractionValue = getSpecialBurnableFractionValue(x, y);
+                    burnableFractionValue = getSpecialBurnableFractionValue(x, y, null);
 
                     LOG.info("burnableFractionValue=" + burnableFractionValue);
 
@@ -149,7 +150,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return false;
     }
 
-    protected double getSpecialBurnableFractionValue(int x, int y) throws IOException {
+    protected double getSpecialBurnableFractionValue(int x, int y, Product lcProduct) throws IOException {
         throw new IllegalStateException("This must not be called.");
     }
 
