@@ -92,7 +92,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             Mask mask = addMask(lon0, lat0, sourceProduct);
 
-            Band lc = lcProduct.getBand("band_1");
+            Band lc = lcProduct.getBand("lccs_class");
             Band jd = sourceProduct.getBand("classification");
             Band cl = sourceProduct.getBand("uncertainty");
             Band no = sourceProduct.getBand("numObs1");
