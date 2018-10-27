@@ -42,7 +42,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(-1, -1);
         this.products = products;
-        Arrays.sort(products, Comparator.comparing(ProductNode::getName));
         this.lcProducts = lcProducts;
         this.targetCell = targetCell;
     }
