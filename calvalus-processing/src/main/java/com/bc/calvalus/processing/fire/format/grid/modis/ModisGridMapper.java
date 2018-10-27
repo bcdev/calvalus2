@@ -1,8 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
-import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
@@ -13,23 +12,22 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductNode;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.common.SubsetOp;
+import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -39,7 +37,7 @@ import java.util.List;
  */
 public class ModisGridMapper extends AbstractGridMapper {
 
-    public static final int WINDOW_SIZE = 36;
+    public static final int WINDOW_SIZE = 32;
     private String targetCell;
     private Configuration configuration;
     private Product lcProduct;
@@ -56,60 +54,73 @@ public class ModisGridMapper extends AbstractGridMapper {
         int year = Integer.parseInt(configuration.get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
-        String m;
-        if (month < 10) {
-            m = "0" + month;
-        } else {
-            m = "" + month;
-        }
-
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
-        Path[] fakePaths = inputSplit.getPaths();
-        targetCell = fakePaths[0].getName();
+        Path[] paths = inputSplit.getPaths();
+
+        LOG.info("paths=" + Arrays.toString(paths));
+        targetCell = paths[paths.length - 1].getName();
         LOG.info("targetCell=" + targetCell);
 
-        ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight);
+        if (paths.length == 1) {
+            LOG.info("no input paths, mapper done");
+            return;
+        }
 
-        List<File> paths = new ArrayList<>();
-        String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-pixel/.*-" + year + "-" + m + "-Fire-Pixel-Formatting.*/.*tif";
-        LOG.info("Copying data according to pattern " + inputPathPattern);
-        FileStatus[] fileStatuses = getFileStatuses(inputPathPattern, context.getConfiguration());
-        for (FileStatus fileStatus : fileStatuses) {
-            if (!fileStatus.getPath().getName().contains("LC")) {
-                File file = CalvalusProductIO.copyFileToLocal(fileStatus.getPath(), context.getConfiguration());
-                paths.add(file);
+        int numProducts = paths.length - 1;
+
+        Product[] sourceProducts = new Product[numProducts];
+
+        ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+        pm.beginTask("Copying data and computing grid cells...", targetRasterWidth * targetRasterHeight + paths.length - 1);
+
+        int productIndex = 0;
+        for (int i = 0; i < paths.length - 1; i++) {
+            if (paths[i].getName().contains("dummy")) {
+                Product product = new Product(paths[i].getName(), "dummy", 4800, 4800);
+                product.addBand("classification", "0", ProductData.TYPE_INT16);
+                product.addBand("numObs1", "3", ProductData.TYPE_UINT8);
+                String tile = paths[i].getName().split("dummyburned_year_month_")[1];
+                File geoCodingFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup-refs/" + tile + ".hdf"), context.getConfiguration());
+                Product geoCodingProduct = ProductIO.readProduct(geoCodingFile);
+                ProductUtils.copyGeoCoding(geoCodingProduct, product);
+                sourceProducts[productIndex] = product;
+            } else {
+                File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+                Product p = ProductIO.readProduct(sourceProductFile);
+                if (p == null) {
+                    throw new IllegalStateException("Cannot read file " + paths[i]);
+                }
+
+                String tile = paths[i].getName().split("_")[3].replace(".nc", "");
+                File geoCodingFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup-refs/" + tile + ".hdf"), context.getConfiguration());
+                Product geoCodingProduct = ProductIO.readProduct(geoCodingFile);
+                ProductUtils.copyGeoCoding(geoCodingProduct, p);
+                if (p.getName().contains("h18")) {
+                    Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
+                    ProductUtils.copyGeoCoding(p, temp);
+                    CommonUtils.fixH18Band(p, temp, "classification");
+                    CommonUtils.fixH18BandByte(p, temp, "numObs1");
+                    if (p.containsBand("uncertainty")) {
+                        CommonUtils.fixH18BandUInt8(p, temp, "uncertainty");
+                    }
+                    p = temp;
+                }
+                sourceProducts[productIndex] = p;
             }
+
+            productIndex++;
+            pm.worked(1);
         }
 
         String lcYear = GridFormatUtils.modisLcYear(year);
-//        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7_MODIS.tif"), context.getConfiguration());
         File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7.tif"), context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(lcFile);
 
-        List<Product> sourceProducts = new ArrayList<>();
-        List<Product> clProducts = new ArrayList<>();
-        for (File productFile : paths) {
-            Product product = ProductIO.readProduct(productFile);
-            if (product == null) {
-                throw new IllegalStateException("Product " + productFile + " is broken.");
-            }
-            if (productFile.getName().contains("JD")) {
-                sourceProducts.add(product);
-            } else if (productFile.getName().contains("CL")) {
-                clProducts.add(product);
-            } else {
-                throw new IllegalStateException("Unknown product: " + productFile.getName());
-            }
-
-            sourceProducts.sort(Comparator.comparing(ProductNode::getName));
-            clProducts.sort(Comparator.comparing(ProductNode::getName));
-        }
+        lcProduct = ProductIO.readProduct(lcFile);
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(targetCell, sourceProducts.toArray(new Product[0]), clProducts.toArray(new Product[0]), lcProduct);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProduct, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
@@ -266,15 +277,11 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected double[] getAreaAndSpecialBurnableFractionValue(int x, int y) throws IOException {
+    protected double getSpecialBurnableFractionValue(int x, int y) throws IOException {
         // return sum of all burnable areas for the given grid cell
 
-        int year = Integer.parseInt(configuration.get("calvalus.year"));
         if (lcProduct == null) {
-            String lcYear = GridFormatUtils.modisLcYear(year);
-            String pathString = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7_MODIS.tif";
-            File lcProductFile = CalvalusProductIO.copyFileToLocal(new Path(pathString), configuration);
-            lcProduct = ProductIO.readProduct(lcProductFile);
+            throw new IllegalStateException("No LC product, something's wrongly implemented.");
         }
 
         SubsetOp subsetOp = new SubsetOp();
@@ -298,7 +305,6 @@ public class ModisGridMapper extends AbstractGridMapper {
         AreaCalculator areaCalculator = new AreaCalculator(lcSubset.getSceneGeoCoding());
 
         double burnableFractionSum = 0.0;
-        double area = 0.0;
         Band lcBand = lcSubset.getBand("band_1");
         int width = lcBand.getRasterWidth();
         int height = lcBand.getRasterHeight();
@@ -307,23 +313,14 @@ public class ModisGridMapper extends AbstractGridMapper {
         int pixelIndex = 0;
         for (int y0 = 0; y0 < height; y0++) {
             for (int x0 = 0; x0 < width; x0++) {
-                double pixelSize = areaCalculator.calculatePixelSize(x0, y0, width - 1, height - 1);
-                area += pixelSize;
                 if (LcRemapping.isInBurnableLcClass(lcClasses[pixelIndex])) {
-                    burnableFractionSum += pixelSize;
+                    burnableFractionSum += areaCalculator.calculatePixelSize(x0, y0, width - 1, height - 1);
                 }
                 pixelIndex++;
             }
         }
 
-        return new double[]{area, burnableFractionSum};
-    }
-
-    private FileStatus[] getFileStatuses(String inputPathPatterns, Configuration conf) throws IOException {
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
+        return burnableFractionSum;
     }
 
 }

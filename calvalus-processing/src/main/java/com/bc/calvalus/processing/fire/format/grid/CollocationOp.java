@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.grid.avhrr;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.core.ProgressMonitor;

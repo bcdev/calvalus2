@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.grid.avhrr;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.CollocationOp;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;

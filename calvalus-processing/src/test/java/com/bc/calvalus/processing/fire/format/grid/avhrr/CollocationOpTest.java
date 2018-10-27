@@ -1,9 +1,11 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
+import com.bc.calvalus.processing.fire.format.grid.CollocationOp;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -13,6 +15,7 @@ import java.io.IOException;
 
 public class CollocationOpTest {
 
+    @Ignore
     @Test
     public void name() throws IOException {
 

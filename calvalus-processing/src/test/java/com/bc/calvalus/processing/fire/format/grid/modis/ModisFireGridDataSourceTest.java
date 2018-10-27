@@ -55,17 +55,17 @@ public class ModisFireGridDataSourceTest {
 
     @Test
     public void testGetLatAndLon() {
-        assertEquals(-180.0, ModisFireGridDataSource.getLon(0, "0,220"), 1E-5);
-        assertEquals(-180.0, ModisFireGridDataSource.getLon(0, "0,120"), 1E-5);
-        assertEquals(-179.75, ModisFireGridDataSource.getLon(1, "0,700"), 1E-5);
-        assertEquals(-172.0, ModisFireGridDataSource.getLon(0, "32,700"), 1E-5);
-        assertEquals(172.0, ModisFireGridDataSource.getLon(0, "1408,220"), 1E-5);
-        assertEquals(179.75, ModisFireGridDataSource.getLon(31, "1408,220"), 1E-5);
+        assertEquals(-180.0, ModisFireGridDataSource.getLeftLon(0, "0,220"), 1E-5);
+        assertEquals(-180.0, ModisFireGridDataSource.getLeftLon(0, "0,120"), 1E-5);
+        assertEquals(-179.75, ModisFireGridDataSource.getLeftLon(1, "0,700"), 1E-5);
+        assertEquals(-172.0, ModisFireGridDataSource.getLeftLon(0, "32,700"), 1E-5);
+        assertEquals(172.0, ModisFireGridDataSource.getLeftLon(0, "1408,220"), 1E-5);
+        assertEquals(179.75, ModisFireGridDataSource.getLeftLon(31, "1408,220"), 1E-5);
 
-        assertEquals(90, ModisFireGridDataSource.getLat(0, "32,0"), 1E-5);
-        assertEquals(89.75, ModisFireGridDataSource.getLat(1, "32,0"), 1E-5);
-        assertEquals(82.25, ModisFireGridDataSource.getLat(31, "32,0"), 1E-5);
-        assertEquals(-86, ModisFireGridDataSource.getLat(0, "320,704"), 1E-5);
-        assertEquals(-89.75, ModisFireGridDataSource.getLat(15, "320,704"), 1E-5);
+        assertEquals(90, ModisFireGridDataSource.getTopLat(0, "32,0"), 1E-5);
+        assertEquals(89.75, ModisFireGridDataSource.getTopLat(1, "32,0"), 1E-5);
+        assertEquals(82.25, ModisFireGridDataSource.getTopLat(31, "32,0"), 1E-5);
+        assertEquals(-86, ModisFireGridDataSource.getTopLat(0, "320,704"), 1E-5);
+        assertEquals(-89.75, ModisFireGridDataSource.getTopLat(15, "320,704"), 1E-5);
     }
 }

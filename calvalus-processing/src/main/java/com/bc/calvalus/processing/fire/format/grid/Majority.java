@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.grid.avhrr;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import org.esa.snap.core.dataop.resamp.Resampling;
 

@@ -91,15 +91,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 ba[targetGridCellIndex] = baValue;
                 patchNumber[targetGridCellIndex] = data.patchCount;
 
-//                if (mustHandleCoverageSpecifially(x)) {
                 if (false) {
+//                if (mustHandleCoverageSpecifially(x)) {
                     LOG.info("Handling LC specially.");
                     LOG.info("specialCoverageValue=" + specialCoverageValue);
-                    double[] areaAndSpecialBurnableFractionValue = getAreaAndSpecialBurnableFractionValue(x, y);
-                    areas[targetGridCellIndex] = areaAndSpecialBurnableFractionValue[0];
-                    burnableFractionValue = areaAndSpecialBurnableFractionValue[1];
+                    burnableFractionValue = getSpecialBurnableFractionValue(x, y);
 
-                    LOG.info("areas=" + areas[targetGridCellIndex]);
                     LOG.info("burnableFractionValue=" + burnableFractionValue);
 
                     coverageValue = specialCoverageValue;
@@ -152,7 +149,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return false;
     }
 
-    protected double[] getAreaAndSpecialBurnableFractionValue(int x, int y) throws IOException {
+    protected double getSpecialBurnableFractionValue(int x, int y) throws IOException {
         throw new IllegalStateException("This must not be called.");
     }
 

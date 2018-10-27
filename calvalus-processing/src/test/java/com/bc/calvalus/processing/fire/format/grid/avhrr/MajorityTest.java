@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
+import com.bc.calvalus.processing.fire.format.grid.Majority;
 import org.esa.snap.core.dataop.resamp.Resampling;
 import org.junit.Test;
 
@@ -19,22 +20,22 @@ public class MajorityTest {
         assertNotNull(index.j);
         assertNotNull(index.ki);
         assertNotNull(index.kj);
-        assertEquals(0, index.i.length);
-        assertEquals(0, index.j.length);
-        assertEquals(0, index.ki.length);
-        assertEquals(0, index.kj.length);
+        assertEquals(19, index.i.length);
+        assertEquals(19, index.j.length);
+        assertEquals(1, index.ki.length);
+        assertEquals(1, index.kj.length);
     }
 
     @Test
     public void testComputeIndexAndGetSample() throws Exception {
         final Resampling.Index index = resampling.createIndex();
-        test(index, 0.5f, 0.0f, 0.0, 0.0, 20f);
-        test(index, 0.5f, 2.0f, 0.0, 2.0, 20f);
-        test(index, 4.5f, 0.0f, 4.0, 0.0, 20f);
+        test(index, 0.5f, 0.0f, 0.0, 0.0, 10f);
+        test(index, 0.5f, 2.0f, 0.0, 2.0, 10f);
+        test(index, 4.5f, 0.0f, 4.0, 0.0, 50f);
         test(index, 0.5f, 3.9f, 0.0, 3.0, 10f);
-        test(index, 2.5f, 1.0f, 2.0, 1.0, 20f);
-        test(index, 4.5f, 4.0f, 4.0, 4.0, 60f);
-        test(index, 2.9f, 2.9f, 2.0, 2.0, 20f);
+        test(index, 2.5f, 1.0f, 2.0, 1.0, 10f);
+        test(index, 4.5f, 4.0f, 4.0, 4.0, 10f);
+        test(index, 2.9f, 2.9f, 2.0, 2.0, 10f);
     }
 
     private void test(final Resampling.Index index, float x, float y, double iExp, double jExp, float sampleExp) throws Exception {
@@ -49,10 +50,10 @@ public class MajorityTest {
     public void testCornerBasedIndex() throws Exception {
         testCornerIndex(0.5f, 0.0f);
         testCornerIndex(0.5f, 2.0f);
-        testCornerIndex(4.5f, 0.0f);
+        testCornerIndex(4.0f, 0.0f);
         testCornerIndex(0.5f, 3.9f);
         testCornerIndex(2.5f, 1.0f);
-        testCornerIndex(4.5f, 4.0f);
+        testCornerIndex(4.0f, 4.0f);
         testCornerIndex(2.9f, 2.9f);
     }
 

@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
+import com.bc.calvalus.processing.fire.format.grid.CollocationOp;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
@@ -12,7 +13,6 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -108,7 +108,6 @@ public class AvhrrFireGridDataSourceTest {
     }
 
     @Test
-    @Ignore
     public void acceptanceTestGetData() throws Exception {
         Product porcProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage.tif");
         Product uncProduct = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Uncertainty.tif");
@@ -140,7 +139,6 @@ public class AvhrrFireGridDataSourceTest {
     }
 
     @Test
-    @Ignore
     public void writeTestProduct() throws IOException, FactoryException, TransformException {
         Product product = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage.tif");
         ReprojectionOp reprojectionOp = new ReprojectionOp();
@@ -163,7 +161,7 @@ public class AvhrrFireGridDataSourceTest {
 
 
     @Test
-    public void name() throws IOException, ParseException {
+    public void writeTestProduct2() throws IOException, ParseException {
         Product product = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Porcentage_WGS.tif");
         Product product2 = ProductIO.readProduct("C:\\ssd\\avhrr\\BA_2000_2_Uncertainty_WGS.tif");
         SubsetOp subsetOp = new SubsetOp();
