@@ -65,7 +65,7 @@ public class ModisGridInputFormat extends InputFormat {
 
         for (String targetCell : tilesLut.keySet()) {
 
-            if (!targetCell.equals("256,128")) {
+            if (!targetCell.endsWith("128")) {
                 continue;
             }
 

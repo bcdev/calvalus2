@@ -62,9 +62,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         for (Product sourceProduct : products) {
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
             if (jdSubset != null && jdSubset.getSceneRasterWidth() > 1 && jdSubset.getSceneRasterHeight() > 1) {
-                totalWidth = jdSubset.getSceneRasterWidth();
-                totalHeight = jdSubset.getSceneRasterHeight();
-                break;
+                totalWidth += jdSubset.getSceneRasterWidth();
+                totalHeight += jdSubset.getSceneRasterHeight();
             }
         }
 
@@ -144,7 +143,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                     targetPixelIndex++;
                 }
             }
-            break;
         }
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.burnable, totalWidth, totalHeight));
         return data;
