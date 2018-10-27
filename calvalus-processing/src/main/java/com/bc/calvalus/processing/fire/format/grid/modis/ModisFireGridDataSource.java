@@ -62,8 +62,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         for (Product sourceProduct : products) {
             Product jdSubset = getSubset(lon0, lat0, sourceProduct);
             if (jdSubset != null && jdSubset.getSceneRasterWidth() > 1 && jdSubset.getSceneRasterHeight() > 1) {
-                totalWidth += jdSubset.getSceneRasterWidth();
-                totalHeight += jdSubset.getSceneRasterHeight();
+                totalWidth = jdSubset.getSceneRasterWidth();
+                totalHeight = jdSubset.getSceneRasterHeight();
+                break;
             }
         }
 
@@ -106,7 +107,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
                 int[] lcMaskPixels = new int[width];
                 mask.readPixels(0, lineIndex, width, 1, lcMaskPixels);
-                LOG.info(Arrays.toString(lcMaskPixels));
                 jd.readPixels(0, lineIndex, width, 1, jdPixels);
                 if (cl != null) {
                     cl.readPixels(0, lineIndex, width, 1, clPixels);
@@ -144,12 +144,13 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                     targetPixelIndex++;
                 }
             }
+            break;
         }
         data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, totalWidth, totalHeight), GridFormatUtils.make2Dims(data.burnable, totalWidth, totalHeight));
         return data;
     }
 
-    protected static Mask addMask(double lon0, double lat0, Band band) {
+    private static Mask addMask(double lon0, double lat0, Band band) {
         Mask mask = new Mask("mask", band.getRasterWidth(), band.getRasterHeight(), Mask.VectorDataType.INSTANCE);
         VectorDataNode vdn = createVDN(getWktString(lon0, lat0), band.getProduct());
         Mask.VectorDataType.setVectorData(mask, vdn);
