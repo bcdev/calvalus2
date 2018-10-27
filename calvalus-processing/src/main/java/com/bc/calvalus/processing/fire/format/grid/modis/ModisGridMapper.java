@@ -85,7 +85,7 @@ public class ModisGridMapper extends AbstractGridMapper {
                 Product geoCodingProduct = ProductIO.readProduct(geoCodingFile);
                 ProductUtils.copyGeoCoding(geoCodingProduct, product);
                 sourceProducts[productIndex] = product;
-                File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/" + tile + "-" + lcYear + ".nc"), context.getConfiguration());
+                File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + tile + "-" + lcYear + ".nc"), context.getConfiguration());
                 lcProducts[productIndex] = ProductIO.readProduct(lcFile);
             } else {
                 File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
@@ -109,7 +109,7 @@ public class ModisGridMapper extends AbstractGridMapper {
                     p = temp;
                 }
                 sourceProducts[productIndex] = p;
-                File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/" + tile + "-" + lcYear + ".nc"), context.getConfiguration());
+                File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + tile + "-" + lcYear + ".nc"), context.getConfiguration());
                 lcProducts[productIndex] = ProductIO.readProduct(lcFile);
             }
 
