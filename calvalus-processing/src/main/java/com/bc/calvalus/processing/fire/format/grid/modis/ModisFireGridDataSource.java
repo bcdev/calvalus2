@@ -13,7 +13,6 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.PlainFeatureFactory;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductNode;
 import org.esa.snap.core.datamodel.VectorDataNode;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
@@ -27,8 +26,9 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
@@ -55,39 +55,30 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         double lon0 = getLeftLon(x, targetCell);
         double lat0 = getTopLat(y, targetCell);
 
-//        int totalWidth = 0;
-//        int totalHeight = 0;
+        List<Integer> productIndices = new ArrayList<>();
 
-//        for (Product sourceProduct : products) {
-//            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
-//            if (jdSubset != null && jdSubset.getSceneRasterWidth() > 1 && jdSubset.getSceneRasterHeight() > 1) {
-//                totalWidth += jdSubset.getSceneRasterWidth();
-//                totalHeight += jdSubset.getSceneRasterHeight();
-//            }
-//        }
+        for (int i = 0; i < products.length; i++) {
+            Product sourceProduct = products[i];
+            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
+            if (jdSubset != null) {
+                productIndices.add(i);
+            }
+        }
 
-//        if (totalHeight == 0 || totalWidth == 0) {
+        if (productIndices.isEmpty()) {
            //  grid cell is covered by water completely - that's fine.
-//            LOG.warning("Completely covered by water? x=" + x + ", y=" + y);
-//            return null;
-//        }
+            LOG.info("Completely covered by water? x=" + x + ", y=" + y);
+            return null;
+        }
 
         int targetPixelIndex = 0;
 
         SourceData data = new SourceData(4800, 4800);
         data.reset();
 
-        for (int i = 0; i < products.length; i++) {
+        for (Integer i : productIndices) {
             Product sourceProduct = products[i];
             Product lcProduct = lcProducts[i];
-//            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
-//            if (jdSubset == null || jdSubset.getSceneRasterWidth() <= 1 || jdSubset.getSceneRasterHeight() <= 1) {
-//                continue;
-//            }
-
-//            Product lcSubset = getSubset(lon0, lat0, lcProducts);
-//            Product lcSubset1 = getLcSubset(jdSubset, lcProducts);
-
 
             Mask mask = addMask(lon0, lat0, sourceProduct);
 
@@ -99,14 +90,17 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             int width = sourceProduct.getSceneRasterWidth();
 
             for (int lineIndex = 0; lineIndex < sourceProduct.getSceneRasterHeight(); lineIndex++) {
+                int[] maskPixels = new int[width];
+                mask.readPixels(0, lineIndex, width, 1, maskPixels);
+
+                if (Arrays.stream(maskPixels).sum() == 0) {
+                    continue;
+                }
 
                 int[] jdPixels = new int[width];
                 float[] clPixels = new float[width];
                 int[] lcPixels = new int[width];
                 int[] numObsPixels = new int[width];
-
-                int[] maskPixels = new int[width];
-                mask.readPixels(0, lineIndex, width, 1, maskPixels);
 
                 jd.readPixels(0, lineIndex, width, 1, jdPixels);
                 if (cl != null) {
@@ -220,12 +214,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             throw new IllegalStateException(e);
         }
 
-//        ReprojectionOp reprojectionOp = new ReprojectionOp();
-//        reprojectionOp.setParameterDefaultValues();
-//        reprojectionOp.setSourceProduct(sourceProduct);
-//        reprojectionOp.setParameter("crs", "EPSG:4326");
-//        Product targetProduct1 = reprojectionOp.getTargetProduct();
-//
         subsetOp.setGeoRegion(geometry);
         subsetOp.setSourceProduct(sourceProduct);
         Product targetProduct = null;
