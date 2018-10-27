@@ -87,31 +87,31 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band cl = sourceProduct.getBand("uncertainty");
             Band no = sourceProduct.getBand("numObs1");
 
-            int width = sourceProduct.getSceneRasterWidth();
+            final int SIZE = 4800;
 
-            for (int lineIndex = 0; lineIndex < sourceProduct.getSceneRasterHeight(); lineIndex++) {
-                int[] maskPixels = new int[width];
-                mask.readPixels(0, lineIndex, width, 1, maskPixels);
+            for (int lineIndex = 0; lineIndex < SIZE; lineIndex++) {
+                int[] maskPixels = new int[SIZE];
+                mask.readPixels(0, lineIndex, SIZE, 1, maskPixels);
 
-                if (Arrays.stream(maskPixels).sum() == 0) {
+                if (Arrays.stream(maskPixels).allMatch(value -> value == 0)) {
                     continue;
                 }
 
-                int[] jdPixels = new int[width];
-                float[] clPixels = new float[width];
-                int[] lcPixels = new int[width];
-                int[] numObsPixels = new int[width];
+                int[] jdPixels = new int[SIZE];
+                float[] clPixels = new float[SIZE];
+                int[] lcPixels = new int[SIZE];
+                int[] numObsPixels = new int[SIZE];
 
-                jd.readPixels(0, lineIndex, width, 1, jdPixels);
+                jd.readPixels(0, lineIndex, SIZE, 1, jdPixels);
                 if (cl != null) {
-                    cl.readPixels(0, lineIndex, width, 1, clPixels);
+                    cl.readPixels(0, lineIndex, SIZE, 1, clPixels);
                 } else {
                     Arrays.fill(clPixels, 0.0F);
                 }
-                no.readPixels(0, lineIndex, width, 1, numObsPixels);
-                lc.readPixels(0, lineIndex, width, 1, lcPixels);
+                no.readPixels(0, lineIndex, SIZE, 1, numObsPixels);
+                lc.readPixels(0, lineIndex, SIZE, 1, lcPixels);
 
-                for (int x0 = 0; x0 < width; x0++) {
+                for (int x0 = 0; x0 < SIZE; x0++) {
                     if (maskPixels[x0] == 0) {
                         continue;
                     }

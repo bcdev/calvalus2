@@ -65,10 +65,6 @@ public class ModisGridInputFormat extends InputFormat {
 
         for (String targetCell : tilesLut.keySet()) {
 
-            if (!targetCell.endsWith("128")) {
-                continue;
-            }
-
             List<FileStatus> fileStatuses = new ArrayList<>();
             Set<String> inputTiles = tilesLut.get(targetCell);
             List<String> tilesWithBurnedData = new ArrayList<>();
