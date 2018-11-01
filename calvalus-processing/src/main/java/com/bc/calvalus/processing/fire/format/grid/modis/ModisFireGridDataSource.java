@@ -41,6 +41,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final Product[] lcProducts;
     private final String targetCell; // "800,312"
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final int SIZE = 4800;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(-1, -1);
@@ -54,12 +55,10 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         LOG.info("x=" + x + ", y=" + y);
-        boolean isInBrokenLcZone = !isInBrokenLcZone(x, y);
+        boolean isInBrokenLcZone = isInBrokenLcZone(x, y);
 
         double lon0 = getLeftLon(x, targetCell);
         double lat0 = getTopLat(y, targetCell);
-
-        LOG.info("lon0=" + lon0 + ", lat0=" + lat0);
 
         List<Integer> productIndices = new ArrayList<>();
 
@@ -79,7 +78,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         int targetPixelIndex = 0;
 
-        SourceData data = new SourceData(4800, 4800);
+        SourceData data = new SourceData(SIZE, SIZE);
         data.reset();
 
         for (Integer i : productIndices) {
@@ -93,7 +92,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band cl = sourceProduct.getBand("uncertainty");
             Band no = sourceProduct.getBand("numObs1");
 
-            final int SIZE = 4800;
             GeoCoding sceneGeoCoding = lcProduct.getSceneGeoCoding();
             PixelPos pp = new PixelPos();
             GeoPos gp = new GeoPos();
@@ -101,7 +99,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int[] maskPixels = new int[SIZE];
                 mask.readPixels(0, lineIndex, SIZE, 1, maskPixels);
 
-                if (Arrays.stream(maskPixels).allMatch(value -> value == 0) && isInBrokenLcZone) {
+                boolean noMatchingPixels = Arrays.stream(maskPixels).allMatch(value -> value == 0);
+                if (noMatchingPixels && !isInBrokenLcZone) {
                     continue;
                 }
 
@@ -120,8 +119,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 lc.readPixels(0, lineIndex, SIZE, 1, lcPixels);
 
                 for (int x0 = 0; x0 < SIZE; x0++) {
-                    if (maskPixels[x0] == 0 && isInBrokenLcZone) {
-                        targetPixelIndex++;
+                    if (maskPixels[x0] == 0 && !isInBrokenLcZone) {
                         continue;
                     }
 
@@ -129,9 +127,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                         pp.x = x0;
                         pp.y = lineIndex;
                         sceneGeoCoding.getGeoPos(pp, gp);
-                        boolean pixelInsideGridCell = gp.isValid() && gp.lat <= lat0 && gp.lon >= lon0 && gp.lat >= lat0 + 0.25 && gp.lon <= lon0 + 0.25;
+                        boolean pixelInsideGridCell = gp.isValid() && gp.lat <= lat0 && gp.lon > lon0 && gp.lat >= lat0 - 0.25 && gp.lon < lon0 + 0.25;
                         if (!pixelInsideGridCell) {
-                            targetPixelIndex++;
                             continue;
                         }
                     }
