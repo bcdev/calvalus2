@@ -49,7 +49,9 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
     public Product createProduct(Configuration configuration, int tileX, int tileY, Rectangle rect) {
 
         if (sensorConfig == null) {
-            sensorConfig = LcL3SensorConfig.create(configuration.get("calvalus.lc.resolution"));
+            String sensor = configuration.get("calvalus.lc.sensor");
+            String spatialResolution = configuration.get("spatialResolution");
+            sensorConfig = LcL3SensorConfig.create(sensor, spatialResolution);
         }
 
         String minDateParameter = configuration.get("calvalus.minDate");

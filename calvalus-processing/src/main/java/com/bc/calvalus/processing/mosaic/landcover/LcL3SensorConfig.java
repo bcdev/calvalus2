@@ -19,6 +19,7 @@ public abstract class LcL3SensorConfig {
     static final LcL3SensorConfig LC_L3_RR_CONFIG = new LcL3RrConfig();
     static final LcL3SensorConfig LC_L3_SPOT_CONFIG = new LcL3SpotConfig();
     static final LcL3SensorConfig LC_L3_PROBA_CONFIG = new LcL3ProbaConfig();
+    static final LcL3SensorConfig LC_L3_PROBA1KM_CONFIG = new LcL3Proba1kmConfig();
     static final LcL3SensorConfig LC_L3_AVHRR_CONFIG = new LcL3AvhrrConfig();
     static final LcL3SensorConfig LC_L3_MSI_CONFIG = new LcL3MsiConfig();
     static final LcL3SensorConfig LC_L3_AGRI_CONFIG = new LcL3AgriConfig();
@@ -32,6 +33,8 @@ public abstract class LcL3SensorConfig {
             return LC_L3_SPOT_CONFIG;
         } else if (LC_L3_PROBA_CONFIG.getSensorName().equals(sensor) && LC_L3_PROBA_CONFIG.getGroundResolution().equals(spatialResolution)) {
             return LC_L3_PROBA_CONFIG;
+        } else if (LC_L3_PROBA1KM_CONFIG.getSensorName().equals(sensor) && LC_L3_PROBA1KM_CONFIG.getGroundResolution().equals(spatialResolution)) {
+            return LC_L3_PROBA1KM_CONFIG;
         } else if (LC_L3_AVHRR_CONFIG.getSensorName().equals(sensor) && LC_L3_AVHRR_CONFIG.getGroundResolution().equals(spatialResolution)) {
             return LC_L3_AVHRR_CONFIG;
         } else if (LC_L3_MSI_CONFIG.getSensorName().equals(sensor) && LC_L3_MSI_CONFIG.getGroundResolution().equals(spatialResolution)) {
@@ -456,16 +459,16 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public int getMosaicTileSize() {
-            return 360;
+            return 336;
         }
         @Override
         public String getGroundResolution() {
-            return "300m";
+            return "333m";
         }
 
         @Override
         public String getSensorName() {
-            return "VEGETATION";
+            return "PROBAV";
         }
 
         @Override
@@ -484,7 +487,7 @@ public abstract class LcL3SensorConfig {
         }
 
         public String getTemporalCloudBandName() {
-            return "sdr_NIR";
+            return "NIR";
         }
 
         public float getTemporalCloudFilterThreshold() {
@@ -519,9 +522,8 @@ public abstract class LcL3SensorConfig {
 
             varNames = new String[]{
                     "status",
-                    "sdr_BLUE", "sdr_RED", "sdr_NIR", "sdr_SWIR",
-                    "ndvi",
-                    "sdr_error_BLUE", "sdr_error_RED", "sdr_error_NIR", "sdr_error_SWIR"
+                    "BLUE", "RED", "NIR", "SWIR",
+                    "ndvi"
             };
 
             String type = "NetCDF4-LC".equals(outputFormat)
@@ -532,23 +534,19 @@ public abstract class LcL3SensorConfig {
         }
 
         public int[] createVariableIndexes(VariableContext varCtx) {
-            int[] varIndexes = new int[2 + BANDNAMES.length * 2];
+            int[] varIndexes = new int[2 + BANDNAMES.length];
             int j = 0;
             varIndexes[j++] = getVariableIndex(varCtx, "status");
             for (int i = 0; i < BANDNAMES.length; i++) {
                 String bandSuffix = BANDNAMES[i];
-                varIndexes[j++] = getVariableIndex(varCtx, "sdr_" + bandSuffix);
+                varIndexes[j++] = getVariableIndex(varCtx, /*"sdr_" +*/ bandSuffix);
             }
             varIndexes[j++] = getVariableIndex(varCtx, "ndvi");
-            for (int i = 0; i < BANDNAMES.length; i++) {
-                String bandSuffix = BANDNAMES[i];
-                varIndexes[j++] = getVariableIndex(varCtx, "sdr_error_" + bandSuffix);
-            }
             return varIndexes;
         }
 
         public String[] createOutputFeatureNames() {
-            String[] featureNames = new String[2 + COUNTER_NAMES.length + BANDNAMES.length * 2];
+            String[] featureNames = new String[2 + COUNTER_NAMES.length + BANDNAMES.length];
             int j = 0;
             featureNames[j++] = "status";
             for (String counter : COUNTER_NAMES) {
@@ -558,9 +556,6 @@ public abstract class LcL3SensorConfig {
                 featureNames[j++] = "sr_" + (i+1) + "_mean";
             }
             featureNames[j++] = "ndvi_mean";
-            for (int i = 0; i < BANDNAMES.length; i++) {
-                featureNames[j++] = "sr_" + (i+1) + "_uncertainty";
-            }
             return featureNames;
         }
 
@@ -575,10 +570,149 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public List<String> getUncertaintyBandNames() {
+            ArrayList<String> names = new ArrayList<String>(0);
+            return names;
+        }
+
+        @Override
+        public boolean isUncertaintiesAreSquares() { return true; }
+
+        @Override
+        public int getPeriod() {
+            return 7;
+        }
+
+        @Override
+        public int getL2BandIndex(String srBandName) {
+            final String name = srBandName.substring("sr_".length(), srBandName.length() - "_mean".length());
+            return Integer.parseInt(name);
+        }
+    }
+
+
+    public static class LcL3Proba1kmConfig extends LcL3SensorConfig {
+
+        static final String[] BANDNAMES = new String[] {
+                "BLUE", "RED", "NIR", "SWIR"
+        };
+        static final float[] WAVELENGTH = new float[] {
+            450f, 645f, 835f, 1665f
+        };
+
+        @Override
+        public int getMosaicTileSize() {
+            return 112;
+        }
+        @Override
+        public String getGroundResolution() {
+            return "1000m";
+        }
+
+        @Override
+        public String getSensorName() {
+            return "PROBAV";
+        }
+
+        @Override
+        public String getPlatformName() {
+            return "PROBA";
+        }
+
+        @Override
+        public String[] getBandNames() {
+            return BANDNAMES;
+        }
+
+        @Override
+        public float[] getWavelengths() {
+            return WAVELENGTH;
+        }
+
+        public String getTemporalCloudBandName() {
+            return "NIR";
+        }
+
+        public float getTemporalCloudFilterThreshold() {
+            return 0.075f;
+        }
+
+        public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
+            String maskExpr;
+            if (asLandText != null) {
+                StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
+                int[] statusesToLand = statusRemapper.getStatusesToLand();
+                StringBuilder sb = new StringBuilder();
+                for (int i : statusesToLand) {
+                    sb.append(" or status == ");
+                    sb.append(i);
+                }
+                maskExpr = "(status == 1 " + sb.toString() + ") and not nan(" + sdrBandName + ")";
+            } else {
+                maskExpr = "status == 1 and not nan(" + sdrBandName + ")";
+            }
+            String[] varNames = new String[]{"status", sdrBandName, "ndvi"};
+            String type = LcSDR8MosaicAlgorithm.class.getName();
+
+            return new MosaicConfig(type, maskExpr, varNames);
+        }
+
+        public MosaicConfig getMainMosaicConfig(String outputFormat, int borderWidth) {
+            String maskExpr;
+            String[] varNames;
+            // exclude invalid
+            maskExpr = "(status == 1 or (status == 2 and not nan(sdr_BLUE)) or (status >= 3))";
+
+            varNames = new String[]{
+                    "status",
+                    "BLUE", "RED", "NIR", "SWIR",
+                    "ndvi"
+            };
+
+            String type = "NetCDF4-LC".equals(outputFormat)
+                    ? LcL3Nc4MosaicAlgorithm.class.getName()
+                    : LCMosaicAlgorithm.class.getName();
+
+            return new MosaicConfig(type, maskExpr, varNames);
+        }
+
+        public int[] createVariableIndexes(VariableContext varCtx) {
+            int[] varIndexes = new int[2 + BANDNAMES.length];
+            int j = 0;
+            varIndexes[j++] = getVariableIndex(varCtx, "status");
+            for (int i = 0; i < BANDNAMES.length; i++) {
+                String bandSuffix = BANDNAMES[i];
+                varIndexes[j++] = getVariableIndex(varCtx, bandSuffix);
+            }
+            varIndexes[j++] = getVariableIndex(varCtx, "ndvi");
+            return varIndexes;
+        }
+
+        public String[] createOutputFeatureNames() {
+            String[] featureNames = new String[2 + COUNTER_NAMES.length + BANDNAMES.length];
+            int j = 0;
+            featureNames[j++] = "status";
+            for (String counter : COUNTER_NAMES) {
+                featureNames[j++] = counter + "_count";
+            }
+            for (int i = 0; i < BANDNAMES.length; i++) {
+                featureNames[j++] = "sr_" + (i+1) + "_mean";
+            }
+            featureNames[j++] = "ndvi_mean";
+            return featureNames;
+        }
+
+        @Override
+        public List<String> getMeanBandNames() {
             ArrayList<String> names = new ArrayList<String>(BANDNAMES.length);
             for (int i = 0; i < BANDNAMES.length; ++i) {
-                names.add("sr_" + (i+1) + "_uncertainty");
+                names.add("sr_" + (i+1) + "_mean");
             }
+            return names;
+        }
+
+        @Override
+        public List<String> getUncertaintyBandNames() {
+            ArrayList<String> names = new ArrayList<String>(0);
             return names;
         }
 

@@ -33,7 +33,7 @@ class HandleAll {
         return currentItem;
     }
 
-    int[] next(int nextIndex) {
+    int[] preceedingUnhandledIndices(int nextIndex) {
         if (nextIndex <= currentItem) {
             String msg = String.format("nextIndex(%d) <= currentItem(%d)", nextIndex, currentItem);
             throw new IllegalArgumentException(msg);

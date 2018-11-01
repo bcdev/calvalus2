@@ -82,6 +82,10 @@
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-watermask</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-sta</artifactId></dependency>
 
+
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdfobj</artifactId></dependency>
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId></dependency>
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId></dependency>
         <dependency><groupId>ncsa.hdf</groupId><artifactId>lib-hdf</artifactId></dependency>
 
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId></dependency>
@@ -96,6 +100,7 @@
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId></dependency>
         <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId></dependency>
+        <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId></dependency>
 
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId></dependency>
@@ -184,7 +189,17 @@
                     <dependency>
                         <groupId>org.esa.s2tbx</groupId>
                         <artifactId>lib-openjpeg</artifactId>
-                        <version>${openjpeg.version}</version>
+                        <version>${snap.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ncsa.hdf</groupId>
+                        <artifactId>jhdfobj</artifactId>
+                        <version>2.7</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ncsa.hdf</groupId>
+                        <artifactId>jhdf5obj</artifactId>
+                        <version>2.7</version>
                     </dependency>
                 </dependencies>
             </plugin>

@@ -122,7 +122,13 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
             if (mode == MODE.EXECUTE && calvalusAppData != null) {
                 boolean success = executeGraphAndCollectOutput(graph, calvalusAppData, pm);
-                if (success && target != null && target.getNodeId() != null && graphContext.getOutputProducts().length > 0) {
+                Product[] outputProducts;
+                try {
+                    outputProducts = graphContext.getOutputProducts();
+                } catch (NullPointerException e) {
+                    outputProducts = new Product[0];
+                }
+                if (success && target != null && target.getNodeId() != null && outputProducts.length > 0) {
                     //graphContext.getOutputProducts()[0];
                     targetProduct = getTargetProductFromGraph(graph, target.getNodeId());
                     return postprocessTargetProduct();

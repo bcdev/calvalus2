@@ -144,7 +144,7 @@ public class RARegions {
 
         RAConfig.NamedRegion next();
 
-        void close() throws Exception;
+        void close() throws IOException;
     }
 
     public static class FilterRegionIterator implements RegionIterator {
@@ -210,7 +210,7 @@ public class RARegions {
         }
 
         @Override
-        public void close() throws Exception {
+        public void close() throws IOException {
             delegate.close();   
         }
     }

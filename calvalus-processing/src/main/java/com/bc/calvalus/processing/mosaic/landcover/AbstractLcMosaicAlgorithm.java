@@ -446,7 +446,9 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
         if (sensorConfig == null) {
-            sensorConfig = LcL3SensorConfig.create(jobConf.get("calvalus.lc.resolution"));
+            String sensor = jobConf.get("calvalus.lc.sensor");
+            String spatialResolution = jobConf.get("spatialResolution");
+            sensorConfig = LcL3SensorConfig.create(sensor, spatialResolution);
             bestPixelAggregation = jobConf.getBoolean("calvalus.lc.bestpixelaggregation", false);
             System.out.println("calvalus.lc.bestpixelaggregation=" + bestPixelAggregation);
         }
