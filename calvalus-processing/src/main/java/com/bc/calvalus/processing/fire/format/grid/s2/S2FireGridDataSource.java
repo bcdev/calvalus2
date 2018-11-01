@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 
 public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
-    private static final int DIMENSION = 5490;
     private final String tile;
     private final Product[] sourceProducts;
     private final Product[] clProducts;
@@ -46,9 +45,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     public SourceData readPixels(int x, int y) throws IOException {
         CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-
-        CalvalusLogger.getLogger().info("All products:");
-        CalvalusLogger.getLogger().info(Arrays.toString(Arrays.stream(sourceProducts).map(Product::getName).toArray()));
 
         double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 0.25;
         double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - (y + 1) * 0.25;
@@ -162,49 +158,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         subsetOp.setGeoRegion(geometry);
         subsetOp.setSourceProduct(sourceProduct);
         return subsetOp.getTargetProduct();
-    }
-
-    static StringBuilder getExpression(int productIndex, String s) {
-        StringBuilder jdExpression = new StringBuilder();
-        for (int i = 0; i < productIndex; i++) {
-            final String band = s + "_" + i;
-            jdExpression.append("(" + band + " > 0 and " + band + " < 997) ? " + band + " : ");
-        }
-        jdExpression.append(" 0");
-        return jdExpression;
-    }
-
-    static int getTargetPixel(int sourcePixelX, int sourcePixelY, double minLon, double maxLon, double minLat, double maxLat, double targetLon0, double targetLat0) {
-        // first: get geo position of sourcePixel
-
-        double sourceLon = Math.abs(minLon + (maxLon - minLon) * sourcePixelX / DIMENSION);
-        double sourceLat = Math.abs(minLat + (maxLat - minLat) * sourcePixelY / DIMENSION);
-
-        // second: get target pixel position from geo position
-
-        int targetPixelX;
-        if (sourceLon == targetLon0) {
-            targetPixelX = 0;
-        } else {
-            targetPixelX = (int) Math.round(sourcePixelX * (1.0 / Math.abs(sourceLon - targetLon0)));
-        }
-        if (targetPixelX >= DIMENSION) {
-            targetPixelX = DIMENSION - 1;
-        }
-
-        int targetPixelY;
-        if (sourceLat == targetLat0) {
-            targetPixelY = 0;
-        } else {
-            targetPixelY = (int) Math.round(sourcePixelY * (1.0 / Math.abs(sourceLat - targetLat0)));
-        }
-        if (targetPixelY >= DIMENSION) {
-            targetPixelY = DIMENSION - 1;
-        }
-
-        // third: reformat as pixel index
-
-        return targetPixelY * DIMENSION + targetPixelX;
     }
 
     private float scale(float cl) {
