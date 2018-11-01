@@ -22,11 +22,6 @@ public class S2FireGridDataSourceTest {
     }
 
     @Test
-    public void testGetTargetPixel() {
-        System.out.println(S2FireGridDataSource.getTargetPixel(0, 0, 32, 33, 4, 3, 32, 4));
-    }
-
-    @Test
     public void name() throws IOException {
         Product product = ProductIO.readProduct("C:\\ssd\\s2-analysis\\20160101-ESACCI-L3S_FIRE-BA-MSI-AREA_h42v17-fv1.1-JD.tif");
         float lon0 = 30.0F;
