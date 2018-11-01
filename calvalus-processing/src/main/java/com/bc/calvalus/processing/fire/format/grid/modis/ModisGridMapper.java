@@ -120,7 +120,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, targetCell);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, targetCell, context.getConfiguration());
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 

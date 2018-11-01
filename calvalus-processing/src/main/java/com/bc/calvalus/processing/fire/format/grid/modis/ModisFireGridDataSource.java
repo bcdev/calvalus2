@@ -9,6 +9,11 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
+import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.PlainFeatureFactory;
@@ -25,6 +30,7 @@ import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,13 +43,15 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final Product[] products;
     private final Product[] lcProducts;
     private final String targetCell; // "800,312"
+    private final Configuration configuration;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
+    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell, Configuration configuration) {
         super(-1, -1);
         this.products = products;
         this.lcProducts = lcProducts;
         this.targetCell = targetCell;
+        this.configuration = configuration;
     }
 
     @Override
@@ -52,8 +60,14 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         LOG.info("x=" + x + ", y=" + y);
 
+        if (x != 7 || y != 15) {
+            return null;
+        }
+
         double lon0 = getLeftLon(x, targetCell);
         double lat0 = getTopLat(y, targetCell);
+
+        LOG.info("lon0=" + lon0 + ", lat0=" + lat0);
 
         List<Integer> productIndices = new ArrayList<>();
 
@@ -81,6 +95,14 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Product lcProduct = lcProducts[i];
 
             Mask mask = addMask(lon0, lat0, sourceProduct);
+
+            ProductIO.writeProduct(sourceProduct, "jd-with-mask.nc", "NetCDF4-CF");
+            File fileLocation = new File("./" + "jd-with-mask.nc");
+            Path path = new Path("hdfs://calvalus/calvalus/projects/fire/" + "/" + "jd-with-mask.nc");
+            FileSystem fs = path.getFileSystem(configuration);
+            if (!fs.exists(path)) {
+                FileUtil.copy(fileLocation, fs, path, false, configuration);
+            }
 
             Band lc = lcProduct.getBand("lccs_class");
             Band jd = sourceProduct.getBand("classification");
