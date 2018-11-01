@@ -197,7 +197,7 @@ public class S2GridMapper extends AbstractGridMapper {
     protected boolean isInBrokenLCZone(int x, int y) {
         // oneDegTile = x191y98
         int targetGridCellX = 4 * Integer.parseInt(oneDegTile.split("y")[0].replace("x", "")) + x;
-        int targetGridCellY = 720 - 4 * Integer.parseInt(oneDegTile.split("y")[1]) + y;
+        int targetGridCellY = 720 - 4 * (Integer.parseInt(oneDegTile.split("y")[1]) + 1) + y;
 
         // targetGridCellX = 4*191 + x = 764 + x
         // targetGridCellY = 720 - 4 * 98 + y = 328 + y
