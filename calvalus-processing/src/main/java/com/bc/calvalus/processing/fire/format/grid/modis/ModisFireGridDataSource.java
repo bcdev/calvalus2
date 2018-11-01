@@ -96,6 +96,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             Mask mask = addMask(lon0, lat0, sourceProduct);
 
+            sourceProduct.addBand("maskovic", "mask == 1");
             ProductIO.writeProduct(sourceProduct, "jd-with-mask.nc", "NetCDF4-CF");
             File fileLocation = new File("./" + "jd-with-mask.nc");
             Path path = new Path("hdfs://calvalus/calvalus/projects/fire/" + "/" + "jd-with-mask.nc");
