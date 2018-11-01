@@ -80,8 +80,7 @@
                 <!--<include>org.esa.snap:blue-marble-worldmap</include>-->
                 <!--<include>org.esa.snap:globcover-worldmap</include>-->
                 <include>org.esa.snap:snap-sta</include>
-        
-                <include>ncsa.hdf:lib-hdf</include>
+
 
                 <include>org.esa.s3tbx:s3tbx-alos-reader</include>
                 <include>org.esa.s3tbx:s3tbx-atsr-reader</include>
@@ -95,6 +94,7 @@
                 <include>org.esa.s3tbx:s3tbx-slstr-regrid</include>
                 <include>org.esa.s3tbx:s3tbx-spot-vgt-reader</include>
                 <include>org.esa.snap.seadas:seadas-reader</include>
+                <include>org.vito.probavbox:probavbox-reader</include>
 
                 <include>org.esa.s2tbx:s2tbx-cache</include>
                 <include>org.esa.s2tbx:s2tbx-s2msi-reader</include>
@@ -125,7 +125,8 @@
                 <include>org.hsqldb:hsqldb</include>
                 <include>xerces:xercesImpl</include>
                 <include>ncsa.hdf:lib-hdf</include>
-
+                <include>ncsa.hdf:jhdfobj</include>
+                <include>ncsa.hdf:jhdf5obj</include>
             </includes>
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>

@@ -126,9 +126,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
             }
         }
-        final int b1BandIndex = 6 - 1 + 1;   // TODO only valid for S2
-        final int b3BandIndex = 6 - 1 + 2; // 3;   // TODO only valid for S2
-        final int b11BandIndex = 6 - 1 + 9; // 10;   // TODO only valid for S2
+        final int b1BandIndex = sensorAndResolution.startsWith("MSI") ? 6 - 1 + 1 : 6 - 1 + 1;   // TODO only valid for S2 and PROBA
+        final int b3BandIndex = sensorAndResolution.startsWith("MSI") ? 6 - 1 + 2 : 6 - 1 + 4; // TODO only valid for S2 and PROBA
+        final int b11BandIndex = sensorAndResolution.startsWith("MSI") ? 6 - 1 + 9 : 6 - 1 + 3; // TODO only valid for S2 and PROBA
         final int ndviBandIndex = numSourceBands - 1;
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
@@ -475,7 +475,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             "MERIS-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MERIS-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2 * targetBandIndex : targetBandIndex + 5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
+            "PROBAV-1000m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
+            "PROBAV-300m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
+            "PROBAV-333m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MSI-20m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "MSI-10m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
@@ -508,6 +511,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 return SeasonalCompositingReducer.AVHRR_BANDS;
             case "VEGETATION-1000m":
             case "VEGETATION-300m":
+            case "PROBAV-1000m":
+            case "PROBAV-300m":
+            case "PROBAV-333m":
                 return SeasonalCompositingReducer.PROBA_BANDS;
             case "MSI-20m":
                 return SeasonalCompositingReducer.MSI_BANDS;

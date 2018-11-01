@@ -50,6 +50,8 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
     private final float referenceMjd;
 
     private static boolean FIRST_DEBUG_EVENT = true;
+    private static boolean DEBUG = true;
+    private static final long DEBUG_BIN_INDEX = 411423363489L;
 
     public AggregatorYoungestClear(VariableContext varCtx,
                                    String flagsVarName, long strongCloudFilter, long weakCloudFilter, int filterThreshold,
@@ -159,6 +161,9 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
             mjds[j] = setVec.get(j*(varIndices.length+3) + varIndices.length);
             flags[j] = (long) setVec.get(j*(varIndices.length+3) + varIndices.length+1);
             percVarValues[j] = setVec.get(j*(varIndices.length+3) + varIndices.length+2);
+            if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                System.out.println(String.format("completeTemporal j=%d mjd=%.2f flag=%X perc=%.2f", j, mjds[j], flags[j], percVarValues[j]));
+            }
         }
         // apply cloud mask, strong, else weak, else nothing such that at least 50% remains
         int numValidObs = 0;
@@ -166,13 +171,20 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
             if ((flags[j] & strongCloudFilter) == 0) {
                 marker[j] = true;
                 ++numValidObs;
+                if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                    System.out.println(String.format("strong %X accepts %d", strongCloudFilter, j));
+                }
             } else {
                 marker[j] = false;
+                if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                    System.out.println(String.format("strong %X drops %d", strongCloudFilter, j));
+                }
             }
         }
         // ... else weak
         if (numValidObs < numTemporalObs * filterThreshold / 100.0) {
-            if (FIRST_DEBUG_EVENT) {
+            //if (FIRST_DEBUG_EVENT && ! DEBUG) {
+            if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
                 FIRST_DEBUG_EVENT = false;
                 System.out.println("falling back to weak cloud mask");
                 System.out.println("numValidObs=" + numValidObs);
@@ -192,8 +204,14 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
                 if ((flags[j] & weakCloudFilter) == 0) {
                     marker[j] = true;
                     ++numValidObs;
+                    if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                        System.out.println(String.format("weak %X accepts %d", weakCloudFilter, j));
+                    }
                 } else {
                     marker[j] = false;
+                    if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                        System.out.println(String.format("weak %X drops %d", weakCloudFilter, j));
+                    }
                 }
             }
         }
@@ -202,6 +220,9 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
             numValidObs = numTemporalObs;
             for (int j = 0; j < numTemporalObs; ++j) {
                 marker[j] = true;
+                if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                    System.out.println(String.format("no filter accepts %d", weakCloudFilter, j));
+                }
             }
         }
         // sort unmasked contributions by percentile variable and chop off lower and upper end
@@ -216,7 +237,13 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
         Arrays.sort(percVarIndex, percVarComparator);
         int start = (int) Math.floor(numValidObs * lowerPercentileThreshold / 100.0);
         int stop = (int) Math.ceil(numValidObs * upperPercentileThreshold / 100.0);
+        if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+            System.out.println(String.format("cutting by perc from %d (%d) to between %d and %d", numValidObs, numTemporalObs, start, stop));
+        }
         if (stop <= start) {
+            if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                System.out.println(String.format("nothing left between %d and %d", start, stop));
+            }
             for (int i = 0; i < varIndices.length; ++i) {
                 temporalVector.set(i, Float.NaN);
             }
@@ -229,8 +256,14 @@ public final class AggregatorYoungestClear extends AbstractAggregator {
         Arrays.sort(mjdIndex, mjdComparator);
         // select youngest
         int selected = mjdIndex[stop-start-1];
+        if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+            System.out.println(String.format("select youngest %d with mjd %f", selected, mjds[selected]));
+        }
         for (int i = 0; i < varIndices.length+3; ++i) {
             temporalVector.set(i, setVec.get(selected*(varIndices.length+3)+i));
+            if (DEBUG && ctx.getIndex() == DEBUG_BIN_INDEX) {
+                System.out.println(String.format("result %d is %9.3f", i, temporalVector.get(i)));
+            }
         }
     }
 

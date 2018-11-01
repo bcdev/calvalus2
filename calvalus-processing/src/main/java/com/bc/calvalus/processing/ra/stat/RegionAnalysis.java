@@ -53,7 +53,7 @@ public class RegionAnalysis {
             if (newDateRange != dataRangeHandler.current()) {
                 writeCurrentRecord();
                 resetRecord();
-                writeEmptyRecords(regionHandler.current(), dataRangeHandler.next(newDateRange));
+                writeEmptyRecords(regionHandler.current(), dataRangeHandler.preceedingUnhandledIndices(newDateRange));
             }
             accumulate(time, numObs, samples);
         }
@@ -61,24 +61,30 @@ public class RegionAnalysis {
 
     public void startRegion(String regionName) throws IOException {
         dataRangeHandler.reset();
-        for (int regionIndex : regionHandler.next(regionNameList.indexOf(regionName))) {
+        for (int regionIndex : regionHandler.preceedingUnhandledIndices(regionNameList.indexOf(regionName))) {
             this.currentRegionName = regionNameList.get(regionIndex);
+            statisticsWriter.createWriters(currentRegionName);
             writeEmptyRecords(regionIndex, dataRangeHandler.remaining());
+            statisticsWriter.closeWriters(currentRegionName);
         }
         this.currentRegionName = regionName;
+        statisticsWriter.createWriters(currentRegionName);
     }
 
     public void endRegion() throws IOException {
         writeCurrentRecord();
         resetRecord();
         writeEmptyRecords(regionHandler.current(), dataRangeHandler.remaining());
+        statisticsWriter.closeWriters(currentRegionName);
     }
 
     public void close() throws IOException {
         dataRangeHandler.reset();
         for (int regionIndex : regionHandler.remaining()) {
             this.currentRegionName = regionNameList.get(regionIndex);
+            statisticsWriter.createWriters(currentRegionName);
             writeEmptyRecords(regionIndex, dataRangeHandler.remaining());
+            statisticsWriter.closeWriters(currentRegionName);
         }
         statisticsWriter.close();
     }

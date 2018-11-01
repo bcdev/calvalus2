@@ -210,6 +210,7 @@ public class CalvalusHadoopRequestConverter {
             if (!"config".equals(option.getLongOpt())
                     && !"quiet".equals(option.getLongOpt())
                     && !"debug".equals(option.getLongOpt())
+                    && !"overwrite".equals(option.getLongOpt())
                     && !"async".equals(option.getLongOpt())
                     && !"status".equals(option.getLongOpt())
                     && !"cancel".equals(option.getLongOpt())

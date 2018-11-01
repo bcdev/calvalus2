@@ -148,4 +148,18 @@ public class CalvalusHadoopConnection {
         ProcessorFactory.installProcessorBundles(userName, jobConf, jobClient.getFs());
 
     }
+
+    public void deleteOutputDir(JobConf jobConf) throws IOException, InterruptedException {
+        final String outputDir = jobConf.get("calvalus.output.dir");
+        final Path dirPath = new Path(outputDir);
+        remoteUser.doAs(new PrivilegedExceptionAction<Path>() {
+                public Path run() throws IOException, InterruptedException {
+                    FileSystem fileSystem = dirPath.getFileSystem(jobConf);
+                    if (fileSystem.exists(dirPath)) {
+                        LOG.info("clearing output dir " + outputDir);
+                        fileSystem.delete(dirPath, true);
+                    }
+                    return dirPath;
+                }});
+    }
 }

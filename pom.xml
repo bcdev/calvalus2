@@ -11,18 +11,19 @@
     <description>Calvalus root module</description>
 
     <properties>
-        <!-- <hadoop.version>2.7.3</hadoop.version> -->
         <hadoop.version>2.7.3-BC</hadoop.version>
+        <!-- <hadoop.version>2.9.1-BC</hadoop.version> -->
         <calvalus.version>2.15-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>7.0.0-SNAPSHOT</snap.version>
-        <ceres.version>7.0.0-SNAPSHOT</ceres.version>
+        <ceres.version>[6.0.0-SNAPSHOT,7.0.0-SNAPSHOT]</ceres.version>
         <seadas.reader.version>1.8-SNAPSHOT</seadas.reader.version>
+        <probav.reader.version>2.1.0-SNAPSHOT</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>17.1</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
         <ncsa.version>2.7.1</ncsa.version>
-        <openjpeg.version>7.0.0-SNAPSHOT</openjpeg.version>
+        <ncsaj.version>2.7</ncsaj.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -275,6 +276,9 @@
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-sta</artifactId><version>${snap.version}</version></dependency>
 
             <dependency><groupId>ncsa.hdf</groupId><artifactId>lib-hdf</artifactId><version>${ncsa.version}</version></dependency>
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdfobj</artifactId><version>${ncsaj.version}</version></dependency>
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId><version>${ncsaj.version}</version></dependency>
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId><version>${ncsaj.version}</version></dependency>
 
             <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId><version>${snap.version}</version></dependency>
@@ -288,6 +292,7 @@
             <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId><version>${seadas.reader.version}</version></dependency>
+            <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId><version>${probav.reader.version}</version></dependency>
 
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId><version>${snap.version}</version></dependency>
