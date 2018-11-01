@@ -121,6 +121,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
                 for (int x0 = 0; x0 < SIZE; x0++) {
                     if (maskPixels[x0] == 0 && isInBrokenLcZone) {
+                        targetPixelIndex++;
                         continue;
                     }
 
@@ -130,6 +131,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                         sceneGeoCoding.getGeoPos(pp, gp);
                         boolean pixelInsideGridCell = gp.isValid() && gp.lat <= lat0 && gp.lon >= lon0 && gp.lat >= lat0 + 0.25 && gp.lon <= lon0 + 0.25;
                         if (!pixelInsideGridCell) {
+                            targetPixelIndex++;
                             continue;
                         }
                     }
