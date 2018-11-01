@@ -92,7 +92,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band cl = sourceProduct.getBand("uncertainty");
             Band no = sourceProduct.getBand("numObs1");
 
-            GeoCoding sceneGeoCoding = lcProduct.getSceneGeoCoding();
+            GeoCoding sceneGeoCoding = sourceProduct.getSceneGeoCoding();
             PixelPos pp = new PixelPos();
             GeoPos gp = new GeoPos();
             for (int lineIndex = 0; lineIndex < SIZE; lineIndex++) {
