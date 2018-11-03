@@ -60,10 +60,10 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private void initBrokenZones() {
         try {
             ObjectInputStream in1 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_1.array"));
-            ObjectInputStream in2 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_1.array"));
-            ObjectInputStream in3 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_1.array"));
-            ObjectInputStream in4 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_1.array"));
-            ObjectInputStream in5 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_1.array"));
+            ObjectInputStream in2 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_2.array"));
+            ObjectInputStream in3 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_3.array"));
+            ObjectInputStream in4 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_4.array"));
+            ObjectInputStream in5 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_5.array"));
             brokenLcPixels1 = (String[]) in1.readObject();
             brokenLcPixels2 = (String[]) in2.readObject();
             brokenLcPixels3 = (String[]) in3.readObject();
