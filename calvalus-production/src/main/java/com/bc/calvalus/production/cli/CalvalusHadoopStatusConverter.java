@@ -4,7 +4,17 @@ import org.apache.hadoop.mapred.JobStatus;
 
 import java.io.IOException;
 
-public class CalvalusHadoopStatusConverter {
+public abstract class CalvalusHadoopStatusConverter {
+
+    public static CalvalusHadoopStatusConverter create(CalvalusHadoopConnection hadoopConnection, String format) {
+        switch (format) {
+            case "csv":
+                return new CalvalusHadoopCsvStatusConverter(hadoopConnection);
+            case "json":
+            default:
+                return new CalvalusHadoopJsonStatusConverter(hadoopConnection);
+        }
+    }
 
     private final CalvalusHadoopConnection hadoopConnection;
 
@@ -30,9 +40,7 @@ public class CalvalusHadoopStatusConverter {
      */
 
     public void accumulateJobStatus(String id, JobStatus job, StringBuilder accu) throws IOException {
-        if (accu.length() > 1) {
-            accu.append(", ");
-        }
+        separateJobStatus(accu);
         double progress = job != null ? job.getMapProgress() * 0.9 + job.getReduceProgress() * 0.1 : 0.0;
         if (job == null) {
             accumulateJobStatus(id, "NOT_FOUND", progress, null, accu);
@@ -52,21 +60,13 @@ public class CalvalusHadoopStatusConverter {
     }
 
     /**
-     * Compose Json string for status
+     * Compose formatted string for status
      */
+    public abstract void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu);
 
-    public void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu) {
-        accu.append("\"");
-        accu.append(id);
-        accu.append("\": {\"status\": \"");
-        accu.append(status);
-        accu.append("\", \"progress\": ");
-        accu.append(String.format("%5.3f", progress));
-        if (message != null) {
-            accu.append(", \"message\": \"");
-            accu.append(message);
-            accu.append("\"");
-        }
-        accu.append("}");
-    }
+    public abstract void initialiseJobStatus(StringBuilder accu);
+
+    protected abstract void separateJobStatus(StringBuilder accu);
+
+    public abstract void finaliseJobStatus(StringBuilder accu);
 }
