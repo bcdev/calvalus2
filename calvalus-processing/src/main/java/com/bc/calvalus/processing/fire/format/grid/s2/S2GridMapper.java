@@ -144,36 +144,22 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
-        double[] values = Arrays.stream(probabilityOfBurn)
-                .map(d -> d == 0 ? 0.01 : d)
-                .filter(d -> d >= 0.01 && d <= 1.0)
-                .toArray();
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
+        // Mask all pixels with value of 0 in the confidence level layer (they should not be included in the analysis)
+        double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn).filter(d -> d > 0).toArray();
+        int n = probabilityOfBurnMasked.length;
 
-        double sum_pb = Arrays.stream(values).sum();
-        double S = numberOfBurnedPixels / sum_pb;
-        double[] pb_i_star = Arrays.stream(values).map(d -> d * S).toArray();
-        double checksum = Arrays.stream(pb_i_star).sum();
+        // pb_i = value of confidence level of pixel /100
+        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();
 
-        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
-            throw new IllegalStateException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
-        }
+        // Var_c = sum (pb_i*(1-pb_i)
+        double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
 
-        double var_c = 0.0;
-        int count = 0;
-        for (double p : pb_i_star) {
-            var_c += p * (1 - p);
-            count++;
-        }
+        // SE = sqr(var_c*(n/(n-1))) * pixel area
+        // pixel area is the area of the pixels. In the case of S2 it is the area of one S2 pixel, you can calculate it as the area of the 0.25º grid cell divided the TOTAL number of S2 pixels (both masked and unmasked)
+        double pixelArea = gridCellArea / (double) probabilityOfBurn.length;
+        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
 
-        if (count == 0) {
-            return 0;
-        }
-        if (count == 1) {
-            return 1;
-        }
-
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) (area / probabilityOfBurn.length);
     }
 
     @Override

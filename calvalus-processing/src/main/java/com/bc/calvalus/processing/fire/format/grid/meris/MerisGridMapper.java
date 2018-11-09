@@ -124,7 +124,7 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int num, double burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
         // getting pixels for areas instead, see MerisGridMapper#predict
         return Float.NaN;
     }

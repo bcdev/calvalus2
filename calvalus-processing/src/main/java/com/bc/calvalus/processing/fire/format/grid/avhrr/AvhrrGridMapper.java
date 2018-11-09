@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.time.Year;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Runs the fire AVHRR formatting grid mapper.
@@ -116,124 +115,24 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
-        /*
-        1. Extract the number of pixels of 0.05deg that are classified as burned in the grid cell.
-            It should be just the count of the pixels with value 1 to 366 inside the grid cell.
-            N = count(pixels with JD>0)
-        */
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
+        // Mask all pixels with value of -1 in the confidence level layer (they should not be included in the analysis)
+        double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn).filter(d -> d >= 0).toArray();
+        int n = probabilityOfBurnMasked.length;
 
-        int N = numberOfBurnedPixels;
-        if (N == 0) {
-            return 0.0F;
-        }
-        AtomicReference<Double> n = new AtomicReference<>(0.0);
+        // the correction_factor is the one assigned to the “BA_[year]_[month]_percentage_WGS.tif” file, in a scale 0 to 1
+        double CF = gridCellArea / burnedArea;
 
-        /*
-        2.  Calculate the probability of burn of each pixel as:
-            pb_i = value of confidence level of pixel  / 100
-            (because the confidence level is expressed as %, to transform it to a 0-1 range)
-         */
+        // pb_i = value of confidence level of pixel * correction_factor /100
+        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d * CF / 100.0).toArray();
 
-        // TS: no, the confidence value actually is in a 0-1 range, so I skip this step.
+        // Var_c = sum (pb_i*(1-pb_i)
+        double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
 
-        /*
-        3.  Extract the value of CF: as the CF value will be the same in all the pixels within the same grid cell and
-            month, you can just extract the value of 1 pixel, and that will be enough.
-            CF = correction factor of each pixel, indicating the proportion of the area of the pixel actually burned.
-            This value is included in each pixel that is burned, but it is the same for each grid cell and month.
-            It is in the range 0 – 1.
-         */
-
-        // TS: no formula, but I assume: CF = area / burned_area
-
-        double CF = area / burnedArea;
-
-        /*
-        4.  sum_pb: pb_i.sum()*CF
-            (this must be the sum of all the probabilities of all the pixels. Use ALL probability values inside the grid
-             cell, not only the ones corresponding to the pixels that have been burned. I am multiplying CF in this step
-             instead of dividing it in each pixel, as José suggested. Mathematically it is the same, and in this case the
-             value of S will already include the CF correction).
-         */
-
-        double sum_pb = Arrays.stream(probabilityOfBurn).filter(v -> v >= 0).sum();
-
-        sum_pb = sum_pb * CF;
-
-        /*
-        5.  Calculate S:
-            S = N / sum_pb
-         */
-
-        double S = N / sum_pb;
-
-        /*
-        6.  Then for each pixel calculate the corrected probability:
-            pb_i’= pb_i * S   (remember that CF is already applied here)
-         */
-
-        double[] pb_star = new double[(int) Arrays.stream(probabilityOfBurn).filter(d -> d >= 0).count()];
-        final AtomicReference<Integer> targetIndex = new AtomicReference<>(0);
-        Arrays.stream(probabilityOfBurn)
-                .filter(pb_i -> pb_i >= 0)
-                .forEach(
-                        pb_i -> {
-                            if (pb_i == 0) {
-                                pb_i = 0.000000000000001;
-                            }
-                            pb_star[targetIndex.get()] = pb_i * S;
-                            n.set((n.get() + 1));
-                            targetIndex.set(targetIndex.get() + 1);
-                        }
-                );
-
-        /*
-
-        7.  Verification step: sum(pb_i’) = number_of_burn_pixels/CF .
-         */
-
-        double sum_pb_star = Arrays.stream(pb_star).sum();
-
-        if (Math.abs(sum_pb_star - numberOfBurnedPixels / CF) > 1E5) {
-            LOG.info("" + N);
-            LOG.info("" + CF);
-            LOG.info("" + sum_pb);
-            LOG.info("" + S);
-            LOG.info("" + sum_pb_star);
-
-            throw new IllegalStateException("Error in standard error computation");
-        }
-
-        /*
-        8.  For each grid cell:
-            a. var() = (pb_i’ (1-pb_i’)).sum()
-            b. standard_error() = sqrt(var(c) *(n/(n-1)) * A
-         */
-
-        double var_c = Arrays.stream(pb_star)
-                .map(pb_star_i -> pb_star_i * (1 - pb_star_i))
-                .sum();
-
-        double A = area;
-
-        float returnValue = (float) (Math.sqrt(var_c * (n.get() / (n.get() - 1))) * A);
-
-        if ((burnedArea > 0 && Math.abs(returnValue) < 0) || Float.isNaN(returnValue)) {
-            LOG.info("" + N);
-            LOG.info("" + CF);
-            LOG.info("" + sum_pb);
-            LOG.info("" + S);
-            LOG.info("" + sum_pb_star);
-            LOG.info("" + var_c);
-            LOG.info("" + A);
-            LOG.info("" + n.get());
-            LOG.info(Arrays.toString(probabilityOfBurn));
-            LOG.info(Arrays.toString(pb_star));
-            throw new IllegalStateException("Suspicious error value: " + returnValue);
-        }
-
-        return returnValue;
+        // SE = sqr(var_c*(n/(n-1))) * pixel area
+        // pixel area is the area of the 0.05º pixels
+        double pixelArea = gridCellArea / (double) probabilityOfBurn.length;
+        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
     }
 
     @Override

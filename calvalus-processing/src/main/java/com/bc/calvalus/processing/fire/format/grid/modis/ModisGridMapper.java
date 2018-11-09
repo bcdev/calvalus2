@@ -190,78 +190,25 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
-        double[] values = Arrays.stream(probabilityOfBurn)
-                .map(d -> d == 0 ? 1 : d)
-                .filter(d -> d >= 1 && d <= 100)
-                .map(operand -> operand / 100.0).toArray();
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
+        // Mask all pixels with value 255 in the confidence level (corresponding to the pixels not observed or non-burnable in the JD layer)
+        // From the remaining pixels, reassign all values of 0 to 1
+        double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
+                .filter(d -> d > 100.0)
+                .map(d -> d == 0 ? 1 : d).toArray();
 
-        double sum_pb = 0.0;
-        for (double p : values) {
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            sum_pb += p;
-        }
+        // n is the number of pixels in the 0.25º cell that were not masked
+        int n = probabilityOfBurnMasked.length;
 
-        double S = numberOfBurnedPixels / sum_pb;
+        // pb_i = value of confidence level of pixel /100
+        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();
 
-        double[] pb_i_star = new double[values.length];
+        // Var_c = sum (pb_i*(1-pb_i)
+        double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
 
-        for (int i = 0; i < values.length; i++) {
-            double pb_i = values[i];
-            if (Double.isNaN(pb_i)) {
-                continue;
-            }
-            if (pb_i > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            pb_i_star[i] = pb_i * S;
-        }
-
-        double checksum = 0.0;
-        for (double v : pb_i_star) {
-            checksum += v;
-        }
-
-        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
-            throw new IllegalStateException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
-        }
-
-        double var_c = 0.0;
-        int count = 0;
-        for (double p : pb_i_star) {
-            var_c += p * (1 - p);
-            if (Double.isNaN(p)) {
-                continue;
-            }
-            if (p > 1) {
-                // no-data/cloud/water
-                continue;
-            }
-            if (p < 0) {
-                throw new IllegalStateException("p < 0");
-            }
-            count++;
-        }
-
-        if (count == 0) {
-            return 0;
-        }
-        if (count == 1) {
-            return 1;
-        }
-
-        return (float) (Math.sqrt(var_c * (count / (count - 1.0))) * ModisFireGridDataSource.MODIS_AREA_SIZE);
-
+        // SE = sqr(var_c*(n/(n-1))) * pixel area
+        // pixel area is the area of the pixels. In the case of MODIS it is a constant value of 53664.6708 m2
+        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * ModisFireGridDataSource.MODIS_AREA_SIZE);
     }
 
     @Override

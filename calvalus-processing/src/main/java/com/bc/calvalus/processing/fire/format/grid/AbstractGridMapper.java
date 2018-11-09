@@ -69,13 +69,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 double specialCoverageValue = 0.0F;
                 double burnableFractionValue = 0.0;
 
-                int numberOfBurnedPixels = 0;
-
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
                     boolean isBurnable = data.burnable[i];
                     if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
-                        numberOfBurnedPixels++;
                         double burnedArea = scale(burnedPixel, data.areas[i]);
                         baValue += burnedArea;
                         addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
@@ -113,7 +110,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 }
 
 
-                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], numberOfBurnedPixels, baValue);
+                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], ba[targetGridCellIndex]);
 
                 for (int i = 0; i < errors.length; i++) {
                     if (ba[i] < 0.00001) {
@@ -174,7 +171,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea);
 
     protected abstract void predict(double[] ba, double[] areas, float[] originalErrors);
 

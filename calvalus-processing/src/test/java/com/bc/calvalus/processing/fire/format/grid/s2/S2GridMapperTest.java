@@ -114,7 +114,7 @@ public class S2GridMapperTest {
 
         areas = Arrays.stream(data.areas).filter(value -> value > 0).average().getAsDouble();
 
-        float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, numberOfBurnedPixels, 0);
+        float errorPerPixel = new S2GridMapper().getErrorPerPixel(data.probabilityOfBurn, areas, 0);
         assertEquals(11063.7255859375, errorPerPixel, 1E-5);
         assertEquals(40, data.patchCount);
     }
@@ -211,7 +211,7 @@ public class S2GridMapperTest {
         };
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0.004992405883967876, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1, 0), 1E-6);
+        assertEquals(0.004992405883967876, new S2GridMapper().getErrorPerPixel(probs, 0.5, 0), 1E-6);
 
     }
 
@@ -221,7 +221,7 @@ public class S2GridMapperTest {
         Arrays.fill(probs, 0);
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 10, 0), 1E-6);
+        assertEquals(0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 0), 1E-6);
     }
 
     @Test
@@ -234,7 +234,7 @@ public class S2GridMapperTest {
         probs[4] = 0.51;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0.0952223390340805, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1, 0), 1E-6);
+        assertEquals(0.0952223390340805, new S2GridMapper().getErrorPerPixel(probs, 0.5, 0), 1E-6);
         probs = new double[6];
         probs[0] = 0;
         probs[1] = 0.5;
@@ -244,7 +244,7 @@ public class S2GridMapperTest {
         probs[5] = Float.NaN;
         areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0.07774871587753296, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1, 0), 1E-6);
+        assertEquals(0.07774871587753296, new S2GridMapper().getErrorPerPixel(probs, 0.5, 0), 1E-6);
     }
 
     @Test
@@ -257,7 +257,7 @@ public class S2GridMapperTest {
         probs[4] = 0.51;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0.0952223390340805, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1, 0), 1E-5);
+        assertEquals(0.0952223390340805, new S2GridMapper().getErrorPerPixel(probs, 0.5, 0), 1E-5);
     }
 
     @Test
@@ -266,7 +266,7 @@ public class S2GridMapperTest {
         probs[0] = 0.3;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 1, 0), 1E-6);
+        assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs, 0.5, 0), 1E-6);
     }
 
     @Test
@@ -280,7 +280,7 @@ public class S2GridMapperTest {
         double area = 7.671923035701257E8;
         int numBurned = 567875;
 
-        float errorPerPixel = new S2GridMapper().getErrorPerPixel(probBurn, area, numBurned, 0);
+        float errorPerPixel = new S2GridMapper().getErrorPerPixel(probBurn, area, 0);
         System.out.println(String.format("%.12f", errorPerPixel));
         assertEquals(14483.97949F, errorPerPixel, 1E-5);
     }

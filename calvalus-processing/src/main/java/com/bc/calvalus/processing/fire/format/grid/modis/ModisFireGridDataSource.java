@@ -172,9 +172,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                     if (isValidPixel) {
                         // set burned pixel value consistently with CL value -- both if burned pixel is valid
                         data.burnedPixels[targetPixelIndex] = sourceJD;
-                        data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                     }
 
+                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                     data.lcClasses[targetPixelIndex] = sourceLC;
                     if (numbObs == 0) {
                         data.statusPixels[targetPixelIndex] = 1;

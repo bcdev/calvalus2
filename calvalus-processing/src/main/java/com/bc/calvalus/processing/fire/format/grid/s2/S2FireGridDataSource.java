@@ -110,10 +110,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                     if (isValidPixel) {
                         // set burned pixel value consistently with CL value -- both if burned pixel is valid
                         data.burnedPixels[targetPixelIndex] = sourceJD;
-
-                        sourceCL = scale(sourceCL);
-                        data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                     }
+                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
 
                     data.lcClasses[targetPixelIndex] = sourceLC;
                     if (sourceJD >= 0) { // neither no-data, nor water, nor cloud -> observed pixel

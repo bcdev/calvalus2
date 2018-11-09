@@ -65,7 +65,7 @@ public class AbstractGridMapperTest {
             }
 
             @Override
-            protected float getErrorPerPixel(double[] probabilityOfBurn, double area, int numberOfBurnedPixels, double burnedArea) {
+            protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
                 return 0;
             }
 

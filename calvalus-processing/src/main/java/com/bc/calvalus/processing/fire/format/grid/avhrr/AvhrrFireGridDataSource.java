@@ -55,10 +55,10 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 float sourcePC = getFloatPixelValue(pc, "porcentage", sourcePixelIndex);
                 int targetPixelIndex = sourceY * 5 + sourceX;
                 if (isValidPixel(sourcePC)) {
-                    float sourceCL = getFloatPixelValue(cl, "confidence", sourcePixelIndex) / 100.0F;
                     data.burnedPixels[targetPixelIndex] = sourcePC;
-                    data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 }
+                float sourceCL = getFloatPixelValue(cl, "confidence", sourcePixelIndex) / 100.0F;
+                data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                 int sourceLC = getIntPixelValue(lc, "landcover", sourcePixelIndex);
                 data.lcClasses[targetPixelIndex] = sourceLC;
                 data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
