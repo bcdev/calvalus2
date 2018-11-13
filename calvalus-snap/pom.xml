@@ -104,6 +104,7 @@
 
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-openjpeg</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId></dependency>
