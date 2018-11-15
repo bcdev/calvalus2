@@ -190,12 +190,14 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedPercentage) {
         // Mask all pixels with value 255 in the confidence level (corresponding to the pixels not observed or non-burnable in the JD layer)
         // From the remaining pixels, reassign all values of 0 to 1
+
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
-                .filter(d -> d > 100.0)
-                .map(d -> d == 0 ? 1 : d).toArray();
+                .map(d -> d == 0 ? 1.0 : d)
+                .filter(d -> d <= 100.0 && d >= 1.0)
+                .toArray();
 
         // n is the number of pixels in the 0.25º cell that were not masked
         int n = probabilityOfBurnMasked.length;
@@ -204,7 +206,9 @@ public class ModisGridMapper extends AbstractGridMapper {
         double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();
 
         // Var_c = sum (pb_i*(1-pb_i)
-        double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
+        double var_c = Arrays.stream(pb)
+                .map(pb_i -> (pb_i * (1.0 - pb_i)))
+                .sum();
 
         // SE = sqr(var_c*(n/(n-1))) * pixel area
         // pixel area is the area of the pixels. In the case of MODIS it is a constant value of 53664.6708 m2

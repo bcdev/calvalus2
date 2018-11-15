@@ -109,6 +109,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         SourceData data = new SourceData(SIZE, SIZE);
         data.reset();
+        Arrays.fill(data.probabilityOfBurn, 255);
 
         for (Integer i : productIndices) {
             Product sourceProduct = products[i];
@@ -138,11 +139,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int[] lcPixels = new int[SIZE];
                 int[] numObsPixels = new int[SIZE];
 
+                Arrays.fill(clPixels, 255);
+
                 jd.readPixels(0, lineIndex, SIZE, 1, jdPixels);
                 if (cl != null) {
                     cl.readPixels(0, lineIndex, SIZE, 1, clPixels);
-                } else {
-                    Arrays.fill(clPixels, 0.0F);
                 }
                 no.readPixels(0, lineIndex, SIZE, 1, numObsPixels);
                 lc.readPixels(0, lineIndex, SIZE, 1, lcPixels);
@@ -170,7 +171,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                     data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                     boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
                     if (isValidPixel) {
-                        // set burned pixel value consistently with CL value -- both if burned pixel is valid
                         data.burnedPixels[targetPixelIndex] = sourceJD;
                     }
 

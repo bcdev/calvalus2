@@ -115,13 +115,15 @@ public class AvhrrGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedPercentage) {
         // Mask all pixels with value of -1 in the confidence level layer (they should not be included in the analysis)
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn).filter(d -> d >= 0).toArray();
+
+        // n is the number of 0.05º pixels in the 0.25º cell that were not masked
         int n = probabilityOfBurnMasked.length;
 
         // the correction_factor is the one assigned to the “BA_[year]_[month]_percentage_WGS.tif” file, in a scale 0 to 1
-        double CF = gridCellArea / burnedArea;
+        double CF = burnedPercentage / 100.0;
 
         // pb_i = value of confidence level of pixel * correction_factor /100
         double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d * CF / 100.0).toArray();
@@ -129,10 +131,12 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         // Var_c = sum (pb_i*(1-pb_i)
         double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
 
-        // SE = sqr(var_c*(n/(n-1))) * pixel area
         // pixel area is the area of the 0.05º pixels
-        double pixelArea = gridCellArea / (double) probabilityOfBurn.length;
-        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
+        double pixelArea = gridCellArea / 25.0;
+
+        // SE = sqr(var_c*(n/(n-1))) * pixel area
+        float v = (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
+        return v;
     }
 
     @Override

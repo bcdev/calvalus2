@@ -57,6 +57,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
+                double avhrrBurnedPercentage = Double.NaN;
+
+                if (x != 12 || y != 30) {
+                    targetGridCellIndex++;
+                    continue;
+                }
 
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
@@ -72,6 +78,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
                     boolean isBurnable = data.burnable[i];
+                    if (Double.isNaN(avhrrBurnedPercentage)) {
+                        avhrrBurnedPercentage = burnedPixel;
+                    }
                     if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
                         double burnedArea = scale(burnedPixel, data.areas[i]);
                         baValue += burnedArea;
@@ -110,7 +119,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 }
 
 
-                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], ba[targetGridCellIndex]);
+                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], avhrrBurnedPercentage);
 
                 for (int i = 0; i < errors.length; i++) {
                     if (ba[i] < 0.00001) {
@@ -171,7 +180,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedArea);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedPercentage);
 
     protected abstract void predict(double[] ba, double[] areas, float[] originalErrors);
 
