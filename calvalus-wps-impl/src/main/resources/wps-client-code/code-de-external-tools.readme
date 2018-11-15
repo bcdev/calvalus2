@@ -1,0 +1,82 @@
+CODE-DE Processing Tools
+
+This software package contains the three tools
+
+1) dhussearch, a tool which allows to search for data products in the CODE-DE data storage
+2) dhusget, a tool which allows to download data products from the CODE-DE data storage, designed to work in conjunction with dhussearch
+3) code-de-wps, the tool to interact with the CODE-DE processing system
+
+Purpose and usage
+
+# dhussearch.py
+
+	The dhussearch tool is provided as python script file. Its purpose is to search for data products in the CODE-DE data storage. The search is conducted using dataset name, start date, end date, and region. The result will be printed to the command line; the results may be redirected to a file for further usage, typically by dhusget.
+	Note that the tool expects the password of the used login to be stored in a file in the working directory named .<username>, with the one-line content "srcpassword='<password>'". Example: if the username is "sentinel-user" and the password is "copernicus!", in the working directory a file named .sentinel-user is expected with the content "srcpassword='copernicus!'" (without the double quotes).
+
+	Dependencies: Python2 with lxml
+	
+	Usage of the tool:
+		dhussearch.py <user> <baseurl> <producttype> <start> <stop> <area>
+
+	<user> is the username, <baseurl> the base URL of the data storage (typically  https://code-de.org/dhus/odata/v1/Products), <start> and <stop> are start and stop date in format yyyy-MM-ddTHH:mm:ss.SSSZ. <area> is the area which the data products are intended to intersect; this may be provided as WKT or as (comma-separated) list of UTM tiles.
+
+	Example call 1:
+		dhussearch.py sentinel-user https://code-de.org/dhus/odata/v1/Products S2MSI2Ap 2018-01-01T00:00:00.000Z 2018-01-02T00:00:00.000Z 'POLYGON((5.9 47.3,5.9 54.9,15.0 54.9,15.0 47.3,5.9 47.3))'
+	
+	Result:
+		S2A_MSIL1C_20180101T105441_N0206_R051_T32UMF_20180101T124911
+		S2A_MSIL1C_20180101T105441_N0206_R051_T32UME_20180101T124911
+	
+	Example call 2:
+		dhussearch.py sentinel-user https://code-de.org/dhus/odata/v1/Products S2MSI2Ap 2018-01-01T00:00:00.000Z 2018-01-02T00:00:00.000Z T32UMF,T32UNF,T32UME
+
+	Result:	
+		S2A_MSIL1C_20180101T105441_N0206_R051_T32UMF_20180101T124911
+		S2A_MSIL1C_20180101T105441_N0206_R051_T32UME_20180101T124911
+
+# dhusget.py
+
+	The dhusget tool is provided as python script file. Its purpose is to download data products from the CODE-DE data storage. The tool expects the same password file as dhussearch (see the previous section).
+	
+	Dependencies: Python2 with lxml + pytz
+
+	Usage of the tool:
+
+		dhusget.py <user> [<reportfile>] <baseurl> <destdirandfile>
+		
+	<user> is the username, <reportfile> an optional file to trace the downloaded files, <baseurl> the base URL of the data storage (typically  https://code-de.org/dhus/odata/v1/Products), and destdirandfile the combination of the target directory and the filename of the file to be downloaded; the latter typically comes from a previous usage of dhussearch.
+		
+	Example call:
+	  dhusget.py sentinel-user s2i.report https://code-de.org/dhus/odata/v1/Products data/S2A_MSIL1C_20180101T105441_N0206_R051_T32UME_20180101T124911.zip
+	
+	Result:
+		file S2A_MSIL1C_20180101T105441_N0206_R051_T32UME_20180101T124911.zip downloaded to directory data.
+	
+		
+# code-de-wps.sh
+
+	The code-de-wps tools is the interface to the CODE-DE processing system. As such, it helps to design, and allows to execute and monitor processing requests, as well as providing the interface to pick up the processed results. The tool is provided as bash script.
+
+	Dependencies: curl
+
+	Usage of the tool:
+
+		1) code-de-wps.sh <user> <password> GetCapabilities
+		
+			This call fetches the capabilities of the CODE-DE WPS server and prints them to standard output.
+		
+		2) code-de-wps.sh <user> <password> DescribeProcess
+		
+			This call prints the descriptions of all available processors of the CODE-DE processing system to standard output.
+		
+		3) code-de-wps.sh <user> <password> Execute <requestXml>
+		
+			This call submits the request specified in the given request XML file to the CODE-DE processing system, and provides the user with the JobId for the resulting processing task.
+		
+		4) code-de-wps.sh <user> <password> GetStatus <JobId>
+		
+			This call fetches the current status from the processing task identified by the given JobId. After the processing has finished successfully, the user is provided with a set of URLs pointing to the result files. If the processing has failed, the user is provided with an error message.
+		
+		5) code-de-wps.sh <user> <password> FetchResult <URL>
+		
+			This call fetches a processing output result file from the CODE-DE processing system, which is identified by the given URL.
