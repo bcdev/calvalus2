@@ -96,7 +96,8 @@ public class StatusHandler {
         writeStatus();
     }
 
-    private void writeStatus() {
+    // synchronized to prevent frequently-thrown ConcurrentModificationException
+    private synchronized void writeStatus() {
         if (statusFile == null) {
             statusFile = new File(reporter.getConfig().getProperty("name", reporter.getName()) + ".status");
         }
