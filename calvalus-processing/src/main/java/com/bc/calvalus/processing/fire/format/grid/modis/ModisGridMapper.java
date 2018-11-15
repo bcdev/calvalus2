@@ -194,6 +194,15 @@ public class ModisGridMapper extends AbstractGridMapper {
         // Mask all pixels with value 255 in the confidence level (corresponding to the pixels not observed or non-burnable in the JD layer)
         // From the remaining pixels, reassign all values of 0 to 1
 
+        System.out.println(Arrays.stream(probabilityOfBurn).filter(d -> d > 100).count());
+        System.out.println(Arrays.stream(probabilityOfBurn).filter(d -> d == 0).count());
+
+        double[] validProbs = Arrays.stream(probabilityOfBurn)
+                .filter(d -> d <= 100.0 && d >= 1.0)
+                .toArray();
+
+        System.out.println(Arrays.toString(Arrays.stream(validProbs).toArray()));
+
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
                 .map(d -> d == 0 ? 1.0 : d)
                 .filter(d -> d <= 100.0 && d >= 1.0)
