@@ -66,7 +66,6 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         }
 
         HdfsWriterFactory hdfsWriterFactory = new HdfsWriterFactory(context);
-
         regionAnalysis = new RegionAnalysis(dateRanges, raConfig, hdfsWriterFactory);
     }
 
@@ -102,7 +101,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             String timeFormatted = RADateRanges.dateFormat.format(new Date(time));
             LOG.info(String.format("    time: %s numObs: %8d  numSamples: %8d   %s", timeFormatted, numObs, numSamples, productName));
 
-            regionAnalysis.addData(time, numObs, samples);
+            regionAnalysis.addData(time, numObs, samples, productName);
             if (pixelArchiver != null) {
                 if (time != lastTime && lastTime != -1) {
                     pixelArchiver.writeTempNetcdf();

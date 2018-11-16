@@ -38,6 +38,7 @@ class StatisticsWriter {
     private final String[] bandNames;
     private final RAConfig.BandConfig[] bandConfigs;
     private final String[] internalRegionNames;
+    private final boolean withProductNames;
 
     StatisticsWriter(RAConfig raConfig, Statistics[] stats, WriterFactory writerFactory) throws IOException {
         this.statisticsPerRegion = raConfig.isWritePerRegion();
@@ -47,8 +48,9 @@ class StatisticsWriter {
         this.bandConfigs = raConfig.getBandConfigs();
         this.writerFactory = writerFactory;
         internalRegionNames = raConfig.getInternalRegionNames();
-
         int numWriter = 1;
+        withProductNames = raConfig.withProductNames();
+
         if (separateHistogram) {
             numWriter = 1 + bandNames.length;
         }
@@ -192,7 +194,7 @@ class StatisticsWriter {
         throw new NoSuchElementException(regionName);
     }
 
-    void writeRecord(int region, List<String> commonStats) throws IOException {
+    void writeRecord(int region, List<String> commonStats, String productName) throws IOException {
         Writer[] writersPerRegion = writer[0];
         if (statisticsPerRegion) {
             writersPerRegion = writer[region];
@@ -217,6 +219,9 @@ class StatisticsWriter {
             for (Statistics stat : this.stats) {
                 records.addAll(stat.getStatisticsRecords());
                 records.addAll(stat.getHistogramRecords());
+                if (productName!=null) {
+                    records.add(productName);
+                }
             }
             writeLine(writersPerRegion[0], records);
         }
@@ -237,6 +242,9 @@ class StatisticsWriter {
         records.add("RegionId");
         records.add("TimeWindow_start");
         records.add("TimeWindow_end");
+        if (withProductNames) {
+            records.add("Product");
+        }
         records.add("numPasses");
         records.add("numObs");
         return records;

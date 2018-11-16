@@ -231,7 +231,7 @@ public class CalvalusHadoopParameters extends Configuration {
         RARegions.RegionIterator regionsIterator = null;
         regionsIterator = raConfig.createNamedRegionIterator(this);
         List<String> names = new ArrayList<>();
-        boolean withEnvelope = raConfig.getRegionEnvelope();
+        boolean withEnvelope = raConfig.withRegionEnvelope();
         while (regionsIterator.hasNext()) {
             RAConfig.NamedRegion namedRegion = regionsIterator.next();
             Geometry geometry = namedRegion.region;
