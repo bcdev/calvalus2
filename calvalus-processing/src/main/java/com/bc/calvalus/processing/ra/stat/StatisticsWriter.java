@@ -194,7 +194,7 @@ class StatisticsWriter {
         throw new NoSuchElementException(regionName);
     }
 
-    void writeRecord(int region, List<String> commonStats, String productName) throws IOException {
+    void writeRecord(int region, List<String> commonStats) throws IOException {
         Writer[] writersPerRegion = writer[0];
         if (statisticsPerRegion) {
             writersPerRegion = writer[region];
@@ -219,9 +219,6 @@ class StatisticsWriter {
             for (Statistics stat : this.stats) {
                 records.addAll(stat.getStatisticsRecords());
                 records.addAll(stat.getHistogramRecords());
-                if (productName!=null) {
-                    records.add(productName);
-                }
             }
             writeLine(writersPerRegion[0], records);
         }

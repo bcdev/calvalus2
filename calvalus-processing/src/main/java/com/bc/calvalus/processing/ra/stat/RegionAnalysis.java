@@ -135,7 +135,7 @@ public class RegionAnalysis {
         String dEnd = dateRanges.formatEnd(dateIndex);
         List<String> commonStats = getCommonStats(dStart, dEnd, numPasses, numObs);
 
-        statisticsWriter.writeRecord(regionIndex, commonStats, productName);
+        statisticsWriter.writeRecord(regionIndex, commonStats);
     }
 
     private List<String> getCommonStats(String dStart, String dEnd, int numPasses, int numObs) {
