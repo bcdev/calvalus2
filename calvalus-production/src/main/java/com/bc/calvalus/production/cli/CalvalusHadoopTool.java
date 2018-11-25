@@ -146,7 +146,7 @@ public class CalvalusHadoopTool {
 
         JobConf jobConf = requestConverter.createJob(requestPath, commandLineParameters, configParameters, hook);
 
-        if (overwriteOutput) {
+        if (overwriteOutput || Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
             hadoopConnection.deleteOutputDir(jobConf);
         }
         RunningJob runningJob = hadoopConnection.submitJob(jobConf);
