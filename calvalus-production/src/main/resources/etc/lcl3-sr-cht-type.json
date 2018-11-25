@@ -1,0 +1,173 @@
+{
+    "productionType"   : "lcl3-sr",
+    
+    /* variable parameters */
+
+    /*
+    "productionName"   : "lcl3-sr request",
+    "inputInventory"   : "/calvalus/geoInventory/Sen2Agri_L2",
+    "dateRanges"       : "[2017-10-12:2017-10-21]",
+    "regionGeometry"   : "POLYGON ((-99 19, -98 19, -98 20, -99 20, -99 19))",
+
+    "cloudFilterInput" : "/calvalus/projects/lc/sen2agri-sr/test-cloud",
+    
+    "outputDir"        : "/calvalus/projects/lc/sen2agri-sr/test-sr",
+    */
+
+    "outputVersion"    : "1.0",
+
+    "queue"            : "lc",
+    "attempts"         : "2",
+    "failurePercent"   : "10",
+    "maxReducers"      : "18",
+    
+    /* type-specific parameters */
+
+    "mapreduce.job.inputformat.class"  : "com.bc.calvalus.processing.hadoop.PatternBasedInputFormat",
+    "mapreduce.job.map.class"          : "com.bc.calvalus.processing.mosaic.MosaicMapper",
+    "mapreduce.job.partitioner.class"  : "com.bc.calvalus.processing.mosaic.MosaicPartitioner",
+    "mapreduce.job.reduce.class"       : "com.bc.calvalus.processing.mosaic.MosaicReducer",
+    "mapreduce.map.output.key.class"   : "com.bc.calvalus.processing.mosaic.TileIndexWritable",
+    "mapreduce.map.output.value.class" : "com.bc.calvalus.processing.mosaic.TileDataWritable",
+    "mapreduce.job.output.key.class"   : "com.bc.calvalus.processing.mosaic.TileIndexWritable",
+    "mapreduce.job.output.value.class" : "com.bc.calvalus.processing.mosaic.TileDataWritable",
+    "mapreduce.job.outputformat.class" : "org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat",
+    "overwrite": "true",
+    "calvalus.output.format"           : "NetCDF4-LC",
+
+    /* mode dependent parameters */
+
+    "processorAdapterType" : "OPERATOR",
+    "processorName"        : "BandMaths",
+    "processorParameters"  : "<parameters> <targetBands> <targetBand><name>B2</name><expression>FRE_R1_B2</expression><type>float32</type></targetBand> <targetBand><name>B3</name><expression>FRE_R1_B3</expression><type>float32</type></targetBand> <targetBand><name>B4</name><expression>FRE_R1_B4</expression><type>float32</type></targetBand> <targetBand><name>B5</name><expression>FRE_R2_B5</expression><type>float32</type></targetBand> <targetBand><name>B6</name><expression>FRE_R2_B6</expression><type>float32</type></targetBand> <targetBand><name>B7</name><expression>FRE_R2_B7</expression><type>float32</type></targetBand> <targetBand><name>B8</name><expression>FRE_R1_B8</expression><type>float32</type></targetBand> <targetBand><name>B8A</name><expression>FRE_R2_B8A</expression><type>float32</type></targetBand> <targetBand><name>B11</name><expression>FRE_R2_B11</expression><type>float32</type></targetBand> <targetBand><name>B12</name><expression>FRE_R2_B12</expression><type>float32</type></targetBand> <targetBand> <name>status</name> <!-- invalid, hidden, cloud+buffer, cloud shadow+topo shadow, land, water, snow --> <expression> FRE_R1_B2 &lt;= 0.0 or FRE_R1_B3 &lt;= 0.0 or FRE_R1_B4 &lt;= 0.0 or FRE_R2_B5 &lt;= 0.0 or FRE_R2_B6 &lt;= 0.0 or FRE_R2_B7 &lt;= 0.0 or FRE_R1_B8 &lt;= 0.0 or FRE_R2_B8A &lt;= 0.0 or FRE_R2_B11 &lt;= 0.0 or FRE_R2_B12 &lt;= 0.0 ? 0 : MSK_R1 &amp; 4 != 0 ? 0 : CLD_R1 &amp; 66 != 0 ? 4 : CLD_R1 &amp; 12 != 0 or MSK_R1 &amp; 8 != 0 ? 5 : MSK_R1 == 0 ? 1 : MSK_R1 &amp; 1 != 0 ? 2 : MSK_R1 &amp; 32 != 0 ? 3 : 0 </expression> <type>int32</type> </targetBand> </targetBands> </parameters>",
+
+    "sensor"                           : "AGRI",
+    "inputFormat"                      : "CALVALUS-SENTINEL-2-MSI-10M",
+    "calvalus.lc.temporalCloudBandName" : "B8",
+    "calvalus.lc.bestpixelaggregation" : "false",
+
+    "calvalus.mosaic.parameters"       : "<parameters> <algorithmName>com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicAlgorithm</algorithmName> <validMaskExpression>(status == 1 or (status == 2 and not nan(B4)) or (status &gt;= 3))</validMaskExpression> <variableNames>status,B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12</variableNames> <virtualVariableNames>ndvi</virtualVariableNames> <virtualVariableExpr>(B8A - B4) / (B8A + B4)</virtualVariableExpr> </parameters>",
+    "calvalus.mosaic.tileSize"         : "2160",
+    "calvalus.mosaic.numTileY"         : "900",
+    "calvalus.mosaic.numXPartitions"   : "36",
+    "calvalus.mosaic.maxReducers"      : "18",
+
+    "calvalus.system.snap.pixelGeoCoding.useTiling" : "true",
+    "calvalus.system.snap.dataio.reader.tileHeight" : "512",
+    "calvalus.system.snap.dataio.reader.tileWidth" : "512",
+    "calvalus.system.beam.pixelGeoCoding.useTiling" : "true",
+    "calvalus.system.beam.reader.tileHeight" : "64",
+    "calvalus.system.beam.reader.tileWidth" : "*",
+
+    /* sizing parameters */
+
+    "timeout"                                       : "7200",  /* 7200000 */
+    "outputReplication"                             : "1",
+    "outputUmask"                                   : "002",
+    "processingMemory"                              : "3072",
+    "aggregationMemory"                             : "4096",
+    "snap.tileCache"                                : "1536",
+    "mapreduce.reduce.shuffle.input.buffer.percent" : "0.35",
+    "yarn.app.mapreduce.am.command-opts"            : "-Xmx512M -Djava.awt.headless=true",
+    "yarn.app.mapreduce.am.resource.mb"             : "512",
+    "dfs.blocksize"                                 : "2147483136",
+
+    /* software parameters */
+
+    "processorBundles"                 : "s2ac-1.3",
+    "calvalus"                         : "calvalus-2.15-boe",
+    "snap"                             : "snap-7.0-boe",
+
+    /* system-specific parameters */
+
+    "mapreduce.map.speculative"        : "false",
+    "mapreduce.reduce.speculative"     : "false",
+    "yarn.dispatcher.exit-on-error"    : "true",
+    "yarn.log-aggregation-enable"      : "true",
+    "rpc.engine.org.apache.hadoop.ipc.ProtocolMetaInfoPB" : "org.apache.hadoop.ipc.ProtobufRpcEngine",
+    "rpc.engine.org.apache.hadoop.mapreduce.v2.api.MRClientProtocolPB" : "org.apache.hadoop.ipc.ProtobufRpcEngine",
+    "fs.hdfs.impl.disable.cache"       : "true",
+
+    /* tool-provided parameters */
+
+    /*
+    "calvalus.user" : "martin",
+    "mapreduce.job.user.name" : "martin",
+    "mapreduce.job.application.attempt.id" : "1",
+    "mapreduce.job.dir" : "/tmp/hadoop-yarn/staging/martin/.staging/job_1525424694045_154530",
+    "mapreduce.job.maps" : "11",
+    "mapreduce.job.reduces" : "9",
+    "mapreduce.job.submithostaddress" : "10.3.20.21",
+    "mapreduce.job.submithostname" : "master00",
+    "mapreduce.job.working.dir" : "hdfs://calvalus/user/martin",
+
+    "fs.defaultFS" : "hdfs://calvalus",
+    "hadoop.http.filter.initializers" : "org.apache.hadoop.yarn.server.webproxy.amfilter.AmFilterInitializer",
+    "io.file.buffer.size" : "131072",
+    "mapred.mapper.new-api" : "true",
+    "mapred.reducer.new-api" : "true",
+    "mapred.queue.test.acl-administer-jobs" : "*",
+    "mapreduce.client.genericoptionsparser.used" : "true",
+    "mapreduce.framework.name" : "yarn",
+
+    "dfs.client.failover.proxy.provider.calvalus" : "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider",
+    "dfs.client.read.shortcircuit" : "true",
+    "dfs.domain.socket.path" : "/var/lib/hadoop-hdfs/dn_socket",
+    "dfs.ha.namenodes.calvalus" : "nn1,nn2",
+    "dfs.namenode.rpc-address.calvalus.nn1" : "master00:8020",
+    "dfs.namenode.rpc-address.calvalus.nn2" : "master01:8020",
+    "dfs.nameservices" : "calvalus",
+    "dfs.permissions.superusergroup" : "hadoop",
+
+    "yarn.client.failover-proxy-provider" : "org.apache.hadoop.yarn.client.ConfiguredRMFailoverProxyProvider",
+    "yarn.resourcemanager.cluster-id" : "calvalus-yarn",
+    "yarn.resourcemanager.ha.enabled" : "true",
+    "yarn.resourcemanager.ha.rm-ids" : "rm1,rm2",
+    "yarn.resourcemanager.hostname" : "master00",
+    "yarn.resourcemanager.hostname.rm1" : "master00",
+    "yarn.resourcemanager.hostname.rm2" : "master01"
+
+    "mapreduce.job.cache.archives" : "hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/SVF.tar.gz#SVF,hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/auxdata.tar.gz#auxdata,hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/s2-luts.tar.gz#s2-luts",
+    "mapreduce.job.cache.archives.filesizes" : "4625331240,3829219470,114625491",
+    "mapreduce.job.cache.archives.timestamps" : "1477053035727,1477052922792,1477052925054",
+    "mapreduce.job.cache.archives.visibilities" : "false,false,false",
+
+    "mapreduce.job.cache.files" : "hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/calvalus-lc-1.0.jar,hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/era-interim-interp-1.0-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/s2-angle-extrapolator-1.0-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/s2tbx-s2msi-idepix-5.0.0-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/s2ac-1.3/snap-s2-ac-1.3-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/calvalus-commons-2.15-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/calvalus-inventory-2.15-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/calvalus-processing-2.15-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/geo-inventory-0.6.1.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/google-s2-1.0.2-20160721.154530-1.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/guava-16.0.1.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/jcommon-1.0.16.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/jfreechart-1.0.13.jar,hdfs://calvalus/calvalus/software/1.0/calvalus-2.15-boe2/jsr305-3.0.0.jar,hdfs://calvalus/calvalus/software/1.0/snap-7.0-boe/sen2agri-reader-0.1.1-SNAPSHOT.jar,hdfs://calvalus/calvalus/software/1.0/snap-7.0-boe/snap-all.jar,hdfs://calvalus/calvalus/software/1.0/snap-7.0-boe/libjhdf.so,hdfs://calvalus/calvalus/software/1.0/snap-7.0-boe/libjhdf5.so,hdfs://calvalus/calvalus/software/1.0/snap-7.0-boe/libopenjp2.so",
+    "mapreduce.job.cache.files.filesizes" : "11370,16477,8259,42031,69177,26061,77223,1797814,86541,128806,2228009,309293,1425744,33031,25147,220189257,1085060,3371519,274172",
+    "mapreduce.job.cache.files.timestamps" : "1484000976303,1477052922926,1477052923173,1478212783561,1479397092210,1527522299950,1527522300020,1527527689471,1527522299641,1527522299870,1527522299989,1527522299886,1527522299371,1527522299656,1526490499763,1526835418845,1526389186076,1526389186115,1526389186229",
+    "mapreduce.job.cache.files.visibilities" : "false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false",
+
+    "mapreduce.job.classpath.files" : "/calvalus/software/1.0/s2ac-1.3/calvalus-lc-1.0.jar,/calvalus/software/1.0/s2ac-1.3/era-interim-interp-1.0-SNAPSHOT.jar,/calvalus/software/1.0/s2ac-1.3/s2-angle-extrapolator-1.0-SNAPSHOT.jar,/calvalus/software/1.0/s2ac-1.3/s2tbx-s2msi-idepix-5.0.0-SNAPSHOT.jar,/calvalus/software/1.0/s2ac-1.3/snap-s2-ac-1.3-SNAPSHOT.jar,/calvalus/software/1.0/calvalus-2.15-boe2/calvalus-commons-2.15-SNAPSHOT.jar,/calvalus/software/1.0/calvalus-2.15-boe2/calvalus-inventory-2.15-SNAPSHOT.jar,/calvalus/software/1.0/calvalus-2.15-boe2/calvalus-processing-2.15-SNAPSHOT.jar,/calvalus/software/1.0/calvalus-2.15-boe2/geo-inventory-0.6.1.jar,/calvalus/software/1.0/calvalus-2.15-boe2/google-s2-1.0.2-20160721.154530-1.jar,/calvalus/software/1.0/calvalus-2.15-boe2/guava-16.0.1.jar,/calvalus/software/1.0/calvalus-2.15-boe2/jcommon-1.0.16.jar,/calvalus/software/1.0/calvalus-2.15-boe2/jfreechart-1.0.13.jar,/calvalus/software/1.0/calvalus-2.15-boe2/jsr305-3.0.0.jar,/calvalus/software/1.0/snap-7.0-boe/sen2agri-reader-0.1.1-SNAPSHOT.jar,/calvalus/software/1.0/snap-7.0-boe/snap-all.jar"
+    */
+
+    "_translate.productionType"   : "calvalus.productionType",
+    "_translate.productionName"   : "mapreduce.job.name",
+    "_translate.inputInventory"   : "calvalus.input.geoInventory",
+    "_translate.dateRanges"       : "calvalus.input.dateRanges",
+    "_translate.regionGeometry"   : [ "calvalus.regionGeometry", "calvalus.mosaic.regionGeometry" ],
+    "_translate.cloudFilterInput" : "calvalus.lc.sdr8mean",
+    "_translate.outputDir"        : [ "calvalus.output.dir", "mapreduce.output.fileoutputformat.outputdir" ],
+    "_translate.outputVersion"    : [ "calvalus.output.version", "calvalus.lc.version" ],
+    "_translate.queue"            : "mapreduce.job.queuename",
+    "_translate.attempts"         : "mapreduce.map.maxattempts",
+    "_translate.failurePercent"   : "mapreduce.map.failures.maxpercent",
+    "_translate.maxReducers"      : [ "mapreduce.job.reduces", "calvalus.mosaic.maxReducers" ],
+    
+    "_translate.processorAdapterType" : "calvalus.l2.processorType",
+    "_translate.processorName"    : "calvalus.l2.operator",
+    "_translate.processorParameters" : "calvalus.l2.parameters",
+    "_translate.sensor"           : [ "calvalus.lc.resolution", "calvalus.lc.sensor" ],
+    "_translate.inputFormat"      : "calvalus.input.format",
+    
+    "_translate.timeout"          : [ [ "mapreduce.task.timeout", "seconds2Millis" ] ],
+    "_translate.outputReplication" : "dfs.replication",
+    "_translate.outputUmask"      : "fs.permissions.umask-mode",
+    "_translate.processingMemory" : [ [ "mapreduce.map.java.opts", "javaOptsOfMem" ], [ "mapreduce.map.memory.mb", "add512" ] ],
+    "_translate.aggregationMemory" : [ [ "mapreduce.reduce.java.opts", "javaOptsOfMem" ], [ "mapreduce.reduce.memory.mb", "add512" ] ],
+    "_translate.snap.tileCache"   : "calvalus.system.snap.jai.tileCacheSize",
+    
+    "_translate.calvalus"         : "calvalus.calvalus.bundle",
+    "_translate.snap"             : "calvalus.snap.bundle",
+    "_translate.processorBundles" : "calvalus.bundles"
+
+}
