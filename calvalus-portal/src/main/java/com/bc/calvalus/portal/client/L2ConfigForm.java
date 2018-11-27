@@ -353,6 +353,7 @@ public class L2ConfigForm extends Composite {
             parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION + suffix, processorDescriptor.getBundleVersion());
             parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION + suffix, processorDescriptor.getBundleLocation());
             parameters.put(ProcessorProductionRequest.PROCESSOR_NAME + suffix, processorDescriptor.getExecutableName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_DESCRIPTION + suffix, processorDescriptor.getProcessorName());
             parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + suffix, getProcessorParameters());
             parameters.put(ProcessorProductionRequest.OUTPUT_PRODUCT_TYPE + suffix, processorDescriptor.getOutputProductType());
         }

@@ -1,6 +1,7 @@
 package com.bc.calvalus.reporting.code;
 
 import com.bc.calvalus.reporting.common.UsageStatistic;
+import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -8,6 +9,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.net.InetAddress;
@@ -47,6 +49,7 @@ public class CodeReport {
     private final long configuredCpuCoresPerTask;
     private final double cpuCoreHours;
     private final String processorName;
+    private final String processorDescription;
     private final double configuredRamPerTask;
     private final double ramHours;
     private final String processingWorkflow;
@@ -80,6 +83,7 @@ public class CodeReport {
                 long configuredCpuCoresPerTask,
                 double cpuCoreHours,
                 String processorName,
+                String processorDescription,
                 double configuredRamPerTask,
                 double ramHours,
                 String processingWorkflow,
@@ -106,6 +110,7 @@ public class CodeReport {
         this.configuredCpuCoresPerTask = configuredCpuCoresPerTask;
         this.cpuCoreHours = cpuCoreHours;
         this.processorName = processorName;
+        this.processorDescription = processorDescription;
         this.configuredRamPerTask = configuredRamPerTask;
         this.ramHours = ramHours;
         this.processingWorkflow = processingWorkflow;
@@ -141,6 +146,7 @@ public class CodeReport {
         this.processorName = resolveProcessorName(usageStatistic.getProcessType(),
                                                   usageStatistic.getMapClass(),
                                                   usageStatistic.getWorkflowType());
+        this.processorDescription = usageStatistic.getProcessorDescription();
         this.configuredRamPerTask = parseLong(usageStatistic.getConfiguredRam()) / KILO_BYTE;
         this.ramHours = calculateRamHours(usageStatistic.getMbMillisMapTotal(),
                                           usageStatistic.getMbMillisReduceTotal());
@@ -150,11 +156,37 @@ public class CodeReport {
         this.outProductsNumber = usageStatistic.getReducesCompleted() > 0 ? usageStatistic.getReducesCompleted() : usageStatistic.getMapsCompleted();
         this.outProductsType = usageStatistic.getOutputType();
         this.outCollection = usageStatistic.getJobName();
-        this.outProductsLocation = usageStatistic.getOutputDir();
+        this.outProductsLocation = usageStatistic.getOutputDir() != null ?
+                                   usageStatistic.getOutputDir() :
+                                   resolveOutProductsLocation(usageStatistic.getWorkflowType(),
+                                                              usageStatistic.getInputPath());
         this.outProductsSize = getGbFromBytes(usageStatistic.getFileBytesWritten());
 
         this.serviceHost = getHostName();
         this.messageTime = LocalDateTime.now().toString();
+    }
+
+    private void validateMandatoryFields() {
+        String mandatoryFields = PropertiesWrapper.get("mandatory.fields");
+        String[] split = mandatoryFields.split(",");
+        for (String s : split) {
+            try {
+                Field declaredField = this.getClass().getDeclaredField(s);
+                if (declaredField.get(this) == null) {
+                    throw new IllegalArgumentException("Field '" + s + "' is mandatory but not available.");
+                }
+            } catch (NoSuchFieldException | IllegalAccessException exception) {
+                throw new IllegalArgumentException(exception);
+            }
+        }
+    }
+
+    private String resolveOutProductsLocation(String workflowType, String inputPath) {
+        if ("GeoDB".equalsIgnoreCase(workflowType)) {
+            return inputPath;
+        } else {
+            return "Not available";
+        }
     }
 
     private String resolveProcessorName(String processType, String mapClass, String workflowType) {
@@ -164,6 +196,8 @@ public class CodeReport {
             return "Formatting";
         } else if ("L3".equalsIgnoreCase(workflowType)) {
             return "Aggregation";
+        } else if ("GeoDB".equalsIgnoreCase(workflowType)) {
+            return "Geo Indexing";
         } else {
             return "None";
         }
@@ -202,6 +236,8 @@ public class CodeReport {
     }
 
     public String toJson() {
+        validateMandatoryFields();
+
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder = gsonBuilder.registerTypeAdapter(Double.class, new JsonSerializer<Double>() {
             @Override

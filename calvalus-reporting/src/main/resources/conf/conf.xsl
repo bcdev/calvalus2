@@ -49,6 +49,12 @@
                     </dataProcessorUsed>
                 </xsl:if>
 
+                <xsl:if test="name='calvalus.l2.processorDescription'">
+                    <processorDescription>
+                        <xsl:value-of select="value"/>
+                    </processorDescription>
+                </xsl:if>
+
                 <xsl:if test="name='mapreduce.job.map.class'">
                     <mapClass>
                         <xsl:value-of select="value"/>

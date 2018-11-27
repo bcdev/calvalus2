@@ -12,8 +12,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.JobStatus;
@@ -44,10 +42,11 @@ public class CalvalusHadoopTool {
     private final CalvalusHadoopRequestConverter requestConverter;
     private final CalvalusHadoopStatusConverter statusConverter;
 
-    public CalvalusHadoopTool(String userName) {
+    public CalvalusHadoopTool(String userName, String format) {
         hadoopConnection = new CalvalusHadoopConnection(userName);
         requestConverter = new CalvalusHadoopRequestConverter(hadoopConnection, userName);
-        statusConverter = new CalvalusHadoopStatusConverter(hadoopConnection);
+        //statusConverter = new CalvalusHadoopStatusConverter(hadoopConnection);
+        statusConverter = CalvalusHadoopStatusConverter.create(hadoopConnection, format);
     }
 
     public static void main(String[] args) {
@@ -89,7 +88,7 @@ public class CalvalusHadoopTool {
 
                 String[] ids = commandLine.getArgs();
                 Map<String, String> commandLineParameters = CalvalusHadoopRequestConverter.collectCommandLineParameters(commandLine);
-                final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName);
+                final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName, commandLine.getOptionValue("format", "json"));
                 if (! calvalusHadoopTool.getStatus(userName, ids, commandLineParameters, configParameters)) {
                     System.exit(1);
                 }
@@ -98,7 +97,7 @@ public class CalvalusHadoopTool {
 
                 String[] ids = commandLine.getArgs();
                 Map<String, String> commandLineParameters = CalvalusHadoopRequestConverter.collectCommandLineParameters(commandLine);
-                final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName);
+                final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName, commandLine.getOptionValue("format", "json"));
                 if (! calvalusHadoopTool.cancel(userName, ids, commandLineParameters, configParameters)) {
                     System.exit(1);
                 }
@@ -113,7 +112,7 @@ public class CalvalusHadoopTool {
                 String requestPath = String.valueOf(commandLine.getArgList().get(0));
                 boolean overwriteOutput = commandLine.hasOption("overwrite");
                 Map<String, String> commandLineParameters = CalvalusHadoopRequestConverter.collectCommandLineParameters(commandLine);
-                final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName);
+                final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName, commandLine.getOptionValue("format", "json"));
                 RunningJob runningJob = calvalusHadoopTool.exec(userName, requestPath, commandLineParameters, configParameters, overwriteOutput);
 
                 if (commandLine.hasOption("async")) {
@@ -198,7 +197,8 @@ public class CalvalusHadoopTool {
         Configuration hadoopParameters = requestConverter.createHadoopConf(commandLineParameters, configParameters);
         hadoopConnection.createJobClient(hadoopParameters);
 
-        StringBuilder accu = new StringBuilder("{");
+        StringBuilder accu = new StringBuilder();
+        statusConverter.initialiseJobStatus(accu);
         if (ids.length == 1) {
             String id = ids[0];
             JobID jobId = JobID.forName(id);
@@ -211,11 +211,8 @@ public class CalvalusHadoopTool {
                 statusConverter.accumulateJobStatus(id, status, accu);
             }
         }
-        if (accu.length() > 1) {
-            accu.append(" ");
-        }
-        accu.append("}");
-        System.out.println(accu.toString());
+        statusConverter.finaliseJobStatus(accu);
+        System.out.print(accu.toString());
         return true;
     }
 
@@ -339,6 +336,13 @@ public class CalvalusHadoopTool {
                                   .withDescription(
                                           "Authentication method. One of unix, saml, debug.")
                                   .create("u"));
+        options.addOption(OptionBuilder
+                                  .withLongOpt("format")
+                                  .hasArg()
+                                  .withArgName("NAME")
+                                  .withDescription(
+                                          "Status output format. One of json, csv.")
+                                  .create("f"));
         return options;
     }
 }

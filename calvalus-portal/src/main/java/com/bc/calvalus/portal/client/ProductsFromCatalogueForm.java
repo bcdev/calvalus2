@@ -100,7 +100,7 @@ public class ProductsFromCatalogueForm extends Composite {
 
     void addInputSelectionHandler(InputSelectionHandler inputSelectionHandler) {
         pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().
-                    getInputSelection(inputSelectionHandler.getInputSelectionChangedCallback()));
+                    getInputSelection(portal.getUserName(), inputSelectionHandler.getInputSelectionChangedCallback()));
         clearSelectionButton.addClickHandler(event -> inputSelectionHandler.onClearSelectionClick());
     }
 

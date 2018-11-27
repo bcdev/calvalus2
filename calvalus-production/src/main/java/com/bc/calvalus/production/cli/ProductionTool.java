@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.ingestion.IngestionTool;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProcessingLogHandler;
@@ -290,6 +291,11 @@ public class ProductionTool {
 
             String jobSubmissionDate = df.format(new Date());
             config.put("jobSubmissionDate", jobSubmissionDate);
+
+            String systemName = config.get(JobConfigNames.CALVALUS_SYSTEM_NAME);
+            if(StringUtils.isNotNullAndNotEmpty(systemName)){
+                request.setParameter(JobConfigNames.CALVALUS_SYSTEM_NAME, systemName);
+            }
 
             Production production = orderProduction(serviceContainer.getProductionService(), request, hook);
             if (production.isAutoStaging()) {

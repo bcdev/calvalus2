@@ -33,6 +33,7 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 
@@ -283,6 +284,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             getLogger().info(String.format("Opened product width = %d height = %d",
                                            product.getSceneRasterWidth(),
                                            product.getSceneRasterHeight()));
+            ProductReader productReader = product.getProductReader();
+            if (productReader != null) {
+                getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
+            }
             if (hasInvalidStartAndStopTime(product)) {
                 getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time. Copying from input.");
                 // When processing with Polymere no time information is attached to the product.

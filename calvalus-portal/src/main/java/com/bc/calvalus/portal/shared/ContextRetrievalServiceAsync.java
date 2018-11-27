@@ -4,5 +4,5 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface ContextRetrievalServiceAsync {
 
-    void getInputSelection(AsyncCallback<DtoInputSelection> async);
+    void getInputSelection(String userName, AsyncCallback<DtoInputSelection> async);
 }

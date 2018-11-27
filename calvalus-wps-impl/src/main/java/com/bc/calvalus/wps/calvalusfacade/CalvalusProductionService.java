@@ -121,7 +121,7 @@ public class CalvalusProductionService implements ServletContextListener {
         return serviceContainer;
     }
 
-    private static File getConfigFile() throws FileNotFoundException {
+    public static File getConfigFile() throws FileNotFoundException {
         File configFile;
         try {
             URL calvalusConfigUrl = CalvalusProductionService.class.getClassLoader().getResource("calvalus.config");
