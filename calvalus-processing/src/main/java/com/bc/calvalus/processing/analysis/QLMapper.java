@@ -29,8 +29,22 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.io.FileUtils;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
+//import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
+import org.geotools.gce.geotiff.GeoTiffFormat;
+import org.geotools.gce.geotiff.GeoTiffWriteParams;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.coverage.grid.GridCoverageWriter;
+import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.parameter.ParameterValueGroup;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
@@ -86,18 +100,64 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        try {
             RenderedImage quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
-                OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
-                OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
-                try {
-                    ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);
-                } finally {
-                    outputStream.close();
+                if( isGeoTiff(config)) {
+                    OutputStream outputStream = createOutputStream(context, imageFileName + ".tiff");
+                    LOGGER.info("outputStream: " + outputStream.toString());
+                    OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
+
+                    final int width = product.getSceneRasterWidth();
+                    final int height = product.getSceneRasterWidth();
+                    final GeoCoding geoCoding = product.getSceneGeoCoding();
+                    final PixelPos posA = new org.esa.snap.core.datamodel.PixelPos(0, 0);
+                    final GeoPos geoPosA = geoCoding.getGeoPos(posA, null);
+                    final PixelPos posB = new org.esa.snap.core.datamodel.PixelPos(width, height);
+                    final GeoPos geoPosB = geoCoding.getGeoPos(posB, null);
+
+                    final GeoTiffFormat format = new GeoTiffFormat();
+                    final GeoTiffWriteParams wp = new GeoTiffWriteParams();
+                    //wp.setCompressionMode(GeoTiffWriteParams.MODE_EXPLICIT);
+                    //wp.setCompressionType("LZW");
+                    //wp.setCompressionQuality(1.0F);
+                    //wp.setTilingMode(GeoToolsWriteParams.MODE_EXPLICIT);
+                    //wp.setTiling(256, 256);
+                    final ParameterValueGroup params = format.getWriteParameters();
+                    params.parameter(AbstractGridFormat.GEOTOOLS_WRITE_PARAMS.getName().toString()).setValue(wp);
+
+                    try {
+                        ReferencedEnvelope envelope =
+                                new ReferencedEnvelope(
+                                        geoPosA.getLon(), geoPosB.getLon(),
+                                        geoPosA.getLat(), geoPosB.getLat(),
+                                        DefaultGeographicCRS.WGS84
+                                );
+                        GridCoverageFactory factory = new GridCoverageFactory();
+                        GridCoverage2D gridCoverage2D = factory.create(imageFileName, quicklookImage, envelope);
+                        GridCoverageWriter writer = format.getWriter(new BufferedOutputStream(pmOutputStream));
+                        writer.write(gridCoverage2D, params.values().toArray(new GeneralParameterValue[1]));
+                        writer.dispose();
+                    } finally {
+                        outputStream.close();
+                    }
+                }
+                else {
+                    OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
+                    LOGGER.info("outputStream: " + outputStream.toString());
+                    OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
+                    try {
+                        ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);
+                    } finally {
+                        outputStream.close();
+                    }
                 }
             }
 //        } catch (Exception e) {
 //            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
 //            LOGGER.log(Level.WARNING, msg, e);
 //        }
+    }
+
+    private static boolean isGeoTiff(Quicklooks.QLConfig qlConfig) {
+        return "geotiff".equalsIgnoreCase(qlConfig.getImageType());
     }
 
     private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {

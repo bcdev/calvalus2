@@ -253,7 +253,7 @@ public class QuicklookParametersForm extends Composite {
     }
 
     public void setAvailableImageTypes() {
-        String[] imageNames = {"jpeg", "tiff", "png"};
+        String[] imageNames = {"jpeg", "png", "tiff", "geotiff"};
         int selectedIndex = imageType.getSelectedIndex();
         imageType.clear();
         for (String imageName : imageNames) {
@@ -529,10 +529,12 @@ public class QuicklookParametersForm extends Composite {
                 imageType.setSelectedIndex(0);
             else if (imageTypeValue.equalsIgnoreCase("jpeg"))
                 imageType.setSelectedIndex(0);
-            else if (imageTypeValue.equalsIgnoreCase("tiff"))
-                imageType.setSelectedIndex(1);
             else if (imageTypeValue.equalsIgnoreCase("png"))
+                imageType.setSelectedIndex(1);
+            else if (imageTypeValue.equalsIgnoreCase("tiff"))
                 imageType.setSelectedIndex(2);
+            else if (imageTypeValue.equalsIgnoreCase("geotiff"))
+                imageType.setSelectedIndex(3);
 
             // overlayURL
             String overlayURLValue = getTagValue(dom, "overlayURL");
