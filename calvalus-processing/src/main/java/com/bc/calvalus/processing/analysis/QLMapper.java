@@ -106,7 +106,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                     OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
 
                     final int width = product.getSceneRasterWidth();
-                    final int height = product.getSceneRasterWidth();
+                    final int height = product.getSceneRasterHeight();
                     final GeoCoding geoCoding = product.getSceneGeoCoding();
                     final PixelPos posA = new org.esa.snap.core.datamodel.PixelPos(0, 0);
                     final GeoPos geoPosA = geoCoding.getGeoPos(posA, null);
