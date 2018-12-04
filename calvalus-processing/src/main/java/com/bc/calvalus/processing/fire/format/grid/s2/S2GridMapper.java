@@ -213,6 +213,7 @@ public class S2GridMapper extends AbstractGridMapper {
                         || (targetGridCellX == 767 && targetGridCellY == 382)
                         || (targetGridCellX == 663 && targetGridCellY == 323)
                         || (targetGridCellX == 664 && targetGridCellY == 323)
+                        || (targetGridCellX == 665 && targetGridCellY == 323)
                         || (targetGridCellX == 648 && targetGridCellY == 300)
                         || (targetGridCellX == 647 && targetGridCellY == 300)
                         || (targetGridCellX == 650 && targetGridCellY == 299)
@@ -224,8 +225,27 @@ public class S2GridMapper extends AbstractGridMapper {
                         || (targetGridCellX == 842 && targetGridCellY == 484)
                         || (targetGridCellX == 839 && targetGridCellY == 488)
                         || (targetGridCellX == 771 && targetGridCellY == 409)
-                        || (targetGridCellX == 747 && targetGridCellY == 300)
-                        || (targetGridCellX == 748 && targetGridCellY == 300);
+                        || (targetGridCellX == 912 && targetGridCellY == 410)
+                        || (targetGridCellX == 912 && targetGridCellY == 411)
+                        || (targetGridCellX == 894 && targetGridCellY == 440)
+                        || (targetGridCellX == 895 && targetGridCellY == 440)
+                        || (targetGridCellX == 896 && targetGridCellY == 440)
+                        || (targetGridCellX == 776 && targetGridCellY == 455)
+                        || (targetGridCellX == 776 && targetGridCellY == 456)
+                        || (targetGridCellX == 778 && targetGridCellY == 459)
+                        || (targetGridCellX == 884 && targetGridCellY == 300)
+                        || (targetGridCellX == 885 && targetGridCellY == 300)
+                        || (targetGridCellX == 886 && targetGridCellY == 300)
+                        || (targetGridCellX == 784 && targetGridCellY == 287)
+                        || (targetGridCellX == 892 && targetGridCellY == 306)
+                        || (targetGridCellX == 893 && targetGridCellY == 306)
+                        || (targetGridCellX == 892 && targetGridCellY == 307)
+                        || (targetGridCellX == 893 && targetGridCellY == 307)
+                        || (targetGridCellX == 894 && targetGridCellY == 307)
+                        || (targetGridCellX == 893 && targetGridCellY == 308)
+                        || (targetGridCellX == 894 && targetGridCellY == 308)
+                        || (targetGridCellX == 894 && targetGridCellY == 309)
+                        || (targetGridCellX == 895 && targetGridCellY == 309);
     }
 
     private FileStatus[] getFileStatuses(String inputPathPatterns, Configuration conf) throws IOException {

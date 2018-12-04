@@ -69,11 +69,15 @@ public abstract class NcFileFactory {
         burnedAreaInVegClassVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("long_name", "burned area in vegetation class"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
-        burnedAreaInVegClassVar.addAttribute(new Attribute("comment", "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/"));
+        burnedAreaInVegClassVar.addAttribute(new Attribute("comment", getBurnedAreaInVegClassComment()));
 
         addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
         ncFile.create();
         return ncFile;
+    }
+
+    protected String getBurnedAreaInVegClassComment() {
+        return "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/";
     }
 
     private void addGroupAttributes(String filename, String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration) {
@@ -90,7 +94,7 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", "org.esa-fire-cci"));
         ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
-        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "none"));
+        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "burned area, fire"));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
         ncFile.addGroupAttribute(null, new Attribute("comment", "These data were produced as part of the ESA Fire_cci programme."));
         ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
@@ -106,8 +110,8 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("geospatial_vertical_max", "0"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd));
-        ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", String.format("P%sD", "" + timeCoverageDuration)));
-        ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", String.format("P%sD", "" + timeCoverageDuration)));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", "P1M"));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", "P1M"));
         ncFile.addGroupAttribute(null, new Attribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention"));
         ncFile.addGroupAttribute(null, new Attribute("license", "ESA CCI Data Policy: free and open access"));
         ncFile.addGroupAttribute(null, new Attribute("platform", getPlatformGlobalAttribute()));

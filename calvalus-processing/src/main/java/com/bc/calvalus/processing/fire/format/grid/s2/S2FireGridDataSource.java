@@ -158,24 +158,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         return subsetOp.getTargetProduct();
     }
 
-    private float scale(float cl) {
-        if (cl < 0.05 || cl > 1.0) {
-            return 0.0F;
-        } else if (cl <= 0.14) {
-            return 0.5F;
-        } else if (cl <= 0.23) {
-            return 0.6F;
-        } else if (cl <= 0.32) {
-            return 0.7F;
-        } else if (cl <= 0.41) {
-            return 0.8F;
-        } else if (cl <= 0.50) {
-            return 0.9F;
-        } else {
-            return 1.0F;
-        }
-    }
-
     static int getProductJD(Product product) {
         String productDate = product.getName().substring(product.getName().lastIndexOf("-") + 1);// BA-T31NBJ-20160219T101925
         return LocalDate.parse(productDate, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")).get(ChronoField.DAY_OF_YEAR);
