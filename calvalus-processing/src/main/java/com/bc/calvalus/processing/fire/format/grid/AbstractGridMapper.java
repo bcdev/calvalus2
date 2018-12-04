@@ -59,10 +59,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             for (int x = 0; x < targetRasterWidth; x++) {
                 double avhrrBurnedPercentage = Double.NaN;
 
-                if (x != 12 || y != 30) {
-                    targetGridCellIndex++;
-                    continue;
-                }
+//                if (x != 31 || y != 4) {
+//                    targetGridCellIndex++;
+//                    continue;
+//                }
 
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {

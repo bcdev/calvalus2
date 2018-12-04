@@ -149,6 +149,12 @@ public class S2GridMapper extends AbstractGridMapper {
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn).filter(d -> d > 0).toArray();
         int n = probabilityOfBurnMasked.length;
 
+        // pixel area is the area of the pixels. In the case of S2 it is the area of one S2 pixel, you can calculate it as the area of the 0.25º grid cell divided the TOTAL number of S2 pixels (both masked and unmasked)
+        double pixelArea = gridCellArea / (double) probabilityOfBurn.length;
+        if (n == 1) {
+            return (float) pixelArea;
+        }
+
         // pb_i = value of confidence level of pixel /100
         double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();
 
@@ -156,8 +162,6 @@ public class S2GridMapper extends AbstractGridMapper {
         double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
 
         // SE = sqr(var_c*(n/(n-1))) * pixel area
-        // pixel area is the area of the pixels. In the case of S2 it is the area of one S2 pixel, you can calculate it as the area of the 0.25º grid cell divided the TOTAL number of S2 pixels (both masked and unmasked)
-        double pixelArea = gridCellArea / (double) probabilityOfBurn.length;
         return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
 
     }

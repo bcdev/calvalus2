@@ -20,7 +20,6 @@ import org.esa.snap.core.datamodel.VectorDataNode;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.common.SubsetOp;
-import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 import org.esa.snap.core.util.FeatureUtils;
 import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.feature.FeatureCollection;
@@ -32,6 +31,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -43,11 +43,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final String targetCell; // "800,312"
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int SIZE = 4800;
-    private static String[] brokenLcPixels1;
-    private static String[] brokenLcPixels2;
-    private static String[] brokenLcPixels3;
-    private static String[] brokenLcPixels4;
-    private static String[] brokenLcPixels5;
+    private static List<String> brokenLcPixels;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, String targetCell) {
         super(-1, -1);
@@ -58,24 +54,14 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     }
 
     private void initBrokenZones() {
-        try {
-            ObjectInputStream in1 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_1.array"));
-            ObjectInputStream in2 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_2.array"));
-            ObjectInputStream in3 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_3.array"));
-            ObjectInputStream in4 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_4.array"));
-            ObjectInputStream in5 = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_5.array"));
-            brokenLcPixels1 = (String[]) in1.readObject();
-            brokenLcPixels2 = (String[]) in2.readObject();
-            brokenLcPixels3 = (String[]) in3.readObject();
-            brokenLcPixels4 = (String[]) in4.readObject();
-            brokenLcPixels5 = (String[]) in5.readObject();
-            in1.close();
-            in2.close();
-            in3.close();
-            in4.close();
-            in5.close();
-        } catch (IOException | ClassNotFoundException e) {
-            throw new IllegalStateException(e);
+        brokenLcPixels = new ArrayList<>();
+        for (int i = 1; i <= 8; i++) {
+            try (ObjectInputStream in = new ObjectInputStream(getClass().getResourceAsStream("broken_pixels_" + i + ".array"))) {
+                String[] currentBrokenLcPixels = (String[]) in.readObject();
+                Collections.addAll(brokenLcPixels, currentBrokenLcPixels);
+            } catch (IOException | ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
@@ -100,18 +86,17 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         }
 
         if (productIndices.isEmpty()) {
-            //  grid cell is covered by water completely - that's fine.
+            //  grid cell is covered by water completely - that's probably fine.
             LOG.info("Completely covered by water? x=" + x + ", y=" + y);
             return null;
         }
-
-        int targetPixelIndex = 0;
 
         SourceData data = new SourceData(SIZE, SIZE);
         data.reset();
         Arrays.fill(data.probabilityOfBurn, 255);
 
         for (Integer i : productIndices) {
+            int targetPixelIndex = 0;
             Product sourceProduct = products[i];
             Product lcProduct = lcProducts[i];
 
@@ -150,6 +135,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
                 for (int x0 = 0; x0 < SIZE; x0++) {
                     if (maskPixels[x0] == 0 && !isInBrokenLcZone) {
+                        targetPixelIndex++;
                         continue;
                     }
 
@@ -159,6 +145,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                         sceneGeoCoding.getGeoPos(pp, gp);
                         boolean pixelInsideGridCell = gp.isValid() && gp.lat <= lat0 && gp.lon > lon0 && gp.lat >= lat0 - 0.25 && gp.lon < lon0 + 0.25;
                         if (!pixelInsideGridCell) {
+                            targetPixelIndex++;
                             continue;
                         }
                     }
@@ -196,7 +183,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         int targetGridCellX = Integer.parseInt(targetCell.split(",")[0]) + x;
         int targetGridCellY = Integer.parseInt(targetCell.split(",")[1]) + y;
         final String pixel = targetGridCellX + " " + targetGridCellY;
-        return Arrays.asList(brokenLcPixels1).contains(pixel) || Arrays.asList(brokenLcPixels2).contains(pixel) || Arrays.asList(brokenLcPixels3).contains(pixel) || Arrays.asList(brokenLcPixels4).contains(pixel) || Arrays.asList(brokenLcPixels5).contains(pixel);
+        return brokenLcPixels.contains(pixel);
     }
 
     private static Mask addMask(double lon0, double lat0, Product jd) {
@@ -232,22 +219,13 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return new VectorDataNode("geo", productFeatures);
     }
 
-    protected static double getTopLat(int y, String tile) {
+    static double getTopLat(int y, String tile) {
         return 90 - Integer.parseInt(tile.split(",")[1]) / 4.0 - y * 0.25;
     }
 
-    protected static double getLeftLon(int x, String tile) {
+    static double getLeftLon(int x, String tile) {
         return -180 + Integer.parseInt(tile.split(",")[0]) / 4.0 + x * 0.25;
     }
-
-    private Product getLcSubset(Product sourceProduct, Product lcProduct) {
-        ReprojectionOp reprojectionOp = new ReprojectionOp();
-        reprojectionOp.setParameterDefaultValues();
-        reprojectionOp.setSourceProduct("collocationProduct", sourceProduct);
-        reprojectionOp.setSourceProduct(lcProduct);
-        return reprojectionOp.getTargetProduct();
-    }
-
 
     private Product getSubset(double lon0, double lat0, Product sourceProduct) {
         SubsetOp subsetOp = new SubsetOp();

@@ -3,6 +3,10 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import org.junit.Test;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -68,4 +72,15 @@ public class ModisFireGridDataSourceTest {
         assertEquals(-86, ModisFireGridDataSource.getTopLat(0, "320,704"), 1E-5);
         assertEquals(-89.75, ModisFireGridDataSource.getTopLat(15, "320,704"), 1E-5);
     }
+
+    @Test
+    public void produceBrokenLcTiles() {
+        String[] pixels = new String[]{"971 35", "972 35", "973 35", "974 35", "975 35", "976 35", "977 35", "978 35", "979 35", "980 35", "971 36", "972 36", "973 36", "974 36", "975 36", "976 36", "977 36", "978 36", "979 36", "980 36", "1094 36"};
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("broken_pixels_" + 8 + ".array"))) {
+            out.writeObject(pixels);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
 }

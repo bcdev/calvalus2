@@ -26,7 +26,6 @@ import org.esa.snap.core.util.ProductUtils;
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -130,37 +129,6 @@ public class ModisGridMapper extends AbstractGridMapper {
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCells);
     }
 
-    static String[] getXCoords(String targetTile) {
-        String x = targetTile.split(",")[0];
-        List<String> xCoords = new ArrayList<>();
-        int xAsInt = Integer.parseInt(x);
-        if (xAsInt % WINDOW_SIZE != 0) {
-            throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
-        }
-        for (int x0 = xAsInt; x0 < xAsInt + WINDOW_SIZE; x0++) {
-            String yCoord = Integer.toString(x0);
-            if (yCoord.length() == 4) {
-                maybeAddCoord(xCoords, yCoord.substring(0, 3) + "x");
-            } else if (yCoord.length() == 3) {
-                maybeAddCoord(xCoords, "0" + yCoord.substring(0, 2) + "x");
-            } else if (yCoord.length() == 2) {
-                maybeAddCoord(xCoords, "00" + yCoord.substring(0, 1) + "x");
-            } else if (yCoord.length() == 1) {
-                maybeAddCoord(xCoords, "000x");
-            } else {
-                throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
-            }
-        }
-        return xCoords.toArray(new String[0]);
-
-    }
-
-    private static void maybeAddCoord(List<String> xCoords, String coord) {
-        if (!xCoords.contains(coord)) {
-            xCoords.add(coord);
-        }
-    }
-
     @Override
     protected void validate(float burnableAreaFraction, List<double[]> baInLc, int targetGridCellIndex, double area) {
         double lcAreaSum = 0.0F;
@@ -194,22 +162,23 @@ public class ModisGridMapper extends AbstractGridMapper {
         // Mask all pixels with value 255 in the confidence level (corresponding to the pixels not observed or non-burnable in the JD layer)
         // From the remaining pixels, reassign all values of 0 to 1
 
-        System.out.println(Arrays.stream(probabilityOfBurn).filter(d -> d > 100).count());
-        System.out.println(Arrays.stream(probabilityOfBurn).filter(d -> d == 0).count());
-
-        double[] validProbs = Arrays.stream(probabilityOfBurn)
-                .filter(d -> d <= 100.0 && d >= 1.0)
-                .toArray();
-
-        System.out.println(Arrays.toString(Arrays.stream(validProbs).toArray()));
-
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
                 .map(d -> d == 0 ? 1.0 : d)
                 .filter(d -> d <= 100.0 && d >= 1.0)
                 .toArray();
 
+//        System.out.println(Arrays.stream(probabilityOfBurn).filter(d -> d == 0).count());
+//        System.out.println(Arrays.stream(probabilityOfBurn).filter(d -> d > 100).count());
+//        System.out.println(probabilityOfBurn.length);
+//        System.out.println(probabilityOfBurnMasked.length);
+//        System.out.println(Arrays.toString(Arrays.stream(probabilityOfBurn).filter(d -> d <= 100.0 && d >= 1.0).toArray()));
+
         // n is the number of pixels in the 0.25º cell that were not masked
         int n = probabilityOfBurnMasked.length;
+
+        if (n == 1) {
+            return (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+        }
 
         // pb_i = value of confidence level of pixel /100
         double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();

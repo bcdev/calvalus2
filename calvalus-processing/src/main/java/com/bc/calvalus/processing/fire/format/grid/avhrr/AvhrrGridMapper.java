@@ -122,6 +122,9 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         // n is the number of 0.05º pixels in the 0.25º cell that were not masked
         int n = probabilityOfBurnMasked.length;
 
+        // pixel area is the area of the 0.05º pixels
+        double pixelArea = gridCellArea / 25.0;
+
         // the correction_factor is the one assigned to the “BA_[year]_[month]_percentage_WGS.tif” file, in a scale 0 to 1
         double CF = burnedPercentage / 100.0;
 
@@ -131,12 +134,14 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         // Var_c = sum (pb_i*(1-pb_i)
         double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
 
-        // pixel area is the area of the 0.05º pixels
-        double pixelArea = gridCellArea / 25.0;
 
-        // SE = sqr(var_c*(n/(n-1))) * pixel area
-        float v = (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
-        return v;
+        if (n == 1) {
+            // SE = sqr(var_c) * pixel area
+            return (float) (Math.sqrt(var_c) * pixelArea);
+        } else {
+            // SE = sqr(var_c*(n/(n-1))) * pixel area
+            return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * pixelArea);
+        }
     }
 
     @Override
