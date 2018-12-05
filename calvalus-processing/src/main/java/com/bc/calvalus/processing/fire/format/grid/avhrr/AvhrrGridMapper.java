@@ -129,7 +129,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         double CF = burnedPercentage;
 
         // pb_i = value of confidence level of pixel * correction_factor /100
-        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d * CF / 100).toArray();
+        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d * CF).toArray();
 
         // Var_c = sum (pb_i*(1-pb_i)
         double var_c = Arrays.stream(pb).map(pb_i -> (pb_i * (1.0 - pb_i))).sum();
