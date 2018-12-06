@@ -78,7 +78,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
                     boolean isBurnable = data.burnable[i];
-                    if (Double.isNaN(avhrrBurnedPercentage)) {
+                    if (Double.isNaN(avhrrBurnedPercentage) && burnedPixel > 0) {
                         avhrrBurnedPercentage = burnedPixel;
                     }
                     if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
