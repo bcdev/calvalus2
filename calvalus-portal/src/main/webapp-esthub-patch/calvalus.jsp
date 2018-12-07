@@ -43,7 +43,7 @@
                 <% } %>
             </div>
             <div class="header-info-help">
-                <a href="https://esthub.maaamet.ee/help" target="_CVHelp"
+                <a href="https://esthub.maaamet.ee" target="_CVHelp"
                    style="text-decoration:none;">
                     <span class="header-info-text">HELP</span>
                 </a>
