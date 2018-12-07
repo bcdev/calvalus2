@@ -360,6 +360,11 @@ public abstract class ProcessorAdapter {
      * @return The input region to process, or {@code null} if no restriction is given.
      */
     public Rectangle getInputRectangle() throws IOException {
+        boolean processCompleteInputFile = !getMapContext().getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true);
+        if (processCompleteInputFile) {
+            return null;
+        }
+
         if (inputRectangle == null) {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
