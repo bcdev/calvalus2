@@ -62,6 +62,8 @@ public class CalvalusHadoopTool {
                 LOG.setLevel(Level.SEVERE);
             } else if (commandLine.hasOption("status")) {
                 LOG.setLevel(Level.SEVERE);
+            } else if (commandLine.hasOption("debug")) {
+                LOG.setLevel(Level.FINER);
             } else {
                 LOG.setLevel(Level.FINE);
             }
