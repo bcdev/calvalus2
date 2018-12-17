@@ -221,7 +221,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
 
     protected String getProductName(Configuration jobConfig, String fileName) {
-        String regex = jobConfig.get(JobConfigNames.OUTPUT_REGEX, "(.*)");
+        String regex = jobConfig.get(JobConfigNames.OUTPUT_REGEX, "^(.*)$");
         String replacement = jobConfig.get(JobConfigNames.OUTPUT_REPLACEMENT, "L2_of_$1");
         String dateElement = jobConfig.get(JobConfigNames.OUTPUT_DATE_ELEMENT, null);
         String dateFormat = jobConfig.get(JobConfigNames.OUTPUT_DATE_FORMAT, null);
