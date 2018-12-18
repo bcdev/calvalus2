@@ -17,8 +17,9 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
     private final Product porcProduct;
-    private final Product lcProduct;
     private final Product uncProduct;
+    private final Product lcProduct;
+    private final Band[] lcFractionBand = new Band[1+18];
     private final int tileIndex;
 
     public AvhrrFireGridDataSource(Product porcProduct, Product lcProduct, Product uncProduct, int tileIndex) {
@@ -27,6 +28,10 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         this.lcProduct = lcProduct;
         this.uncProduct = uncProduct;
         this.tileIndex = tileIndex;
+        lcFractionBand[0] = lcProduct.getBand("lc_class_19");
+        for (int i=1; i<19; ++i) {
+            lcFractionBand[i] = lcProduct.getBand(String.format("lc_class_%02d", i));
+        }
     }
 
     @Override
@@ -45,7 +50,7 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         AreaCalculator areaCalculator = new AreaCalculator(porcProduct.getSceneGeoCoding());
         Band pc = porcProduct.getBand("band_1");
         Band cl = uncProduct.getBand("band_1");
-        Band lc = lcProduct.getBand("band_1");
+        //Band lc = lcProduct.getBand("band_1");
 
         for (int sourceY = 0; sourceY < data.height; sourceY++) {
             for (int sourceX = 0; sourceX < data.width; sourceX++) {
@@ -59,9 +64,9 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 }
                 float sourceCL = getFloatPixelValue(cl, "confidence", sourcePixelIndex) / 100.0F;
                 data.probabilityOfBurn[targetPixelIndex] = sourceCL;
-                int sourceLC = getIntPixelValue(lc, "landcover", sourcePixelIndex);
-                data.lcClasses[targetPixelIndex] = sourceLC;
-                data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                //int sourceLC = getIntPixelValue(lc, "landcover", sourcePixelIndex);
+                //data.lcClasses[targetPixelIndex] = sourceLC;
+                //data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
 
                 if (sourcePC >= 0) { // has data -> observed pixel
                     data.statusPixels[targetPixelIndex] = 1;
@@ -105,4 +110,25 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                 + innerXOffset;
     }
 
+    public void readLcFraction(int x, int y, float[][] lcFraction) {
+        for (int c = 0; c < 19; ++c) {
+            for (int sourceY = 0; sourceY < 5; sourceY++) {
+                for (int sourceX = 0; sourceX < 5; sourceX++) {
+                    int sourcePixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
+                    try {
+                        float fraction = getFloatPixelValue(lcFractionBand[c], lcFractionBand[c].getName(), sourcePixelIndex);
+                        if (! Float.isNaN(fraction)) {
+                           lcFraction[c][sourceY * 5 + sourceX] = fraction;
+                        } else {
+                            lcFraction[c][sourceY * 5 + sourceX] = 0.0f;
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("failed reading LC at x=" + x + " y=" + y + " tile" + tileIndex, e);
+                        //lcFraction[c][sourceY * 5 + sourceX] = 0.0f;
+                    }
+                }
+            }
+        }
+    }
 }

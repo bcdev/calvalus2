@@ -54,8 +54,10 @@ public class AvhrrGridMapper extends AbstractGridMapper {
 
         String lcYear = year <= 1993 ? "1992" : year >= 2016 ? "2015" : "" + (year - 1);
 
-        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7.tif"), context.getConfiguration());
-        Product lcProduct = reproject(ProductIO.readProduct(lcFile));
+        //File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr/ESACCI-LC-L4-LCCS-Map-300m-P1Y-" + lcYear + "-v2.0.7.tif"), context.getConfiguration());
+        //Product lcProduct = reproject(ProductIO.readProduct(lcFile));
+        File lcFile = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc-avhrr-aggregated/ESACCI-LC-L4-LCCS-Map-300m-P1Y-aggregated-0.050000Deg-" + lcYear + "-v2.0.7.nc"), context.getConfiguration());
+        Product lcProduct = ProductIO.readProduct(lcFile);
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();

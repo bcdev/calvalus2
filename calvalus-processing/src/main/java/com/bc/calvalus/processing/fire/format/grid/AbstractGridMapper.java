@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.grid.avhrr.AvhrrFireGridDataSource;
+import com.bc.calvalus.processing.fire.format.grid.avhrr.AvhrrGridMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -54,6 +56,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             baInLc.add(baInLcBuffer);
         }
 
+        float[][] lcFraction = new float[1+getLcClassesCount()][];
+        for (int c=0; c<1+getLcClassesCount(); ++c) {
+            lcFraction[c] = new float[5*5];
+        }
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
@@ -69,6 +75,52 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     targetGridCellIndex++;
                     continue;
                 }
+
+                if (this instanceof AvhrrGridMapper) {
+
+                    ((AvhrrFireGridDataSource) dataSource).readLcFraction(x, y, lcFraction);
+
+                    double area025 = 0.0;
+                    double burnableArea025 = 0.0;
+                    double observedArea025 = 0.0;
+                    double burnedArea025 = 0.0;
+                    double[] burnedLcArea025 = new double[19];
+                    Arrays.fill(burnedLcArea025, 0.0);
+                    for (int i = 0; i < data.burnedPixels.length; i++) {
+                        double fractionOfBurnable = 1.0 - lcFraction[0][i];
+                        // sum up area
+                        area025 += data.areas[i];
+                        // sum up burnable area
+                        burnableArea025 += data.areas[i] * fractionOfBurnable;
+                        // sum up observed burnable area
+                        if (data.statusPixels[i] == 1) {
+                            observedArea025 += data.areas[i] * fractionOfBurnable;
+                        }
+                        // sum up burned area
+                        if (data.burnedPixels[i] > 0.0) {
+                            burnedArea025 += data.areas[i] * data.burnedPixels[i];
+                            // sum up burned area per LC class
+                            for (int c=1; c<19; ++c) {
+                                burnedLcArea025[c] += data.areas[i] * data.burnedPixels[i] * lcFraction[c][i] / fractionOfBurnable;
+                            }
+                        }
+                    }
+
+                    areas[targetGridCellIndex] = area025;
+                    ba[targetGridCellIndex] = burnedArea025;
+                    for (int c=1; c<19; ++c) {
+                        baInLc.get(c-1)[targetGridCellIndex] = burnedLcArea025[c];
+                    }
+                    burnableFraction[targetGridCellIndex] = (float)(burnableArea025 / area025);
+                    coverage[targetGridCellIndex] = burnableArea025 > 0 ? (float)(observedArea025 / burnableArea025) : 0.0f;
+                    patchNumber[targetGridCellIndex] = data.patchCount;
+                    if (burnedArea025 >= 0.00001) {
+                        errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, area025, burnedArea025/area025);
+                    } else {
+                        errors[targetGridCellIndex] = 0;
+                    }
+
+                } else {
 
                 double baValue = 0.0F;
                 double coverageValue = 0.0F;
@@ -125,6 +177,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     if (ba[i] < 0.00001) {
                         errors[i] = 0;
                     }
+                }
+
                 }
 
                 targetGridCellIndex++;
