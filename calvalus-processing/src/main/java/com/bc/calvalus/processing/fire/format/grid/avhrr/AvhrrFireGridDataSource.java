@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
+    private static final double EPS = 1.0E-5;
 
     private final Product porcProduct;
     private final Product uncProduct;
@@ -32,6 +33,10 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
         for (int i=1; i<19; ++i) {
             lcFractionBand[i] = lcProduct.getBand(String.format("lc_class_%02d", i));
         }
+    }
+
+    public String toString() {
+        return "AvhrrFireGridDataSource(" + tileIndex + ")";
     }
 
     @Override
@@ -70,6 +75,8 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
 
                 if (sourcePC >= 0) { // has data -> observed pixel
                     data.statusPixels[targetPixelIndex] = 1;
+                } else if (sourcePC == -2.0f) { // fraction of burnable less than 0.2
+                    data.statusPixels[targetPixelIndex] = 2;
                 }
 
                 int x1 = sourcePixelIndex % porcProduct.getSceneRasterWidth();
@@ -117,6 +124,9 @@ public class AvhrrFireGridDataSource extends AbstractFireGridDataSource {
                     int sourcePixelIndex = getPixelIndex(x, y, sourceX, sourceY, tileIndex);
                     try {
                         float fraction = getFloatPixelValue(lcFractionBand[c], lcFractionBand[c].getName(), sourcePixelIndex);
+                        if (fraction > 1.0 - EPS) {
+                            fraction = 1.0f;
+                        }
                         if (! Float.isNaN(fraction)) {
                            lcFraction[c][sourceY * 5 + sourceX] = fraction;
                         } else {

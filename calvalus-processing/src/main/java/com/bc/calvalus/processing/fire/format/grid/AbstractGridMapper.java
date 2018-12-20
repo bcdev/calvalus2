@@ -82,6 +82,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                     double area025 = 0.0;
                     double burnableArea025 = 0.0;
+                    double burnable20PercentArea025 = 0.0;
                     double observedArea025 = 0.0;
                     double burnedArea025 = 0.0;
                     double[] burnedLcArea025 = new double[19];
@@ -90,8 +91,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         double fractionOfBurnable = 1.0 - lcFraction[0][i];
                         // sum up area
                         area025 += data.areas[i];
-                        // sum up burnable area
+                        // sum up burnable area (and the rather doubtful burnable areas with fraction >= 0.2)
                         burnableArea025 += data.areas[i] * fractionOfBurnable;
+                        if (data.statusPixels[i] != 2) {
+                            burnable20PercentArea025 += data.areas[i] * fractionOfBurnable;
+                        }
                         // sum up observed burnable area
                         if (data.statusPixels[i] == 1) {
                             observedArea025 += data.areas[i] * fractionOfBurnable;
@@ -112,7 +116,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         baInLc.get(c-1)[targetGridCellIndex] = burnedLcArea025[c];
                     }
                     burnableFraction[targetGridCellIndex] = (float)(burnableArea025 / area025);
-                    coverage[targetGridCellIndex] = burnableArea025 > 0 ? (float)(observedArea025 / burnableArea025) : 0.0f;
+                    // tough rather doubtful we map non-burnable to not observed as requested by UAH
+                    coverage[targetGridCellIndex] = burnable20PercentArea025 > 0.0 ? (float)(observedArea025 / burnable20PercentArea025) : 0.0f;
                     patchNumber[targetGridCellIndex] = data.patchCount;
                     if (burnedArea025 >= 0.00001) {
                         errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, area025, burnedArea025/area025);
