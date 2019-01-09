@@ -1,5 +1,6 @@
 package com.bc.calvalus.api;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.AbstractFileSystemService;
 import com.bc.calvalus.inventory.FileSystemService;
@@ -120,7 +121,7 @@ public class ProcessorPackageResource {
             FileItem item = getFileItem(request);
             String zipFileName = item.getName();
             String bundleId = zipFileName.toLowerCase().endsWith(".zip") ? zipFileName.substring(0, zipFileName.length()-4) : zipFileName;
-            String bundlePath = AbstractFileSystemService.getUserPath(userName, bundleId);
+            String bundlePath = AbstractFileSystemService.getUserPath(userName, "software/" + bundleId);
             // delete existing bundle before upload
             FileSystemService fileSystemService = serviceContainer.getFileSystemService();
             fileSystemService.removeDirectory(userName, bundlePath);
@@ -128,10 +129,9 @@ public class ProcessorPackageResource {
                 byte[] buffer = new byte[8192];
                 while (true) {
                     ZipEntry entry = in.getNextEntry();
-                    if (entry == null) {
-                        break;
-                    }
+                    if (entry == null) { break; }
                     String fileName = entry.getName();
+                    if (fileName.endsWith("/")) { continue; }
                     String filePath = bundlePath + "/" + fileName;
                     try (OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, filePath), 64 * 1024)) {
                         int len;
