@@ -7,8 +7,6 @@ import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.ContextRetrievalService;
-import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
@@ -68,7 +66,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     };
 
     private final BackendServiceAsync backendService;
-    private final ContextRetrievalServiceAsync retrievalService;
     private boolean initialised;
 
     // Data provided by various external services
@@ -105,7 +102,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
-        retrievalService = GWT.create(ContextRetrievalService.class);
         productionListFiltered = true;
     }
 
@@ -214,11 +210,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     @Override
     public BackendServiceAsync getBackendService() {
         return backendService;
-    }
-
-    @Override
-    public ContextRetrievalServiceAsync getContextRetrievalService() {
-        return retrievalService;
     }
 
     @Override

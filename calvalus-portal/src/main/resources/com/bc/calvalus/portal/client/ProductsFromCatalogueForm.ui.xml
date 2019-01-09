@@ -19,6 +19,8 @@
                         <g:FlowPanel styleName="{style.fileCount}">
                             <g:InlineLabel styleName="{style.fileCountLabel}">File count:</g:InlineLabel>
                             <g:InlineLabel ui:field="inputFileCount"/>
+                            <g:HorizontalPanel height="1em"/>
+                            <g:InlineLabel ui:field="warningMessage"/>
                         </g:FlowPanel>
                     </g:FlowPanel>
 

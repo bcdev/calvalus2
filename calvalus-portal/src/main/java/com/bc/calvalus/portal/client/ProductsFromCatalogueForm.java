@@ -2,6 +2,8 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -40,6 +42,9 @@ public class ProductsFromCatalogueForm extends Composite {
     InlineLabel inputFileCount;
 
     @UiField
+    InlineLabel warningMessage;
+
+    @UiField
     Button pasteFromCatalogueButton;
 
     @UiField
@@ -64,6 +69,10 @@ public class ProductsFromCatalogueForm extends Composite {
                                           "The selected input files are not consistent with the selected input file set. " +
                                           "To change the input file set, please first clear the input files selection");
         }
+        if (warningMessage.getText().endsWith("Nothing to process.")) {
+            throw new ValidationException(this, "The selected inputs from catalogue are not contained in any processing" +
+                    " collection. Please select a different set of inputs.");
+        }
     }
 
     public Map<String, String> getValueMap() {
@@ -82,6 +91,7 @@ public class ProductsFromCatalogueForm extends Composite {
         }
         updateProductListTextArea();
         updateFileCount();
+        updateWarningMessage(parameters.get("warningMessage"));
     }
 
     // do not remove the static modifier even though suggested by IntelliJ
@@ -99,8 +109,13 @@ public class ProductsFromCatalogueForm extends Composite {
     }
 
     void addInputSelectionHandler(InputSelectionHandler inputSelectionHandler) {
-        pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().
-                    getInputSelection(portal.getUserName(), inputSelectionHandler.getInputSelectionChangedCallback()));
+        pasteFromCatalogueButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                portal.getBackendService().getInputSelection(portal.getUserName(), inputSelectionHandler.getInputSelectionChangedCallback());
+
+            }
+        });
         clearSelectionButton.addClickHandler(event -> inputSelectionHandler.onClearSelectionClick());
     }
 
@@ -123,4 +138,9 @@ public class ProductsFromCatalogueForm extends Composite {
     private void updateFileCount() {
         inputFileCount.setText(String.valueOf(productIdentifiersCount));
     }
+
+    private void updateWarningMessage(String warningMessage) {
+        this.warningMessage.setText(warningMessage != null ? warningMessage : "");
+    }
+
 }

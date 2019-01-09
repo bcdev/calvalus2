@@ -66,6 +66,7 @@ class UIUtils {
             }
             parameters.put("geoInventory", inputSelection.getCollectionName());
             parameters.put("collectionName", inputSelection.getCollectionName());
+            parameters.put("warningMessage", inputSelection.getWarningMessage());
         }
         return parameters;
     }
