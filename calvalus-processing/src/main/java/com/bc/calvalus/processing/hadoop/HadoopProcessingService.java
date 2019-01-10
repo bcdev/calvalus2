@@ -682,4 +682,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
         return inputStream;
     }
+
+    @Override
+    public void invalidateBundleCache() {
+        synchronized (bundleQueryCache) {
+            bundleQueryCache.clear();
+        }
+    }
 }

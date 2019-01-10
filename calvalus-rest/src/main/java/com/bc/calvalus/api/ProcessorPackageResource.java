@@ -20,27 +20,27 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * TODO add API doc
@@ -50,46 +50,29 @@ import java.util.zip.ZipInputStream;
 @Path("processor-packages")
 public class ProcessorPackageResource {
 
-//    @Context
-//    private ServletContext servletContext;
-//    @Context
-//    private HttpHeaders httpHeaders;
-//    @Context
-//    UriInfo uriInfo;
-//    @Context
-//    Request request;
+    static Logger LOG = CalvalusLogger.getLogger();
 
     static ServiceContainer serviceContainer = null;
     static ServiceContainer getServiceContainer(ServletContext context) throws ServletException, ProductionException {
         if (serviceContainer == null) {
-            System.out.println("constructing new service container");
+            LOG.info("constructing new service container");
             BackendConfig backendConfig = new BackendConfig(context);
             serviceContainer = new HadoopServiceContainerFactory().create(backendConfig.getConfigMap(), backendConfig.getLocalAppDataDir(), backendConfig.getLocalStagingDir());
-        } else {
-            System.out.println("using existing service container");
         }
         return serviceContainer;
     }
 
-//    public ProcessorPackageResource(UriInfo uriInfo, Request request, String id) {
-//        this.uriInfo = uriInfo;
-//        this.request = request;
-//        this.id = id;
-//    }
-//
-//    public ProcessorPackageResource() {}
-//
     // processor package collection methods
 
     @GET
-    @Path("/")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    public List<ProcessorPackageEntry> getEntries(@Context HttpServletRequest request, @Context ServletContext context) {
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    public List<ProcessorPackageEntry> list(@Context HttpServletRequest request, @Context ServletContext context) {
         try {
             String userName = request.getUserPrincipal().getName();
             ServiceContainer serviceContainer = getServiceContainer(context);
             BundleFilter filter = new BundleFilter().withProvider(BundleFilter.PROVIDER_USER).withTheUser(userName);
             BundleDescriptor[] descriptors = serviceContainer.getProductionService().getBundles(userName, filter);
+            LOG.info("listing processor packages: " + descriptors.length);
             List<ProcessorPackageEntry> accu = new ArrayList<>();
             for (BundleDescriptor descriptor : descriptors) {
                 accu.add(new ProcessorPackageEntry(descriptor.getBundleName(),
@@ -100,21 +83,14 @@ public class ProcessorPackageResource {
 //            accu.add(new ProcessorPackageEntry("somename", "someversion", "someowner", "somelocation"));
             return accu;
         } catch (ProductionException|ServletException e) {
-            throw new RuntimeException(e);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                                      .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
         }
     }
 
-//    @POST
-//    @Path("/")
-//    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})  // TODO
-//    public ProcessorPackageEntry createEntry() {
-//         return null;  // TODO Response.created(uriInfo.getAbsolutePath()).build();
-//    }
-
     @POST
-    @Path("/")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response uploadContent(@Context HttpServletRequest request, @Context ServletContext context) {
+    public Response uploadContent(@Context HttpServletRequest request, @Context ServletContext context, @Context UriInfo uriInfo) {
         try {
             String userName = request.getUserPrincipal().getName();
             ServiceContainer serviceContainer = getServiceContainer(context);
@@ -124,8 +100,14 @@ public class ProcessorPackageResource {
             String bundlePath = AbstractFileSystemService.getUserPath(userName, "software/" + bundleId);
             // delete existing bundle before upload
             FileSystemService fileSystemService = serviceContainer.getFileSystemService();
-            fileSystemService.removeDirectory(userName, bundlePath);
-            try (ZipInputStream in = new ZipInputStream(new BufferedInputStream(item.getInputStream(), 64 * 1024))) {
+            if (fileSystemService.pathExists(bundlePath)) {
+                LOG.info("replacing processor package " + bundleId);
+                fileSystemService.removeDirectory(userName, bundlePath);
+            } else {
+                LOG.info("adding new processor package " + bundleId);
+            }
+            serviceContainer.getProductionService().invalidateBundleCache();
+            try (ZipInputStream in = new ZipInputStream(new BufferedInputStream(item.getInputStream(), 8192))) {
                 byte[] buffer = new byte[8192];
                 while (true) {
                     ZipEntry entry = in.getNextEntry();
@@ -133,7 +115,7 @@ public class ProcessorPackageResource {
                     String fileName = entry.getName();
                     if (fileName.endsWith("/")) { continue; }
                     String filePath = bundlePath + "/" + fileName;
-                    try (OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, filePath), 64 * 1024)) {
+                    try (OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, filePath), 8192)) {
                         int len;
                         while ((len = in.read(buffer)) > 0) {
                             out.write(buffer, 0, len);
@@ -141,9 +123,10 @@ public class ProcessorPackageResource {
                     }
                 }
             }
-            return null;  // TODO Response.created(uriInfo.getAbsolutePath()).build();
+            return Response.created(URI.create(uriInfo.toString() + "/" + bundleId)).build();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                                      .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
         }
     }
 
@@ -158,43 +141,100 @@ public class ProcessorPackageResource {
         return null;
     }
 
-//
-//    // processor package entry methods
-//
-//    @GET
-//    @Path("{name}/{version}")
-//    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-//    public ProcessorPackageEntry getEntry(@PathParam("name") String name, @PathParam("version") String version) {
-//        ProcessorPackageEntry entry = null;
-//        if (entry == null) {
-//            throw new RuntimeException("Processor " + name + "-" + version + " not found");
-//        }
-//        return entry;
-//    }
-//
-//    @DELETE
-//    @Path("{name}/{version}")
-//    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-//    public void deleteEntry(@PathParam("name") String name, @PathParam("version") String version) {
-//        ProcessorPackageEntry entry = null;
-//        if (entry == null) {
-//            throw new RuntimeException("Processor " + name + "-" + version + " not found");
-//        }
-//    }
-//
-//    // processor package content methods
-//
-//    @GET
-//    @Path("{name}/{version}/content")
-//    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-//    public Response getContent(@PathParam("name") String name, @PathParam("version") String version) {
-//        ProcessorPackageEntry entry = null;
-//        if (entry == null) {
-//            throw new RuntimeException("Processor " + name + "-" + version + " not found");
-//        }
-//        return null;
-//    }
-//
+
+    // processor package entry methods
+
+    @GET
+    @Path("{name}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML})
+    public ProcessorPackageEntry getEntry(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) {
+        try {
+            LOG.info("showing processor package " + name);
+            String userName = request.getUserPrincipal().getName();
+            ServiceContainer serviceContainer = getServiceContainer(context);
+            BundleFilter filter = new BundleFilter().withProvider(BundleFilter.PROVIDER_USER).withTheUser(userName);
+            BundleDescriptor[] descriptors = serviceContainer.getProductionService().getBundles(userName, filter);
+            for (BundleDescriptor descriptor : descriptors) {
+                if ((descriptor.getBundleName() + "-" + descriptor.getBundleVersion()).equals(name)) {
+                    return new ProcessorPackageEntry(descriptor.getBundleName(),
+                                                     descriptor.getBundleVersion(),
+                                                     descriptor.getOwner(),
+                                                     descriptor.getBundleLocation());
+                }
+            }
+        } catch (ProductionException|ServletException e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                                      .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+        }
+        throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+    }
+
+    @DELETE
+    @Path("{name}")
+    public void deleteEntry(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) {
+        try {
+            LOG.info("deleting processor package " + name);
+            String userName = request.getUserPrincipal().getName();
+            ServiceContainer serviceContainer = getServiceContainer(context);
+            String bundlePath = AbstractFileSystemService.getUserPath(userName, "software/" + name);
+            FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+            fileSystemService.removeDirectory(userName, bundlePath);
+            serviceContainer.getProductionService().invalidateBundleCache();
+        } catch (Exception e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                                      .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+        }
+    }
+
+    // processor package content methods
+
+    @GET
+    @Path("{name}/content")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response getContent(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) {
+        try {
+            String userName = request.getUserPrincipal().getName();
+            ServiceContainer serviceContainer = getServiceContainer(context);
+            String bundlePath = AbstractFileSystemService.getUserPath(userName, "software/" + name);
+            FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+            if (! fileSystemService.pathExists(bundlePath)) {
+                LOG.info("retrieving content of processor package failed - not found: " + name);
+                throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
+            }
+            LOG.info("retrieving content of processor package " + name);
+            List<String> pathPatterns = new ArrayList<>();
+            pathPatterns.add(bundlePath + "/.*");
+            final String[] paths = fileSystemService.globPaths(userName, pathPatterns);
+            System.out.println(paths.length + " find in " + bundlePath);
+            StreamingOutput stream = new StreamingOutput() {
+                @Override
+                public void write(OutputStream outputStream) throws IOException, WebApplicationException {
+                    ZipOutputStream zip = new ZipOutputStream(new BufferedOutputStream(outputStream, 8192));
+                    for (String path : paths) {
+                        System.out.println("adding " + path.substring(path.lastIndexOf('/')+1) + " to zip");
+                        zip.putNextEntry(new ZipEntry(path.substring(path.lastIndexOf('/')+1)));
+                        byte[] buffer = new byte[8192];
+                        int l;
+                        try (InputStream in = new BufferedInputStream(fileSystemService.openFile(userName, path))) {
+                            while ((l = in.read(buffer, 0, buffer.length)) > 0) {
+                                zip.write(buffer, 0, l);
+                            }
+                        }
+                        zip.closeEntry();
+                    }
+                    zip.finish();
+                    zip.flush();
+                }
+            };
+            Response.ResponseBuilder response = Response.ok(stream);
+            response.header("Content-Disposition", "attachment; filename=\"" + name + ".zip\"");
+            return response.build();
+        } catch (Exception e) {
+            throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                                                      .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
+        }
+    }
+
 //    @PUT
 //    @Path("{name}/{version}/content")
 //    @Consumes(MediaType.APPLICATION_OCTET_STREAM)

@@ -106,11 +106,9 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     @Override
     public boolean pathExists(String path) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
-
-        Path p = new Path(path);
-        FileSystem fileSystem = p.getFileSystem(conf);
-
-        return fileSystem.exists(p);
+        FileSystem fileSystem = new Path(path).getFileSystem(conf);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.exists(qualifiedPath);
     }
 
     @Override
