@@ -1,4 +1,4 @@
-package com.bc.calvalus.api;
+package com.bc.calvalus.api.model;
 
 import java.io.File;
 import java.util.ArrayList;

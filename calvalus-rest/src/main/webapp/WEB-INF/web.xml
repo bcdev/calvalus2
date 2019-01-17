@@ -4,6 +4,12 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0">
 
+    <!--
+    replacement for ...
+    @ApplicationPath("/*")
+    public class ApplicationConfig extends Application {}
+    -->
+
     <display-name>Calvalus REST</display-name>
     <servlet>
         <servlet-name>API</servlet-name>

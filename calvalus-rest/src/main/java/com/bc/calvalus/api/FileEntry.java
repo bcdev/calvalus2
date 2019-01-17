@@ -14,16 +14,24 @@ import java.util.TimeZone;
 @XmlRootElement
 public class FileEntry {
 
-    private static final String SYSTEM_PATH = "/calvalus/software/1.0";
-    private static final String USER_HOME = "/calvalus/home";
-    private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd`T`HH:mm:ss");
+    private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     private String name;
+    private String owner;
     private Date modificationDate;
     private long size;
+
+    public FileEntry() {}
+
+    public FileEntry(String name, String owner, Date modificationDate, long size) {
+        this.name = name;
+        this.owner = owner;
+        this.modificationDate = modificationDate;
+        this.size = size;
+    }
 
     public String getName() {
         return name;
@@ -33,12 +41,12 @@ public class FileEntry {
         this.name = name;
     }
 
-    public Date getModificationDate() {
-        return modificationDate;
-    }
+    public String getOwner() { return owner; }
 
-    public void setModificationDate(Date modificationDate) {
-        this.modificationDate = modificationDate;
+    public void setOwner(String owner) { this.owner = owner; }
+
+    public String getModificationDate() {
+        return ISO_DATE_FORMAT.format(modificationDate);
     }
 
     public void setModifiationDate(String dateString) throws ParseException {
@@ -54,5 +62,5 @@ public class FileEntry {
     }
 
     @Override
-    public String toString() { return String.format("%s %s %s", name, size, ISO_DATE_FORMAT.format(modificationDate)); }
+    public String toString() { return String.format("%s %s %s %d", name, owner, ISO_DATE_FORMAT.format(modificationDate), size); }
 }
