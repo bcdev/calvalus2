@@ -63,7 +63,8 @@ public class PropertiesHandler {
             } else {
                 for (DomElement element : childElements) {
                     String name = nameCoder.decodeNode(element.getName());
-                    String value = nameCoder.decodeNode(element.getValue());
+                    String elementValue = element.getValue();
+                    String value = elementValue != null ? nameCoder.decodeNode(elementValue) : null;
                     if (value != null && element.getChildCount() == 0) {
                         properties.setProperty(prefix + name, value);
                     } else {
