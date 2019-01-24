@@ -103,10 +103,10 @@ public class WpsXmlRequestConverterTest {
                                        "      <ows:Identifier>calvalus.plainText.parameter</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
                                        "This is a multiline\n" +
                                        "Textfield\n" +
-                                       "</parameters></wps:LiteralData>\n" +
+                                       "&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "  </wps:DataInputs>\n" +
@@ -200,19 +200,19 @@ public class WpsXmlRequestConverterTest {
                                        "      <ows:Identifier>calvalus.l2.parameters</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
-                                       "   <doSmile>true</doSmile>\n" +
-                                       "    <reproVersion>AUTO_DETECT</reproVersion>\n</parameters></wps:LiteralData>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
+                                       "   &lt;doSmile&gt;true&lt;/doSmile&gt;\n" +
+                                       "    &lt;reproVersion&gt;AUTO_DETECT&lt;/reproVersion&gt;\n&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "    <wps:Input>\n" +
                                        "      <ows:Identifier>calvalus.plainText.parameter</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
                                        "This is a multiline\n" +
                                        "Textfield\n" +
-                                       "</parameters></wps:LiteralData>\n" +
+                                       "&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "  </wps:DataInputs>\n" +

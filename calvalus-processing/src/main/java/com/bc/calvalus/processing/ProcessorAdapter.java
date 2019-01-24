@@ -360,10 +360,13 @@ public abstract class ProcessorAdapter {
      * @return The input region to process, or {@code null} if no restriction is given.
      */
     public Rectangle getInputRectangle() throws IOException {
-        boolean processCompleteInputFile = !getMapContext().getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true);
-        if (processCompleteInputFile) {
-            return null;
-        }
+        // Unclear why we had introduced this in November 2018.
+        // Removed January 2019 because it is harmful for graphs that do resamping and output subsetting
+        // because they will process all inputs including the non-overlapping ones.
+        //boolean processCompleteInputFile = !getMapContext().getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true);
+        //if (processCompleteInputFile) {
+        //    return null;
+        //}
 
         if (inputRectangle == null) {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);

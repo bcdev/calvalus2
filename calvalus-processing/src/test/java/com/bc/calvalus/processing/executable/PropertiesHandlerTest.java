@@ -146,6 +146,6 @@ public class PropertiesHandlerTest {
         );
         assertNotNull(properties);
         System.out.println("properties = " + properties);
-        assertEquals(24, properties.size());
+        assertEquals(19, properties.size());
     }
 }
