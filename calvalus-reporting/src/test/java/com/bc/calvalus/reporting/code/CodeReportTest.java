@@ -4,12 +4,18 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.bc.calvalus.reporting.common.UsageStatistic;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 
 /**
  * @author hans
  */
 public class CodeReportTest {
+
+    @Before
+    public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("code-de.properties");
+    }
 
     @Test
     public void canDeserializeCorrectly() {
