@@ -101,7 +101,7 @@ public class GeoServer {
         putCoverageStoreSingleGeoTiff(inputStream, geoserverRestURL, workspace, store, layer);
 
         if (style != null && !style.isEmpty()) {
-            putLayerStyle(geoserverRestURL, workspace, store, style);
+            putLayerStyle(geoserverRestURL, workspace, layer, style);
         }
     }
 
@@ -205,7 +205,7 @@ public class GeoServer {
     public void putLayerStyle(String geoserverRestURL, String workspace, String layer, String style) throws IOException {
         String payload = "<layer><defaultStyle><name>" + style + "</name></defaultStyle></layer>";
         String uploadStyleURL = String.format("%s/workspaces/%s/layers/%s", geoserverRestURL, workspace, layer);
-        LOGGER.info("Updating layer style to '" + style + "':" + uploadStyleURL);
+        LOGGER.info("Updating layer style to '" + style + "': " + uploadStyleURL);
 
         URL url = new URL(uploadStyleURL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
