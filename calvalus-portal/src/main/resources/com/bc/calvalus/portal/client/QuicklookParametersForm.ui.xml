@@ -307,6 +307,152 @@
 
         </g:HTMLPanel>
 
+        <g:HTMLPanel ui:field="geoServerPanel" styleName="{style.quicklookParametersPanel}">
+            <table cellspacing="2" width="100%" border="0px">
+                <!-- GeoServer REST URL -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer REST URL:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerRestUrl' width="30em" styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The URL to GeoServer's REST API (e.g. http://myhost/geoserver/rest/
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer username -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer username:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerUsername' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The username for GeoServer authentication
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer password -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer password:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerPassword' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The password for GeoServer authentication
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Workspace -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer workspace:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerWorkspace' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer workspace's name
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Store -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer store:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerStore' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer store's name
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Layer -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer layer:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerLayer' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer layer's name
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Style -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer style:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerStyle' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer style name
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+
+        </g:HTMLPanel>
+
         <g:HTML>
             <br/>
         </g:HTML>

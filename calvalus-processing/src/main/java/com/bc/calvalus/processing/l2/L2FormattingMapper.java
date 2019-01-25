@@ -21,6 +21,7 @@ import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.analysis.GeoServer;
 import com.bc.calvalus.processing.analysis.QLMapper;
 import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -39,6 +40,7 @@ import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.logging.Level;
@@ -163,21 +165,35 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
         List<Quicklooks.QLConfig> qlConfigList = getValidQlConfigs(jobConfig);
         for (Quicklooks.QLConfig qlConfig : qlConfigList) {
-            String imageFileName;
+            String imageBaseName;
 //            if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
 //                    && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
-//                imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+//                imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
 //            } else {
-                imageFileName = productName;
+            imageBaseName = productName;
 //            }
             if (qlConfigList.size() > 1) {
-                imageFileName = imageFileName + "_" + qlConfig.getBandName();
+                imageBaseName = imageBaseName + "_" + qlConfig.getBandName();
             }
+
             try {
-                QLMapper.createQuicklook(targetProduct, imageFileName, context, qlConfig);
+                QLMapper.createQuicklook(targetProduct, imageBaseName, context, qlConfig);
             } catch (Exception e) {
                 String msg = String.format("Could not create quicklook image '%s'.", qlConfig.getBandName());
                 LOG.log(Level.WARNING, msg, e);
+            }
+
+            if( qlConfig.getGeoServerRestUrl() != null ) {
+                // upload geoTiff to GeoServer
+                try {
+                    GeoServer geoserver = new GeoServer(context, targetProduct, qlConfig);
+                    String imageFilename = QLMapper.getImageFileName(imageBaseName, qlConfig);
+                    InputStream inputStream = QLMapper.createInputStream(context, imageFilename);
+                    geoserver.uploadImage(inputStream, imageBaseName);
+                } catch (Exception e) {
+                    String msg = String.format("Could not upload quicklook image '%s' to GeoServer.", qlConfig.getBandName());
+                    LOG.log(Level.WARNING, msg, e);
+                }
             }
         }
         LOG.info("Finished creating quicklooks.");

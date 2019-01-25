@@ -24,6 +24,7 @@ import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -48,7 +49,9 @@ import org.opengis.parameter.ParameterValueGroup;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.Logger;
@@ -75,18 +78,25 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 final String productName = FileUtils.getFilenameWithoutExtension(inputFileName);
                 final Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
                 for (Quicklooks.QLConfig config : configs) {
-                    final String imageFileName;
+                    final String imageBaseName;
                     if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
                             && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
                         if (configs.length == 1) {
-                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
+                            imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
                         } else {
-                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
+                            imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
                         }
                     } else {
-                        imageFileName = productName + "_" + config.getBandName();
+                        imageBaseName = productName + "_" + config.getBandName();
                     }
-                    createQuicklook(product, imageFileName, context, config);
+                    createQuicklook(product, imageBaseName, context, config);
+                    if( config.getGeoServerRestUrl() != null ) {
+                        // upload geoTiff to GeoServer
+                        GeoServer geoserver = new GeoServer(context, product, config);
+                        String imageFilename = QLMapper.getImageFileName(imageBaseName, config);
+                        InputStream inputStream = QLMapper.createInputStream(context, imageFilename);
+                        geoserver.uploadImage(inputStream, imageBaseName);
+                    }
                 }
             }
         } finally {
@@ -95,13 +105,14 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
+    public static void createQuicklook(Product product, String imageBaseName, Mapper.Context context,
                                        Quicklooks.QLConfig config) throws IOException, InterruptedException {
 //        try {
+            String imageFileName = getImageFileName(imageBaseName, config);
             RenderedImage quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
                 if( isGeoTiff(config)) {
-                    OutputStream outputStream = createOutputStream(context, imageFileName + ".tiff");
+                    OutputStream outputStream = createOutputStream(context, imageFileName);
                     LOGGER.info("outputStream: " + outputStream.toString());
                     OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
 
@@ -140,7 +151,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                     }
                 }
                 else {
-                    OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
+                    OutputStream outputStream = createOutputStream(context, imageFileName);
                     LOGGER.info("outputStream: " + outputStream.toString());
                     OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
                     try {
@@ -156,16 +167,37 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        }
     }
 
+
+    public static String getImageFileName(String imageBaseName, Quicklooks.QLConfig qlConfig) {
+        if( isGeoTiff(qlConfig)) {
+            return imageBaseName + ".tiff";
+        }
+        else {
+            return imageBaseName + qlConfig.getImageType();
+        }
+    }
+
+    public static Path getWorkOutputFilePath(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        return new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+    }
+
     private static boolean isGeoTiff(Quicklooks.QLConfig qlConfig) {
         return "geotiff".equalsIgnoreCase(qlConfig.getImageType());
     }
 
     private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
-        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+        Path path = getWorkOutputFilePath(context, fileName);
+        LOGGER.info("createOutputStream: path = " + path);
         final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
         return new BufferedOutputStream(fsDataOutputStream);
     }
 
+    public static InputStream createInputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        Path path = getWorkOutputFilePath(context, fileName);
+        LOGGER.info("createInputStream: path = " + path);
+        final FSDataInputStream fsDataInputStream = path.getFileSystem(context.getConfiguration()).open(path);
+        return new BufferedInputStream(fsDataInputStream);
+    }
 
     private static class BytesCountingOutputStream extends OutputStream {
 

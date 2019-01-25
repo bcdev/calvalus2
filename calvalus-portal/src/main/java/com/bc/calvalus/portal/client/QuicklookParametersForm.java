@@ -71,6 +71,8 @@ public class QuicklookParametersForm extends Composite {
     HTMLPanel multiBandPanel;
     @UiField
     HTMLPanel moreOptionsPanel;
+    @UiField
+    HTMLPanel geoServerPanel;
 
     @UiField
     RadioButton quicklookNone;
@@ -115,6 +117,21 @@ public class QuicklookParametersForm extends Composite {
     TextBox backgroundColor;
     @UiField
     CheckBox legendEnabled;
+
+    @UiField
+    TextBox geoServerRestUrl;
+    @UiField
+    TextBox geoServerUsername;
+    @UiField
+    TextBox geoServerPassword;
+    @UiField
+    TextBox geoServerWorkspace;
+    @UiField
+    TextBox geoServerStore;
+    @UiField
+    TextBox geoServerLayer;
+    @UiField
+    TextBox geoServerStyle;
 
     private DtoColorPalette[] availableColorPalettes = null;
     private Boolean pageLoaded = false;
@@ -237,12 +254,14 @@ public class QuicklookParametersForm extends Composite {
         singleBandPanel.setVisible(false);
         multiBandPanel.setVisible(false);
         moreOptionsPanel.setVisible(false);
+        geoServerPanel.setVisible(false);
     }
 
     private void quicklookSingleBandChangeHandler() {
         singleBandPanel.setVisible(true);
         multiBandPanel.setVisible(false);
         moreOptionsPanel.setVisible(true);
+        geoServerPanel.setVisible(true);
         bandNameChangeHandler();
     }
 
@@ -250,6 +269,7 @@ public class QuicklookParametersForm extends Composite {
         singleBandPanel.setVisible(false);
         multiBandPanel.setVisible(true);
         moreOptionsPanel.setVisible(true);
+        geoServerPanel.setVisible(true);
     }
 
     public void setAvailableImageTypes() {
@@ -349,6 +369,56 @@ public class QuicklookParametersForm extends Composite {
             legendEnabledXML = indentXML + "<legendEnabled>true</legendEnabled>\n";
         }
 
+        // GeoServer section...
+        // geoServerRestUrl
+        String geoServerRestUrlValue = geoServerRestUrl.getValue();
+        String geoServerRestUrlXML = "";
+        if (geoServerRestUrlValue != null && !geoServerRestUrlValue.isEmpty()) {
+            geoServerRestUrlXML = indentXML + "<geoServerRestUrl>" + geoServerRestUrlValue + "</geoServerRestUrl>\n";
+        }
+
+        // geoServerUsername
+        String geoServerUsernameValue = geoServerUsername.getValue();
+        String geoServerUsernameXML = "";
+        if (geoServerUsernameValue != null && !geoServerUsernameValue.isEmpty()) {
+            geoServerUsernameXML = indentXML + "<geoServerUsername>" + geoServerUsernameValue + "</geoServerUsername>\n";
+        }
+
+        // geoServerPassword
+        String geoServerPasswordValue = geoServerPassword.getValue();
+        String geoServerPasswordXML = "";
+        if (geoServerPasswordValue != null && !geoServerPasswordValue.isEmpty()) {
+            geoServerPasswordXML = indentXML + "<geoServerPassword>" + geoServerPasswordValue + "</geoServerPassword>\n";
+        }
+
+        // geoServerWorkspace
+        String geoServerWorkspaceValue = geoServerWorkspace.getValue();
+        String geoServerWorkspaceXML = "";
+        if (geoServerWorkspaceValue != null && !geoServerWorkspaceValue.isEmpty()) {
+            geoServerWorkspaceXML = indentXML + "<geoServerWorkspace>" + geoServerWorkspaceValue + "</geoServerWorkspace>\n";
+        }
+
+        // geoServerStore
+        String geoServerStoreValue = geoServerStore.getValue();
+        String geoServerStoreXML = "";
+        if (geoServerStoreValue != null && !geoServerStoreValue.isEmpty()) {
+            geoServerStoreXML = indentXML + "<geoServerStore>" + geoServerStoreValue + "</geoServerStore>\n";
+        }
+
+        // geoServerLayer
+        String geoServerLayerValue = geoServerLayer.getValue();
+        String geoServerLayerXML = "";
+        if (geoServerLayerValue != null && !geoServerLayerValue.isEmpty()) {
+            geoServerLayerXML = indentXML + "<geoServerLayer>" + geoServerLayerValue + "</geoServerLayer>\n";
+        }
+
+        // geoServerStyle
+        String geoServerStyleValue = geoServerStyle.getValue();
+        String geoServerStyleXML = "";
+        if (geoServerStyleValue != null && !geoServerStyleValue.isEmpty()) {
+            geoServerStyleXML = indentXML + "<geoServerStyle>" + geoServerStyleValue + "</geoServerStyle>\n";
+        }
+
         String quicklookParameters = "";
         if (quicklookSingleBand.getValue()) {
 
@@ -378,6 +448,13 @@ public class QuicklookParametersForm extends Composite {
                     subSamplingYXML +
                     backgroundColorXML +
                     legendEnabledXML +
+                    geoServerRestUrlXML +
+                    geoServerUsernameXML +
+                    geoServerPasswordXML +
+                    geoServerWorkspaceXML +
+                    geoServerStoreXML +
+                    geoServerLayerXML +
+                    geoServerStyleXML +
                     "    </config>\n" +
                     "  </quicklooks>\n" +
                     "</parameters>";
@@ -432,6 +509,13 @@ public class QuicklookParametersForm extends Composite {
                     subSamplingYXML +
                     backgroundColorXML +
                     legendEnabledXML +
+                    geoServerRestUrlXML +
+                    geoServerUsernameXML +
+                    geoServerPasswordXML +
+                    geoServerWorkspaceXML +
+                    geoServerStoreXML +
+                    geoServerLayerXML +
+                    geoServerStyleXML +
                     "    </config>\n" +
                     "  </quicklooks>\n" +
                     "</parameters>";
@@ -449,7 +533,6 @@ public class QuicklookParametersForm extends Composite {
         String quicklookParametersValue = parameters.get("calvalus.ql.parameters");
         if (quicklookParametersValue == null || quicklookParametersValue.isEmpty()) {
 
-
             bandName.setValue(null);
             colorPalette.setSelectedIndex(0);
 
@@ -466,6 +549,14 @@ public class QuicklookParametersForm extends Composite {
             subSamplingX.setValue(null);
             maskOverlays.setValue(null);
             legendEnabled.setValue(false);
+
+            geoServerRestUrl.setValue(null);
+            geoServerUsername.setValue(null);
+            geoServerPassword.setValue(null);
+            geoServerWorkspace.setValue(null);
+            geoServerStore.setValue(null);
+            geoServerLayer.setValue(null);
+            geoServerStyle.setValue(null);
 
             // set no quicklook radio button in GUI
             quicklookNone.setValue(true, true);
@@ -572,6 +663,34 @@ public class QuicklookParametersForm extends Composite {
                 legendEnabled.setValue(true);
             else
                 legendEnabled.setValue(false);
+
+            // geoServerRestUrl
+            String geoServerRestUrlValue = getTagValue(dom, "geoServerRestUrl");
+            geoServerRestUrl.setValue(geoServerRestUrlValue);
+
+            // geoServerUsername
+            String geoServerUsernameValue = getTagValue(dom, "geoServerUsername");
+            geoServerUsername.setValue(geoServerUsernameValue);
+
+            // geoServerPassword
+            String geoServerPasswordValue = getTagValue(dom, "geoServerPassword");
+            geoServerPassword.setValue(geoServerPasswordValue);
+
+            // geoServerWorkspace
+            String geoServerWorkspaceValue = getTagValue(dom, "geoServerWorkspace");
+            geoServerWorkspace.setValue(geoServerWorkspaceValue);
+
+            // geoServerStore
+            String geoServerStoreValue = getTagValue(dom, "geoServerStore");
+            geoServerStore.setValue(geoServerStoreValue);
+
+            // geoServerLayer
+            String geoServerLayerValue = getTagValue(dom, "geoServerLayer");
+            geoServerLayer.setValue(geoServerLayerValue);
+
+            // geoServerStyle
+            String geoServerStyleValue = getTagValue(dom, "geoServerStyle");
+            geoServerStyle.setValue(geoServerStyleValue);
         }
     }
 
