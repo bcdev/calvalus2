@@ -23,8 +23,11 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.analysis.QuicklookGenerator;
 import com.bc.calvalus.processing.analysis.Quicklooks;
+import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.hadoop.HDFSSimpleFileSystem;
+import com.bc.calvalus.processing.hadoop.NoRecordReader;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -39,7 +42,18 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.StatusReporter;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.task.MapContextImpl;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
+import org.apache.htrace.fasterxml.jackson.core.JsonParser;
+import org.apache.htrace.fasterxml.jackson.core.type.TypeReference;
+import org.apache.htrace.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.GeoCoding;
@@ -90,6 +104,50 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
+
+    /** For use with cdt, called with request and input as parameters */
+    public static void main(String args[]) {
+        try {
+            final String path = args[0];
+            final String input = args[1];
+            final String output = args[2];
+
+            final ObjectMapper jsonParser = new ObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+            final Map<String, Object> request = jsonParser.readValue(new File(path), VALUE_TYPE_REF);
+            final Configuration conf = new Configuration();
+            for (Map.Entry<String,Object> entry : request.entrySet()) {
+                conf.set(entry.getKey(), String.valueOf(entry.getValue()));
+            }
+            // TODO translate all request parameters
+            translateParameter(conf, "productionName", "mapreduce.job.name");
+            translateParameter(conf, "processorType", "calvalus.l2.processorType");  // TODO
+            translateParameter(conf, "processorName", "calvalus.l2.scriptFiles");  // TODO
+            
+            conf.set("mapreduce.output.fileoutputformat.outputdir", output);
+
+            final FileSplit split = new ProductSplit(new Path(input), 1, new String[] { "localhost" });
+            final NoRecordReader reader = new NoRecordReader();
+            final StatusReporter reporter = new TaskAttemptContextImpl.DummyReporter();
+
+            final String productionName = String.valueOf(request.get("productionName")).replaceAll(" ", "_");
+            final TaskAttemptID task = new TaskAttemptID(productionName,0, TaskType.MAP, 0, 0);
+            final TaskAttemptContextImpl taskContext = new TaskAttemptContextImpl(conf, task, reporter);
+            final OutputCommitter committer = new SimpleOutputFormat().getOutputCommitter(taskContext);
+
+            final MapContextImpl<NullWritable, NullWritable, Text, Text> mapContext =
+                    new MapContextImpl<NullWritable, NullWritable, Text, Text>(conf, task, reader, null, committer, reporter, split);
+            final Mapper<NullWritable, NullWritable, Text, Text>.Context context =
+                    new WrappedMapper<NullWritable, NullWritable, Text, Text>().getMapContext(mapContext);
+
+            final ProcessingMapper mapper = new ProcessingMapper();
+            mapper.run(context);
+            committer.commitTask(taskContext);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
 
     /**
      * Mapper implementation method. See class comment.
