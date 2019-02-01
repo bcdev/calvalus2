@@ -106,7 +106,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
 
-    /** For use with cdt, called with request and input as parameters */
+    /** For use with cdt, called with request and input and output dir as parameters */
     public static void main(String args[]) {
         try {
             final String path = args[0];
