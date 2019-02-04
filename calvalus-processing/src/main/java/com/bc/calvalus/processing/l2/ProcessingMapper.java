@@ -177,9 +177,12 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
         translateParameters(context);
         final Configuration jobConfig = context.getConfiguration();
+        final String outputFormat = jobConfig.get(JobConfigNames.OUTPUT_FORMAT);
+        final String outputCompression = jobConfig.get(JobConfigNames.OUTPUT_COMPRESSION);
+
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         final String productName = getProductName(jobConfig, processorAdapter.getInputPath().getName());
-        final ProductFormatter productFormatter = new ProductFormatter(productName, jobConfig.get(JobConfigNames.OUTPUT_FORMAT), jobConfig.get(JobConfigNames.OUTPUT_COMPRESSION));
+        final ProductFormatter productFormatter = outputFormat != null ? new ProductFormatter(productName, outputFormat, outputCompression) : null;
 
         final ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;
@@ -192,7 +195,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
             // check and prepare, localise
 
-            if (checkFormattedOutputExists(jobConfig, context, productFormatter.getOutputFilename())) { return; }
+            if (productFormatter != null && checkFormattedOutputExists(jobConfig, context, productFormatter.getOutputFilename())) { return; }
             processorAdapter.prepareProcessing();
             if (checkNativeOutputExists(jobConfig, context, processorAdapter)) { return; }
             if (checkInputIntersectsRoi(jobConfig, context, processorAdapter)) { return; }
@@ -207,7 +210,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
                 return;
             }
 
-            if (jobConfig.getBoolean("outputNative", false) || jobConfig.get("outputFormat") == null) {
+            if (jobConfig.getBoolean("outputNative", false) || productFormatter == null) {
                 LOG.info(context.getTaskAttemptID() + " target product created");
                 processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
@@ -240,8 +243,10 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
             pm.worked(5);
 
             context.setStatus("Writing");
-            writeProductFile(targetProduct, productFormatter, context, jobConfig,
-                             productFormatter.getOutputFormat(), SubProgressMonitor.create(pm, progressForSaving));
+            if (productFormatter != null) {
+                writeProductFile(targetProduct, productFormatter, context, jobConfig,
+                                 productFormatter.getOutputFormat(), SubProgressMonitor.create(pm, progressForSaving));
+            }
             pm.worked(10);
 
         } catch (Exception e) {
