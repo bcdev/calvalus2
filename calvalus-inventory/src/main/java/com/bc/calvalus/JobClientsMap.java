@@ -70,9 +70,9 @@ public class JobClientsMap {
     public synchronized JobClient getJobClient(String userName) throws IOException {
         if (jobClientsCache.get(userName) == null) {
             System.out.println("CREATING new JobClient for: " + userName);
-            if ("anonymous".equals(userName)) {
-                new Exception("Where is anonymous created=").printStackTrace();
-            }
+//            if ("anonymous".equals(userName)) {
+//                new Exception("Where is anonymous created=").printStackTrace();
+//            }
             UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
             JobClient jobClient = null;
             try {
