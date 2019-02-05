@@ -2,7 +2,6 @@
 <head>
     <title>Close Browser Window</title>
 </head>
-<body onLoad="window.close()">
-
+<body onload=window.location='https://processing.code-de.org'>
 </body>
 </html>

@@ -193,4 +193,7 @@ public interface BackendService extends RemoteService {
      * Load details about the region data.
      */
     DtoRegionDataInfo loadRegionDataInfo(String filePath) throws BackendServiceException;
+
+    DtoInputSelection getInputSelection(String userName);
+
 }

@@ -60,4 +60,6 @@ public interface BackendServiceAsync {
     void calculateL3Periods(String minDate, String maxDate, String periodLength, String compositingPeriodLength, AsyncCallback<String[][]> callback);
 
     void loadRegionDataInfo(String filePath, AsyncCallback<DtoRegionDataInfo> callback);
+
+    void getInputSelection(String userName, AsyncCallback<DtoInputSelection> callback);
 }

@@ -1,7 +1,5 @@
 package com.bc.calvalus.portal.server;
 
-import static com.bc.calvalus.portal.server.BCAuthenticationFilter.INJECT_INPUT_SELECTION_PREFIX;
-
 import org.jasig.cas.client.util.CommonUtils;
 import org.jasig.cas.client.validation.AbstractTicketValidationFilter;
 import org.jasig.cas.client.validation.Assertion;
@@ -19,38 +17,39 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static com.bc.calvalus.portal.server.BCAuthenticationFilter.INJECT_INPUT_SELECTION_PREFIX;
+
 public class SamlCreateTicketValidationFilter extends AbstractTicketValidationFilter {
 
     private static final Set<String> RESERVED_INIT_PARAMS = new HashSet<>(Arrays.asList("casServerUrlPrefix", "renew",
-                                                                                        "exceptionOnValidationFailure",
-                                                                                        "redirectAfterValidation",
-                                                                                        "useSession", "serverName",
-                                                                                        "service",
-                                                                                        "artifactParameterName",
-                                                                                        "serviceParameterName",
-                                                                                        "encodeServiceUrl",
-                                                                                        "hostnameVerifier", "encoding",
-                                                                                        "config"));
-    private static final String INJECT_INPUT_SELECTION_SERVLET = "https://processing.code-de-ref.eoc.dlr.de/injectInputSelection";
-    private static final String PROCESSING_SERVER_NAME = "https://processing.code-de-ref.eoc.dlr.de";
+            "exceptionOnValidationFailure",
+            "redirectAfterValidation",
+            "useSession", "serverName",
+            "service",
+            "artifactParameterName",
+            "serviceParameterName",
+            "encodeServiceUrl",
+            "hostnameVerifier", "encoding",
+            "config"));
+
+    public static final String PARAMETER_NAME_INJECT_INPUT_SELECTION_SERVLET = "injectInputSelectionServlet";
+    public static final String PARAMETER_NAME_PROCESSING_SERVER_NAME = "processingServerName";
+    private FilterConfig filterConfig;
 
     /**
      * Constructs a SamlCreateTicketValidator.
      *
      * @param filterConfig filter configuration
-     *
      * @return the TicketValidator.
      */
     protected final TicketValidator getTicketValidator(final FilterConfig filterConfig) {
         final String casServerUrlPrefix = getPropertyFromInitParams(filterConfig, "casServerUrlPrefix", null);
-        final String calvalusPrivateKeyPath = getPropertyFromInitParams(filterConfig,
-                                                                        "calvalus.crypt.samlkey-private-key", null);
+        this.filterConfig = filterConfig;
+        final String calvalusPrivateKeyPath = getPropertyFromInitParams(filterConfig, "calvalus.crypt.samlkey-private-key", null);
         if (calvalusPrivateKeyPath == null) {
-            throw new RuntimeException(
-                        "Must configure path to calvalus private key, property 'calvalus.crypt.samlkey-private-key'");
+            throw new RuntimeException("Must configure path to calvalus private key, property 'calvalus.crypt.samlkey-private-key'");
         }
-        final SamlCreateTicketValidator validator = new SamlCreateTicketValidator(casServerUrlPrefix,
-                                                                                  calvalusPrivateKeyPath);
+        final SamlCreateTicketValidator validator = new SamlCreateTicketValidator(casServerUrlPrefix, calvalusPrivateKeyPath);
 
         validator.setRenew(parseBoolean(getPropertyFromInitParams(filterConfig, "renew", "false")));
         validator.setEncoding(getPropertyFromInitParams(filterConfig, "encoding", null));
@@ -85,12 +84,16 @@ public class SamlCreateTicketValidationFilter extends AbstractTicketValidationFi
             }
         }
         if (injectInputSelection) {
+
+            String injectInputSelectionServlet = getParameter(PARAMETER_NAME_INJECT_INPUT_SELECTION_SERVLET);
+            String processingServerName = getParameter(PARAMETER_NAME_PROCESSING_SERVER_NAME);
+
             String redirectUrl = CommonUtils.constructServiceUrl(request,
-                                                                 response,
-                                                                 INJECT_INPUT_SELECTION_SERVLET,
-                                                                 PROCESSING_SERVER_NAME,
-                                                                 "ticket",
-                                                                 true);
+                    response,
+                    injectInputSelectionServlet,
+                    processingServerName,
+                    "ticket",
+                    true);
             try {
                 System.out.println("Redirect URL : " + redirectUrl);
                 response.sendRedirect(redirectUrl);
@@ -100,5 +103,13 @@ public class SamlCreateTicketValidationFilter extends AbstractTicketValidationFi
             }
         }
         super.onSuccessfulValidation(request, response, assertion);
+    }
+
+    private String getParameter(String parameterName) {
+        String param = filterConfig.getInitParameter(parameterName);
+        if (param == null) {
+            throw new IllegalStateException("Filter '" + getClass().getName() + "' is missing configuration parameter '" + parameterName + "'");
+        }
+        return param;
     }
 }

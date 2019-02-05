@@ -13,6 +13,7 @@ public class DtoInputSelection implements IsSerializable {
     private List<String> productIdentifiers;
     private DtoDateRange dateRange;
     private String regionGeometry;
+    private String warningMessage;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -41,6 +42,18 @@ public class DtoInputSelection implements IsSerializable {
 
     public String getRegionGeometry() {
         return regionGeometry;
+    }
+
+    public String getWarningMessage() {
+        return warningMessage;
+    }
+
+    public void setWarningMessage(String warningMessage) {
+        this.warningMessage = warningMessage;
+    }
+
+    public void setCollectionName(String collectionName) {
+        this.collectionName = collectionName;
     }
 
     @Override

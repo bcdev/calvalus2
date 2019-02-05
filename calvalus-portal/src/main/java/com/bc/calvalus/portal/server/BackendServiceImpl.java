@@ -29,6 +29,7 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
@@ -118,6 +119,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * The server side implementation of the RPC processing service.
@@ -134,6 +136,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final Properties calvalusVersionProperties;
     private static final String REQUEST_FILE_EXTENSION = ".xml";
+    private static final String CATALOGUE_SEARCH_PREFIX = "catalogueSearch_";
     private static final String USER_ROLE = "calvalus.portal.userRole";
 
     static {
@@ -424,7 +427,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             HadoopJobHook hook = null;
             Map<String, String> config = backendConfig.getConfigMap();
             String systemName = config.get("calvalus.system.name");
-            if(StringUtils.isNotBlank(systemName)){
+            if (StringUtils.isNotBlank(systemName)) {
                 productionRequest.setParameter(JobConfigNames.CALVALUS_SYSTEM_NAME, systemName);
             }
             if ("debug".equals(config.get("calvalus.crypt.auth"))) {
@@ -1077,6 +1080,42 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         } catch (IOException e) {
             throw convert(e);
         }
+    }
+
+    @Override
+    public DtoInputSelection getInputSelection(String userName) {
+
+        DtoInputSelection inputSelection = (DtoInputSelection) getServletContext().getAttribute(CATALOGUE_SEARCH_PREFIX + userName);
+
+        if (inputSelection.getProductIdentifiers().isEmpty()) {
+            inputSelection.setWarningMessage("No product selected in catalogue. Nothing to process.");
+            LOG.warning("No product selected in catalogue. Nothing to process.");
+            return inputSelection;
+        }
+
+        boolean isOriginalCollection = true;
+        for (Map.Entry<String, String> entry : getCalvalusConfig().getConfig().entrySet()) {
+            if (entry.getKey().startsWith("calvalus.catalogue.")) {
+                Pattern pattern = Pattern.compile(entry.getValue());
+                for (String productIdentifier : inputSelection.getProductIdentifiers()) {
+                    if (pattern.matcher(productIdentifier).matches()) {
+                        String collectionName = entry.getKey().substring("calvalus.catalogue.".length());
+                        if (!isOriginalCollection && !inputSelection.getCollectionName().equals(collectionName)) {
+                            inputSelection.setWarningMessage("Different collection names chosen for input, using last collection name '" + collectionName + "' only.");
+                        }
+                        inputSelection.setCollectionName(collectionName);
+                        isOriginalCollection = false;
+                    }
+                }
+            }
+        }
+
+        if (isOriginalCollection) {
+            inputSelection.setWarningMessage("Input not found in any processable collection. Nothing to process.");
+            LOG.warning("First product identifier without match: " + inputSelection.getProductIdentifiers().get(0));
+        }
+
+        return inputSelection;
     }
 
     private String getStringFromDoc(Document doc) {

@@ -3,7 +3,6 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
@@ -34,8 +33,6 @@ public interface PortalContext {
     ListDataProvider<DtoProduction> getProductions();
 
     BackendServiceAsync getBackendService();
-
-    ContextRetrievalServiceAsync getContextRetrievalService();
 
     void showView(String id);
 

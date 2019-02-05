@@ -128,9 +128,7 @@ public class BCAuthenticationFilter extends AbstractCasFilter {
             log.debug("Constructed service url: " + modifiedServiceUrl);
         }
 
-        final String urlToRedirectTo = CommonUtils.constructRedirectUrl(this.casServerLoginUrl,
-                                                                        getServiceParameterName(), modifiedServiceUrl,
-                                                                        this.renew, this.gateway);
+        final String urlToRedirectTo = CommonUtils.constructRedirectUrl(this.casServerLoginUrl, getServiceParameterName(), modifiedServiceUrl, this.renew, this.gateway);
 
         if (log.isDebugEnabled()) {
             log.debug("redirecting to \"" + urlToRedirectTo + "\"");
