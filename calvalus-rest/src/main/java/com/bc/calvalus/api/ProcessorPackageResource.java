@@ -5,9 +5,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.hadoop.fs.FileStatus;
 
 import javax.servlet.ServletContext;
@@ -31,6 +28,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -74,7 +72,7 @@ public class ProcessorPackageResource {
     public Response uploadContent(@Context HttpServletRequest request, @Context ServletContext context, @Context UriInfo uriInfo) {
         try {
             String userName = request.getUserPrincipal().getName();
-            FileItem item = getFileItem(request);
+            FileItem item = Utils.getFileItem(request);
             String zipFileName = item.getName();
             String bundleId = zipFileName.toLowerCase().endsWith(".zip") ? zipFileName.substring(0, zipFileName.length()-4) : zipFileName;
             String bundlePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + bundleId);
@@ -185,7 +183,7 @@ public class ProcessorPackageResource {
         } catch (WebApplicationException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, e.getMessage(), e);
             throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                                                       .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
         }
@@ -198,7 +196,7 @@ public class ProcessorPackageResource {
                             @PathParam("name") String name) {
         try {
             String userName = request.getUserPrincipal().getName();
-            FileItem item = getFileItem(request);
+            FileItem item = Utils.getFileItem(request);
             String fileName = item.getName();
             String filePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name + "/" + fileName);
             // delete existing file before upload
@@ -275,15 +273,4 @@ public class ProcessorPackageResource {
         }
     }
 
-    /** Returns first non-form-field file item */
-    private FileItem getFileItem(HttpServletRequest request) throws FileUploadException {
-        ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
-        List<FileItem> items = upload.parseRequest(request);
-        for (FileItem item : items) {
-            if (!item.isFormField()) {
-                return item;
-            }
-        }
-        return null;
-    }
 }

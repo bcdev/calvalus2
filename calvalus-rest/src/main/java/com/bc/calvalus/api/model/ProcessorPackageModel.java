@@ -1,5 +1,6 @@
 package com.bc.calvalus.api.model;
 
+import com.bc.calvalus.api.Utils;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.AbstractFileSystemService;
@@ -21,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -97,24 +97,8 @@ public class ProcessorPackageModel {
         return serviceContainer.getFileSystemService().globPaths(userName, pathPatterns);
     }
 
-    public void unzipFromStream(String userName, String bundlePath, InputStream stream) throws IOException {
-        try (ZipInputStream in = new ZipInputStream(new BufferedInputStream(stream, 8192))) {
-            byte[] buffer = new byte[8192];
-            while (true) {
-                ZipEntry entry = in.getNextEntry();
-                if (entry == null) { break; }
-                String fileName = entry.getName();
-                if (fileName.endsWith("/")) { continue; }
-                System.out.println("extracting " + fileName + " from zip");
-                String filePath = bundlePath + "/" + fileName;
-                try (OutputStream out = new BufferedOutputStream(serviceContainer.getFileSystemService().addFile(userName, filePath), 8192)) {
-                    int len;
-                    while ((len = in.read(buffer)) > 0) {
-                        out.write(buffer, 0, len);
-                    }
-                }
-            }
-        }
+    public void unzipFromStream(String username, String targetPath, InputStream stream) throws IOException {
+        Utils.unzipFromStream(username, targetPath, stream, serviceContainer.getFileSystemService());
     }
 
     public StreamingOutput zipToStream(String userName, String[] paths) {
