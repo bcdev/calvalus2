@@ -222,31 +222,32 @@ public class L3MapperTest {
         conf.set("calvalus.input.dateRanges", "[2017-06-30:2017-06-30]");
         conf.set("calvalus.minDate", "2017-06-30");
         conf.set("calvalus.maxDate", "2017-06-30");
+        conf.set("calvalus.region", "1823,0,58,76");
         conf.set("calvalus.regionGeometry", "POLYGON((-124 39.9,-124 40.2,-123.9 40.2,-123.9 39.9,-124 39.9))");
         conf.set("calvalus.l3.parameters", "<parameters>  <planetaryGrid>org.esa.snap.binning.support.PlateCarreeGrid</planetaryGrid>  <numRows>64800</numRows>  <compositingType>MOSAICKING</compositingType>  <superSampling>1</superSampling>  <maskExpr></maskExpr>  <variables>  <variable>  <name>ndvi</name>  <expr>not nan(sdr_7) ? (sdr_13 - sdr_7) / (sdr_13 + sdr_7) : -1.0</expr>  <validExpr>true</validExpr>  </variable>  </variables>  <aggregators>    <aggregator>      <type>ON_MAX_SET_DEBUG</type>      <onMaxVarName>ndvi</onMaxVarName>    </aggregator>  </aggregators>  </parameters>");
         conf.set("calvalus.output.dir", "/home/martin/tmp/c3s/olci-sr-test-from-nc");
 
         Product inputProduct = ProductIO.readProduct(new File(conf.get("calvalus.input.pathPatterns")));
         Map<String,Object> subsetParams = new HashMap<>();
-        subsetParams.put("geoRegion", conf.get("calvalus.regionGeometry"));
+        subsetParams.put("region", conf.get("calvalus.region"));
         Product subset = GPF.createProduct("Subset", subsetParams, inputProduct);
+
         VirtualBand band = new VirtualBand("_binning_mask", ProductData.TYPE_UINT8,
                                            subset.getSceneRasterWidth(), subset.getSceneRasterHeight(),
                                            "true");
         subset.addBand(band);
+
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
         DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
         Geometry regionGeometry = GeometryUtils.createGeometry(conf.get("calvalus.regionGeometry"));
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         MosaickingGrid planetaryGrid = (MosaickingGrid) binningContext.getPlanetaryGrid();
         Product reproProduct = planetaryGrid.reprojectToGrid(subset);
-        Product subset2 = GPF.createProduct("Subset", subsetParams, reproProduct);
-//        Band b = subset2.getBand("_binning_mask");
-//        for (int y=0; y<b.getRasterHeight(); ++y) {
-//            for (int x = 0; x < b.getRasterWidth(); ++x) {
-//                assertEquals(b.getPixelInt(x, y), 0);
-//            }
-//        }
+
+        Map<String,Object> subsetParams2 = new HashMap<>();
+        subsetParams2.put("geoRegion", conf.get("calvalus.regionGeometry"));
+        Product subset2 = GPF.createProduct("Subset", subsetParams2, reproProduct);
+
         ProductIO.writeProduct(subset2, conf.get("calvalus.output.dir") + "/test.dim", "BEAM-DIMAP");
     }
 
