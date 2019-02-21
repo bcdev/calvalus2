@@ -88,15 +88,15 @@ public class L3MapperTest {
         System.getProperties().setProperty("snap.dataio.reader.tileWidth", "512");
         System.getProperties().setProperty("snap.useAlternatePixelGeoCoding", "true");
         //System.getProperties().setProperty("snap.jai.tileCacheSize", "3816");
-        final Configuration conf = new Configuration();
-        conf.set("calvalus.input.pathPatterns", "/home/martin/tmp/c3s/L2_of_S3A_OL_1_EFR____20170630T185820_20170630T190020_20171020T121102_0119_019_227______MR1_R_NT_002.SEN3L2_of_.nc");
-        conf.set("calvalus.input.dateRanges", "[2017-06-30:2017-06-30]");
-        conf.set("calvalus.minDate", "2017-06-30");
-        conf.set("calvalus.maxDate", "2017-06-30");
-        conf.set("calvalus.region", "1823,0,58,76");
-        conf.set("calvalus.regionGeometry", "POLYGON((-124 39.9,-124 40.2,-123.9 40.2,-123.9 39.9,-124 39.9))");
-        conf.set("calvalus.l3.parameters", "<parameters>  <planetaryGrid>org.esa.snap.binning.support.PlateCarreeGrid</planetaryGrid>  <numRows>64800</numRows>  <compositingType>MOSAICKING</compositingType>  <superSampling>1</superSampling>  <maskExpr></maskExpr>  <variables>  <variable>  <name>ndvi</name>  <expr>not nan(sdr_7) ? (sdr_13 - sdr_7) / (sdr_13 + sdr_7) : -1.0</expr>  <validExpr>true</validExpr>  </variable>  </variables>  <aggregators>    <aggregator>      <type>ON_MAX_SET_DEBUG</type>      <onMaxVarName>ndvi</onMaxVarName>    </aggregator>  </aggregators>  </parameters>");
-        conf.set("calvalus.output.dir", "/home/martin/tmp/c3s/olci-sr-test-from-nc");
+        final Map<String,String> conf = new HashMap<>();
+        conf.put("calvalus.input.pathPatterns", "/home/martin/tmp/c3s/L2_of_S3A_OL_1_EFR____20170630T185820_20170630T190020_20171020T121102_0119_019_227______MR1_R_NT_002.SEN3L2_of_.nc");
+        conf.put("calvalus.input.dateRanges", "[2017-06-30:2017-06-30]");
+        conf.put("calvalus.minDate", "2017-06-30");
+        conf.put("calvalus.maxDate", "2017-06-30");
+        conf.put("calvalus.region", "1823,0,58,76");
+        conf.put("calvalus.regionGeometry", "POLYGON((-124 39.9,-124 40.2,-123.9 40.2,-123.9 39.9,-124 39.9))");
+        conf.put("calvalus.l3.parameters", "<parameters>  <planetaryGrid>org.esa.snap.binning.support.PlateCarreeGrid</planetaryGrid>  <numRows>64800</numRows>  <compositingType>MOSAICKING</compositingType>  <superSampling>1</superSampling>  <maskExpr></maskExpr>  <variables>  <variable>  <name>ndvi</name>  <expr>not nan(sdr_7) ? (sdr_13 - sdr_7) / (sdr_13 + sdr_7) : -1.0</expr>  <validExpr>true</validExpr>  </variable>  </variables>  <aggregators>    <aggregator>      <type>ON_MAX_SET_DEBUG</type>      <onMaxVarName>ndvi</onMaxVarName>    </aggregator>  </aggregators>  </parameters>");
+        conf.put("calvalus.output.dir", "/home/martin/tmp/c3s/olci-sr-test-from-nc");
 
         Product inputProduct = ProductIO.readProduct(new File(conf.get("calvalus.input.pathPatterns")));
         Map<String,Object> subsetParams = new HashMap<>();
