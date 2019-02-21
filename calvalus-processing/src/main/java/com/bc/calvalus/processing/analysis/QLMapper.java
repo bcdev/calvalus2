@@ -173,7 +173,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             return imageBaseName + ".tiff";
         }
         else {
-            return imageBaseName + qlConfig.getImageType();
+            return imageBaseName + "." + qlConfig.getImageType();
         }
     }
 
