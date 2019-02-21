@@ -35,6 +35,7 @@ public class ProcessorProductionRequest {
     public static final String PROCESSOR_BUNDLE_LOCATION = "processorBundleLocation";
     public static final String PROCESSOR_BUNDLES = "processorBundles";
     public static final String PROCESSOR_NAME = "processorName";
+    public static final String PROCESSOR_DESCRIPTION = "processorDescription";
     public static final String PROCESSOR_PARAMETERS = "processorParameters";
     public static final String OUTPUT_PRODUCT_TYPE = "outputProductType";
     private final String processorBundleName;
@@ -42,6 +43,7 @@ public class ProcessorProductionRequest {
     private final String processorBundleLocation;
     private final String processorBundles;
     private final String processorName;
+    private final String processorDescription;
     private final String processorParameters;
     private final String outputProductType;
     private final String userName;
@@ -56,6 +58,7 @@ public class ProcessorProductionRequest {
         this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION + parameterSuffix, null);
         this.processorBundles = productionRequest.getString(PROCESSOR_BUNDLES, null);
         this.processorName = productionRequest.getString(PROCESSOR_NAME + parameterSuffix, null);
+        this.processorDescription = productionRequest.getString(PROCESSOR_DESCRIPTION + parameterSuffix, null);
         this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS + parameterSuffix, "<parameters/>");
         this.outputProductType = productionRequest.getString(OUTPUT_PRODUCT_TYPE + parameterSuffix, null);
         this.userName = productionRequest.getUserName();
@@ -84,6 +87,9 @@ public class ProcessorProductionRequest {
         if (processorName != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, processorParameters);
+            if(processorDescription != null) {
+                jobConfig.set(JobConfigNames.CALVALUS_L2_PROCESSOR_DESCRIPTION + parameterSuffix, processorDescription);
+            }
             if(outputProductType != null){
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_PRODUCT_TYPE + parameterSuffix, outputProductType);
             }

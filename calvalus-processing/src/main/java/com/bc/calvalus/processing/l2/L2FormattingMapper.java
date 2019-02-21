@@ -285,7 +285,6 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 newProductName = m.replaceAll(replacement);
                 if (dateElement != null && dateFormat != null) {
                     final String dateString = m.replaceAll(dateElement);
-                    
                     final DateFormat df1 = DateUtils.createDateFormat(dateFormat);
                     final DateFormat df2 = DateUtils.createDateFormat(newProductName);
                     final Date date = df1.parse(dateString);
@@ -295,10 +294,10 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             return newProductName;
         } catch (Exception e) {
             if (dateElement == null || dateFormat == null) {
-                throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex + " by " + replacement);
+                throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex + " by " + replacement, e);
             } else {
                 throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex +
-                                                   " date ele " + dateElement + " date format " + dateFormat + " by " + replacement);
+                                                   " date ele " + dateElement + " date format " + dateFormat + " by " + replacement, e);
             }
         }
     }

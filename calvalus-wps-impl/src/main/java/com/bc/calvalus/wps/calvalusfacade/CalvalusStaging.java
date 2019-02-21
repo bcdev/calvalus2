@@ -38,8 +38,8 @@ import java.util.logging.Logger;
 class CalvalusStaging {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String CALWPS_ROOT_PATH = "/webapps/bc-wps/";
-    private static final String APP_NAME = "bc-wps";
+    private static final String CALWPS_ROOT_PATH = PropertiesWrapper.get("wps.application.path");
+    private static final String APP_NAME = PropertiesWrapper.get("wps.application.name");
 
     private final WpsServerContext wpsServerContext;
 
@@ -67,6 +67,7 @@ class CalvalusStaging {
         }
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
         File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
+        CalvalusLogger.getLogger().info("looking up results in staging dir " + stagingDirectory);
 
         Optional<File[]> productResultFiles = Optional.ofNullable(stagingDirectory.listFiles());
         if (productResultFiles.isPresent()) {
@@ -142,9 +143,11 @@ class CalvalusStaging {
 
     private List<String> doGetProductResultUrls(Production production, String stagingDirectoryPath, File[] productResultFiles) {
         List<String> productResultUrls = new ArrayList<>();
+        boolean withMetadataFile = false;
         for (File productResultFile : productResultFiles) {
             String productFileName = productResultFile.getName().toLowerCase();
             if (productFileName.endsWith("-metadata") || productFileName.endsWith(".csv")) {
+                withMetadataFile = true;
                 continue;
             }
             UriBuilder builder = new UriBuilderImpl();
@@ -157,15 +160,17 @@ class CalvalusStaging {
                         .build().toString();
             productResultUrls.add(productUrl);
         }
-        UriBuilder builder = new UriBuilderImpl();
-        String metadataUrl = builder.scheme("http")
+        if (withMetadataFile) {
+            UriBuilder builder = new UriBuilderImpl();
+            String metadataUrl = builder.scheme("http")
                     .host(wpsServerContext.getHostAddress())
                     .port(wpsServerContext.getPort())
                     .path(APP_NAME)
                     .path(stagingDirectoryPath)
                     .path(production.getName().replaceAll(" ", "_") + "-metadata")
-                .build().toString();
-        productResultUrls.add(metadataUrl);
+                    .build().toString();
+            productResultUrls.add(metadataUrl);
+        }
         return productResultUrls;
     }
 }

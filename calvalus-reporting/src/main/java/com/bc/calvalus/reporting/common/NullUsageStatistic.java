@@ -30,6 +30,7 @@ public class NullUsageStatistic extends UsageStatistic {
               NOT_FOUND_STRING_IDENTIFIER,
               NOT_FOUND_STRING_IDENTIFIER,
               NOT_FOUND_STRING_IDENTIFIER,
+              NOT_FOUND_STRING_IDENTIFIER,
               NOT_FOUND_INT_IDENTIFIER,
               NOT_FOUND_INT_IDENTIFIER,
               NOT_FOUND_INT_IDENTIFIER,

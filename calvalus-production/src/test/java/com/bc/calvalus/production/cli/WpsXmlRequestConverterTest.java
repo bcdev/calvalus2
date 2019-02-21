@@ -44,7 +44,8 @@ public class WpsXmlRequestConverterTest {
                                        "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
                                        "             xmlns:xlink=\"http://www.w3.org/1999/xlink\"\n" +
                                        "             xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                                       "             xsi:schemaLocation=\"http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd\">\n  <ows:Identifier>L2Plus</ows:Identifier>\n" +
+                                       "             xsi:schemaLocation=\"http://www.opengis.net/wps/1.0.0 ogc/wps/1.0.0/wpsExecute_request.xsd\">\n" +
+                                       "  <ows:Identifier>L2Plus</ows:Identifier>\n" +
                                        "  <wps:DataInputs>\n" +
                                        "    <wps:Input>\n" +
                                        "      <ows:Identifier>calvalus.processor.package</ows:Identifier>\n" +
@@ -80,7 +81,8 @@ public class WpsXmlRequestConverterTest {
                                        "      <wps:Data>\n" +
                                        "        <wps:LiteralData>BEAM-DIMAP</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
-                                       "    </wps:Input>\n    <wps:Input>\n" +
+                                       "    </wps:Input>\n" +
+                                       "    <wps:Input>\n" +
                                        "      <ows:Identifier>calvalus.l2.operator</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
@@ -91,19 +93,20 @@ public class WpsXmlRequestConverterTest {
                                        "      <ows:Identifier>calvalus.l2.parameters</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
-                                       "   <doSmile>true</doSmile>\n" +
-                                       "    <reproVersion>AUTO_DETECT</reproVersion>\n</parameters></wps:LiteralData>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
+                                       "   &lt;doSmile&gt;true&lt;/doSmile&gt;\n" +
+                                       "    &lt;reproVersion&gt;AUTO_DETECT&lt;/reproVersion&gt;\n" +
+                                       "&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "    <wps:Input>\n" +
                                        "      <ows:Identifier>calvalus.plainText.parameter</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
                                        "This is a multiline\n" +
                                        "Textfield\n" +
-                                       "</parameters></wps:LiteralData>\n" +
+                                       "&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "  </wps:DataInputs>\n" +
@@ -197,19 +200,19 @@ public class WpsXmlRequestConverterTest {
                                        "      <ows:Identifier>calvalus.l2.parameters</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
-                                       "   <doSmile>true</doSmile>\n" +
-                                       "    <reproVersion>AUTO_DETECT</reproVersion>\n</parameters></wps:LiteralData>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
+                                       "   &lt;doSmile&gt;true&lt;/doSmile&gt;\n" +
+                                       "    &lt;reproVersion&gt;AUTO_DETECT&lt;/reproVersion&gt;\n&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "    <wps:Input>\n" +
                                        "      <ows:Identifier>calvalus.plainText.parameter</ows:Identifier>\n" +
                                        "      <ows:Title/>\n" +
                                        "      <wps:Data>\n" +
-                                       "        <wps:LiteralData><parameters>\n" +
+                                       "        <wps:LiteralData>&lt;parameters&gt;\n" +
                                        "This is a multiline\n" +
                                        "Textfield\n" +
-                                       "</parameters></wps:LiteralData>\n" +
+                                       "&lt;/parameters&gt;</wps:LiteralData>\n" +
                                        "      </wps:Data>\n" +
                                        "    </wps:Input>\n" +
                                        "  </wps:DataInputs>\n" +

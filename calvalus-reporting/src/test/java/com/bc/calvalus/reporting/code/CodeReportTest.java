@@ -4,12 +4,18 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.bc.calvalus.reporting.common.UsageStatistic;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 
 /**
  * @author hans
  */
 public class CodeReportTest {
+
+    @Before
+    public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("code-de.properties");
+    }
 
     @Test
     public void canDeserializeCorrectly() {
@@ -24,6 +30,7 @@ public class CodeReportTest {
                                                            "remoteUser",
                                                            "remoteRef",
                                                            "Fmask",
+                                                           "Fmask for Landsat 8 and Sentinel 2 v0.1.0",
                                                            "com.bc.calvalus.processing.l2.L2FormattingMapper",
                                                            "L2",
                                                            "/path/to/output",
@@ -64,6 +71,7 @@ public class CodeReportTest {
                                                        "  \"configuredCpuCoresPerTask\": 2,\n" +
                                                        "  \"cpuCoreHours\": 0.016489,\n" +
                                                        "  \"processorName\": \"Fmask\",\n" +
+                                              "  \"processorDescription\": \"Fmask for Landsat 8 and Sentinel 2 v0.1.0\",\n" +
                                                        "  \"configuredRamPerTask\": 4.000000,\n" +
                                                        "  \"ramHours\": 1.288120,\n" +
                                                        "  \"processingWorkflow\": \"L2\",\n" +
@@ -92,6 +100,7 @@ public class CodeReportTest {
                                                            "Job 01",
                                                            "remoteUser",
                                                            "remoteRef",
+                                                           null,
                                                            null,
                                                            "com.bc.calvalus.processing.l2.L2FormattingMapper",
                                                            "L2",
@@ -162,6 +171,7 @@ public class CodeReportTest {
                                                            "remoteUser",
                                                            "remoteRef",
                                                            null,
+                                                           null,
                                                            "com.bc.calvalus.processing.l2.SomethingElse",
                                                            "L2",
                                                            "/path/to/output",
@@ -231,6 +241,7 @@ public class CodeReportTest {
                                                            "remoteUser",
                                                            "remoteRef",
                                                            null,
+                                                           null,
                                                            "com.bc.calvalus.processing.l3.L3FormatterMapper",
                                                            "L3",
                                                            "/path/to/output",
@@ -299,6 +310,7 @@ public class CodeReportTest {
                                                            "Job 01",
                                                            "remoteUser",
                                                            "remoteRef",
+                                                           null,
                                                            null,
                                                            "com.bc.calvalus.processing.l3.SomethingElse",
                                                            "L3",
@@ -373,6 +385,7 @@ public class CodeReportTest {
                                                0,
                                                0.123456789,
                                                "processorName",
+                                               "processorDescription",
                                                0.123456789,
                                                0.123456789,
                                                "processingWorkflow",
@@ -400,6 +413,7 @@ public class CodeReportTest {
                                                        "  \"configuredCpuCoresPerTask\": 0,\n" +
                                                        "  \"cpuCoreHours\": 0.123457,\n" +
                                                        "  \"processorName\": \"processorName\",\n" +
+                                              "  \"processorDescription\": \"processorDescription\",\n" +
                                                        "  \"configuredRamPerTask\": 0.123457,\n" +
                                                        "  \"ramHours\": 0.123457,\n" +
                                                        "  \"processingWorkflow\": \"processingWorkflow\",\n" +

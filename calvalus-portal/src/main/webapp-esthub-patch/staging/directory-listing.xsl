@@ -145,16 +145,18 @@
                     <div class="footer-copyright">
                         <span class="copyright-text">Copyright &#169; 2018 ESTHub</span>
                     </div>
+                    <!--
                     <div class="footer-legal">
-                        <a href="https://esthub.maamet.ee/en/legal_notice" target="_blank" style="text-decoration:none;">
+                        <a href="https://esthub.maaamet.ee/en/legal_notice" target="_blank" style="text-decoration:none;">
                             <span class="legal-privacy-text">Legal Notice</span>
                         </a>
                     </div>
                     <div class="footer-privacy">
-                        <a href="https://cesthub.maamet.ee/en/data_protection" target="_blank" style="text-decoration:none;">
+                        <a href="https://esthub.maaamet.ee/en/data_protection" target="_blank" style="text-decoration:none;">
                             <span class="legal-privacy-text">Privacy Statement</span>
                         </a>
                     </div>
+                    -->
                     <div class="footer-empty"/>
                 </div>
             </body>

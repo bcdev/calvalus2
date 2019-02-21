@@ -17,6 +17,7 @@
 package com.bc.calvalus.production;
 
 import com.bc.calvalus.inventory.FileSystemService;
+import org.apache.hadoop.fs.FileStatus;
 import org.junit.*;
 
 import java.io.IOException;
@@ -74,5 +75,10 @@ public class TestFileSystemService implements FileSystemService {
     @Override
     public InputStream openFile(String username, String path) {
         return null;
+    }
+
+    @Override
+    public FileStatus[] globFiles(String username, List<String> pathPatterns) throws IOException {
+        return new FileStatus[0];
     }
 }

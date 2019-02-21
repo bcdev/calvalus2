@@ -57,7 +57,6 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     @Override
     public String[] globPaths(String username, List<String> pathPatterns) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
-
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
@@ -69,6 +68,18 @@ public abstract class AbstractFileSystemService implements FileSystemService {
             result[i] = fileStatuses.get(i).getPath().toString();
         }
         return result;
+    }
+
+    @Override
+    public FileStatus[] globFiles(String username, List<String> pathPatterns) throws IOException {
+        Configuration conf = jobClientsMap.getConfiguration();
+        Pattern pattern = createPattern(pathPatterns, conf);
+        String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
+        Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
+        List<FileStatus> fileStatuses = new ArrayList<>(1000);
+        collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
+        return fileStatuses.toArray(new FileStatus[0]);
     }
 
     @Override
@@ -106,11 +117,9 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     @Override
     public boolean pathExists(String path) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
-
-        Path p = new Path(path);
-        FileSystem fileSystem = p.getFileSystem(conf);
-
-        return fileSystem.exists(p);
+        FileSystem fileSystem = new Path(path).getFileSystem(conf);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.exists(qualifiedPath);
     }
 
     @Override

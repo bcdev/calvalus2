@@ -98,7 +98,7 @@ public class CalvalusExecuteOperationTest {
         ExecuteResponse executeResponse = executeOperation.execute(mockExecuteRequest);
 
         assertThat(executeResponse.getStatus().getProcessAccepted(),
-                   equalTo("The request has been accepted. The status of the process can be found in the URL."));
+                   equalTo("The request has been accepted. In order to check the status, use GetStatus with JobId 'process-00'."));
         assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com/bc-wps/wps/provider1?Service=WPS&Request=GetStatus&JobId=process-00"));
         assertThat(executeResponse.getProcess().getIdentifier().getValue(), equalTo("process1"));
     }

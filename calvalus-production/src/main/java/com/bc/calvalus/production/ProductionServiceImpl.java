@@ -416,4 +416,9 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         return processingService.loadRegionDataInfo(username, url);
     }
+
+    @Override
+    public void invalidateBundleCache() {
+        processingService.invalidateBundleCache();
+    }
 }

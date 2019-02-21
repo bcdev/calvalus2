@@ -81,4 +81,6 @@ public interface ProcessingService<JobId> {
      * Load details about the region data.
      */
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
+
+    void invalidateBundleCache();
 }

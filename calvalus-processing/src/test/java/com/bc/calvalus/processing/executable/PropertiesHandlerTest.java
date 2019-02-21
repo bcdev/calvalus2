@@ -114,4 +114,38 @@ public class PropertiesHandlerTest {
         assertEquals("name32", properties.getProperty("childs.1.name"));
         assertEquals("value32", properties.getProperty("childs.1.value"));
     }
+
+    @Test
+    public void testAsProperties_XML_fromBfGExample() throws Exception {
+        Properties properties = PropertiesHandler.asProperties(
+                "<parameters>\n" +
+                        "  <cloudBufferWidth>2</cloudBufferWidth>\n" +
+                        "  <computeCloudBuffer>true</computeCloudBuffer>\n" +
+                        "  <CHLexp>1.04</CHLexp>\n" +
+                        "  <CHLfak>21.0</CHLfak>\n" +
+                        "  <netSet>C2RCC-Nets</netSet>\n" +
+                        "  <elevation>0.001</elevation>\n" +
+                        "  <outputRtoa>false</outputRtoa>\n" +
+                        "  <outputIops>false</outputIops>\n" +
+                        "  <outputUncertainties>false</outputUncertainties>\n" +
+                        "  <usertag></usertag>\n" +
+                        "  <salinity>0.0001</salinity>\n" +
+                        "  <temperature>15.0</temperature>\n" +
+                        "  <waterRadiometricThreshold>0.0</waterRadiometricThreshold>\n" +
+                        "  <TSMfakBpart>1.72</TSMfakBpart>\n" +
+                        "  <TSMfakBwit>3.1</TSMfakBwit>\n" +
+                        "  <validPixelExpression>not pixel_classif_flags.IDEPIX_INVALID and not pixel_classif_flags.IDEPIX_CLOUD and WATER_RADIOMETRIC == 1</validPixelExpression>\n" +
+                        "  <doReproject>true</doReproject>\n" +
+                        "  <crs>EPSG:25832</crs>\n" +
+                        "  <pixelSize>60</pixelSize>\n" +
+                        "  <resampling>Nearest</resampling>\n" +
+                        "  <var1expression></var1expression>\n" +
+                        "  <var2expression></var2expression>\n" +
+                        "  <var3expression></var3expression>\n" +
+                        "</parameters>"
+        );
+        assertNotNull(properties);
+        System.out.println("properties = " + properties);
+        assertEquals(19, properties.size());
+    }
 }

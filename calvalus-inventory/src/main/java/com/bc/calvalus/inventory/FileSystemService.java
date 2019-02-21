@@ -16,6 +16,8 @@
 
 package com.bc.calvalus.inventory;
 
+import org.apache.hadoop.fs.FileStatus;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,6 +39,8 @@ public interface FileSystemService {
      * @throws java.io.IOException If an I/O error occurs
      */
     String[] globPaths(String username, List<String> pathPatterns) throws IOException;
+
+    FileStatus[] globFiles(String username, List<String> pathPatterns) throws IOException;
 
     /**
      * @param username The user who will perform ths operation (to check rights).

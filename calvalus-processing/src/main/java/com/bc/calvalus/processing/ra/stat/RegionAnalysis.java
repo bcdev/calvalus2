@@ -22,11 +22,13 @@ public class RegionAnalysis {
     private final Statistics[] stats;
     private final StatisticsWriter statisticsWriter;
     private final List<String> regionNameList;
+    private final boolean withProductNames;
 
     private String currentRegionName;
     private long currentTime;
     private int numPasses;
     private int numObs;
+    private String productName = null;
 
     public RegionAnalysis(RADateRanges dateRanges, RAConfig raConfig, WriterFactory writerFactor) throws IOException, InterruptedException {
         this.dateRanges = dateRanges;
@@ -41,10 +43,11 @@ public class RegionAnalysis {
             RAConfig.BandConfig bConfig = bandConfigs[i];
             stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getMin(), bConfig.getMax(), raConfig.getPercentiles());
         }
+        withProductNames = raConfig.withProductNames();
         statisticsWriter = new StatisticsWriter(raConfig, stats, writerFactor);
     }
 
-    public void addData(long time, int numObs, float[][] samples) throws IOException {
+    public void addData(long time, int numObs, float[][] samples, String... productNames) throws IOException {
         int newDateRange = dateRanges.findIndex(time);
         if (newDateRange == -1) {
             String out_ouf_range_date = dateRanges.format(time);
@@ -56,6 +59,7 @@ public class RegionAnalysis {
                 writeEmptyRecords(regionHandler.current(), dataRangeHandler.preceedingUnhandledIndices(newDateRange));
             }
             accumulate(time, numObs, samples);
+            productName = productNames.length > 0 ? productNames[0] : null;
         }
     }
 
@@ -139,6 +143,9 @@ public class RegionAnalysis {
         records.add(currentRegionName);
         records.add(dStart);
         records.add(dEnd);
+        if (withProductNames){
+            records.add(productName);
+        }
         records.add(Integer.toString(numPasses));
         records.add(Integer.toString(numObs));
         return records;

@@ -118,6 +118,12 @@ public class RAConfig implements XmlConvertible {
     @Parameter
     private String regionSourceAttributeFilter;
 
+    @Parameter(defaultValue = "true")
+    private boolean withRegionEnvelope;
+
+    @Parameter(defaultValue = "false")
+    private boolean withProductNames;
+
     @Parameter
     private String goodPixelExpression;
 
@@ -172,6 +178,20 @@ public class RAConfig implements XmlConvertible {
 
     public void setRegionSourceAttributeFilter(String regionSourceAttributeFilter) {
         this.regionSourceAttributeFilter = regionSourceAttributeFilter;
+    }
+
+    public void setWithRegionEnvelope(boolean withRegionEnvelope) {
+        this.withRegionEnvelope = withRegionEnvelope;
+    }
+
+    public boolean withRegionEnvelope() {return withRegionEnvelope; }
+
+    public boolean withProductNames() {
+        return withProductNames;
+    }
+
+    public void setWithProductNames(boolean withProductNames) {
+        this.withProductNames = withProductNames;
     }
 
     public String getGoodPixelExpression() {
