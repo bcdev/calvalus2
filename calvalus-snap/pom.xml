@@ -82,12 +82,6 @@
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-watermask</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-sta</artifactId></dependency>
 
-
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdfobj</artifactId></dependency>
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId></dependency>
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId></dependency>
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>lib-hdf</artifactId></dependency>
-
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-avhrr-reader</artifactId></dependency>
