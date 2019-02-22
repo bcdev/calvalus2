@@ -65,6 +65,7 @@ public class CalvalusFacadeTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockRequestContext = mock(WpsRequestContext.class);
         mockCalvalusProduction = mock(CalvalusProduction.class);
         mockCalvalusStaging = mock(CalvalusStaging.class);
@@ -72,7 +73,6 @@ public class CalvalusFacadeTest {
 
         when(mockRequestContext.getUserName()).thenReturn(MOCK_USER_NAME);
 
-        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         configureProductionServiceMocking();
     }
 

@@ -147,6 +147,8 @@ public class CalvalusHadoopParameters extends Configuration {
         }
     }
 
+
+
     /**
      * Function for use in production type translation rules
      */
@@ -229,10 +231,11 @@ public class CalvalusHadoopParameters extends Configuration {
         RARegions.RegionIterator regionsIterator = null;
         regionsIterator = raConfig.createNamedRegionIterator(this);
         List<String> names = new ArrayList<>();
+        boolean withEnvelope = raConfig.withRegionEnvelope();
         while (regionsIterator.hasNext()) {
             RAConfig.NamedRegion namedRegion = regionsIterator.next();
             Geometry geometry = namedRegion.region;
-            if (geometry.getNumPoints() > 20) {
+            if (withEnvelope && geometry.getNumPoints() > 20) {
                 geometry = geometry.getEnvelope();
             }
             geometries.add(geometry);

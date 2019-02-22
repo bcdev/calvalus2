@@ -104,6 +104,7 @@ public class RAProductionType extends HadoopProductionType {
 
     private String[] getRAConfigXmlAndRegion(ProductionRequest productionRequest) throws ProductionException {
         String raParametersXml = productionRequest.getString("calvalus.ra.parameters", null);
+        boolean withEnvelope = productionRequest.getBoolean("calvalus.ra.envelope", true);
         RAConfig raConfig;
         if (raParametersXml == null) {
             raConfig = getRaConfigFromRequest(productionRequest);
@@ -119,12 +120,13 @@ public class RAProductionType extends HadoopProductionType {
         try {
             Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
             regionsIterator = raConfig.createNamedRegionIterator(conf);
+
             List<String> names = new ArrayList<>();
             List<Geometry> geometries = new ArrayList<>();
             while (regionsIterator.hasNext()) {
                 RAConfig.NamedRegion namedRegion = regionsIterator.next();
                 Geometry geometry = namedRegion.region;
-                if (geometry.getNumPoints() > 20) {
+                if (withEnvelope && geometry.getNumPoints() > 20) {
                     geometry = geometry.getEnvelope();
                 }
                 geometries.add(geometry);

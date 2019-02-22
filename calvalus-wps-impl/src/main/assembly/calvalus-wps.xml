@@ -9,7 +9,21 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/src/main/resources/conf</directory>
+            <directory>${project.basedir}/src/main/resources/config</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+            <outputDirectory>/config</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/webapp</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/deploy</directory>
             <includes>
                 <include>**</include>
             </includes>

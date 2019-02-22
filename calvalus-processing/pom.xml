@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.15-SNAPSHOT</version>
+        <version>2.16-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-processing</artifactId>
@@ -19,12 +19,6 @@
 
     <dependencies>
         <!-- force this version instead of the SNAP one -->
-        <dependency>
-            <groupId>edu.ucar</groupId>
-            <artifactId>netcdf</artifactId>
-            <version>4.3.23</version>
-        </dependency>
-
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -62,11 +56,12 @@
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-gpf</artifactId>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-netcdf</artifactId>
-            <version>7.0.0-20181029.082811-74</version>
         </dependency>
+        -->
         <dependency>
             <groupId>org.xeustechnologies</groupId>
             <artifactId>jtar</artifactId>

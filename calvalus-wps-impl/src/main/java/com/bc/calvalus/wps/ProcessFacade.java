@@ -30,12 +30,14 @@ public abstract class ProcessFacade {
     protected Map<String, String> requestHeaderMap = new HashMap<>();
 
     private final String remoteRef;
+    private final WpsRequestContext wpsRequestContext;
 
     private static final String REMOTE_USER_KEY = PropertiesWrapper.get("remote.user.key");
     private static final String REMOTE_REF_KEY = PropertiesWrapper.get("remote.ref.key");
     private static final String REMOTE_USER_PREFIX = PropertiesWrapper.get("remote.user.prefix");
 
     public ProcessFacade(WpsRequestContext wpsRequestContext) throws IOException {
+        this.wpsRequestContext = wpsRequestContext;
         this.systemUserName = wpsRequestContext.getUserName();
         this.remoteUserName = resolveUserName(wpsRequestContext);
         this.remoteRef = wpsRequestContext.getHeaderField(REMOTE_REF_KEY);
@@ -72,6 +74,10 @@ public abstract class ProcessFacade {
         } else {
             return systemUserName;
         }
+    }
+
+    public String getHeaderField(String key) {
+        return wpsRequestContext.getHeaderField(key);
     }
 
     public abstract LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException;

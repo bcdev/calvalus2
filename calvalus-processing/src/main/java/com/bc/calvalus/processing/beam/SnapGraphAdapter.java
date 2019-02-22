@@ -278,9 +278,13 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             }
             Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
             Product sourceProduct;
-            if (qualifiedInputPath.equals(qualifiedSourcePath)) {
-                // main input
-                sourceProduct = getInputProduct();
+            if (qualifiedInputPath.equals(qualifiedSourcePath) ) {
+                // main input, maybe re-read with specific input format
+                if (inputFormat == null) {
+                    sourceProduct = getInputProduct();
+                } else {
+                    sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
+                }
                 if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
                     getLogger().info("input subsetting of split " + sourcePath);
                     sourceProduct = createSubsetFromInput(sourceProduct);

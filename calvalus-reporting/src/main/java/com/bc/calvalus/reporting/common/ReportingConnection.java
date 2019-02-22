@@ -4,6 +4,7 @@ import static com.bc.calvalus.reporting.common.NullUsageStatistic.NOT_FOUND_STRI
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.google.gson.Gson;
+import org.esa.snap.core.util.StringUtils;
 
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
@@ -23,15 +24,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * TODO add API doc
+ * This is a class that handles sending requests to Calvalus Reporting server.
  *
  * @author Martin Boettcher
+ * @author Hans Permana
  */
 public class ReportingConnection {
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final int DELAY_SECONDS = 300;
+    private static final String DEFAULT_CURSOR = "2017-10-01T00:00:00Z";
 
     private final Reporter reporter;
     private final Gson gson;
@@ -41,9 +44,14 @@ public class ReportingConnection {
     public ReportingConnection(Reporter reporter) {
         this.reporter = reporter;
         gson = new Gson();
-        cursor = reporter.getConfig().getProperty("reporting.cursor");
+        cursor = reporter.getConfig().getProperty("reporting.cursor", DEFAULT_CURSOR);
     }
 
+    /**
+     * Retrieve a single job report based on the  specified job id
+     *
+     * @param report The job report (that consists of job id) to be retrieved
+     */
     public void retrieveSingle(Report report) {
         String url = String.format("%s/job/%s/%s",
                                    reporter.getConfig().getProperty("reporting.calvalus.url"),
@@ -88,6 +96,10 @@ public class ReportingConnection {
         }
     }
 
+    /**
+     * Checks Calvalus Reporting server periodically to see if there are new records taking account the latest
+     * retrieved job.
+     */
     public void pollReportingServer() {
         while (true) {
             updateCursor();
@@ -152,10 +164,13 @@ public class ReportingConnection {
         }
         try {
             String reportContent = new String(Files.readAllBytes(reportFilePath));
+            if (StringUtils.isNullOrEmpty(reportContent)) {
+                return;
+            }
             String[] reportContentLines = reportContent.split("\n");
             String reportContentLastLine = reportContentLines[reportContentLines.length - 1];
             String latestDateTime = reportContentLastLine.split("\t")[1];
-            if (cursor != null && cursor.equalsIgnoreCase(latestDateTime)) {
+            if (cursor.equalsIgnoreCase(latestDateTime)) {
                 return;
             }
             cursor = latestDateTime;

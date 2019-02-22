@@ -11,7 +11,7 @@ public class DtoInputSelection implements IsSerializable {
 
     private String collectionName;
     private List<String> productIdentifiers;
-    private DtoTimeSelection dateRange;
+    private DtoDateRange dateRange;
     private String regionGeometry;
 
     /**
@@ -20,11 +20,11 @@ public class DtoInputSelection implements IsSerializable {
     public DtoInputSelection() {
     }
 
-    public DtoInputSelection(String collectionName, List<String> productIdentifiers, DtoTimeSelection timeSelection, String spatialSelection) {
+    public DtoInputSelection(String collectionName, List<String> productIdentifiers, DtoDateRange dateRange, String regionGeometry) {
         this.collectionName = collectionName;
         this.productIdentifiers = productIdentifiers;
-        this.dateRange = timeSelection;
-        this.regionGeometry = spatialSelection;
+        this.dateRange = dateRange;
+        this.regionGeometry = regionGeometry;
     }
 
     public String getCollectionName() {
@@ -35,11 +35,21 @@ public class DtoInputSelection implements IsSerializable {
         return productIdentifiers;
     }
 
-    public DtoTimeSelection getDateRange() {
+    public DtoDateRange getDateRange() {
         return dateRange;
     }
 
     public String getRegionGeometry() {
         return regionGeometry;
+    }
+
+    @Override
+    public String toString() {
+        return "DtoInputSelection{" +
+               "collectionName='" + collectionName + '\'' +
+               ", productIdentifiers=" + String.join(",", productIdentifiers) +
+               ", dateRange=" + dateRange +
+               ", regionGeometry='" + regionGeometry + '\'' +
+               '}';
     }
 }

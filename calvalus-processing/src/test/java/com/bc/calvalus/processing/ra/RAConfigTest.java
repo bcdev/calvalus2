@@ -36,6 +36,8 @@ public class RAConfigTest {
                 "  <regionSource>/calvalus/home/marcoz/shapefiles/HELCOM_grid100_LAEA5210.zip</regionSource>\n" +
                 "  <regionSourceAttributeName>CellCode</regionSourceAttributeName>\n" +
                 "  <regionSourceAttributeFilter>40N2, 40N3</regionSourceAttributeFilter>\n" +
+                "  <withRegionEnvelope>false</withRegionEnvelope>\n" +
+                "  <withProductNames>false</withProductNames>\n" +
                 "  <goodPixelExpression>not cloud and water</goodPixelExpression>\n" +
                 "  <percentiles>2,50,99</percentiles>\n" +
                 "  <bands>\n" +

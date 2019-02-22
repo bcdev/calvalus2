@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.TopologyException;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 import org.esa.snap.core.datamodel.Band;
@@ -98,16 +99,22 @@ public abstract class Extractor {
         regionFilters = new ArrayList<>();
         while (regionIterator.hasNext()) {
             RAConfig.NamedRegion namedRegion = regionIterator.next();
-            Rectangle pixelRect = SubsetOp.computePixelRegion(product, namedRegion.region, 1);
-            if (!pixelRect.isEmpty()) {
-                PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(namedRegion.region);
-                regionFilters.add(new Extractor.GeometryFilter(regionIndex,
-                                                               namedRegion.name,
-                                                               pixelRect,
-                                                               product.getSceneGeoCoding(),
-                                                               preparedGeometry));
+            try {
+                Rectangle pixelRect = SubsetOp.computePixelRegion(product, namedRegion.region, 1);
+
+                if (!pixelRect.isEmpty()) {
+                    PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(namedRegion.region);
+                    regionFilters.add(new Extractor.GeometryFilter(regionIndex,
+                            namedRegion.name,
+                            pixelRect,
+                            product.getSceneGeoCoding(),
+                            preparedGeometry));
+                }
+                regionIndex++;
             }
-            regionIndex++;
+            catch(TopologyException e) {
+                System.err.println("Region is skipped: "+namedRegion.name+" "+namedRegion.region+". Reason:"+e);
+            }
         }
         time = -1;
     }

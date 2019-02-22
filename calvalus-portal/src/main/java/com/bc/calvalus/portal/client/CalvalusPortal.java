@@ -94,6 +94,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private String[] queues = null;
     private MainMenu mainMenu;
     private PortalView currentView = null;
+    private String userName;
     private Map<String, OrderProductionView> productionTypeViews;
 
     public boolean withPortalFeature(String featureName) {
@@ -255,6 +256,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     @Override
     public OrderProductionView getViewForRestore(String productionType) {
         return productionTypeViews.get(productionType);
+    }
+
+    @Override
+    public String getUserName() {
+        return userName;
     }
 
     private void maybeInitFrontend() {
@@ -607,6 +613,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onSuccess(DtoCalvalusConfig config) {
             calvalusConfig = new HashMap<>();
             List<String> queueList = new ArrayList<>();
+            userName = config.getUser();
             if (config.getConfig().containsKey("calvalus.hadoop.mapreduce.job.queuename")) {
                 queueList.add(config.getConfig().get("calvalus.hadoop.mapreduce.job.queuename"));
             }

@@ -38,6 +38,7 @@ class StatisticsWriter {
     private final String[] bandNames;
     private final RAConfig.BandConfig[] bandConfigs;
     private final String[] internalRegionNames;
+    private final boolean withProductNames;
 
     StatisticsWriter(RAConfig raConfig, Statistics[] stats, WriterFactory writerFactory) throws IOException {
         this.statisticsPerRegion = raConfig.isWritePerRegion();
@@ -47,8 +48,9 @@ class StatisticsWriter {
         this.bandConfigs = raConfig.getBandConfigs();
         this.writerFactory = writerFactory;
         internalRegionNames = raConfig.getInternalRegionNames();
-
         int numWriter = 1;
+        withProductNames = raConfig.withProductNames();
+
         if (separateHistogram) {
             numWriter = 1 + bandNames.length;
         }
@@ -237,6 +239,9 @@ class StatisticsWriter {
         records.add("RegionId");
         records.add("TimeWindow_start");
         records.add("TimeWindow_end");
+        if (withProductNames) {
+            records.add("Product");
+        }
         records.add("numPasses");
         records.add("numObs");
         return records;

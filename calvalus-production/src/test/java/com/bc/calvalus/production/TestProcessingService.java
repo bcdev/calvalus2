@@ -78,4 +78,7 @@ public class TestProcessingService implements ProcessingService<String> {
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         return new String[0][];
     }
+
+    @Override
+    public void invalidateBundleCache() {}
 }

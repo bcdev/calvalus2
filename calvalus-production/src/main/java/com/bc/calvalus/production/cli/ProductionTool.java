@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.ingestion.IngestionTool;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProcessingLogHandler;
@@ -109,7 +110,7 @@ import static com.bc.calvalus.production.ProcessingLogHandler.LOG_STREAM_EMPTY_E
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-2.15-SNAPSHOT'
+ *                         the production. Defaults to 'calvalus-2.16-SNAPSHOT'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
@@ -290,6 +291,11 @@ public class ProductionTool {
 
             String jobSubmissionDate = df.format(new Date());
             config.put("jobSubmissionDate", jobSubmissionDate);
+
+            String systemName = config.get(JobConfigNames.CALVALUS_SYSTEM_NAME);
+            if(StringUtils.isNotNullAndNotEmpty(systemName)){
+                request.setParameter(JobConfigNames.CALVALUS_SYSTEM_NAME, systemName);
+            }
 
             Production production = orderProduction(serviceContainer.getProductionService(), request, hook);
             if (production.isAutoStaging()) {

@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -28,11 +29,15 @@ import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.SnapFileFilter;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 
 /**
@@ -139,15 +144,28 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
 
                 switch (inputFormat) {
                     case FORMAT_15M:
-                        return ProductIO.readProduct(localFile, "Landsat8GeoTIFF15m");
+                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF15m");
+                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF15m"), "panchromatic");
                     case FORMAT_30M:
-                        return ProductIO.readProduct(localFile, "Landsat8GeoTIFF30m");
+                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF30m");
+                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF30m"), "red");
                     default:
+                        CalvalusLogger.getLogger().info("reading with automatic format (inputFormat=" + inputFormat + ")");
                         return ProductIO.readProduct(localFile);
                 }
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }
+        }
+
+        private Product resample(Product product, String referenceBand) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("referenceBand", referenceBand);
+            Dimension preferredTileSize = product.getPreferredTileSize();
+            CalvalusLogger.getLogger().info("resampling input to " + referenceBand);
+            product = GPF.createProduct("Resample", params, product);
+            product.setPreferredTileSize(preferredTileSize);
+            return product;
         }
 
         @Override

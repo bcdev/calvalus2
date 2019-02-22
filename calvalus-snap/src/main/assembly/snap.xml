@@ -98,6 +98,7 @@
 
                 <include>org.esa.s2tbx:s2tbx-cache</include>
                 <include>org.esa.s2tbx:s2tbx-s2msi-reader</include>
+                <include>org.esa.s2tbx:s2tbx-s2msi-resampler</include>
                 <include>org.esa.s2tbx:lib-openjpeg</include>
                 <include>org.esa.s2tbx:s2tbx-jp2-reader</include>
                 <include>org.esa.s2tbx:s2tbx-jp2-writer</include>

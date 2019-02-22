@@ -28,7 +28,7 @@
 <div id="container" style="height: 100vh">
     <div class="header-panel">
         <div class="header-logo">
-            <a href="https://www.maamet.ee/">
+            <a href="https://www.maaamet.ee/">
                 <img src="images/0_maaamet_vapp_eng_78px_resize.png" alt="Maamet logo"/>
             </a>
         </div>
@@ -43,7 +43,7 @@
                 <% } %>
             </div>
             <div class="header-info-help">
-                <a href="https://esthub.maamet.ee/help" target="_CVHelp"
+                <a href="https://esthub.maaamet.ee/help" target="_CVHelp"
                    style="text-decoration:none;">
                     <span class="header-info-text">HELP</span>
                 </a>
@@ -72,12 +72,12 @@
                     <span class="copyright-text">Copyright &#169; 2018 ESTHub</span>
                 </div>
                 <div class="footer-legal">
-                    <a href="https://esthub.maamet.ee/en/legal_notice" target="_blank" style="text-decoration:none;">
+                    <a href="https://esthub.maaamet.ee/en/legal_notice" target="_blank" style="text-decoration:none;">
                         <span class="legal-privacy-text">Legal Notice</span>
                     </a>
                 </div>
                 <div class="footer-privacy">
-                    <a href="https://esthub.maamet.ee/en/data_protection" target="_blank" style="text-decoration:none;">
+                    <a href="https://esthub.maaamet.ee/en/data_protection" target="_blank" style="text-decoration:none;">
                         <span class="legal-privacy-text">Privacy Statement</span>
                     </a>
                 </div>
@@ -86,13 +86,13 @@
         </div>
         <div class="footer-info">
             <div class="footer-info-about">
-                <a href="https://esthub.maamet.ee/about"
+                <a href="https://esthub.maaamet.ee"
                    target="_blank" style="text-decoration:none;">
                     <span class="footer-info-text">About</span>
                 </a>
             </div>
             <div class="footer-info-help">
-                <a href="https://esthub.maamet.ee/help" target="_CVHelp"
+                <a href="https://esthub.maaamet.ee" target="_CVHelp"
                    style="text-decoration:none;">
                     <span class="footer-info-text">Help</span>
                 </a>

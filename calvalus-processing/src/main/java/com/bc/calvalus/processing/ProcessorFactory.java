@@ -27,23 +27,18 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.esa.snap.core.datamodel.Product;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isArchive;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isLib;
 
 /**
  * Creates a {@code ProcessorAdapter} for the given processor.

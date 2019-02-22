@@ -198,15 +198,15 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     String referenceBand = null;
                     if ("BEAM-DIMAP".equals(snapFormatName)) {  // TODO: only applicable for multi-resolution S2AC
                         referenceBand = "B2_ac";
-                    } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_10M)) {
+                    } else if (!snapFormatName.equals(FORMAT_L2_SEN2AGRI) && inputFormat.equals(FORMAT_10M)) {
                         referenceBand = "B2";
-                    } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_20M)) {
+                    } else if (!snapFormatName.equals(FORMAT_L2_SEN2AGRI) && inputFormat.equals(FORMAT_20M)) {
                         referenceBand = "B5";
-                    } else if (snapFormatName != FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_60M)) {
+                    } else if (!snapFormatName.equals(FORMAT_L2_SEN2AGRI) && inputFormat.equals(FORMAT_60M)) {
                         referenceBand = "B1";
-                    } else if (snapFormatName == FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_10M)) {
+                    } else if (snapFormatName.equals(FORMAT_L2_SEN2AGRI) && inputFormat.equals(FORMAT_10M)) {
                         referenceBand = "FRE_R1_B2";
-                    } else if (snapFormatName == FORMAT_L2_SEN2AGRI && inputFormat.equals(FORMAT_20M)) {
+                    } else if (snapFormatName.equals(FORMAT_L2_SEN2AGRI) && inputFormat.equals(FORMAT_20M)) {
                         referenceBand = "FRE_R2_B5";
                     }
                     if (referenceBand == null || !product.containsBand(referenceBand)) {

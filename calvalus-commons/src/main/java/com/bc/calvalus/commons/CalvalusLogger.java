@@ -40,6 +40,7 @@ public class CalvalusLogger {
         Logger logger = Logger.getLogger("com.bc.calvalus");
         logger.setUseParentHandlers(false);
         calvalusHandler.setFormatter(calvalusFormatter);
+        calvalusHandler.setLevel(Level.ALL);
         logger.addHandler(calvalusHandler);
         logger.setLevel(Level.INFO);
 

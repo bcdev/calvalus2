@@ -165,4 +165,8 @@ public interface ProductionService {
      */
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
 
+    /**
+     * Invalidates bundle cache after upload or delete
+     */
+    void invalidateBundleCache();
 }

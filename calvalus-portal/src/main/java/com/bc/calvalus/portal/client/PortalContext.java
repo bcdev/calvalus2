@@ -53,4 +53,6 @@ public interface PortalContext {
     String[] getRequestQueues();
 
     OrderProductionView getViewForRestore(String productionType);
+
+    String getUserName();
 }

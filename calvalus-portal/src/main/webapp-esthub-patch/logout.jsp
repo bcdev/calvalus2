@@ -14,7 +14,7 @@
             <table class="headerPanel">
                 <tr>
                     <td width="200">
-                        <a href="http://esthub.maamet.ee/"><img src="images/0_maaamet_vapp_eng_78px_resize.png" width="200" alt="Maamet logo"/></a>
+                        <a href="http://esthub.maaamet.ee/"><img src="images/0_maaamet_vapp_eng_78px_resize.png" width="200" alt="Maamet logo"/></a>
                     </td>
                     <td>
                         <h1 class="title">ESTHub Processing Platform</h1>
