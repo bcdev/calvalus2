@@ -121,7 +121,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
             }
             // TODO translate all request parameters
             translateParameter(conf, "productionName", "mapreduce.job.name");
-            translateParameter(conf, "processorType", "calvalus.l2.processorType");  // TODO
+            translateParameter(conf, "processorAdapterType", "calvalus.l2.processorType");  // TODO
             translateParameter(conf, "processorName", "calvalus.l2.scriptFiles");  // TODO
             
             conf.set("mapreduce.output.fileoutputformat.outputdir", output);
@@ -143,6 +143,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
             final ProcessingMapper mapper = new ProcessingMapper();
             mapper.run(context);
             committer.commitTask(taskContext);
+            committer.cleanupJob(taskContext);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -181,7 +182,13 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         final String outputCompression = jobConfig.get(JobConfigNames.OUTPUT_COMPRESSION);
 
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        final String productName = getProductName(jobConfig, processorAdapter.getInputPath().getName());
+        String inputName = processorAdapter.getInputPath().getName();
+        String productName;
+        if (! "MTD_MSIL1C.xml".equals(inputName)) {  // TODO
+            productName = getProductName(jobConfig, inputName);
+        } else {
+            productName = getProductName(jobConfig, processorAdapter.getInputPath().getParent().getName());
+        }
         final ProductFormatter productFormatter = outputFormat != null ? new ProductFormatter(productName, outputFormat, outputCompression) : null;
 
         final ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
