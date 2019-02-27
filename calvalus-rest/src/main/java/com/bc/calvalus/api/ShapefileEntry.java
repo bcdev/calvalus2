@@ -8,6 +8,10 @@ public class ShapefileEntry {
     private String owner;
     private String path;
 
+    // necessary for Jersey
+    public ShapefileEntry() {
+    }
+
     public ShapefileEntry(String owner, String path) {
         this.owner = owner;
         this.path = path;

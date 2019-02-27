@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 public class ShapefileModel {
 
+    private static final String REGION_DATA_DIR = "region_data";
     private static Logger LOG = CalvalusLogger.getLogger();
     private static ShapefileModel instance;
     private ServiceContainer serviceContainer;
@@ -38,7 +39,7 @@ public class ShapefileModel {
 
     public List<ShapefileEntry> getShapefiles(String userName) throws IOException {
         List<String> shapefilePathPatterns = new ArrayList<>();
-        String shapefilePathPattern = "/calvalus/home/" + userName + "/shapefiles/.*zip";
+        String shapefilePathPattern = "/calvalus/home/" + userName + "/" + REGION_DATA_DIR + "/.*zip";
         shapefilePathPatterns.add(shapefilePathPattern);
         FileStatus[] fileStatuses = serviceContainer.getFileSystemService().globFiles(userName, shapefilePathPatterns);
         List<ShapefileEntry> shapefileEntries = new ArrayList<>();
@@ -55,7 +56,8 @@ public class ShapefileModel {
 
     public FileStatus getShapefile(String username, String filename) throws IOException {
         List<String> pathPatterns = new ArrayList<>();
-        pathPatterns.add("/calvalus/home/" + username + "/shapefiles/" + filename + ".*");
+        pathPatterns.add("/calvalus/home/" + username + "/" + REGION_DATA_DIR + "/" + filename + ".*");
+        pathPatterns.add("/calvalus/home/" + username + "/" + REGION_DATA_DIR + "/" + filename + ".*");
         return serviceContainer.getFileSystemService().globFiles(username, pathPatterns)[0];
     }
 
