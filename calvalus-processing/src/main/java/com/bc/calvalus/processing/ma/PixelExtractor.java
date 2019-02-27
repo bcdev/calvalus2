@@ -323,7 +323,10 @@ public class PixelExtractor {
                 for (String flagName : flagNames) {
                     attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + band.getName() + "." + flagName);
                     // Note: side-effect here, adding new band to product
-                    product.addBand("flag_" + band.getName() + "_" + flagName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
+                    String bandName = "flag_" + band.getName() + "_" + flagName;
+                    if (!product.getBandGroup().contains(bandName)) {
+                        product.addBand(bandName, band.getName() + "." + flagName, ProductData.TYPE_INT8);
+                    }
                 }
             }
         }

@@ -217,7 +217,8 @@ public class CalvalusProductIO {
 
         String archiveName = path.getName().toLowerCase();
         long localSize = 0;
-        if (archiveName.endsWith(".zip")) {
+        boolean isZippedSlstrWithoutExtension = path.getName().matches("S3._SL_1_RBT.*_NT_00.");
+        if (archiveName.endsWith(".zip") || isZippedSlstrWithoutExtension) {
             try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
                 ZipEntry entry;
                 while ((entry = zipIn.getNextEntry()) != null) {
