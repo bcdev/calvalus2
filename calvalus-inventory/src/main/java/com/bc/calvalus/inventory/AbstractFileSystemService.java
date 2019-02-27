@@ -115,9 +115,20 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     }
 
     @Override
-    public boolean pathExists(String path) throws IOException {
+    public boolean pathExists(String path, String username) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
-        FileSystem fileSystem = new Path(path).getFileSystem(conf);
+
+        FileSystem fileSystem;
+        if (username != null) {
+            try {
+                fileSystem = FileSystem.get(new Path(path).toUri(), conf, username);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Unable to access file system.", e);
+            }
+        } else {
+            fileSystem = new Path(path).getFileSystem(conf);
+        }
+
         Path qualifiedPath = makeQualified(fileSystem, path);
         return fileSystem.exists(qualifiedPath);
     }

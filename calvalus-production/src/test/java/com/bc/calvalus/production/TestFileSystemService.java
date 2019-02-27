@@ -68,7 +68,7 @@ public class TestFileSystemService implements FileSystemService {
     }
 
     @Override
-    public boolean pathExists(String path) throws IOException {
+    public boolean pathExists(String path, String username) throws IOException {
         return false;
     }
 

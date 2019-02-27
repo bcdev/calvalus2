@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 
 public class ShapefileModel {
 
-    private static final String REGION_DATA_DIR = "region_data";
+    public static final String REGION_DATA_DIR = "region_data";
     private static Logger LOG = CalvalusLogger.getLogger();
     private static ShapefileModel instance;
     private ServiceContainer serviceContainer;
@@ -65,8 +65,8 @@ public class ShapefileModel {
         return AbstractFileSystemService.getUserPath(userName, path);
     }
 
-    public boolean pathExists(String path) throws IOException {
-        return serviceContainer.getFileSystemService().pathExists(path);
+    public boolean pathExists(String username, String path) throws IOException {
+        return serviceContainer.getFileSystemService().pathExists(path, username);
     }
 
     public boolean removeFile(String userName, String path) throws IOException {

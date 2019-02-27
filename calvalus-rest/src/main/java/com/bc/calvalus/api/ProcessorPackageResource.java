@@ -77,7 +77,7 @@ public class ProcessorPackageResource {
             String bundleId = zipFileName.toLowerCase().endsWith(".zip") ? zipFileName.substring(0, zipFileName.length()-4) : zipFileName;
             String bundlePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + bundleId);
             // delete existing bundle before upload
-            if (ProcessorPackageModel.getInstance(context).pathExists(bundlePath)) {
+            if (ProcessorPackageModel.getInstance(context).pathExists(userName, bundlePath)) {
                 LOG.info("replacing processor package " + bundleId);
                 ProcessorPackageModel.getInstance(context).removeDirectory(userName, bundlePath);
             } else {
@@ -137,7 +137,7 @@ public class ProcessorPackageResource {
         try {
             String userName = request.getUserPrincipal().getName();
             String bundlePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name);
-            if (! ProcessorPackageModel.getInstance(context).pathExists(bundlePath)) {
+            if (! ProcessorPackageModel.getInstance(context).pathExists(userName, bundlePath)) {
                 LOG.info("retrieving content of processor package failed - not found: " + name);
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
             }
@@ -200,7 +200,7 @@ public class ProcessorPackageResource {
             String fileName = item.getName();
             String filePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name + "/" + fileName);
             // delete existing file before upload
-            if (ProcessorPackageModel.getInstance(context).pathExists(filePath)) {
+            if (ProcessorPackageModel.getInstance(context).pathExists(userName, filePath)) {
                 LOG.info("replacing processor file " + name + "/" + fileName);
                 ProcessorPackageModel.getInstance(context).removeDirectory(userName, filePath);
             } else {
@@ -257,7 +257,7 @@ public class ProcessorPackageResource {
         try {
             String userName = request.getUserPrincipal().getName();
             String filePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name + "/" + fileName);
-            if (! ProcessorPackageModel.getInstance(context).pathExists(filePath)) {
+            if (! ProcessorPackageModel.getInstance(context).pathExists(userName, filePath)) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
             }
             LOG.info("retrieving content of processor file " + name + "/" + fileName);

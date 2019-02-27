@@ -217,7 +217,7 @@ public abstract class HadoopProductionType implements ProductionType {
      */
     protected boolean successfullyCompleted(String outputDir) {
         try {
-            return fileSystemService.pathExists(outputDir + "/_SUCCESS");
+            return fileSystemService.pathExists(outputDir + "/_SUCCESS", null);
         } catch (IOException e) {
             return false;
         }

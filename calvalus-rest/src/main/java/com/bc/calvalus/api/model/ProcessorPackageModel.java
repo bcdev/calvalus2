@@ -77,8 +77,8 @@ public class ProcessorPackageModel {
         return AbstractFileSystemService.getUserPath(userName, path);
     }
 
-    public boolean pathExists(String path) throws IOException {
-        return serviceContainer.getFileSystemService().pathExists(path);
+    public boolean pathExists(String username, String path) throws IOException {
+        return serviceContainer.getFileSystemService().pathExists(path, username);
     }
 
     public boolean removeDirectory(String userName, String path) throws IOException {

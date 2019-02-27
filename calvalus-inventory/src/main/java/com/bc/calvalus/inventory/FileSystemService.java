@@ -83,10 +83,11 @@ public interface FileSystemService {
      * Provides the information if the given path exists.
      *
      * @param path the path to check.
+     * @param username the username to fetch the filesystem for. If <code>null</code>, the default username is used.
      * @return {@code true}, if the path exists, otherwise {@code false}.
      * @throws IOException If an I/O error occurs
      */
-    boolean pathExists(String path) throws IOException;
+    boolean pathExists(String path, String username) throws IOException;
 
     /**
      * Opens the file specified by the given path for reading.

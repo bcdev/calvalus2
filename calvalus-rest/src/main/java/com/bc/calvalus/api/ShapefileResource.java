@@ -73,7 +73,7 @@ public class ShapefileResource {
             ShapefileModel shapefileModel = ShapefileModel.getInstance(context);
             String shapefilePath = getShapefilePath(userName, filename, shapefileModel);
             // delete existing shapefile before upload
-            if (shapefileModel.pathExists(shapefilePath)) {
+            if (shapefileModel.pathExists(userName, shapefilePath)) {
                 LOG.info("replacing shapefile '" + shapefileName + "'");
                 removeSafe(userName, shapefileName, shapefileModel, shapefilePath);
             } else {
@@ -101,8 +101,8 @@ public class ShapefileResource {
             if (fileStatus == null) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
             }
-            return new FileEntry(fileStatus.getPath().getName(), fileStatus.getOwner(), new Date(fileStatus.getModificationTime()), fileStatus.getLen());
-        } catch (WebApplicationException e) {
+        return new FileEntry(fileStatus.getPath().getName(), fileStatus.getOwner(), new Date(fileStatus.getModificationTime()), fileStatus.getLen());
+    } catch (WebApplicationException e) {
             throw e;
         } catch (Exception e) {
             throw new WebApplicationException(e, Response.status(Response.Status.INTERNAL_SERVER_ERROR)
@@ -125,7 +125,7 @@ public class ShapefileResource {
     }
 
     private static String getShapefilePath(String username, String filename, ShapefileModel shapefileModel) {
-        return shapefileModel.getUserPath(username, "shapefiles/" + filename);
+        return shapefileModel.getUserPath(username, ShapefileModel.REGION_DATA_DIR + "/" + filename);
     }
 
     private static void removeSafe(String username, String shapefileName, ShapefileModel shapefileModel, String shapefilePath) {
