@@ -1,7 +1,6 @@
 package com.bc.calvalus.reporting.code;
 
 import com.bc.calvalus.reporting.common.UsageStatistic;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -166,8 +165,7 @@ public class CodeReport {
         this.messageTime = LocalDateTime.now().toString();
     }
 
-    private void validateMandatoryFields() {
-        String mandatoryFields = PropertiesWrapper.get("mandatory.fields");
+    private void validateMandatoryFields(String mandatoryFields) {
         String[] split = mandatoryFields.split(",");
         for (String s : split) {
             try {
@@ -235,8 +233,8 @@ public class CodeReport {
         return (mbMillisMapTotal + mbMillisReduceTotal) / (KILO_BYTE * SECONDS_PER_HOUR * MILLIS_PER_SECOND);
     }
 
-    public String toJson() {
-        validateMandatoryFields();
+    public String toJson(String mandatoryFields) {
+        validateMandatoryFields(mandatoryFields);
 
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder = gsonBuilder.registerTypeAdapter(Double.class, new JsonSerializer<Double>() {

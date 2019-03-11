@@ -55,7 +55,7 @@ public class CodeReportTest {
                                                            1159308L,
                                                            59360L);
         CodeReport codeReport = new CodeReport(usageStatistic);
-        assertThat(codeReport.toJson(), containsString("{\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
                                                        "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
@@ -84,7 +84,7 @@ public class CodeReportTest {
                                                        "  \"outProductsSize\": 0.767787,\n" +
                                                        "  \"messageType\": \"ProductProcessedMessage\",\n" +
                                                        "  \"serviceId\": \"code-de-processing-service\",\n"));
-        assertThat(codeReport.toJson(), containsString("  \"version\": \"1.0\"\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("  \"version\": \"1.0\"\n" +
                                                        "}"));
     }
 
@@ -126,7 +126,7 @@ public class CodeReportTest {
                                                            1159308L,
                                                            59360L);
         CodeReport codeReport = new CodeReport(usageStatistic);
-        assertThat(codeReport.toJson(), containsString("{\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
                                                        "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
@@ -154,7 +154,7 @@ public class CodeReportTest {
                                                        "  \"outProductsSize\": 0.767787,\n" +
                                                        "  \"messageType\": \"ProductProcessedMessage\",\n" +
                                                        "  \"serviceId\": \"code-de-processing-service\",\n"));
-        assertThat(codeReport.toJson(), containsString("  \"version\": \"1.0\"\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("  \"version\": \"1.0\"\n" +
                                                        "}"));
     }
 
@@ -196,7 +196,7 @@ public class CodeReportTest {
                                                            1159308L,
                                                            59360L);
         CodeReport codeReport = new CodeReport(usageStatistic);
-        assertThat(codeReport.toJson(), containsString("{\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
                                                        "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
@@ -224,7 +224,7 @@ public class CodeReportTest {
                                                        "  \"outProductsSize\": 0.767787,\n" +
                                                        "  \"messageType\": \"ProductProcessedMessage\",\n" +
                                                        "  \"serviceId\": \"code-de-processing-service\",\n"));
-        assertThat(codeReport.toJson(), containsString("  \"version\": \"1.0\"\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("  \"version\": \"1.0\"\n" +
                                                        "}"));
     }
 
@@ -266,7 +266,7 @@ public class CodeReportTest {
                                                            1159308L,
                                                            59360L);
         CodeReport codeReport = new CodeReport(usageStatistic);
-        assertThat(codeReport.toJson(), containsString("{\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
                                                        "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
@@ -294,7 +294,7 @@ public class CodeReportTest {
                                                        "  \"outProductsSize\": 0.767787,\n" +
                                                        "  \"messageType\": \"ProductProcessedMessage\",\n" +
                                                        "  \"serviceId\": \"code-de-processing-service\",\n"));
-        assertThat(codeReport.toJson(), containsString("  \"version\": \"1.0\"\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("  \"version\": \"1.0\"\n" +
                                                        "}"));
     }
 
@@ -336,7 +336,7 @@ public class CodeReportTest {
                                                            1159308L,
                                                            59360L);
         CodeReport codeReport = new CodeReport(usageStatistic);
-        assertThat(codeReport.toJson(), containsString("{\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("{\n" +
                                                        "  \"requestId\": \"job-01\",\n" +
                                                        "  \"jobName\": \"Job 01\",\n" +
                                                        "  \"jobSubmissionTime\": \"2018-01-01T01:00:00.000Z\",\n" +
@@ -364,7 +364,7 @@ public class CodeReportTest {
                                                        "  \"outProductsSize\": 0.767787,\n" +
                                                        "  \"messageType\": \"ProductProcessedMessage\",\n" +
                                                        "  \"serviceId\": \"code-de-processing-service\",\n"));
-        assertThat(codeReport.toJson(), containsString("  \"version\": \"1.0\"\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("  \"version\": \"1.0\"\n" +
                                                        "}"));
     }
 
@@ -397,7 +397,7 @@ public class CodeReportTest {
                                                "outProductsLocation",
                                                0.123456789
         );
-        assertThat(codeReport.toJson(), containsString("{\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("{\n" +
                                                        "  \"requestId\": \"id\",\n" +
                                                        "  \"jobName\": \"job\",\n" +
                                                        "  \"jobSubmissionTime\": \"jobSubmissionTime\",\n" +
@@ -426,7 +426,7 @@ public class CodeReportTest {
                                                        "  \"outProductsSize\": 0.123457,\n" +
                                                        "  \"messageType\": \"ProductProcessedMessage\",\n" +
                                                        "  \"serviceId\": \"code-de-processing-service\","));
-        assertThat(codeReport.toJson(), containsString("  \"version\": \"1.0\"\n" +
+        assertThat(codeReport.toJson(PropertiesWrapper.get("mandatory.fields")), containsString("  \"version\": \"1.0\"\n" +
                                                        "}"));
     }
 }

@@ -49,7 +49,7 @@ public class AccountingJmsConnection {
 
     void send(Report report) {
         CodeReport codeReport = new CodeReport(report.usageStatistic);
-        String messageJson = codeReport.toJson();
+        String messageJson = codeReport.toJson(reporter.getConfig().getProperty("mandatory.fields"));
         LOGGER.info("sending report " + report.usageStatistic.getJobId());
         Path reportsDirPath = Paths.get(reporter.getConfig().getProperty("reporting.code.reportsdir"));
         if (!Files.exists(reportsDirPath)) {
