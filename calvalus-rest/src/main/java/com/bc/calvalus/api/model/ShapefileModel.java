@@ -57,7 +57,6 @@ public class ShapefileModel {
     public FileStatus getShapefile(String username, String filename) throws IOException {
         List<String> pathPatterns = new ArrayList<>();
         pathPatterns.add("/calvalus/home/" + username + "/" + REGION_DATA_DIR + "/" + filename + ".*");
-        pathPatterns.add("/calvalus/home/" + username + "/" + REGION_DATA_DIR + "/" + filename + ".*");
         return serviceContainer.getFileSystemService().globFiles(username, pathPatterns)[0];
     }
 
