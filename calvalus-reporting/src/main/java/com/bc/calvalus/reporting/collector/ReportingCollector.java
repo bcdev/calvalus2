@@ -67,27 +67,36 @@ public class ReportingCollector<T> {
     private void run() throws JobReportsException, ServerConnectionException, JAXBException, JobTransformerException {
         jobReports.init(PropertiesWrapper.get("reporting.folder.path"));
         this.statusHandler.initReport(jobReports.getKnownJobIdSet().size());
+        boolean firstCycle = true;
         while (true) {
-            Jobs jobs = retrieveAllJobs();
-            Gson gson = new Gson();
-            int counter = 0;
-            for (Job job : jobs.getJob()) {
-                if (!jobReports.contains(job.getId())) {
-                    JobConf conf = getConf(job);
-                    JobCounters counters = getCounters(job);
-                    JobDetailType jobDetailType = createJobDetailType(conf, counters, job);
-                    String jobJsonString = gson.toJson(jobDetailType);
-                    long finishTime = Long.parseLong(job.getFinishTime());
-                    jobReports.add(job.getId(), finishTime, jobJsonString);
-                    counter++;
+            try {
+                Jobs jobs = retrieveAllJobs();
+                Gson gson = new Gson();
+                int counter = 0;
+                for (Job job : jobs.getJob()) {
+                    if (!jobReports.contains(job.getId())) {
+                        JobConf conf = getConf(job);
+                        JobCounters counters = getCounters(job);
+                        JobDetailType jobDetailType = createJobDetailType(conf, counters, job);
+                        String jobJsonString = gson.toJson(jobDetailType);
+                        long finishTime = Long.parseLong(job.getFinishTime());
+                        jobReports.add(job.getId(), finishTime, jobJsonString);
+                        counter++;
+                    }
                 }
+                if (counter > 0) {
+                    LOGGER.info("Successfully added " + counter + " new job(s) to the reports file.");
+                    this.statusHandler.updateNewJobNumber(jobReports.getKnownJobIdSet().size());
+                } else {
+                    LOGGER.info("No new jobs on the history server.");
+                }
+            } catch (ServerConnectionException exception) {
+                if (firstCycle) {
+                    throw exception;
+                }
+                LOGGER.log(Level.WARNING, "Problem when connecting to history server.", exception);
             }
-            if (counter > 0) {
-                LOGGER.info("Successfully added " + counter + " new job(s) to the reports file.");
-                this.statusHandler.updateNewJobNumber(jobReports.getKnownJobIdSet().size());
-            } else {
-                LOGGER.info("No new jobs on the history server.");
-            }
+            firstCycle = false;
             int pollInterval = PropertiesWrapper.getInteger("history.server.poll.interval");
             LOGGER.info("waiting for " + pollInterval / 1000 + " seconds for the next run...");
             try {
