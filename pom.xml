@@ -12,7 +12,7 @@
 
     <properties>
         <hadoop.version>2.7.3-BC</hadoop.version>
-        <!-- <hadoop.version>2.9.1-BC</hadoop.version> -->
+        <!--<hadoop.version>2.9.1-BC</hadoop.version>-->
         <calvalus.version>2.16-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>7.0.0-SNAPSHOT</snap.version>
@@ -334,10 +334,21 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>2.2.3</version>
+                <!--<version>2.9.5</version>-->
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>2.2.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.2.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
                 <version>2.2.3</version>
             </dependency>
 

@@ -109,6 +109,15 @@
             <artifactId>jackson-mapper-asl</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+
         <!-- Apache cli command line parser -->
 
         <dependency>
@@ -156,12 +165,12 @@
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
         </dependency>
-<!--
-        <dependency>
-        <groupId>org.esa.s2tbx</groupId>
-        <artifactId>sen2agri-reader</artifactId>
-        <version>0.1.1-SNAPSHOT</version>
-        </dependency>
--->
+        <!--
+                <dependency>
+                <groupId>org.esa.s2tbx</groupId>
+                <artifactId>sen2agri-reader</artifactId>
+                <version>0.1.1-SNAPSHOT</version>
+                </dependency>
+        -->
     </dependencies>
 </project>
