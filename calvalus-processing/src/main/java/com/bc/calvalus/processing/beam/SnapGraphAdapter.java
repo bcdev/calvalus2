@@ -283,6 +283,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 if (inputFormat == null) {
                     sourceProduct = getInputProduct();
                 } else {
+                    getConfiguration().set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
                     sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
                 }
                 if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
