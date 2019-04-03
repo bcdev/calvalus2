@@ -20,6 +20,8 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
@@ -41,6 +43,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +54,8 @@ import java.util.regex.Pattern;
  * It unzips the products and opens from the local file.
  */
 public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private static final String FORMAT_10M = "CALVALUS-SENTINEL-2-MSI-10M";
     public static final String FORMAT_20M = "CALVALUS-SENTINEL-2-MSI-20M";
@@ -64,6 +69,9 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             String filename = pathConfig.getPath().getName();
             if (filename.matches("^S2.*_MSIL1C.*") ||
                     filename.matches("^S2.*_...L2A.*")) {
+                return DecodeQualification.INTENDED;
+            }
+            if ("MTD_MSIL1C.xml".equals(filename) && pathConfig.getPath().toString().startsWith("s3a://")) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -129,6 +137,14 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
                         snapFormatName = FORMAT_L2_SEN2AGRI;
                     }
+                } else if ("s3a".equals(pathConfig.getPath().toUri().getScheme())) {
+                    // it currently is the metadata file, so download the containing folder
+                    FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
+                    File dst = new File(pathConfig.getPath().getParent().getName());
+                    LOG.info("copyFileToLocal: " + pathConfig.getPath().getParent().toString() + " --> " + dst);
+                    FileUtil.copy(fs, pathConfig.getPath().getParent(), dst, false, configuration);
+                    localFile = new File(dst, "MTD_MSIL1C.xml");
+                    snapFormatName = "SENTINEL-2-MSI-MultiRes";
                 } else {
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
