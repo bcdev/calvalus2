@@ -36,6 +36,7 @@
     <security-role>
         <description>Users with access to Calvalus API</description>
         <role-name>bc</role-name>
+        <role-name>calwps</role-name>
     </security-role>
 
     <security-constraint>
@@ -49,6 +50,7 @@
         </web-resource-collection>
         <auth-constraint>
             <role-name>bc</role-name>
+            <role-name>calwps</role-name>
         </auth-constraint>
     </security-constraint>
 

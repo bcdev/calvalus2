@@ -1,5 +1,6 @@
 package com.bc.calvalus.api;
 
+import com.bc.calvalus.api.model.BackendConfig;
 import com.bc.calvalus.api.model.ShapefileModel;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
@@ -42,10 +43,9 @@ public class ShapefileResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     public Response list(@Context HttpServletRequest request, @Context SecurityContext securityContext, @Context ServletContext context) throws NotFoundException {
 
-        String userName = request.getUserPrincipal().getName();
-
         Response response;
         try {
+            String userName = Utils.getUserName(request, context);
             ShapefileModel shapefileModel = ShapefileModel.getInstance(context);
             GenericEntity<List<ShapefileEntry>> shapefileList = new GenericEntity<List<ShapefileEntry>>(shapefileModel.getShapefiles(userName)) {};
             int count = shapefileList.getEntity().size();
@@ -66,7 +66,7 @@ public class ShapefileResource {
     @Consumes({MediaType.MULTIPART_FORM_DATA})
     public Response upload(@Context HttpServletRequest request, @Context UriInfo uriInfo, @Context ServletContext context) throws NotFoundException {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             FileItem item = getFileItem(request);
             String filename = getValidFilename(item);
             String shapefileName = filename.substring(0, filename.length() - 4);
@@ -96,7 +96,7 @@ public class ShapefileResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
     public FileEntry show(@PathParam("filename") String filename, @Context HttpServletRequest request, @Context SecurityContext securityContext, @Context ServletContext context) throws NotFoundException {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             FileStatus fileStatus = ShapefileModel.getInstance(context).getShapefile(userName, filename);
             if (fileStatus == null) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
@@ -114,7 +114,7 @@ public class ShapefileResource {
     @Path("/{filename}")
     public void delete(@PathParam("filename") String filename, @Context HttpServletRequest request, @Context ServletContext context) throws NotFoundException {
         try {
-            String username = request.getUserPrincipal().getName();
+            String username = Utils.getUserName(request, context);
             ShapefileModel shapefileModel = ShapefileModel.getInstance(context);
             String shapefilePath = getShapefilePath(username, filename, shapefileModel);
             removeSafe(username, filename, shapefileModel, shapefilePath);

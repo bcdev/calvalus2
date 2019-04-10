@@ -33,7 +33,7 @@ public class ShapefileModel {
 
     private ShapefileModel(ServletContext context) throws ServletException, ProductionException {
         LOG.info("constructing new service container");
-        BackendConfig backendConfig = new BackendConfig(context);
+        BackendConfig backendConfig = BackendConfig.getConfig(context);
         serviceContainer = new HadoopServiceContainerFactory().create(backendConfig.getConfigMap(), backendConfig.getLocalAppDataDir(), backendConfig.getLocalStagingDir());
     }
 

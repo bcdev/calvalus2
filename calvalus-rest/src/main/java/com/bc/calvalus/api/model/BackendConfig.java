@@ -34,6 +34,14 @@ public class BackendConfig {
     private String uploadPath;
     private Map<String, String> configMap;
 
+    static BackendConfig singleton = null;
+    public synchronized static BackendConfig getConfig(ServletContext context) throws ServletException {
+         if (singleton == null) {
+             singleton = new BackendConfig(context);
+         }
+         return singleton;
+    }
+
     public BackendConfig(ServletContext servletContext) throws ServletException {
         String realPath = servletContext.getRealPath(".");
         localContextDir = realPath != null ? new File(realPath) : null;
