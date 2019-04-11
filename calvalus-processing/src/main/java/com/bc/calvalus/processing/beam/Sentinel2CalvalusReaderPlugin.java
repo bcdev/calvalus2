@@ -71,7 +71,9 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     filename.matches("^S2.*_...L2A.*")) {
                 return DecodeQualification.INTENDED;
             }
-            if ("MTD_MSIL1C.xml".equals(filename) && pathConfig.getPath().toString().startsWith("s3a://")) {
+            if ("MTD_MSIL1C.xml".equals(filename)
+                    && (pathConfig.getPath().toString().startsWith("s3a://")
+                        || pathConfig.getPath().toString().startsWith("swift://"))) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -137,7 +139,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
                         snapFormatName = FORMAT_L2_SEN2AGRI;
                     }
-                } else if ("s3a".equals(pathConfig.getPath().toUri().getScheme())) {
+                } else if ("s3a".equals(pathConfig.getPath().toUri().getScheme()) || "swift".equals(pathConfig.getPath().toUri().getScheme())) {
                     // it currently is the metadata file, so download the containing folder
                     FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
                     File dst = new File(pathConfig.getPath().getParent().getName());

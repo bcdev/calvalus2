@@ -453,6 +453,11 @@
                 <artifactId>hadoop-aws</artifactId>
                 <version>2.9.1-BC</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-openstack</artifactId>
+                <version>2.9.1-BC</version>
+            </dependency>
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
 
