@@ -59,7 +59,12 @@ public class CalvalusHadoopConnection {
     }
 
     public String getDiagnostics(JobID id) throws IOException {
-        return getDiagnostics(getJob(id));
+        RunningJob job = getJob(id);
+        if (job != null) {
+            return getDiagnostics(job);
+        } else {
+            return "job diagnostics not found";
+        }
     }
 
     /** Read first exception message of some failed task */
