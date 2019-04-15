@@ -96,7 +96,7 @@ public class DefaultInventoryService implements InventoryService {
                         for (String item : productSet.getGeoInventory().split(",")) {
                             if (item.startsWith("file:") && !withExternalAccessControl) {
                                 LocalFileSystem.newInstance(new Configuration()).exists(new Path(item + "/" + ProductSetPersistable.INDEX));
-                            } else {
+                            } else if (! item.startsWith("catalogue")) {
                                 fileSystem.exists(fileSystemService.makeQualified(fileSystem, item + "/" + ProductSetPersistable.INDEX));
                             }
                         }

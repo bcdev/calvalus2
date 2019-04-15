@@ -44,6 +44,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,6 +57,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Base64;
 
 /**
  * An input format that maps each input file to a single (file) split.
@@ -126,12 +128,11 @@ public class PatternBasedInputFormat extends InputFormat {
         String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
-        String catalogue = conf.get(JobConfigNames.CALVALUS_INPUT_CATALOGUE);
         Set<String> productIdentifiers = new HashSet<>(conf.getStringCollection(
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
 
         List<InputSplit> splits;
-        if (geoInventory != null && inputPathPatterns == null) {
+        if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns == null) {
             Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
             LOG.info(String.format("%d files returned from geo-inventory '%s'.", paths.size(), geoInventory));
             if (!productIdentifiers.isEmpty()) {
@@ -181,7 +182,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
             }
-        } else if (geoInventory != null && inputPathPatterns != null) {
+        } else if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
             Set<String> pathInDB = GeodbInputFormat.queryGeoInventory(false, conf);
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -214,17 +215,24 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
             }
-        } else if (catalogue != null) {
-            final Map<String, String> searchParameters = searchParametersOf(catalogue);
-            final String provider = searchParameters.get("provider");
-            final String searchUrl = conf.get("catalogue." + provider + ".searchurl");
+        } else if (geoInventory != null && geoInventory.startsWith("catalogue")) {
+            final Map<String, String> searchParameters = parseSearchParameters(geoInventory);
+            final String provider = searchParameters.get("catalogue");
+            final String searchUrlTemplate = conf.get("catalogue." + provider + ".searchurl");
             final String searchXPath = conf.get("catalogue." + provider + ".searchxpath");
-            final String searchPattern = conf.get("catalogue." + provider + ".pathpattern");
-            final String searchReplacement = conf.get("catalogue." + provider + ".pathreplacement");
+            final String searchCredentials = conf.get("catalogue." + provider + ".searchcredentials");
+            final Pattern pathPattern = conf.get("catalogue." + provider + ".pathpattern") != null
+                    ? Pattern.compile(conf.get("catalogue." + provider + ".pathpattern")) : null;
+            final String pathReplacement = conf.get("catalogue." + provider + ".pathreplacement");
             final String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             final List<DateRange> dateRanges = createDateRangeList(dateRangesString);
 
-            final String searchUrl1 = replaceSearchParameters(searchUrl, searchParameters, geometryWkt);
+            if (geometryWkt != null) {
+                searchParameters.put("polygon", geometryWkt);
+            } else {
+                searchParameters.put("polygon", "POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))");
+            }
+
             final HttpClient httpClient = new HttpClient();
             final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             docFactory.setNamespaceAware(true);
@@ -233,25 +241,33 @@ public class PatternBasedInputFormat extends InputFormat {
 
             // date ranges loop
             for (DateRange dateRange : dateRanges) {
-                String searchUrl2 = replaceStartStop(searchUrl1, dateRange);
+                searchParameters.put("start", DateUtils.formatDate(dateRange.getStartDate()));
+                searchParameters.put("stop", DateUtils.formatDate(dateRange.getStopDate()));
 
                 // incremental query loop
                 int offset = 0;
                 while (true) {
-                    String searchUrl3 = urlEncode(replaceOffsetCount(searchUrl2, offset, DEFAULT_SEARCH_CHUNK_SIZE));
-                    //System.out.println(searchUrl3);
-                    GetMethod catalogueRequest = new GetMethod(searchUrl3);
-                    InputStream response = inquireCatalogue(httpClient, catalogueRequest);
+                    searchParameters.put("offset", String.valueOf(offset));
+                    searchParameters.put("offset1", String.valueOf(offset+1));
+                    searchParameters.put("count", String.valueOf(DEFAULT_SEARCH_CHUNK_SIZE));
+                    final String searchUrl = urlEncode(replaceSearchParameters(searchUrlTemplate, searchParameters));
+
+                    //System.out.println(searchUrl);
+                    final GetMethod catalogueRequest = new GetMethod(searchUrl);
+                    if (searchCredentials != null) {
+                        catalogueRequest.setRequestHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(searchCredentials.getBytes(StandardCharsets.UTF_8)));
+                    }
+                    final InputStream response = inquireCatalogue(httpClient, catalogueRequest);
 
                     try {
-                        NodeList nl = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
+                        NodeList pathNodes = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
 
                         // search results loop
                         int count = 0;
-                        for (int i = 0; i < nl.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
-                            String productArchivePath = nl.item(i).getTextContent();
-                            if (searchPattern != null && searchReplacement != null) {
-                                productArchivePath = replaceSearchPattern(productArchivePath, searchPattern, searchReplacement);
+                        for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
+                            String productArchivePath = pathNodes.item(i).getTextContent();
+                            if (pathPattern != null && pathReplacement != null) {
+                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
                             }
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
@@ -278,31 +294,7 @@ public class PatternBasedInputFormat extends InputFormat {
         return splits;
     }
 
-    private String replaceSearchPattern(String productArchivePath, String searchPattern, String searchReplacement) {
-        Pattern pattern = Pattern.compile(searchPattern);
-        Matcher matcher = pattern.matcher(productArchivePath);
-        productArchivePath = matcher.replaceAll(searchReplacement);
-        return productArchivePath;
-    }
-
-    private String replaceStartStop(String searchUrl, DateRange dateRange) {
-        return searchUrl.replaceAll("\\$\\{start\\}", DateUtils.formatDate(dateRange.getStartDate())).
-                            replaceAll("\\$\\{stop\\}", DateUtils.formatDate(dateRange.getStopDate()));
-    }
-
-    private String replaceSearchParameters(String searchUrl, Map<String, String> searchParameters, String geometryWkt) {
-        for (Map.Entry<String,String> e : searchParameters.entrySet()) {
-            searchUrl = searchUrl.replaceAll("\\$\\{"+e.getKey()+"\\}", e.getValue());
-        }
-        if (geometryWkt != null) {
-            searchUrl = searchUrl.replaceAll("\\$\\{polygon\\}", geometryWkt);
-        } else {
-            searchUrl = searchUrl.replaceAll("\\$\\{polygon\\}", "POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))");
-        }
-        return searchUrl;
-    }
-
-    private Map<String, String> searchParametersOf(String catalogue) {
+    private Map<String, String> parseSearchParameters(String catalogue) {
         Map<String,String> searchParameters = new HashMap<>();
         for (String param : catalogue.split("&")) {
             int p = param.indexOf('=');
@@ -311,13 +303,23 @@ public class PatternBasedInputFormat extends InputFormat {
         return searchParameters;
     }
 
-    private NodeList parseCatalogueResponse(DocumentBuilderFactory factory, XPathFactory xPathfactory, InputStream response, String searchXPath) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(response);
-        XPath xpath = xPathfactory.newXPath();
-        xpath.setNamespaceContext(ATOM_NAMESPACE_CONTEXT);
-        XPathExpression expr = xpath.compile(searchXPath);
-        return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+
+    private String replaceSearchParameters(String searchUrl,
+                                           Map<String, String> searchParameters) {
+        for (Map.Entry<String,String> param : searchParameters.entrySet()) {
+            searchUrl = searchUrl.replaceAll("\\$\\{"+param.getKey()+"\\}", param.getValue());
+        }
+        return searchUrl;
+    }
+
+    private String urlEncode(String searchUrl) {
+        return searchUrl.
+                replaceAll(" ", "%20").
+                replaceAll("\"", "%22").
+                replaceAll("\\(", "%28").
+                replaceAll("\\)", "%29").
+                replaceAll("\\[", "%5B").
+                replaceAll("\\]", "%5D");
     }
 
     private InputStream inquireCatalogue(HttpClient httpClient, GetMethod getMethod) throws IOException {
@@ -329,20 +331,19 @@ public class PatternBasedInputFormat extends InputFormat {
         return getMethod.getResponseBodyAsStream();
     }
 
-    private String replaceOffsetCount(String searchUrl2, int offset, int searchChunkSize) {
-        return searchUrl2.replaceAll("\\$\\{offset\\}", String.valueOf(offset)).
-                replaceAll("\\$\\{offset1\\}", String.valueOf(offset+1)).
-                replaceAll("\\$\\{count\\}", String.valueOf(searchChunkSize));
+    private NodeList parseCatalogueResponse(DocumentBuilderFactory factory, XPathFactory xPathfactory, InputStream response, String searchXPath) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(response);
+        XPath xpath = xPathfactory.newXPath();
+        xpath.setNamespaceContext(ATOM_NAMESPACE_CONTEXT);
+        XPathExpression expr = xpath.compile(searchXPath);
+        return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     }
 
-    private String urlEncode(String searchUrl3) {
-        return searchUrl3.
-                replaceAll(" ", "%20").
-                replaceAll("\"", "%22").
-                replaceAll("\\(", "%28").
-                replaceAll("\\)", "%29").
-                replaceAll("\\[", "%5B").
-                replaceAll("\\]", "%5D");
+    private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement) {
+        Matcher matcher = pathPattern.matcher(productArchivePath);
+        productArchivePath = matcher.replaceAll(pathReplacement);
+        return productArchivePath;
     }
 
     private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(
