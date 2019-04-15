@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.hadoop;
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
@@ -11,11 +12,14 @@ import com.bc.calvalus.processing.geodb.GeodbInputFormat;
 import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobConf;
@@ -25,16 +29,33 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.esa.snap.core.util.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An input format that maps each input file to a single (file) split.
@@ -52,6 +73,31 @@ import java.util.logging.Logger;
 public class PatternBasedInputFormat extends InputFormat {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
+    private static final int DEFAULT_SEARCH_CHUNK_SIZE = 20;
+
+    static class AtomNamespaceContext implements NamespaceContext {
+        @Override
+        public String getNamespaceURI(String prefix) {
+            if ("a".equals(prefix))
+                return "http://www.w3.org/2005/Atom";
+            if ("m".equals(prefix))
+                return "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
+            if ("d".equals(prefix))
+                return "http://schemas.microsoft.com/ado/2007/08/dataservices";
+            if ("odata".equals(prefix))
+                return "https://scihub.copernicus.eu/dhus/odata/v1/";
+            throw new IllegalArgumentException(prefix);
+        }
+        @Override
+        public String getPrefix(String namespaceURI) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public Iterator<String> getPrefixes(String namespaceURI) {
+            throw new UnsupportedOperationException();
+        }
+    }
+    private static NamespaceContext ATOM_NAMESPACE_CONTEXT = new AtomNamespaceContext();
 
     /**
      * Maps each input file to a single (file) split.
@@ -59,6 +105,16 @@ public class PatternBasedInputFormat extends InputFormat {
      * Input files are given by the configuration parameter
      * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_INPUT_PATH_PATTERNS}. Its value is expected to
      * be a comma-separated list of file path patterns (HDFS URLs). These patterns can contain dates and region names.
+     *
+     * Alternatively, inputs are specified by geoInventory, dateRange, and regionGeoemtry.
+     *
+     * Alternatively, inputs are specified by catalogue, searchurl, searchxpath:
+     *     "catalogue"        : "provider=mundi&collection=Sentinel2&type=MSIL1C&level=L1C",
+     *    "catalogue.mundi.searchurl"     : "https://mundiwebservices.com/acdc/catalog/proxy/search/${collection}/opensearch?q=(sensingStartDate:[${start}T00:00:00Z%20TO%20${stop}T23:59:59Z]%20AND%20footprint:"Intersects(${polygon})")&processingLevel=${level}&startIndex=${offset}&maxRecords=${count}",
+     *    "catalogue.mundi.searchxpath" : "concat('s3a:/',substring-after(/a:feed/a:entry/a:link[@rel="enclosure"]/@href,'https://obs.eu-de.otc.t-systems.com'))",
+     *
+     *    "dateRanges"       : "[2018-04-24:2018-04-24]",
+     *    "regionGeometry"   : "POLYGON((10.624552319335976 45.58429059451441,10.719458959961003 45.58525169665108,10.71877231445319 45.55964882024322,10.625238964843788 45.5586872798687,10.624552319335976 45.58429059451441))",
      */
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
@@ -70,6 +126,7 @@ public class PatternBasedInputFormat extends InputFormat {
         String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
+        String catalogue = conf.get(JobConfigNames.CALVALUS_INPUT_CATALOGUE);
         Set<String> productIdentifiers = new HashSet<>(conf.getStringCollection(
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
 
@@ -157,6 +214,60 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
             }
+        } else if (catalogue != null) {
+            final Map<String, String> searchParameters = searchParametersOf(catalogue);
+            final String provider = searchParameters.get("provider");
+            final String searchUrl = conf.get("catalogue." + provider + ".searchurl");
+            final String searchXPath = conf.get("catalogue." + provider + ".searchxpath");
+            final String searchPattern = conf.get("catalogue." + provider + ".pathpattern");
+            final String searchReplacement = conf.get("catalogue." + provider + ".pathreplacement");
+            final String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            final List<DateRange> dateRanges = createDateRangeList(dateRangesString);
+
+            final String searchUrl1 = replaceSearchParameters(searchUrl, searchParameters, geometryWkt);
+            final HttpClient httpClient = new HttpClient();
+            final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            docFactory.setNamespaceAware(true);
+            final XPathFactory xPathfactory = XPathFactory.newInstance();
+            splits = new ArrayList<>(1000);
+
+            // date ranges loop
+            for (DateRange dateRange : dateRanges) {
+                String searchUrl2 = replaceStartStop(searchUrl1, dateRange);
+
+                // incremental query loop
+                int offset = 0;
+                while (true) {
+                    String searchUrl3 = urlEncode(replaceOffsetCount(searchUrl2, offset, DEFAULT_SEARCH_CHUNK_SIZE));
+                    //System.out.println(searchUrl3);
+                    GetMethod catalogueRequest = new GetMethod(searchUrl3);
+                    InputStream response = inquireCatalogue(httpClient, catalogueRequest);
+
+                    try {
+                        NodeList nl = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
+
+                        // search results loop
+                        int count = 0;
+                        for (int i = 0; i < nl.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
+                            String productArchivePath = nl.item(i).getTextContent();
+                            if (searchPattern != null && searchReplacement != null) {
+                                productArchivePath = replaceSearchPattern(productArchivePath, searchPattern, searchReplacement);
+                            }
+                            System.out.println(productArchivePath);
+                            splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
+                            ++count;
+                        }
+                        if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
+                            break;
+                        }
+                        offset += count;
+                    } catch (SAXException | XPathExpressionException | ParserConfigurationException e) {
+                        throw new IOException(e);
+                    }
+                    catalogueRequest.releaseConnection();
+                }
+            }
+            LOG.info(String.format("%d splits created.", splits.size()));
         } else {
             throw new IOException(
                         String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
@@ -165,6 +276,73 @@ public class PatternBasedInputFormat extends InputFormat {
         }
         LOG.info("Total files to process : " + splits.size());
         return splits;
+    }
+
+    private String replaceSearchPattern(String productArchivePath, String searchPattern, String searchReplacement) {
+        Pattern pattern = Pattern.compile(searchPattern);
+        Matcher matcher = pattern.matcher(productArchivePath);
+        productArchivePath = matcher.replaceAll(searchReplacement);
+        return productArchivePath;
+    }
+
+    private String replaceStartStop(String searchUrl, DateRange dateRange) {
+        return searchUrl.replaceAll("\\$\\{start\\}", DateUtils.formatDate(dateRange.getStartDate())).
+                            replaceAll("\\$\\{stop\\}", DateUtils.formatDate(dateRange.getStopDate()));
+    }
+
+    private String replaceSearchParameters(String searchUrl, Map<String, String> searchParameters, String geometryWkt) {
+        for (Map.Entry<String,String> e : searchParameters.entrySet()) {
+            searchUrl = searchUrl.replaceAll("\\$\\{"+e.getKey()+"\\}", e.getValue());
+        }
+        if (geometryWkt != null) {
+            searchUrl = searchUrl.replaceAll("\\$\\{polygon\\}", geometryWkt);
+        } else {
+            searchUrl = searchUrl.replaceAll("\\$\\{polygon\\}", "POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))");
+        }
+        return searchUrl;
+    }
+
+    private Map<String, String> searchParametersOf(String catalogue) {
+        Map<String,String> searchParameters = new HashMap<>();
+        for (String param : catalogue.split("&")) {
+            int p = param.indexOf('=');
+            searchParameters.put(param.substring(0,p), param.substring(p+1));
+        }
+        return searchParameters;
+    }
+
+    private NodeList parseCatalogueResponse(DocumentBuilderFactory factory, XPathFactory xPathfactory, InputStream response, String searchXPath) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(response);
+        XPath xpath = xPathfactory.newXPath();
+        xpath.setNamespaceContext(ATOM_NAMESPACE_CONTEXT);
+        XPathExpression expr = xpath.compile(searchXPath);
+        return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    }
+
+    private InputStream inquireCatalogue(HttpClient httpClient, GetMethod getMethod) throws IOException {
+        int statusCode = httpClient.executeMethod(getMethod);
+        if (statusCode > 299) {
+            String message = getMethod.getResponseBodyAsString();
+            throw new IOException("search error: " + message + " query: " + getMethod.getQueryString());
+        }
+        return getMethod.getResponseBodyAsStream();
+    }
+
+    private String replaceOffsetCount(String searchUrl2, int offset, int searchChunkSize) {
+        return searchUrl2.replaceAll("\\$\\{offset\\}", String.valueOf(offset)).
+                replaceAll("\\$\\{offset1\\}", String.valueOf(offset+1)).
+                replaceAll("\\$\\{count\\}", String.valueOf(searchChunkSize));
+    }
+
+    private String urlEncode(String searchUrl3) {
+        return searchUrl3.
+                replaceAll(" ", "%20").
+                replaceAll("\"", "%22").
+                replaceAll("\\(", "%28").
+                replaceAll("\\)", "%29").
+                replaceAll("\\[", "%5B").
+                replaceAll("\\]", "%5D");
     }
 
     private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(
