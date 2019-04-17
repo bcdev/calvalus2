@@ -20,6 +20,8 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
@@ -115,8 +117,16 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
-
+                File[] unzippedFiles;
+                if (pathConfig.getPath().getName().endsWith(".zip")) {
+                    unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                } else {
+                    FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
+                    File dst = new File(pathConfig.getPath().getName());
+                    CalvalusLogger.getLogger().info("copyFileToLocal: " + pathConfig.getPath().toString() + " --> " + dst);
+                    FileUtil.copy(fs, pathConfig.getPath(), dst, false, configuration);
+                    unzippedFiles = dst.listFiles();
+                }
                 // find manifest file
                 File productManifest = null;
                 for (File file : unzippedFiles) {

@@ -5,7 +5,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
+import com.bc.calvalus.inventory.hadoop.FileSystemPathIteratorFactory;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.geodb.GeodbInputFormat;
@@ -76,6 +76,7 @@ public class PatternBasedInputFormat extends InputFormat {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
     private static final int DEFAULT_SEARCH_CHUNK_SIZE = 20;
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     static class AtomNamespaceContext implements NamespaceContext {
         @Override
@@ -163,11 +164,11 @@ public class PatternBasedInputFormat extends InputFormat {
                     List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(),
                                                                   dateRange.getStopDate(), regionName);
                     RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
-                                                                                     inputPatterns, conf, null);
+                                                                                     inputPatterns, conf, null, true);
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
-                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, true);
                     if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
                         splits = splits.subList(0, requestSizeLimit);
                         break;
@@ -176,11 +177,11 @@ public class PatternBasedInputFormat extends InputFormat {
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
                 RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
-                                                                                 conf, null);
+                                                                                 conf, null, true);
                 if (!productIdentifiers.isEmpty()) {
                     fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                 }
-                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, true);
             }
         } else if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
@@ -196,11 +197,11 @@ public class PatternBasedInputFormat extends InputFormat {
                     List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(),
                                                                   dateRange.getStopDate(), regionName);
                     RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
-                                                                                     inputPatterns, conf, pathInDB);
+                                                                                     inputPatterns, conf, pathInDB, false);
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
-                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, false);
                     if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
                         splits = splits.subList(0, requestSizeLimit);
                         break;
@@ -209,21 +210,21 @@ public class PatternBasedInputFormat extends InputFormat {
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
                 RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
-                                                                                 conf, pathInDB);
+                                                                                 conf, pathInDB, false);
                 if (!productIdentifiers.isEmpty()) {
                     fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                 }
-                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, false);
             }
         } else if (geoInventory != null && geoInventory.startsWith("catalogue")) {
             final Map<String, String> searchParameters = parseSearchParameters(geoInventory);
             final String provider = searchParameters.get("catalogue");
-            final String searchUrlTemplate = conf.get("catalogue." + provider + ".searchurl");
-            final String searchXPath = conf.get("catalogue." + provider + ".searchxpath");
-            final String searchCredentials = conf.get("catalogue." + provider + ".searchcredentials");
-            final Pattern pathPattern = conf.get("catalogue." + provider + ".pathpattern") != null
-                    ? Pattern.compile(conf.get("catalogue." + provider + ".pathpattern")) : null;
-            final String pathReplacement = conf.get("catalogue." + provider + ".pathreplacement");
+            final String searchUrlTemplate = conf.get("calvalus." + provider + ".searchurl");
+            final String searchXPath = conf.get("calvalus." + provider + ".searchxpath");
+            final String searchCredentials = conf.get("calvalus." + provider + ".searchcredentials");
+            final Pattern pathPattern = conf.get("calvalus." + provider + ".pathpattern") != null
+                    ? Pattern.compile(conf.get("calvalus." + provider + ".pathpattern")) : null;
+            final String pathReplacement = conf.get("calvalus." + provider + ".pathreplacement");
             final String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             final List<DateRange> dateRanges = createDateRangeList(dateRangesString);
 
@@ -408,10 +409,10 @@ public class PatternBasedInputFormat extends InputFormat {
     protected void createSplits(ProductInventory productInventory,
                                 RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
-                                Configuration conf, int requestSizeLimit) throws IOException {
+                                Configuration conf, int requestSizeLimit, boolean withDirs) throws IOException {
         while (fileStatusIt.hasNext()) {
             LocatedFileStatus locatedFileStatus = fileStatusIt.next();
-            InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
+            InputSplit split = createSplit(productInventory, conf, locatedFileStatus, withDirs);
             if (split != null) {
                 splits.add(split);
                 if (requestSizeLimit > 0 && splits.size() == requestSizeLimit) {
@@ -421,7 +422,7 @@ public class PatternBasedInputFormat extends InputFormat {
         }
     }
 
-    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file) throws
+    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file, boolean withDirs) throws
                                                                                                              IOException {
         long fileLength = file.getLen();
 
@@ -451,6 +452,8 @@ public class PatternBasedInputFormat extends InputFormat {
                     return new ProductSplit(file.getPath(), fileLength, block.getHosts());
                 }
             }
+        } else if (withDirs) {
+            return new ProductSplit(file.getPath(), 0, EMPTY_STRING_ARRAY);
         } else {
             String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
             LOG.warning(String.format(msgFormat, file.getPath()));
@@ -462,15 +465,16 @@ public class PatternBasedInputFormat extends InputFormat {
     protected RemoteIterator<LocatedFileStatus> getFileStatuses(HdfsFileSystemService fileSystemService,
                                                                 List<String> inputPatterns,
                                                                 Configuration conf,
-                                                                Set<String> existingPathes) throws IOException {
-        FileSystemPathIterator.FileStatusFilter extraFilter = null;
+                                                                Set<String> existingPathes,
+                                                                boolean withDirs) throws IOException {
+        FileSystemPathIteratorFactory.FileStatusFilter extraFilter = null;
         if (existingPathes != null && existingPathes.size() > 0) {
             extraFilter = fileStatus -> {
                 String dbPath = GeodbScanMapper.getDBPath(fileStatus.getPath(), conf);
                 return !existingPathes.contains(dbPath);
             };
         }
-        return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter);
+        return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter, withDirs);
     }
 
     protected List<String> getInputPatterns(String inputPathPatterns, Date minDate, Date maxDate, String regionName) {

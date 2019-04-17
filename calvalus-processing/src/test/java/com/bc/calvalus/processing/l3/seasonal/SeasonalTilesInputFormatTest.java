@@ -46,7 +46,7 @@ public class SeasonalTilesInputFormatTest {
                 return new LocatedFileStatus(iterator.next(), blockLocations);
             }
         };
-        inputFormat.createSplits(null, remoteIter, splits, new Configuration(), 0);
+        inputFormat.createSplits(null, remoteIter, splits, new Configuration(), 0, false);
 
         assertEquals(2, splits.size());
     }

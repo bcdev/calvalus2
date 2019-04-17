@@ -101,7 +101,7 @@ public class DefaultInventoryService implements InventoryService {
                             }
                         }
                     }
-                    if (productSet.getPath() != null) {
+                    if (productSet.getPath() != null && productSet.getPath().length() > 0) {
                         for (String item : productSet.getPath().split(",")) {
                             item = item.replaceAll("\\$", "_");
                             if (item.startsWith("file:") && !withExternalAccessControl) {

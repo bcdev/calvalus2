@@ -67,13 +67,12 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
+            if (pathConfig.getPath().toString().startsWith("file://")
+                    && ! filename.endsWith(".zip")) {
+                return DecodeQualification.UNABLE;
+            }
             if (filename.matches("^S2.*_MSIL1C.*") ||
                     filename.matches("^S2.*_...L2A.*")) {
-                return DecodeQualification.INTENDED;
-            }
-            if ("MTD_MSIL1C.xml".equals(filename)
-                    && (pathConfig.getPath().toString().startsWith("s3a://")
-                        || pathConfig.getPath().toString().startsWith("swift://"))) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -132,19 +131,19 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 Configuration configuration = pathConfig.getConfiguration();
                 File localFile = null;
                 String snapFormatName = "SENTINEL-2-MSI-MultiRes";
-                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                if ("file".equals(pathConfig.getPath().toUri().getScheme()) && new File(pathConfig.getPath().toUri()).getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
                     localFile = new File(pathConfig.getPath().toUri());
-                    if (localFile.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
-                        snapFormatName = "SENTINEL-2-MSI-MultiRes";
-                    } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
-                        snapFormatName = FORMAT_L2_SEN2AGRI;
-                    }
+                    snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                } else if ("file".equals(pathConfig.getPath().toUri().getScheme()) && new File(pathConfig.getPath().toUri()).getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                    snapFormatName = FORMAT_L2_SEN2AGRI;
                 } else if ("s3a".equals(pathConfig.getPath().toUri().getScheme()) || "swift".equals(pathConfig.getPath().toUri().getScheme())) {
-                    // it currently is the metadata file, so download the containing folder
+                    // download the folder
                     FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
-                    File dst = new File(pathConfig.getPath().getParent().getName());
-                    LOG.info("copyFileToLocal: " + pathConfig.getPath().getParent().toString() + " --> " + dst);
-                    FileUtil.copy(fs, pathConfig.getPath().getParent(), dst, false, configuration);
+                    File dst = new File(pathConfig.getPath().getName());
+                    LOG.info("copyFileToLocal: " + pathConfig.getPath().toString() + " --> " + dst);
+                    FileUtil.copy(fs, pathConfig.getPath(), dst, false, configuration);
+                    // TODO: support L2A as well
                     localFile = new File(dst, "MTD_MSIL1C.xml");
                     snapFormatName = "SENTINEL-2-MSI-MultiRes";
                 } else {
@@ -186,20 +185,6 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, snapFormatName);
-
-//                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
-//                if (snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
-//                    for (Band band : product.getBands()) {
-//                        if (!"FRE_R1_B2".equals(band.getName())
-//                                && !"FRE_R1_B3".equals(band.getName())
-//                                && !"FRE_R1_B4".equals(band.getName())
-//                                && !"FRE_R1_B8".equals(band.getName())
-//                                && !"CLD_R1".equals(band.getName())
-//                                && !"MSK_R1".equals(band.getName())) {
-//                            product.removeBand(band);
-//                        }
-//                    }
-//                }
 
                 CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 if (product.getStartTime() == null && product.getEndTime() == null) {
