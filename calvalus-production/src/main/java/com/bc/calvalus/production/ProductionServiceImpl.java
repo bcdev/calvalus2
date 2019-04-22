@@ -72,6 +72,11 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     }
 
     @Override
+    public ProcessingService getProcessingService() {
+        return processingService;
+    }
+
+    @Override
     public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws ProductionException {
         try {
             return processingService.getBundles(username, filter);

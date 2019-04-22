@@ -3,10 +3,12 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
+import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 
 import java.io.IOException;
 import java.util.Observer;
+import java.util.Timer;
 
 /**
  * The interface to the Calvalus production service.
@@ -169,4 +171,6 @@ public interface ProductionService {
      * Invalidates bundle cache after upload or delete
      */
     void invalidateBundleCache();
+
+    public ProcessingService getProcessingService();
 }
