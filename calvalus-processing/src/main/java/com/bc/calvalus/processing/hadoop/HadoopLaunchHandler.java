@@ -91,6 +91,7 @@ public class HadoopLaunchHandler {
     class SubmitTask extends TimerTask {
         @Override
         public void run() {
+            LOG.info("SubmitTask started");
             try {
                 synchronized (HadoopLaunchHandler.this) {
                     if (clusterState != ClusterState.UP) {
@@ -99,6 +100,14 @@ public class HadoopLaunchHandler {
                     while (!workflowItemQueue.isEmpty()) {
                         HadoopWorkflowItem workflowItem;
                         workflowItem = workflowItemQueue.get(0);
+                        workflowItem.getJobConfig().set("yarn.resourcemanager.hostname", configuration.get("yarn.resourcemanager.hostname"));
+                        workflowItem.getJobConfig().set("yarn.resourcemanager.address", configuration.get("yarn.resourcemanager.address"));
+                        workflowItem.getJobConfig().set("mapreduce.jobhistory.address", configuration.get("mapreduce.jobhistory.address"));
+                        workflowItem.getJobConfig().set("mapreduce.jobhistory.webapp.address", configuration.get("mapreduce.jobhistory.webapp.address"));
+                        workflowItem.getJobConfig().set("yarn.log.server.url", configuration.get("yarn.log.server.url"));
+                        workflowItem.getJobConfig().unset("yarn.resourcemanager.scheduler.address");
+                        workflowItem.getJobConfig().unset("yarn.resourcemanager.resource-tracker.address");
+                        workflowItem.getJobConfig().unset("yarn.resourcemanager.admin.address");
                         workflowItem.submitInternal();
                         workflowItemQueue.remove(0);
                         if (workflowItemQueue.isEmpty()) {
@@ -107,10 +116,13 @@ public class HadoopLaunchHandler {
                     }
                 }
             } catch (WorkflowException e) {
+                LOG.warning("SubmitTask error: " + e);
                 synchronized (HadoopLaunchHandler.this) {
                     clusterState = ClusterState.UNKNOWN;
                     hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
                 }
+            } finally {
+                LOG.info("SubmitTask finished");
             }
         }
     }
@@ -163,33 +175,38 @@ public class HadoopLaunchHandler {
 
         @Override
         public void run() {
-            synchronized (HadoopLaunchHandler.this) {
-                switch (clusterState) {
-                    case UNKNOWN:
-                        hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
-                        break;
-                    case DOWN:
-                        if (!workflowItemQueue.isEmpty()) {
-                            hadoopProcessingService.getTimer().schedule(new ClusterStartTask(), 0);
-                        }
-                        break;
-                    case IDLE:
-                        if (System.currentTimeMillis() > idleSince + SHUTDOWN_DELAY) {
-                            hadoopProcessingService.getTimer().schedule(new ClusterStartTask(), 0);
-                        }
-                        break;
-                    case UP:
-                        try {
-                            if (retrieveNoOfRunningTasks() == 0) {
+            try {
+                LOG.info("ClusterSupervisorTask started");
+                synchronized (HadoopLaunchHandler.this) {
+                    switch (clusterState) {
+                        case UNKNOWN:
+                            hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
+                            break;
+                        case DOWN:
+                            if (!workflowItemQueue.isEmpty()) {
+                                hadoopProcessingService.getTimer().schedule(new ClusterStartTask(), 0);
+                            }
+                            break;
+                        case IDLE:
+                            if (System.currentTimeMillis() > idleSince + SHUTDOWN_DELAY) {
+                                hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
+                            }
+                            break;
+                        case UP:
+                            try {
+                                if (retrieveNoOfRunningTasks() == 0) {
+                                    clusterState = ClusterState.IDLE;
+                                    idleSince = System.currentTimeMillis();
+                                }
+                            } catch (Exception e) {
+                                LOG.warning("failed to retrieve hadoop metrics: " + e);
                                 clusterState = ClusterState.IDLE;
                                 idleSince = System.currentTimeMillis();
                             }
-                        } catch (Exception e) {
-                            LOG.warning("failed to retrieve hadoop metrics: " + e);
-                            clusterState = ClusterState.IDLE;
-                            idleSince = System.currentTimeMillis();
-                        }
+                    }
                 }
+            } finally {
+                LOG.info("SubmitTask finished");
             }
         }
     }
@@ -198,7 +215,7 @@ public class HadoopLaunchHandler {
         final HttpClient httpClient = new HttpClient();
         final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         final XPathFactory xPathfactory = XPathFactory.newInstance();
-        String masterHost = configuration.get("calvalus.hadoop.yarn.resourcemanager.hostname", "cdt1");
+        String masterHost = configuration.get("yarn.resourcemanager.hostname", "cdt1");
         final String searchUrl = "http://" + masterHost + ":8088/ws/v1/cluster/metrics";
         final GetMethod metricsRequest = new GetMethod(searchUrl);
         metricsRequest.setRequestHeader("Accept", "application/xml");
@@ -221,14 +238,21 @@ public class HadoopLaunchHandler {
             //# ip 80.158.3.197 is assigned to vm cdt1
             outputProductPattern = Pattern.compile("# ip (.*) is assigned to vm cdt1");
         }
+
         @Override
         public void onStdoutLineReceived(ProcessObserver.ObservedProcess process, String line, ProgressMonitor pm) {
-            super.onStdoutLineReceived(process, line, pm);
+            //super.onStdoutLineReceived(process, line, pm);
+            LOG.info(line);
             Matcher outputProductMatcher = outputProductPattern.matcher(line);
             if (outputProductMatcher.find()) {
                 outputFiles.add(outputProductMatcher.group(1).trim());
-                return;
             }
+        }
+
+        @Override
+        public void onStderrLineReceived(ProcessObserver.ObservedProcess process, String line, ProgressMonitor pm) {
+            //super.onStderrLineReceived(process, line, pm);
+            LOG.warning(line);
         }
     }
 
@@ -245,10 +269,12 @@ public class HadoopLaunchHandler {
         if (outputFiles.length < 1) {
             throw new IOException("external IP of master not found");
         }
-        configuration.set("calvalus.hadoop.yarn.resourcemanager.hostname", outputFiles[0]);
-        configuration.set("calvalus.hadoop.yarn.resourcemanager.address", outputFiles[0] + ":8032");
-        configuration.set("calvalus.hadoop.mapreduce.jobhistory.address", outputFiles[0] + ":10020");
-        configuration.set("calvalus.hadoop.mapreduce.jobhistory.webapp.address", outputFiles[0] + ":19888");
+        configuration.set("yarn.resourcemanager.hostname", outputFiles[0]);
+        configuration.set("yarn.resourcemanager.address", outputFiles[0] + ":8032");
+        configuration.set("mapreduce.jobhistory.address", outputFiles[0] + ":10020");
+        configuration.set("mapreduce.jobhistory.webapp.address", outputFiles[0] + ":19888");
+        configuration.set("yarn.log.server.url", outputFiles[0] + ":19888/jobhistory/logs");
+        //hadoopProcessingService.clearCache();
     }
 
     void stopCluster() throws IOException, InterruptedException {
@@ -259,9 +285,10 @@ public class HadoopLaunchHandler {
         if (process.waitFor() != 0) {
             throw new IOException(stopCmd + " failed");
         }
-        configuration.unset("calvalus.hadoop.yarn.resourcemanager.hostname");
-        configuration.unset("calvalus.hadoop.yarn.resourcemanager.address");
-        configuration.unset("calvalus.hadoop.mapreduce.jobhistory.address");
-        configuration.unset("calvalus.hadoop.mapreduce.jobhistory.webapp.address");
+        configuration.unset("yarn.resourcemanager.hostname");
+        configuration.unset("yarn.resourcemanager.address");
+        configuration.unset("mapreduce.jobhistory.address");
+        configuration.unset("mapreduce.jobhistory.webapp.address");
+        configuration.unset("yarn.log.server.url");
     }
 }

@@ -433,6 +433,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return jobClientsMap.getJobClient(username);
     }
 
+    //public void clearCache() {
+    //    jobClientsMap.removeAllEntries();
+    //}
+
     @Override
     public JobIdFormat<JobID> getJobIdFormat() {
         return new HadoopJobIdFormat();
@@ -441,7 +445,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     @Override
     public void updateStatuses(String username) throws IOException {
         JobClient jobClient = jobClientsMap.getJobClient(username);
-        JobStatus[] jobStatuses = jobClientsMap.getConfiguration().get("calvalus.hadoop.yarn.resourcemanager.hostname") != null ? jobClient.getAllJobs() : new JobStatus[0];
+        String rmHostname = jobClientsMap.getConfiguration().get("yarn.resourcemanager.hostname");
+        logger.info("rm host for status polling is " + rmHostname);
+        JobStatus[] jobStatuses;
+        if (rmHostname != null && ! "0.0.0.0".equals(rmHostname)) {
+            jobClient.getConf().set("yarn.resourcemanager.hostname", rmHostname);
+            jobStatuses = jobClient.getAllJobs();
+        } else {
+            jobStatuses = new JobStatus[0];
+        }
         synchronized (jobStatusMap) {
             if (jobStatuses != null && jobStatuses.length > 0) {
                 Set<JobID> allJobs = new HashSet<>(jobStatusMap.keySet());
