@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.ceres.core.ProcessObserver;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -40,7 +42,7 @@ import java.util.regex.Pattern;
  */
 public class HadoopLaunchHandler {
 
-    private static final long SHUTDOWN_DELAY = 600 * 1000;
+    private static final long SHUTDOWN_DELAY = 300 * 1000;
     private static final long SUPERVISOR_PERIOD = 120 * 1000;
 
     private static Logger LOG = CalvalusLogger.getLogger();
@@ -197,6 +199,7 @@ public class HadoopLaunchHandler {
                                 if (retrieveNoOfRunningTasks() == 0) {
                                     clusterState = ClusterState.IDLE;
                                     idleSince = System.currentTimeMillis();
+                                    LOG.info("idle since " + DateUtils.formatDate(new Date(idleSince)));
                                 }
                             } catch (Exception e) {
                                 LOG.warning("failed to retrieve hadoop metrics: " + e);
@@ -206,7 +209,7 @@ public class HadoopLaunchHandler {
                     }
                 }
             } finally {
-                LOG.info("SubmitTask finished");
+                LOG.info("ClusterSupervisorTask finished");
             }
         }
     }
@@ -274,7 +277,7 @@ public class HadoopLaunchHandler {
         configuration.set("mapreduce.jobhistory.address", outputFiles[0] + ":10020");
         configuration.set("mapreduce.jobhistory.webapp.address", outputFiles[0] + ":19888");
         configuration.set("yarn.log.server.url", outputFiles[0] + ":19888/jobhistory/logs");
-        //hadoopProcessingService.clearCache();
+        hadoopProcessingService.clearCache();
     }
 
     void stopCluster() throws IOException, InterruptedException {

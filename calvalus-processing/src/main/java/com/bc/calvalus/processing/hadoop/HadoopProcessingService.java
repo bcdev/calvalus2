@@ -433,9 +433,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return jobClientsMap.getJobClient(username);
     }
 
-    //public void clearCache() {
-    //    jobClientsMap.removeAllEntries();
-    //}
+    public void clearCache() {
+        jobClientsMap.removeAllEntries();
+    }
 
     @Override
     public JobIdFormat<JobID> getJobIdFormat() {

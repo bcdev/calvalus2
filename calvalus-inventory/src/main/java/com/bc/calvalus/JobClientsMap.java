@@ -180,7 +180,7 @@ public class JobClientsMap {
      * We remove JobClients after 3 hours. IN ALL CASES. Because the update thread always triggers the accessTime
      * Inside it contains a "org.apache.hadoop.mapred.ClientCache" that has a forever growing cache.
      */
-    private synchronized void removeAllEntries() {
+    public synchronized void removeAllEntries() {
         if (withExternalAccessControl) {
             fileSystemMap.clear();
         }
