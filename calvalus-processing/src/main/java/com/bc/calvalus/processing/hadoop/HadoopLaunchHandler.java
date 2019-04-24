@@ -42,8 +42,8 @@ import java.util.regex.Pattern;
  */
 public class HadoopLaunchHandler {
 
-    private static final long SHUTDOWN_DELAY = 300 * 1000;
-    private static final long SUPERVISOR_PERIOD = 120 * 1000;
+    private static final long SHUTDOWN_DELAY = 150 * 1000;
+    private static final long SUPERVISOR_PERIOD = 60 * 1000;
 
     private static Logger LOG = CalvalusLogger.getLogger();
 
@@ -51,7 +51,6 @@ public class HadoopLaunchHandler {
         DOWN,
         STARTING,
         UP,
-        SUBMITTING,
         IDLE,
         STOPPING,
         UNKNOWN
@@ -74,6 +73,7 @@ public class HadoopLaunchHandler {
     }
 
     public void queueWorkflowItem(HadoopWorkflowItem workflowItem) {
+        LOG.info("queueWorkflowItem while cluster " + clusterState);
         workflowItemQueue.add(workflowItem);
         synchronized (this) {
             switch (clusterState) {
@@ -93,10 +93,10 @@ public class HadoopLaunchHandler {
     class SubmitTask extends TimerTask {
         @Override
         public void run() {
-            LOG.info("SubmitTask started");
+            LOG.info("SubmitTask started " + clusterState);
             try {
                 synchronized (HadoopLaunchHandler.this) {
-                    if (clusterState != ClusterState.UP) {
+                    if (clusterState != ClusterState.UP && clusterState != ClusterState.IDLE) {
                         return;
                     }
                     while (!workflowItemQueue.isEmpty()) {
@@ -116,6 +116,7 @@ public class HadoopLaunchHandler {
                             break;
                         }
                     }
+                    clusterState = ClusterState.UP;
                 }
             } catch (WorkflowException e) {
                 LOG.warning("SubmitTask error: " + e);
@@ -124,7 +125,7 @@ public class HadoopLaunchHandler {
                     hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
                 }
             } finally {
-                LOG.info("SubmitTask finished");
+                LOG.info("SubmitTask finished " + clusterState);
             }
         }
     }
@@ -132,6 +133,7 @@ public class HadoopLaunchHandler {
     class ClusterStartTask extends TimerTask {
         @Override
         public void run() {
+            LOG.info("StartTask started " + clusterState);
             try {
                 synchronized (HadoopLaunchHandler.this) {
                     if (clusterState != ClusterState.DOWN) {
@@ -149,6 +151,8 @@ public class HadoopLaunchHandler {
                     clusterState = ClusterState.UNKNOWN;
                     hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
                 }
+            } finally {
+                LOG.info("StartTask finished " + clusterState);
             }
         }
     }
@@ -157,8 +161,9 @@ public class HadoopLaunchHandler {
         @Override
         public void run() {
             try {
+                LOG.info("StopTask started " + clusterState);
                 synchronized (HadoopLaunchHandler.this) {
-                    if (clusterState != ClusterState.UP && clusterState != ClusterState.IDLE && clusterState != ClusterState.UNKNOWN) {
+                    if (clusterState != ClusterState.IDLE && clusterState != ClusterState.UNKNOWN) {
                         return;
                     }
                     clusterState = clusterState.STOPPING;
@@ -169,6 +174,8 @@ public class HadoopLaunchHandler {
                 }
             } catch (Exception e) {
                 clusterState = ClusterState.UNKNOWN;
+            } finally {
+                LOG.info("StopTask finished " + clusterState);
             }
         }
     }
@@ -178,7 +185,7 @@ public class HadoopLaunchHandler {
         @Override
         public void run() {
             try {
-                LOG.info("ClusterSupervisorTask started");
+                LOG.info("ClusterSupervisorTask started " + clusterState);
                 synchronized (HadoopLaunchHandler.this) {
                     switch (clusterState) {
                         case UNKNOWN:
@@ -190,16 +197,20 @@ public class HadoopLaunchHandler {
                             }
                             break;
                         case IDLE:
-                            if (System.currentTimeMillis() > idleSince + SHUTDOWN_DELAY) {
+                            if (! workflowItemQueue.isEmpty()) {
+                                // should never happen ...
+                                clusterState = ClusterState.UP;
+                                hadoopProcessingService.getTimer().schedule(new SubmitTask(), 0);
+                            } else if (System.currentTimeMillis() > idleSince + SHUTDOWN_DELAY) {
                                 hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
                             }
                             break;
                         case UP:
                             try {
-                                if (retrieveNoOfRunningTasks() == 0) {
+                                if (workflowItemQueue.isEmpty() && retrieveNoOfRunningTasks() == 0) {
                                     clusterState = ClusterState.IDLE;
                                     idleSince = System.currentTimeMillis();
-                                    LOG.info("idle since " + DateUtils.formatDate(new Date(idleSince)));
+                                    LOG.info("idle since " + DateUtils.ISO_FORMAT.format(new Date(idleSince)));
                                 }
                             } catch (Exception e) {
                                 LOG.warning("failed to retrieve hadoop metrics: " + e);
@@ -209,7 +220,7 @@ public class HadoopLaunchHandler {
                     }
                 }
             } finally {
-                LOG.info("ClusterSupervisorTask finished");
+                LOG.info("ClusterSupervisorTask finished " + clusterState);
             }
         }
     }
