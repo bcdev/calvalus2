@@ -23,8 +23,6 @@ import java.util.zip.ZipInputStream;
 
 public class Utils {
 
-    public static Logger LOG = CalvalusLogger.getLogger();
-
     public static String getUserName(HttpServletRequest request, ServletContext context) throws ServletException {
         String userName = request.getUserPrincipal().getName();
         String remoteUser = request.getHeader(BackendConfig.getConfig(context).getConfigMap().get("calvalus.wps.deputy.attribute"));
@@ -46,29 +44,5 @@ public class Utils {
             }
         }
         return null;
-    }
-
-    public static void unzipFromStream(String userName, String targetPath, InputStream stream, FileSystemService fileSystemService) throws IOException {
-        try (ZipInputStream in = new ZipInputStream(new BufferedInputStream(stream, 8192))) {
-            byte[] buffer = new byte[8192];
-            while (true) {
-                ZipEntry entry = in.getNextEntry();
-                if (entry == null) {
-                    break;
-                }
-                String fileName = entry.getName();
-                if (fileName.endsWith("/")) {
-                    continue;
-                }
-                LOG.info(String.format("extracting '%s from zip to '%s'", fileName, targetPath));
-                String filePath = targetPath + "/" + fileName;
-                try (OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, filePath), 8192)) {
-                    int len;
-                    while ((len = in.read(buffer)) > 0) {
-                        out.write(buffer, 0, len);
-                    }
-                }
-            }
-        }
     }
 }
