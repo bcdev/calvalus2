@@ -41,6 +41,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public abstract class PixelFinaliseMapper extends Mapper {
@@ -106,24 +108,39 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
         FileSystem fs = outputPaths[0].getFileSystem(configuration);
-        // for (int i = 0; i < results.length - 1; i++) {   TODO verify that changing this back is correct. Else, no LC band will be written
+
+        ExecutorService executor = Executors.newFixedThreadPool(3);
         for (int i = 0; i < results.length; i++) {
-            CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/" + BAND_TYPES.length + "...");
-            Path tifPath = outputPaths[i];
-            Path alternativeTifPath = new Path(outputPaths[i].toString().replace("-Formatting", "-Formatting_format"));
+            int finalI = i;
+            Runnable worker = () -> {
 
-            if (fileSystem.exists(tifPath) || fileSystem.exists(alternativeTifPath)) {
-                LOG.info("File '" + tifPath + "' already exists, skipping.");
-                continue;
-            }
+                try {
+                    CalvalusLogger.getLogger().info("Writing final product " + (finalI + 1) + "/" + BAND_TYPES.length + "...");
+                    Path tifPath = outputPaths[finalI];
+                    Path alternativeTifPath = new Path(outputPaths[finalI].toString().replace("-Formatting", "-Formatting_format"));
 
-            Product result = results[i];
-            final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
-            String localFilename = baseFilename + "-" + BAND_TYPES[i] + ".tif";
-            geotiffWriter.writeProductNodes(result, localFilename);
-            geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
-            CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
-            FileUtil.copy(new File(localFilename), fs, tifPath, false, configuration);
+                    if (fileSystem.exists(tifPath) || fileSystem.exists(alternativeTifPath)) {
+                        LOG.info("File '" + tifPath + "' already exists, skipping.");
+                        return;
+                    }
+
+                    Product result = results[finalI];
+                    final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+                    String localFilename = baseFilename + "-" + BAND_TYPES[finalI] + ".tif";
+                    geotiffWriter.writeProductNodes(result, localFilename);
+
+                    geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
+                    CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
+                    FileUtil.copy(new File(localFilename), fs, tifPath, false, configuration);
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+            };
+            executor.execute(worker);
+        }
+
+        executor.shutdown();
+        while (!executor.isTerminated()) {
         }
 
         LOG.info("...done. Creating metadata...");

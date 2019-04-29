@@ -1,37 +1,38 @@
 package com.bc.calvalus.processing.fire.format.grid.avhrr;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
 
 public class AvhrrGridMapperTest {
 
-    private AvhrrGridMapper avhrrGridMapper;
+    private static double DEVIATION = 0.05;
 
-    @Before
-    public void setUp() throws Exception {
-        avhrrGridMapper = new AvhrrGridMapper();
-    }
+    /*
+    according to mail from Gonzalo:
+
+        Raw=320, column = 769, Current  result = 6338184, Gonzalo’s result = 30161896.
+        Raw=315, column = 661, Current result = 7206075, Gonzalo’s result = 17494142.
+
+        Accept results with 5% deviation
+
+    */
 
     @Test
     public void testGetStandardError() {
-
-        assertEquals(4224449.0, avhrrGridMapper.getErrorPerPixel(new double[]{
-                0.3166666626930237, 0.46666666865348816, 0.3616666793823242, 0.20000000298023224, 0.24666668474674225,
-                0.30000001192092896, 0.2916666567325592, 0.35333332419395447, 0.37166666984558105, 0.20333333313465118,
-                0.15166667103767395, 0.22166666388511658, 0.16333332657814026, 0.3499999940395355, 0.21666665375232697,
-                0.1850000023841858, 0.14499999582767487, 0.17666666209697723, 0.27000001072883606, 0.2266666740179062,
-                0.15000000596046448, 0.22499999403953552, 0.2683333456516266, 0.21166667342185974, 0.22833333909511566
-        }, 7.630264085335622E8, 0), 1E-6);
-
+        double[] probBurn = new double[]{19.333332, 20.0, 12.333334, 15.666667, 15.166667, 16.666668, 23.5, 22.166666, 19.166666, 21.166668, 18.0, 20.166666, 19.166666, 16.166666, 15.5, 16.666668, 13.500001, 9.666666, 6.166667, 8.666667, 14.833333, 17.833332, 62.166668, 19.833334, 10.0};
+        double[] probBurn_by100 = Arrays.stream(probBurn).map(d -> d / 100.0).toArray();
+        assertEquals(30161896, new AvhrrGridMapper().getErrorPerPixel(probBurn_by100, 7.630269896117187E8, 0.22865), DEVIATION * 30161896);
     }
 
     @Test
     public void testGetStandardError2() {
-        double totalArea = 5.856306447976106E8;
-        double[] probBurn = new double[]{0.1616666615009308, 0.15833333134651184, 0.2516666650772095, 0.23000000417232513, 0.24833333492279053, 0.27000001072883606, 0.2516666650772095, 0.25999999046325684, 0.23999999463558197, 0.20499999821186066, 0.27666667103767395, 0.22833333909511566, 0.21833333373069763, 0.273333340883255, 0.20666666328907013, 0.1366666704416275, 0.25833332538604736, 0.2666666805744171, 0.2983333468437195, 0.2933333218097687, 0.5299999713897705, 0.3916666805744171, 0.44166669249534607, 0.20000000298023224, 0.16500000655651093};
-        double burnedArea = 9444343.0100321323489;
-        System.out.println(avhrrGridMapper.getErrorPerPixel(probBurn, totalArea, 0));
+        double[] probBurn = new double[]{42.0, 22.0, 23.166666, 24.833334, 53.666668, 18.0, 31.666666, 31.0, 32.666664, 27.000002, 10.5, 32.5, 28.166666, 63.333332, 48.5, 9.333333, 32.666664, 25.0, 30.000002, 19.833334, 17.333334, 38.833332, 46.5, 28.5, 26.0};
+        double[] probBurn_by100 = Arrays.stream(probBurn).map(d -> d / 100.0).toArray();
+        assertEquals(17494142, new AvhrrGridMapper().getErrorPerPixel(probBurn_by100, 7.599478154723896E8, 0.0443), DEVIATION * 17494142);
+
     }
+
 }

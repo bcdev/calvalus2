@@ -154,6 +154,7 @@ public class CommonUtils {
             case 2015:
             case 2016:
             case 2017:
+            case 2018:
                 return "2010";
         }
         throw new IllegalArgumentException("Illegal year: " + year);

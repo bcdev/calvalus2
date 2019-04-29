@@ -63,7 +63,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
-                double avhrrBurnedPercentage = Double.NaN;
 
 //                if (x != 31 || y != 4) {
 //                    targetGridCellIndex++;
@@ -77,6 +76,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 }
 
                 if (this instanceof AvhrrGridMapper) {
+                    double avhrrBurnedPercentage = Double.NaN;
 
                     ((AvhrrFireGridDataSource) dataSource).readLcFraction(x, y, lcFraction);
 
@@ -88,6 +88,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     double[] burnedLcArea025 = new double[19];
                     Arrays.fill(burnedLcArea025, 0.0);
                     for (int i = 0; i < data.burnedPixels.length; i++) {
+
+                        if (Double.isNaN(avhrrBurnedPercentage) && data.burnedPixels[i] > 0) {
+                            avhrrBurnedPercentage = data.burnedPixels[i];
+                        }
+
                         double fractionOfBurnable = 1.0 - lcFraction[0][i];
                         // sum up area
                         area025 += data.areas[i];
@@ -119,8 +124,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     // tough rather doubtful we map non-burnable to not observed as requested by UAH
                     coverage[targetGridCellIndex] = burnable20PercentArea025 > 0.0 ? (float)(observedArea025 / burnable20PercentArea025) : 0.0f;
                     patchNumber[targetGridCellIndex] = data.patchCount;
+
                     if (burnedArea025 >= 0.00001) {
-                        errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, area025, burnedArea025/area025);
+                        errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, area025, avhrrBurnedPercentage);
                     } else {
                         errors[targetGridCellIndex] = 0;
                     }
@@ -135,9 +141,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     float burnedPixel = data.burnedPixels[i];
                     boolean isBurnable = data.burnable[i];
-                    if (Double.isNaN(avhrrBurnedPercentage) && burnedPixel > 0) {
-                        avhrrBurnedPercentage = burnedPixel;
-                    }
                     if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
                         double burnedArea = scale(burnedPixel, data.areas[i]);
                         baValue += burnedArea;
@@ -176,7 +179,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 }
 
 
-                errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], avhrrBurnedPercentage);
+                    errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], Float.NaN);
 
                 for (int i = 0; i < errors.length; i++) {
                     if (ba[i] < 0.00001) {
