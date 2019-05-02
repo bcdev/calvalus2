@@ -142,12 +142,16 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
                     File dst = new File(pathConfig.getPath().getName());
                     LOG.info("copyFileToLocal: " + pathConfig.getPath().toString() + " --> " + dst);
+                    long t0 = System.currentTimeMillis();
                     FileUtil.copy(fs, pathConfig.getPath(), dst, false, configuration);
+                    LOG.info("time for s3/swift input retrieval [ms]: " + (System.currentTimeMillis() - t0));
                     // TODO: support L2A as well
                     localFile = new File(dst, "MTD_MSIL1C.xml");
                     snapFormatName = "SENTINEL-2-MSI-MultiRes";
                 } else {
+                    long t0 = System.currentTimeMillis();
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                    LOG.info("time for zip input retrieval [ms]: " + (System.currentTimeMillis() - t0));
 
                     // find *MTD*xml file in top directory
                     for (File file : unzippedFiles) {

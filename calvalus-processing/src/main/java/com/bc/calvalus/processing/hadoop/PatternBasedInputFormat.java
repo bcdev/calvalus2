@@ -133,6 +133,8 @@ public class PatternBasedInputFormat extends InputFormat {
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
 
         List<InputSplit> splits;
+        long t0 = System.currentTimeMillis();
+
         if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns == null) {
             Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
             LOG.info(String.format("%d files returned from geo-inventory '%s'.", paths.size(), geoInventory));
@@ -151,6 +153,7 @@ public class PatternBasedInputFormat extends InputFormat {
             }
             splits = GeodbInputFormat.createInputSplits(conf, paths, requestSizeLimit);
             LOG.info(String.format("%d splits created.", splits.size()));
+            LOG.info("geo-inventory query done in [ms]: " + (System.currentTimeMillis() - t0));
         } else if (geoInventory == null && inputPathPatterns != null) {
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -183,6 +186,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, true);
             }
+            LOG.info("file system query done in [ms]: " + (System.currentTimeMillis() - t0));
         } else if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
             Set<String> pathInDB = GeodbInputFormat.queryGeoInventory(false, conf);
@@ -216,6 +220,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, false);
             }
+            LOG.info("geo-inventory query and complementary file system query done in [ms]: " + (System.currentTimeMillis() - t0));
         } else if (geoInventory != null && geoInventory.startsWith("catalogue")) {
             final Map<String, String> searchParameters = parseSearchParameters(geoInventory);
             final String provider = searchParameters.get("catalogue");
@@ -239,6 +244,7 @@ public class PatternBasedInputFormat extends InputFormat {
             docFactory.setNamespaceAware(true);
             final XPathFactory xPathfactory = XPathFactory.newInstance();
             splits = new ArrayList<>(1000);
+            int numQueries = 0;
 
             // date ranges loop
             for (DateRange dateRange : dateRanges) {
@@ -259,6 +265,7 @@ public class PatternBasedInputFormat extends InputFormat {
                         catalogueRequest.setRequestHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(searchCredentials.getBytes(StandardCharsets.UTF_8)));
                     }
                     final InputStream response = inquireCatalogue(httpClient, catalogueRequest);
+                    ++numQueries;
 
                     try {
                         NodeList pathNodes = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
@@ -285,6 +292,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
             }
             LOG.info(String.format("%d splits created.", splits.size()));
+            LOG.info("catalogue query " + numQueries + " cycles done in [ms]: " + (System.currentTimeMillis() - t0));
         } else {
             throw new IOException(
                         String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
