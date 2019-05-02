@@ -68,8 +68,8 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                     String dateRangesString = jobConfig.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
                     try {
                         RADateRanges dateRanges = RADateRanges.create(dateRangesString);
-                        product.setStartTime(ProductData.UTC.parse(dateRanges.formatStart(0)));
-                        product.setEndTime(ProductData.UTC.parse(dateRanges.formatStart(0)));
+                        product.setStartTime(ProductData.UTC.parse(dateRanges.formatStart(0), "yyyy-MM-dd HH:mm:ss"));
+                        product.setEndTime(ProductData.UTC.parse(dateRanges.formatStart(0), "yyyy-MM-dd HH:mm:ss"));
                         LOG.warning("Product has no time information, assuming " + dateRanges.formatStart(0));
                     } catch (ParseException e) {
                         throw new IOException(e);
