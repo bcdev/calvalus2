@@ -34,6 +34,7 @@ class Statistics {
 
     private final int[] percentiles;
     private final Accumulator accu;
+    private final boolean binValuesAsRatio;
 
     Statistics() {
         this(0, Double.NaN, Double.NaN);
@@ -42,13 +43,14 @@ class Statistics {
     Statistics(int numBins,
                    double lowValue,
                    double highValue) {
-        this(numBins, lowValue, highValue, new int[]{5,25,50,75,95});
+        this(numBins, lowValue, highValue, new int[]{5,25,50,75,95}, false);
     }
 
     Statistics(int numBins,
                double lowValue,
                double highValue,
-               int[] percentiles) {
+               int[] percentiles,
+               boolean binValuesAsRatio) {
         if (numBins > 0) {
             histogram = new Histogram(numBins, lowValue, highValue, 1);
         } else {
@@ -61,6 +63,7 @@ class Statistics {
             this.percentiles = null;
             this.accu = null;
         }
+        this.binValuesAsRatio = binValuesAsRatio;
         reset();
     }
 
@@ -115,6 +118,8 @@ class Statistics {
         geomLogSum = 0;
         if (histogram != null) {
             histogram.clearHistogram();
+            belowHistogram = 0;
+            aboveHistogram = 0;
         }
         if (accu != null) {
             accu.clear();
@@ -188,14 +193,24 @@ class Statistics {
     public List<String> getHistogramRecords() {
         List<String> stats = new ArrayList<>();
         if (histogram != null) {
-            stats.add(Integer.toString(belowHistogram));
-            stats.add(Integer.toString(aboveHistogram));
+            if (! binValuesAsRatio) {
+                stats.add(Integer.toString(belowHistogram));
+                stats.add(Integer.toString(aboveHistogram));
+            } else {
+                stats.add(Double.toString(((double)belowHistogram) / numValid));
+                stats.add(Double.toString(((double)aboveHistogram) / numValid));
+            }
             stats.add(Integer.toString(histogram.getNumBins(0)));
             stats.add(Double.toString(histogram.getLowValue(0)));
             stats.add(Double.toString(histogram.getHighValue(0)));
             int[] bins = histogram.getBins(0);
             for (int bin : bins) {
-                stats.add(Integer.toString(bin));
+                if (! binValuesAsRatio) {
+                    stats.add(Integer.toString(bin));
+                } else {
+                    stats.add(Double.toString(((double) bin) / numValid));
+                    
+                }
             }
         }
         return stats;
