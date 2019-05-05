@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://www.brockmann-consult.de/calwps/calwpsRegionalStatisticsParameters-schema.xsd" xmlns:wps="http://www.brockmann-consult.de/calwps/calwpsRegionalStatisticsParameters-schema.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="parameters">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bands" type="BandConfigType" form="qualified" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="percentiles" type="xs:string" form="qualified" default="90" minOccurs="0" maxOccurs="1"/>
+                <xs:element name="binValuesAsRatio" type="xs:string" form="qualified" default="true" maxOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="BandConfigType">
+        <xs:sequence>
+            <xs:element name="band">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="name" type="xs:string" form="qualified" minOccurs="1" maxOccurs="1"/>
+                        <xs:element name="numBins" type="xs:string" form="qualified" minOccurs="1" maxOccurs="1"/>
+                        <xs:element name="min" type="xs:string" form="qualified" minOccurs="1" maxOccurs="1"/>
+                        <xs:element name="max" type="xs:string" form="qualified" minOccurs="1" maxOccurs="1"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

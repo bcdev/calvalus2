@@ -54,8 +54,38 @@ public class RAConfigTest {
                 "  <writePerRegion>true</writePerRegion>\n" +
                 "  <writeSeparateHistogram>true</writeSeparateHistogram>\n" +
                 "  <writePixelValues>false</writePixelValues>\n" +
+                "  <binValuesAsRatio>false</binValuesAsRatio>\n" +
                 "</parameters>";
         
         assertEquals(expected, xml);
+    }
+
+    @Test
+    public void parseXmlTest() throws Exception {
+        String expected = "<parameters>\n" +
+                "  <regionSource>/calvalus/home/marcoz/shapefiles/HELCOM_grid100_LAEA5210.zip</regionSource>\n" +
+                "  <regionSourceAttributeName>CellCode</regionSourceAttributeName>\n" +
+                "  <regionSourceAttributeFilter>40N2, 40N3</regionSourceAttributeFilter>\n" +
+                "  <withRegionEnvelope>false</withRegionEnvelope>\n" +
+                "  <withProductNames>false</withProductNames>\n" +
+                "  <goodPixelExpression>not cloud and water</goodPixelExpression>\n" +
+                "  <percentiles>2,50,99</percentiles>\n" +
+                "  <bands>\n" +
+                "    <band>\n" +
+                "      <name>chl</name>\n" +
+                "    </band>\n" +
+                "    <band>\n" +
+                "      <name>refl_1</name>\n" +
+                "      <numBins>20</numBins>\n" +
+                "      <min>0.0</min>\n" +
+                "      <max>1.0</max>\n" +
+                "    </band>\n" +
+                "  </bands>\n" +
+                "  <writePerRegion>true</writePerRegion>\n" +
+                "  <writeSeparateHistogram>true</writeSeparateHistogram>\n" +
+                "  <writePixelValues>false</writePixelValues>\n" +
+                "</parameters>";
+        RAConfig raConfig = RAConfig.fromXml(expected);
+        assertEquals(false, raConfig.isBinValuesAsRatio());
     }
 }

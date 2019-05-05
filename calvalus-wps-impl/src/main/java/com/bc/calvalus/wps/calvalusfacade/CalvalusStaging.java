@@ -66,7 +66,7 @@ class CalvalusStaging {
             throw new WpsResultProductException(exception);
         }
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
-        File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
+        File stagingDirectory = new File(System.getProperty("catalina.base") + CALWPS_ROOT_PATH + "/" + stagingDirectoryPath);
         CalvalusLogger.getLogger().info("looking up results in staging dir " + stagingDirectory);
 
         Optional<File[]> productResultFiles = Optional.ofNullable(stagingDirectory.listFiles());
@@ -114,7 +114,7 @@ class CalvalusStaging {
             throw new ProductMetadataException(exception);
         }
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
-        File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
+        File stagingDirectory = new File(System.getProperty("catalina.base") + CALWPS_ROOT_PATH + "/" + stagingDirectoryPath);
         File[] productResultFiles = stagingDirectory.listFiles();
         if (productResultFiles == null) {
             throw new ProductMetadataException("No available product result files.");
@@ -146,7 +146,7 @@ class CalvalusStaging {
         boolean withMetadataFile = false;
         for (File productResultFile : productResultFiles) {
             String productFileName = productResultFile.getName().toLowerCase();
-            if (productFileName.endsWith("-metadata") || productFileName.endsWith(".csv")) {
+            if (productFileName.endsWith("-metadata")/* || productFileName.endsWith(".csv")*/) {
                 withMetadataFile = true;
                 continue;
             }

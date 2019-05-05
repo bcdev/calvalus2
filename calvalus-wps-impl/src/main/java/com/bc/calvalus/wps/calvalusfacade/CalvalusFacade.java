@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
@@ -94,5 +95,13 @@ public class CalvalusFacade extends ProcessFacade {
 
     private ServiceContainer getServices() throws ProductionException, IOException {
         return CalvalusProductionService.getServiceContainerSingleton();
+    }
+
+    public String[] getRegionFiles() throws IOException {
+        return calvalusProcessorExtractor.getRegionFiles(remoteUserName);
+    }
+
+    public String[][] loadRegionDataInfo(String url) throws IOException, ProductionException {
+        return getServices().getProductionService().loadRegionDataInfo(remoteUserName, url);
     }
 }
