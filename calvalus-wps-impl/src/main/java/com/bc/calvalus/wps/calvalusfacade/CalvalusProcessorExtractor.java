@@ -8,8 +8,10 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessorExtractor;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,9 +34,12 @@ class CalvalusProcessorExtractor extends ProcessorExtractor {
 
     public String[] getRegionFiles(String remoteUserName) throws IOException {
         try {
-            List<String> pathPatterns = Collections.singletonList(AbstractFileSystemService.getUserGlob(remoteUserName, "region_data"));
-            return CalvalusProductionService.getServiceContainerSingleton().getFileSystemService().globPaths(remoteUserName, pathPatterns);
-        } catch (ProductionException e) {
+            UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(remoteUserName);
+                        return remoteUser.doAs((PrivilegedExceptionAction<String[]>) () -> {
+                            List<String> pathPatterns = Collections.singletonList(AbstractFileSystemService.getUserGlob(remoteUserName, "region_data"));
+                            return CalvalusProductionService.getServiceContainerSingleton().getFileSystemService().globPaths(remoteUserName, pathPatterns);
+                        });
+        } catch (InterruptedException e) {
             throw new IOException("failed to retrieve region files", e);
         }
     }
