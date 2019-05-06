@@ -293,6 +293,7 @@ public class CalvalusGetStatusOperationTest {
         when(mockProductionRequest.getString(PROCESSOR_BUNDLE_NAME.getIdentifier())).thenReturn("mockBundle");
         when(mockProductionRequest.getString(PROCESSOR_BUNDLE_VERSION.getIdentifier())).thenReturn("1.0");
         when(mockProductionRequest.getString(PROCESSOR_NAME.getIdentifier())).thenReturn("mockProcessor");
+        when(mockProductionRequest.getString(PROCESSOR_NAME.getIdentifier(), "ra")).thenReturn("mockProcessor");
         return mockProductionRequest;
     }
 

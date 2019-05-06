@@ -49,7 +49,8 @@ public class CalvalusProductionService implements ServletContextListener {
     public synchronized static Timer getStatusObserverSingleton() {
         if (statusObserver == null) {
             WpsServletContainer.addServletContextListener(new CalvalusProductionService());
-            statusObserver = new Timer("StatusObserver" + new Date().toString(), true);
+            //statusObserver = new Timer("StatusObserver" + new Date().toString(), true);
+            statusObserver = serviceContainer.getProductionService().getProcessingService().getTimer();
         }
         return statusObserver;
     }
