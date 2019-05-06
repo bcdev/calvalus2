@@ -400,23 +400,29 @@ public class CalvalusDataInputs {
             accu.append("<regionSource>");
             accu.append(regionSource);
             accu.append("</regionSource>");
-            String regionSourceAttributeName = inputMapRaw.get("regionSourceAttributeName");
-            if (regionSourceAttributeName == null || regionSourceAttributeName.length() == 0) {
+            String regionAttributeName = inputMapRaw.get("regionAttributeName");
+            if (regionAttributeName == null) {
+                regionAttributeName = inputMapRaw.get("regionSourceAttributeName");
+            }
+            if (regionAttributeName == null || regionAttributeName.length() == 0) {
                 String[][] regionAttributeValues;
                 try {
                     regionAttributeValues = calvalusFacade.loadRegionDataInfo(regionSource);
                 } catch (IOException | ProductionException e) {
                     throw new InvalidParameterValueException(e, "shapefile " + shapefile + " of user not found");
                 }
-                regionSourceAttributeName = determineMostDistinctiveAttribute(regionAttributeValues);
+                regionAttributeName = determineMostDistinctiveAttribute(regionAttributeValues);
             }
             accu.append("<regionSourceAttributeName>");
-            accu.append(regionSourceAttributeName);
+            accu.append(regionAttributeName);
             accu.append("</regionSourceAttributeName>");
-            String regionSourceAttributeFilter = inputMapRaw.get("regionSourceAttributeFilter");
-            if (regionSourceAttributeFilter != null && regionSourceAttributeFilter.length() != 0) {
+            String regionAttributeValueFilter = inputMapRaw.get("regionAttributeValueFilter");
+            if (regionAttributeValueFilter == null) {
+                regionAttributeValueFilter = inputMapRaw.get("regionSourceAttributeFilter");
+            }
+            if (regionAttributeValueFilter != null && regionAttributeValueFilter.length() != 0) {
                 accu.append("<regionSourceAttributeFilter>");
-                accu.append(regionSourceAttributeFilter);
+                accu.append(regionAttributeValueFilter);
                 accu.append("</regionSourceAttributeFilter>");
             }
         } else {
