@@ -1,5 +1,6 @@
 package com.bc.calvalus.api;
 
+import com.bc.calvalus.api.model.BackendConfig;
 import com.bc.calvalus.api.model.ProcessorPackageModel;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -48,7 +49,7 @@ public class ProcessorPackageResource {
                                             @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
         try {
             List<ProcessorPackageEntry> accu = new ArrayList<>();
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             BundleDescriptor[] descriptors = ProcessorPackageModel.getInstance(context).getBundleDescriptors(userName);
             int start = offset == null ? 0 : offset < descriptors.length ? offset : descriptors.length;
             int stop = limit == null || limit > MAX_LIMIT ? start + MAX_LIMIT : start + limit;
@@ -71,7 +72,7 @@ public class ProcessorPackageResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadContent(@Context HttpServletRequest request, @Context ServletContext context, @Context UriInfo uriInfo) {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             FileItem item = Utils.getFileItem(request);
             String zipFileName = item.getName();
             String bundleId = zipFileName.toLowerCase().endsWith(".zip") ? zipFileName.substring(0, zipFileName.length()-4) : zipFileName;
@@ -98,7 +99,7 @@ public class ProcessorPackageResource {
     public ProcessorPackageEntry getEntry(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) {
         try {
             LOG.info("showing processor package " + name);
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             BundleDescriptor descriptor = ProcessorPackageModel.getInstance(context).getBundleDescriptor(userName, name);
             if (descriptor == null) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
@@ -120,7 +121,7 @@ public class ProcessorPackageResource {
     public void deleteEntry(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) {
         try {
             LOG.info("deleting processor package " + name);
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             String bundlePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name);
             ProcessorPackageModel.getInstance(context).removeDirectory(userName, bundlePath);
             ProcessorPackageModel.getInstance(context).invalidateBundleCache();
@@ -135,7 +136,7 @@ public class ProcessorPackageResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response getContent(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             String bundlePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name);
             if (! ProcessorPackageModel.getInstance(context).pathExists(userName, bundlePath)) {
                 LOG.info("retrieving content of processor package failed - not found: " + name);
@@ -167,7 +168,7 @@ public class ProcessorPackageResource {
                                             @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
         try {
             List<FileEntry> accu = new ArrayList<>();
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             BundleDescriptor descriptor = ProcessorPackageModel.getInstance(context).getBundleDescriptor(userName, name);
             if (descriptor == null) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
@@ -195,7 +196,7 @@ public class ProcessorPackageResource {
     public Response putFile(@Context HttpServletRequest request, @Context ServletContext context, @Context UriInfo uriInfo,
                             @PathParam("name") String name) {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             FileItem item = Utils.getFileItem(request);
             String fileName = item.getName();
             String filePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name + "/" + fileName);
@@ -220,7 +221,7 @@ public class ProcessorPackageResource {
     public FileEntry getFileEntry(@Context HttpServletRequest request, @Context ServletContext context,
                                   @PathParam("name") String name, @PathParam("filename") String fileName) {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             FileStatus fileStatus = ProcessorPackageModel.getInstance(context).getFile(userName, "software/" + name + "/" + fileName);
             if (fileStatus == null) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());
@@ -240,7 +241,7 @@ public class ProcessorPackageResource {
                            @Context HttpServletRequest request, @Context ServletContext context) {
         try {
             LOG.info("deleting processor file " + name + "/" + fileName);
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             String filePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name + "/" + fileName);
             ProcessorPackageModel.getInstance(context).removeFile(userName, filePath);
         } catch (Exception e) {
@@ -255,7 +256,7 @@ public class ProcessorPackageResource {
     public Response getFileContent(@Context HttpServletRequest request, @Context ServletContext context,
                                             @PathParam("name") String name, @PathParam("filename") String fileName) {
         try {
-            String userName = request.getUserPrincipal().getName();
+            String userName = Utils.getUserName(request, context);
             String filePath = ProcessorPackageModel.getInstance(context).getUserPath(userName, "software/" + name + "/" + fileName);
             if (! ProcessorPackageModel.getInstance(context).pathExists(userName, filePath)) {
                 throw new WebApplicationException(Response.status(Response.Status.NOT_FOUND).build());

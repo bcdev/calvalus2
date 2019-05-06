@@ -5,7 +5,10 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
+import com.bc.calvalus.processing.ra.RAConfig;
+import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
+import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -17,12 +20,15 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
 import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +53,7 @@ public class CalvalusDataInputs {
     CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor,
                        WpsProcess calvalusProcessor,
                        ProductSet[] productSets,
-                       Map<String, String> requestHeaderMap)
+                       CalvalusFacade calvalusFacade)
                 throws InvalidParameterValueException {
         inputMapFormatted = new HashMap<>();
         inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
@@ -63,6 +69,12 @@ public class CalvalusDataInputs {
         extractProductSetParameters(productSets, (CalvalusProcessor) calvalusProcessor);
         if (extractL3Parameters(calvalusProcessor)) {
             inputMapFormatted.put("productionType", "L3");
+            String productionName = executeRequestExtractor.getValue("productionName");
+            if (productionName != null) {
+                inputMapFormatted.put("calvalus.output.prefix", productionName.replaceAll(" ", "_"));
+            }
+        } else if (extractRAParamters(calvalusProcessor, calvalusFacade)) {
+            inputMapFormatted.put("productionType", "RA");
             String productionName = executeRequestExtractor.getValue("productionName");
             if (productionName != null) {
                 inputMapFormatted.put("calvalus.output.prefix", productionName.replaceAll(" ", "_"));
@@ -91,11 +103,11 @@ public class CalvalusDataInputs {
         }
         inputMapFormatted.put("autoStaging", "true");
         inputMapFormatted.put("calvalus.output.compression", "none");
-        if(requestHeaderMap.get("remoteUser") != null){
-            inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
+        if(calvalusFacade.getRequestHeaderMap().get("remoteUser") != null){
+            inputMapFormatted.put("calvalus.wps.remote.user", calvalusFacade.getRequestHeaderMap().get("remoteUser"));
         }
-        if(requestHeaderMap.get("remoteRef") != null){
-            inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
+        if(calvalusFacade.getRequestHeaderMap().get("remoteRef") != null){
+            inputMapFormatted.put("calvalus.wps.remote.ref", calvalusFacade.getRequestHeaderMap().get("remoteRef"));
         }
         inputMapFormatted.put("quicklooks", "true");
     }
@@ -276,6 +288,233 @@ public class CalvalusDataInputs {
         return true;
     }
 
+    /**
+     * Identifies RA request and converts WPS parameters into a Calvalus request.
+     * Implicit input is inputMapRaw with the WPS request parameters.
+     *     shapefile: Shape file name with features to be used for statistics, e.g. LUX_adm
+     *     regionAttributeName: Shape file attribute for features to be used for statistics, e.g. NAME_3, leave empty for heuristic selection
+     *     regionAttributeValueFilter: Pattern to select attribute values, .e.g. Lux*|Esch*, leave empty to select all regions of attribute
+     *     bands: Bands of selected input to be used for statistics, defaults to non-default bands of regionalStatisticsParameters
+     *     validPixelExpression: Band maths expression to identify pixels that shall be counted
+     *     regionalStatisticsParameters: <parameters>
+     *         <bands>
+     *           <band><name>band_1</name><numBins>2</numBins><min>0</min><max>255</max></band>
+     *           <band><name>ndvi_max</name><numBins>8</numBins><min>0</min><max>0.8</max></band>
+     *           <band><name>ndwi_mean</name><numBins>8</numBins><min>0</min><max>0.8</max></band>
+     *           <band><name>*</name><numBins>10</numBins><min>0</min><max>1</max></band>
+     *         </bands>
+     *         <percentiles>10,90</percentiles>
+     *       </parameters>
+     * Implicit output is inputMapFormatted with the added Calvalus request parameters.
+     *     collectionName: DLR WSF 2015 (Urban TEP)
+     *     geoInventory: /calvalus/geoInventory/WSF2015_v1_EPSG4326
+     *     inputProductType: URBAN_FOOTPRINT
+     *     regionWKT: POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))
+     *     minDate: 2015-01-01
+     *     maxDate: 2015-12-31
+     *     periodLength: 365
+     *     autoStaging: true
+     *     outputFormat: Report
+     *     calvalus.ra.binValuesAsRatio: true
+     *     cavalus.ra.parameters: <parameters>
+     *         <regions>
+     *             <region><name>...</name><wkt>POLYGON((...))</wkt></region>
+     *         </regions>
+     *         <regionSource>http://.../region_data/....zip</regionSource>
+     *         <regionSourceAttributeName>NAME_3</regionSourceAttributeName>
+     *         <regionSourceAttributeFilter></regionSourceAttributeFilter>
+     *         <goodPixelExpression>true</goodPixelExpression>
+     *         <percentiles>90</percentiles>
+     *         <bands>
+     *             <band><name>band_1</name><numBins>2</numBins><min>0</min><max>255</max></band>
+     *         </bands>
+     *         <writePerRegion>false</writePerRegion>
+     *         <writeSeparateHistogram>false</writeSeparateHistogram>
+     *       </parameters>
+     * @param processor  processor descriptor from bundle descriptor, with default regionalStatistics configuration, e.g.
+     *     <regionalStatisticsParameters>
+     *       <parameters>
+     *         <bands>
+     *           <band><name>band_1</name><numBins>2</numBins><min>0</min><max>255</max></band>
+     *           <band><name>ndvi_max</name><numBins>8</numBins><min>0</min><max>0.8</max></band>
+     *           <band><name>*</name><numBins>10</numBins><min>0</min><max>1</max></band>
+     *         </bands>
+     *         <percentiles>90</percentiles>
+     *       </parameters>
+     *     </regionalStatisticsParameters>
+     * @param calvalusFacade access to shapefiles
+     * @return whether the bundle descriptor contains the RA parameters
+     * @throws InvalidParameterValueException
+     */
+    private boolean extractRAParamters(WpsProcess processor, CalvalusFacade calvalusFacade) throws InvalidParameterValueException {
+        String regionalStatisticsParameters = inputMapRaw.get("regionalStatisticsParameters");
+        if (regionalStatisticsParameters == null) {
+            return false;
+        }
+        // remove dummy processor "ra" and parameters
+        if ("ra".equals(inputMapFormatted.get("processorName"))) {
+            inputMapFormatted.remove("processorName");
+            inputMapFormatted.remove("processorParameters");
+        }
+        // determine and set period length
+        String minDate = inputMapRaw.get("minDate");
+        if (minDate == null || minDate.length() == 0) {
+            minDate = inputMapFormatted.get("minDateSource");
+            inputMapFormatted.put("minDate", minDate);
+        }
+        String maxDate = inputMapRaw.get("maxDate");
+        if (maxDate == null || maxDate.length() == 0) {
+            maxDate = inputMapFormatted.get("maxDateSource");
+            inputMapFormatted.put("maxDate", maxDate);
+        }
+        try {
+            long millis = ISO_DATE_FORMAT.parse(maxDate).getTime() - ISO_DATE_FORMAT.parse(minDate).getTime();
+            int periodLength = (int) ((millis + (1000 * 60 * 60 * 24) * 3 / 2) / (1000 * 60 * 60 * 24));
+            inputMapFormatted.put("periodLength", String.valueOf(periodLength));
+        } catch (ParseException e) {
+            throw new InvalidParameterValueException("failed to parse date " + minDate + " or " + maxDate, e, "minDate or maxDate or dataset temporal coverage");
+        }
+        // accumulate ra parameters
+        StringBuilder accu = new StringBuilder();
+        accu.append("<parameters>");
+        // read shape file if specified
+        String regionSource = null;
+        String shapefile = inputMapRaw.get("shapefile");
+        if (shapefile != null && shapefile.length() > 0) {
+            String[] regionFiles;
+            try {
+                regionFiles = calvalusFacade.getRegionFiles();
+            } catch (IOException e) {
+                throw new InvalidParameterValueException(e, "shapefiles of user not found");
+            }
+            for (String path : regionFiles) {
+                String filename = path.substring(path.lastIndexOf('/') + 1);
+                if (filename.equals(shapefile) || filename.equals(shapefile + ".zip")) {
+                    regionSource = path;
+                    break;
+                }
+            }
+            if (regionSource == null) {
+                throw new InvalidParameterValueException("shapefile " + shapefile + " not found among " + String.join(" ", regionFiles));
+            }
+            accu.append("<regionSource>");
+            accu.append(regionSource);
+            accu.append("</regionSource>");
+            String regionSourceAttributeName = inputMapRaw.get("regionSourceAttributeName");
+            if (regionSourceAttributeName == null || regionSourceAttributeName.length() == 0) {
+                String[][] regionAttributeValues;
+                try {
+                    regionAttributeValues = calvalusFacade.loadRegionDataInfo(regionSource);
+                } catch (IOException | ProductionException e) {
+                    throw new InvalidParameterValueException(e, "shapefile " + shapefile + " of user not found");
+                }
+                regionSourceAttributeName = determineMostDistinctiveAttribute(regionAttributeValues);
+            }
+            accu.append("<regionSourceAttributeName>");
+            accu.append(regionSourceAttributeName);
+            accu.append("</regionSourceAttributeName>");
+            String regionSourceAttributeFilter = inputMapRaw.get("regionSourceAttributeFilter");
+            if (regionSourceAttributeFilter != null && regionSourceAttributeFilter.length() != 0) {
+                accu.append("<regionSourceAttributeFilter>");
+                accu.append(regionSourceAttributeFilter);
+                accu.append("</regionSourceAttributeFilter>");
+            }
+        } else {
+            accu.append("<regions><region><name>");
+            accu.append(inputMapRaw.getOrDefault("regionName", inputMapRaw.getOrDefault("productionName", "selected_region")));
+            accu.append("</name><wkt>");
+            accu.append(inputMapRaw.get("regionWkt"));
+            accu.append("</wkt></region></regions>");
+        }
+        RAConfig raConfig;
+        try {
+            raConfig = RAConfig.fromXml(regionalStatisticsParameters);
+        } catch (BindingException e) {
+            throw new InvalidParameterValueException("failed to parse RA config from bundle descriptor");
+        }
+        accu.append("<goodPixelExpression>");
+        accu.append(inputMapRaw.getOrDefault("validPixelExpression", "true"));
+        accu.append("</goodPixelExpression>");
+        if (raConfig.getPercentiles().length > 0) {
+            accu.append("<percentiles>");
+            accu.append(raConfig.getPercentiles()[0]);
+            for (int i=1; i<raConfig.getPercentiles().length; ++i) {
+                accu.append(",");
+                accu.append(raConfig.getPercentiles()[i]);
+            }
+            accu.append("</percentiles>");
+        }
+        String[] bandNames;
+        String bandsString = inputMapRaw.get("bands");
+        if (bandsString == null || bandsString.length() == 0) {
+            bandNames = raConfig.getBandNames();
+        } else {
+            bandNames = bandsString.split(",");
+            for (int i=0; i<bandNames.length; ++i) {
+                bandNames[i] = bandNames[i].trim();
+            }
+        }
+        accu.append("<bands>");
+        for (String bandName : bandNames) {
+            RAConfig.BandConfig bandConfig = findBandConfig(bandName, raConfig);
+            accu.append("<band><name>");
+            accu.append(bandName);
+            accu.append("</name><numBins>");
+            accu.append(bandConfig.getNumBins());
+            accu.append("</numBins><min>");
+            accu.append(bandConfig.getMin());
+            accu.append("</min><max>");
+            accu.append(bandConfig.getMax());
+            accu.append("</max></band>");
+        }
+        accu.append("</bands>");
+        accu.append("<writePerRegion>false</writePerRegion><writeSeparateHistogram>false</writeSeparateHistogram></parameters>");
+        inputMapFormatted.put("calvalus.ra.parameters", accu.toString());
+        inputMapFormatted.put("calvalus.ra.binValuesAsRatio", String.valueOf(raConfig.isBinValuesAsRatio()));
+        return true;
+    }
+
+    private RAConfig.BandConfig findBandConfig(String bandName, RAConfig raConfig) {
+        for (RAConfig.BandConfig bandConfig : raConfig.getBandConfigs()) {
+            if (bandName.matches(bandConfig.getName())) {
+                return bandConfig;
+            }
+        }
+        return new RAConfig.BandConfig(".*", 10, 0.0, 1.0);
+    }
+
+    private String determineMostDistinctiveAttribute(String[][] regionAttributeValues) throws InvalidParameterValueException {
+        if (regionAttributeValues.length == 0) {
+            throw new InvalidParameterValueException("no attributes found in shapefile");
+        }
+        int bestIndex = 0;
+        int bestSize = getSizeOf(regionAttributeValues[0]);
+        for (int i=1; i<regionAttributeValues.length; ++i) {
+            int size = getSizeOf(regionAttributeValues[i]);
+            if (size > bestSize) {
+                bestIndex = i;
+                bestSize = size;
+            }
+        }
+        return regionAttributeValues[bestIndex][0];
+    }
+
+    private int getSizeOf(String[] regionAttributeValue) {
+        int size = 0;
+        for (int i=1; i<regionAttributeValue.length; ++i) {
+            for (int j=1;; ++j) {
+                if (j >= i) {
+                    ++size;
+                    break;
+                }
+                if (regionAttributeValue[i].equals(regionAttributeValue[j])) {
+                    break;
+                }
+            }
+        }
+        return size;
+    }
+
     private void extractProductionParameters() {
         List<String> productionParameterNames = getProductionInfoParameters();
         productionParameterNames.stream()
@@ -311,6 +550,7 @@ public class CalvalusDataInputs {
                 && ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
                 putProductPath(productSet);
                 putDates(productSet);
+                putBands(productSet);
                 break;
             }
         }
@@ -319,6 +559,13 @@ public class CalvalusDataInputs {
             && StringUtils.isBlank(inputMapFormatted.get("inputPath"))
             && StringUtils.isBlank(inputMapFormatted.get("geoInventory"))) {
             throw new InvalidParameterValueException(INPUT_DATASET.getIdentifier());
+        }
+    }
+
+    private void putBands(ProductSet productSet) {
+        String[] bandNames = productSet.getBandNames();
+        if (inputMapRaw.get("bands") == null && bandNames != null && bandNames.length != 0) {
+            inputMapRaw.put("bands", String.join(",", bandNames));
         }
     }
 
@@ -351,6 +598,12 @@ public class CalvalusDataInputs {
         sb.append("<parameters>\n");
         if (processorParameters != null) {
             for (ParameterDescriptor parameterDescriptor : processorParameters) {
+                if ("ra".equals(inputMapFormatted.get("processorName"))
+                        && ("shapefile".equals(parameterDescriptor.getName())
+                        || "bands".equals(parameterDescriptor.getName())
+                        || "validPixelExpression".equals(parameterDescriptor.getName()))) {
+                    continue;
+                }
                 String processorParameterValue = inputMapRaw.get(parameterDescriptor.getName());
                 String defaultParameterValue = parameterDescriptor.getDefaultValue();
                 if (StringUtils.isNotBlank(processorParameterValue) || StringUtils.isNotBlank(defaultParameterValue)) {

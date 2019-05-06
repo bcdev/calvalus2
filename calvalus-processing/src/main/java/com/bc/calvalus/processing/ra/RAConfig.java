@@ -147,6 +147,9 @@ public class RAConfig implements XmlConvertible {
     @Parameter(defaultValue = "false")
     private boolean writePixelValues = false;
 
+    @Parameter(defaultValue = "false")
+    private boolean binValuesAsRatio = false;
+
     // internal, will be set by the production type, to prevent repeated reading
     @Parameter
     private String[] internalRegionNames;
@@ -256,6 +259,14 @@ public class RAConfig implements XmlConvertible {
 
     public void setWritePixelValues(boolean writePixelValues) {
         this.writePixelValues = writePixelValues;
+    }
+
+    public boolean isBinValuesAsRatio() {
+        return binValuesAsRatio;
+    }
+
+    public void setBinValuesAsRatio(boolean binValuesAsRatio) {
+        this.binValuesAsRatio = binValuesAsRatio;
     }
 
     public static RAConfig get(Configuration conf) {

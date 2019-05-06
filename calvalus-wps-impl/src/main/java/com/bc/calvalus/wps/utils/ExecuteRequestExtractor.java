@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.utils;
 
+import com.bc.calvalus.processing.ra.RAConfig;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.DataInputsType;
@@ -70,10 +71,7 @@ public class ExecuteRequestExtractor {
                                                               lon0, lat0, lon1, lat1);
                     inputParametersMapRaw.put(dataInput.getIdentifier().getValue(), polygonCoordinates);
                 }
-            } else if (!dataInput.getIdentifier().getValue().equals("calvalus.l3.parameters")) {
-                String value = extractDataInputValue(dataInput);
-                inputParametersMapRaw.put(dataInput.getIdentifier().getValue(), value);
-            } else {
+            } else if (dataInput.getIdentifier().getValue().equals("calvalus.l3.parameters")) {
                 ElementNSImpl elementNS = null;
                 for (Object object : dataInput.getData().getComplexData().getContent()) {
                     if (object instanceof ElementNSImpl) {
@@ -83,6 +81,19 @@ public class ExecuteRequestExtractor {
                 InputStream l3ParametersStream = getL3ParametersStream(elementNS);
                 L3Parameters l3Parameters = (L3Parameters) JaxbHelper.unmarshal(l3ParametersStream, new ObjectFactory());
                 extractL3Parameters(l3Parameters);
+//            } else if (dataInput.getIdentifier().getValue().equals("regionalStatisticsParameters")) {
+//                ElementNSImpl elementNS = null;
+//                for (Object object : dataInput.getData().getComplexData().getContent()) {
+//                    if (object instanceof ElementNSImpl) {
+//                        elementNS = (ElementNSImpl) object;
+//                    }
+//                }
+//                InputStream l3ParametersStream = getL3ParametersStream(elementNS);
+//                RAConfig l3Parameters = (RAConfig) JaxbHelper.unmarshal(l3ParametersStream, new ObjectFactory());
+//                extractRAConfig(l3Parameters);
+            } else {
+                String value = extractDataInputValue(dataInput);
+                inputParametersMapRaw.put(dataInput.getIdentifier().getValue(), value);
             }
         }
     }
@@ -104,6 +115,10 @@ public class ExecuteRequestExtractor {
     private void extractL3Parameters(L3Parameters l3Parameters) {
         L3ParameterXmlGenerator xmlGenerator = new L3ParameterXmlGenerator(l3Parameters);
         inputParametersMapRaw.put("calvalus.l3.parameters", xmlGenerator.createXml());
+    }
+
+     private void extractRAConfig(RAConfig raConfig) {
+        inputParametersMapRaw.put("regionalStatisticsParameters", raConfig.toXml());
     }
 
     private InputStream getL3ParametersStream(Node elementNS) {

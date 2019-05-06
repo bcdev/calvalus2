@@ -4,6 +4,7 @@ import static com.bc.wps.api.utils.WpsTypeConverter.str2CodeType;
 import static com.bc.wps.api.utils.WpsTypeConverter.str2LanguageStringType;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
@@ -38,6 +39,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -307,7 +309,31 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
         if (parameterDescriptors != null) {
             for (ProcessorDescriptor.ParameterDescriptor parameterDescriptor : parameterDescriptors) {
-                InputDescriptionType input = InputDescriptionTypeBuilder
+                if ("Regions".equals(parameterDescriptor.getType())) {
+                    String[] shapefiles = calvalusFacade.getRegionFiles();
+                    List<Object> allowedValues = new ArrayList<>();
+                    for (String shapefile : shapefiles) {
+                        shapefile = shapefile.substring(shapefile.lastIndexOf('/')+1);
+                        if (shapefile.endsWith(".zip")) {
+                            shapefile = shapefile.substring(0, shapefile.length() - ".zip".length());
+                        }
+                        ValueType value = new ValueType();
+                        value.setValue(shapefile);
+                        allowedValues.add(value);
+                    }
+                    InputDescriptionTypeBuilder builder = InputDescriptionTypeBuilder
+                            .create()
+                            .withIdentifier(parameterDescriptor.getName())
+                            .withTitle(parameterDescriptor.getName())
+                            .withAbstract(parameterDescriptor.getDescription())
+                            .withDataType("String");
+                    if (! allowedValues.isEmpty()) {
+                        builder = builder.withAllowedValues(allowedValues)
+                                .withDefaultValue(((ValueType) allowedValues.get(0)).getValue());
+                    }
+                    dataInputs.getInput().add(builder.build());
+                } else {
+                    InputDescriptionType input = InputDescriptionTypeBuilder
                             .create()
                             .withIdentifier(parameterDescriptor.getName())
                             .withTitle(parameterDescriptor.getName())
@@ -315,7 +341,8 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                             .withDefaultValue(parameterDescriptor.getDefaultValue())
                             .withDataType(parameterDescriptor.getType())
                             .build();
-                dataInputs.getInput().add(input);
+                    dataInputs.getInput().add(input);
+                }
             }
         } else if (!StringUtils.isBlank(processor.getDefaultParameters())) {
             InputDescriptionType input = InputDescriptionTypeBuilder
@@ -345,6 +372,18 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                             .withDataType("string")
                             .build();
                 dataInputs.getInput().add(aggregationParameters);
+            }
+            parameters = processor.getJobConfiguration().get("calvalus.wps.regionalStatistics");
+            if (parameters != null) {
+                InputDescriptionType regionalStatisticsParameters = InputDescriptionTypeBuilder
+                            .create()
+                            .withIdentifier("regionalStatisticsParameters")
+                            .withTitle("Parameters for regional statistics")
+                            .withAbstract("Parameters for spatio-temporal aggregation and statistics generation, with defaults")
+                            .withDefaultValue(parameters)
+                            .withDataType("string")
+                            .build();
+                dataInputs.getInput().add(regionalStatisticsParameters);
             }
         }
 

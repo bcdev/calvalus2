@@ -66,7 +66,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
             ProductionRequest productionRequest = production.getProductionRequest();
             ProcessorNameConverter processorConverter = new ProcessorNameConverter(productionRequest.getString(PROCESSOR_BUNDLE_NAME.getIdentifier()),
                                                                                    productionRequest.getString(PROCESSOR_BUNDLE_VERSION.getIdentifier()),
-                                                                                   productionRequest.getString(PROCESSOR_NAME.getIdentifier()));
+                                                                                   productionRequest.getString(PROCESSOR_NAME.getIdentifier(), "ra")); // TODO find better way to handle RA
 
             String processId = processorConverter.getProcessorIdentifier();
             processBriefType.setIdentifier(WpsTypeConverter.str2CodeType(processId));

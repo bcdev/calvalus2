@@ -8,21 +8,31 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class ShapefileModel {
+public class ShapefileModel extends FileBasedModel {
 
     public static final String REGION_DATA_DIR = "region_data";
-    private static Logger LOG = CalvalusLogger.getLogger();
     private static ShapefileModel instance;
-    private ServiceContainer serviceContainer;
+
+    private ShapefileModel(ServletContext context) throws ServletException, ProductionException {
+        super(context);
+    }
 
     public static ShapefileModel getInstance(ServletContext context) throws ServletException, ProductionException {
         if (instance == null) {
@@ -31,44 +41,54 @@ public class ShapefileModel {
         return instance;
     }
 
-    private ShapefileModel(ServletContext context) throws ServletException, ProductionException {
-        LOG.info("constructing new service container");
-        BackendConfig backendConfig = new BackendConfig(context);
-        serviceContainer = new HadoopServiceContainerFactory().create(backendConfig.getConfigMap(), backendConfig.getLocalAppDataDir(), backendConfig.getLocalStagingDir());
+    public String getName(String zipFileName) {
+        return zipFileName.endsWith(".zip") ? zipFileName.substring(0, zipFileName.length() - 4) : zipFileName;
     }
 
-    public List<ShapefileEntry> getShapefiles(String userName) throws IOException {
-        List<String> shapefilePathPatterns = new ArrayList<>();
-        String shapefilePathPattern = "/calvalus/home/" + userName + "/" + REGION_DATA_DIR + "/.*zip";
-        shapefilePathPatterns.add(shapefilePathPattern);
-        FileStatus[] fileStatuses = serviceContainer.getFileSystemService().globFiles(userName, shapefilePathPatterns);
-        List<ShapefileEntry> shapefileEntries = new ArrayList<>();
-        for (FileStatus fileStatus : fileStatuses) {
-            ShapefileEntry shapefileEntry = new ShapefileEntry(userName, fileStatus.getPath().toString());
-            shapefileEntries.add(shapefileEntry);
-        }
-        return shapefileEntries;
-    }
-
-    public void unzipFromStream(String username, String targetPath, InputStream stream) throws IOException {
-        Utils.unzipFromStream(username, targetPath, stream, serviceContainer.getFileSystemService());
-    }
-
-    public FileStatus getShapefile(String username, String filename) throws IOException {
+    public FileStatus findShapefile(String username, String filename) throws IOException {
         List<String> pathPatterns = new ArrayList<>();
-        pathPatterns.add("/calvalus/home/" + username + "/" + REGION_DATA_DIR + "/" + filename + ".*");
-        return serviceContainer.getFileSystemService().globFiles(username, pathPatterns)[0];
+        pathPatterns.add("/calvalus/home/" + username + "/" + REGION_DATA_DIR + "/" + filename + ".zip");
+        FileStatus[] fileStatuses = serviceContainer.getFileSystemService().globFiles(username, pathPatterns);
+        if (fileStatuses == null || fileStatuses.length == 0) {
+            return null;
+        }
+        return fileStatuses[0];
     }
 
-    public String getUserPath(String userName, String path) {
-        return AbstractFileSystemService.getUserPath(userName, path);
+    public List<ShapefileEntry> getShapefiles(String userName) throws IOException, InterruptedException {
+        final List<String> shapefilePathPatterns = Arrays.asList(new String[] { "/calvalus/home/" + userName + "/" + REGION_DATA_DIR + "/.*zip" });
+        final FileStatus[] fileStatuses = serviceContainer.getFileSystemService().globFiles(userName, shapefilePathPatterns);
+        final List<ShapefileEntry> accu = new ArrayList<>();
+        for (FileStatus fileStatus : fileStatuses) {
+            try {
+                accu.add(getShapefileEntry(fileStatus, userName));
+            } catch (Exception e) {
+                LOG.warning("skipping shapefile " + fileStatus.getPath().getName() + ", reading failed: " + e.getMessage());
+            }
+        }
+        return accu;
     }
 
-    public boolean pathExists(String username, String path) throws IOException {
-        return serviceContainer.getFileSystemService().pathExists(path, username);
+    public ShapefileEntry getShapefileEntry(FileStatus fileStatus, String userName) throws IOException, InterruptedException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
+        return remoteUser.doAs((PrivilegedExceptionAction<ShapefileEntry>) () -> {
+            final String zipFileName = fileStatus.getPath().getName();
+            final String shapeName = getName(zipFileName);
+            final String url = serviceContainer.getFileSystemService().getQualifiedPath(userName, fileStatus.getPath().toString());
+            final String[][] data = serviceContainer.getProductionService().loadRegionDataInfo(userName, url);
+            final String[] attributes = data[0];
+            final String[][] features = Arrays.copyOfRange(data, 1, data.length);
+            return new ShapefileEntry(shapeName, userName, new Date(fileStatus.getModificationTime()), fileStatus.getLen(), fileStatus.getPath().toString(), attributes, features);
+        });
     }
 
-    public boolean removeFile(String userName, String path) throws IOException {
-        return serviceContainer.getFileSystemService().removeFile(userName, path);
+    public List<ShapefileEntry> getShapeFileBrief(String userName) throws IOException {
+        final List<String> shapefilePathPatterns = Arrays.asList(new String[] { "/calvalus/home/" + userName + "/" + REGION_DATA_DIR + "/.*zip" });
+        final FileStatus[] fileStatuses = serviceContainer.getFileSystemService().globFiles(userName, shapefilePathPatterns);
+        final List<ShapefileEntry> accu = new ArrayList<>();
+        for (FileStatus fileStatus : fileStatuses) {
+            accu.add(new ShapefileEntry(getName(fileStatus.getPath().getName()), userName, new Date(fileStatus.getModificationTime()), fileStatus.getLen(), fileStatus.getPath().toString()));
+        }
+        return accu;
     }
 }

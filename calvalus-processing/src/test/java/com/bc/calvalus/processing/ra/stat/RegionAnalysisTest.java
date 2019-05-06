@@ -47,7 +47,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_empty() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.close();
 
         Set<String> keySet = writer.writerMap.keySet();
@@ -69,7 +69,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_oneRange_nodata() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.endRegion();
         ra.close();
@@ -87,7 +87,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_oneRange_multiple_tiles() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 5, new float[][]{{11, 12, 13}});
@@ -114,7 +114,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_oneRange_data() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.endRegion();
@@ -139,7 +139,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_manyRanges_nodata() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.endRegion();
         ra.close();
@@ -169,7 +169,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_manyRanges_data() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-15 11:00:00").getTime(), 8, new float[][]{{4, 5, 6}});
@@ -204,7 +204,7 @@ public class RegionAnalysisTest {
     public void test_many_many() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
         rac1.setInternalRegionNames("r1", "r2", "r3");
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-15 11:00:00").getTime(), 8, new float[][]{{4, 5, 6}});
@@ -260,7 +260,7 @@ public class RegionAnalysisTest {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
         rac1.setInternalRegionNames("r1", "r2", "r3");
         rac1.setWriteSeparateHistogram(false);
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-15 11:00:00").getTime(), 8, new float[][]{{4, 5, 6}});
@@ -300,7 +300,7 @@ public class RegionAnalysisTest {
         rac1.setInternalRegionNames("r1", "r2", "r3");
         rac1.setWritePerRegion(true);
 
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-15 11:00:00").getTime(), 8, new float[][]{{4, 5, 6}});
@@ -377,7 +377,7 @@ public class RegionAnalysisTest {
         rac3.setWritePerRegion(false);
         rac3.setWriteSeparateHistogram(false);
 
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}, {4, 5, 6, 7, 8}, {3, 4, 5}});
         ra.endRegion();
@@ -401,7 +401,7 @@ public class RegionAnalysisTest {
         rac3.setWritePerRegion(true);
         rac3.setWriteSeparateHistogram(false);
 
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}, {4, 5, 6, 7, 8}, {3, 4, 5}});
         ra.endRegion();
@@ -431,7 +431,7 @@ public class RegionAnalysisTest {
         rac3.setWritePerRegion(false);
         rac3.setWriteSeparateHistogram(true);
 
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}, {4, 5, 6, 7, 8}, {3, 4, 5}});
         ra.endRegion();
@@ -469,7 +469,7 @@ public class RegionAnalysisTest {
         rac3.setWritePerRegion(true);
         rac3.setWriteSeparateHistogram(true);
 
-        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, false, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}, {4, 5, 6, 7, 8}, {3, 4, 5}});
         ra.endRegion();
