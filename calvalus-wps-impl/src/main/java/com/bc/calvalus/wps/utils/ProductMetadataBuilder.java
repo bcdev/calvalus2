@@ -206,7 +206,7 @@ public class ProductMetadataBuilder {
             this.collectionUrl = getBaseStagingUrl() + "/" + this.production.getStagingPath();
             try {
                 this.productionName = encodeSpecialCharacters(this.production.getName());
-                this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
+                this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier(), "ra");
                 this.inputDatasetName = productionRequest.getString("inputDataSetName");
                 String regionWktRaw = productionRequest.getString(("regionWKT"));
                 this.regionWkt = extractRegionWkt(regionWktRaw);
