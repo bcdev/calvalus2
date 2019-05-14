@@ -242,6 +242,7 @@ public class PatternBasedInputFormat extends InputFormat {
             final HttpClient httpClient = new HttpClient();
             final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             docFactory.setNamespaceAware(true);
+            docFactory.setValidating(false);
             final XPathFactory xPathfactory = XPathFactory.newInstance();
             splits = new ArrayList<>(1000);
             int numQueries = 0;
@@ -341,6 +342,11 @@ public class PatternBasedInputFormat extends InputFormat {
     }
 
     private NodeList parseCatalogueResponse(DocumentBuilderFactory factory, XPathFactory xPathfactory, InputStream response, String searchXPath) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+        if (true) {  // TODO fix for CreoDias that returns XML with missing namespace declaration
+            response = new TokenReplacingStream(response,
+                                                "xmlns:media=".getBytes(),
+                                                "xmlns:resto=\"http://whereeverrestoresides\" xmlns:media=".getBytes());
+        }
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document doc = builder.parse(response);
         XPath xpath = xPathfactory.newXPath();
@@ -497,5 +503,72 @@ public class PatternBasedInputFormat extends InputFormat {
                                                                        TaskAttemptContext context)
                 throws IOException, InterruptedException {
         return new NoRecordReader();
+    }
+
+    /** from https://stackoverflow.com/questions/7743534/filter-search-and-replace-array-of-bytes-in-an-inputstream */
+
+    public class TokenReplacingStream extends InputStream {
+
+        private final InputStream source;
+        private final byte[] oldBytes;
+        private final byte[] newBytes;
+        private int tokenMatchIndex = 0;
+        private int bytesIndex = 0;
+        private boolean unwinding;
+        private int mismatch;
+        private int numberOfTokensReplaced = 0;
+
+        public TokenReplacingStream(InputStream source, byte[] oldBytes, byte[] newBytes) {
+            assert oldBytes.length > 0;
+            this.source = source;
+            this.oldBytes = oldBytes;
+            this.newBytes = newBytes;
+        }
+
+        @Override
+        public int read() throws IOException {
+
+            if (unwinding) {
+                if (bytesIndex < tokenMatchIndex) {
+                    return oldBytes[bytesIndex++];
+                } else {
+                    bytesIndex = 0;
+                    tokenMatchIndex = 0;
+                    unwinding = false;
+                    return mismatch;
+                }
+            } else if (tokenMatchIndex == oldBytes.length) {
+                if (bytesIndex == newBytes.length) {
+                    bytesIndex = 0;
+                    tokenMatchIndex = 0;
+                    numberOfTokensReplaced++;
+                } else {
+                    return newBytes[bytesIndex++];
+                }
+            }
+
+            int b = source.read();
+            if (b == oldBytes[tokenMatchIndex]) {
+                tokenMatchIndex++;
+            } else if (tokenMatchIndex > 0) {
+                mismatch = b;
+                unwinding = true;
+            } else {
+                return b;
+            }
+
+            return read();
+
+        }
+
+        @Override
+        public void close() throws IOException {
+            source.close();
+        }
+
+        public int getNumberOfTokensReplaced() {
+            return numberOfTokensReplaced;
+        }
+
     }
 }
