@@ -183,11 +183,20 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         String inputName = processorAdapter.getInputPath().getName();
-        String productName;
-        if (! "MTD_MSIL1C.xml".equals(inputName)) {  // TODO
-            productName = getProductName(jobConfig, inputName);
-        } else {
-            productName = getProductName(jobConfig, processorAdapter.getInputPath().getParent().getName());
+        String productName = null;
+        if (processorAdapter.getInputParameters() != null) {
+            for (int i = 0; i < processorAdapter.getInputParameters().length; i += 2) {
+                if ("output".equals(processorAdapter.getInputParameters()[i])) {
+                    productName = getProductName(jobConfig, processorAdapter.getInputParameters()[i + 1]);
+                }
+            }
+        }
+        if (productName == null) {
+            if (! "MTD_MSIL1C.xml".equals(inputName)) {  // TODO
+                productName = getProductName(jobConfig, inputName);
+            } else {
+                productName = getProductName(jobConfig, processorAdapter.getInputPath().getParent().getName());
+            }
         }
         final ProductFormatter productFormatter = outputFormat != null ? new ProductFormatter(productName, outputFormat, outputCompression) : null;
 

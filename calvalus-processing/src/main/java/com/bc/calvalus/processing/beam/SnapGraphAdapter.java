@@ -334,7 +334,11 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
         for (int i = 0; i < getInputParameters().length; i += 2) {
-            if (!"output".equals(getInputParameters()[i])) {
+            if ("output".equals(getInputParameters()[i])) {
+                // drop parameter, is used later in SubsetProcessorAdapter
+            } else if ("regionGeometry".equals(getInputParameters()[i])) {
+                conf.set("calvalus.regionGeometry", getInputParameters()[i+1]);
+            } else {
                 processingParameters.put(getInputParameters()[i], getInputParameters()[i + 1]);
             }
         }

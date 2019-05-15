@@ -69,7 +69,7 @@ public class TableInputFormat extends InputFormat {
             if (line.startsWith("#")) {
                 continue;
             }
-            final String[] values = line.split("[ \t]+");
+            final String[] values = line.split("\t"); // TODO made strict tab-separated, to be documented
             if (values.length != attributes.length) {
                 LOG.warning("values " + (values.length - 1) + " does not match attributes " +
                                     (attributes.length - 1) + " for " + values[0]);
