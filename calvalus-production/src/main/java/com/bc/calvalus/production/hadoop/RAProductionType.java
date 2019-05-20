@@ -87,7 +87,17 @@ public class RAProductionType extends HadoopProductionType {
         raJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         raJobConfig.set(JobConfigNames.CALVALUS_RA_PARAMETERS, raConfigXmlAndRegion[0]);
 
-        raJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, raConfigXmlAndRegion[1]);
+        if (productionRequest.getParameter("regionWKT", false) != null &&
+                ! "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))".
+                equals(productionRequest.getString("regionWKT"))) {
+            raJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, productionRequest.getString("regionWKT"));
+        } else if (raJobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY) != null &&
+                ! "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))".
+                equals(raJobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY))) {
+            // keep this polygon
+        } else {
+            raJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, raConfigXmlAndRegion[1]);
+        }
         WorkflowItem workflowItem = new RAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                        productionName, raJobConfig);
 
