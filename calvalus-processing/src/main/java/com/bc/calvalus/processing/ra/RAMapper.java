@@ -36,7 +36,7 @@ import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**
@@ -76,8 +76,8 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                     }
                 }
                 final AtomicBoolean foundPixel = new AtomicBoolean(false);
-                final AtomicInteger numObsTotal = new AtomicInteger(0);
-                final AtomicInteger numSamplesTotal = new AtomicInteger(0);
+                final AtomicLong numObsTotal = new AtomicLong(0);
+                final AtomicLong numSamplesTotal = new AtomicLong(0);
                 final Set<Integer> regionIdSet = new HashSet<>();
                 final String productName = product.getName();
                 RARegions.RegionIterator regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());

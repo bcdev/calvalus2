@@ -69,7 +69,8 @@ public class RAConfigTest {
                 "  <withRegionEnvelope>false</withRegionEnvelope>\n" +
                 "  <withProductNames>false</withProductNames>\n" +
                 "  <goodPixelExpression>not cloud and water</goodPixelExpression>\n" +
-                "  <percentiles>2,50,99</percentiles>\n" +
+                "  <!-- <percentiles>2,50,99</percentiles> -->\n" +
+                "  <percentiles></percentiles>\n" +
                 "  <bands>\n" +
                 "    <band>\n" +
                 "      <name>chl</name>\n" +
@@ -87,5 +88,6 @@ public class RAConfigTest {
                 "</parameters>";
         RAConfig raConfig = RAConfig.fromXml(expected);
         assertEquals(false, raConfig.isBinValuesAsRatio());
+        assertNull(raConfig.getPercentiles());
     }
 }

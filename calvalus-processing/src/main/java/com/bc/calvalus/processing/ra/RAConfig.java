@@ -127,7 +127,7 @@ public class RAConfig implements XmlConvertible {
     @Parameter
     private String goodPixelExpression;
 
-    @Parameter(defaultValue = "5,25,50,75,95")
+    @Parameter(defaultValue = "")
     private int[] percentiles;
 
     // TODO bandNames have to be given, switch to all if not given ?
@@ -214,10 +214,14 @@ public class RAConfig implements XmlConvertible {
     }
     
     public void setPercentiles(String percentilesText) {
-        String[] split = percentilesText.split(",");
-        this.percentiles = new int[split.length];
-        for (int i = 0; i < split.length; i++) {
-            this.percentiles[i] = Integer.parseInt(split[i]);
+        if (percentilesText == null || percentilesText.trim().length() == 0) {
+            this.percentiles = null;
+        } else {
+            String[] split = percentilesText.split(",");
+            this.percentiles = new int[split.length];
+            for (int i = 0; i < split.length; i++) {
+                this.percentiles[i] = Integer.parseInt(split[i]);
+            }
         }
     }
 

@@ -6,6 +6,7 @@ import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.processing.ra.RAConfig;
+import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.ceres.binding.BindingException;
@@ -441,7 +442,7 @@ public class CalvalusDataInputs {
         accu.append("<goodPixelExpression>");
         accu.append(inputMapRaw.getOrDefault("validPixelExpression", "true"));
         accu.append("</goodPixelExpression>");
-        if (raConfig.getPercentiles().length > 0) {
+        if (raConfig.getPercentiles() != null && raConfig.getPercentiles().length > 0) {
             accu.append("<percentiles>");
             accu.append(raConfig.getPercentiles()[0]);
             for (int i=1; i<raConfig.getPercentiles().length; ++i) {
@@ -489,31 +490,32 @@ public class CalvalusDataInputs {
         return new RAConfig.BandConfig(".*", 10, 0.0, 1.0);
     }
 
-    private String determineMostDistinctiveAttribute(String[][] regionAttributeValues) throws InvalidParameterValueException {
+    static String determineMostDistinctiveAttribute(String[][] regionAttributeValues) throws InvalidParameterValueException {
         if (regionAttributeValues.length == 0) {
             throw new InvalidParameterValueException("no attributes found in shapefile");
         }
         int bestIndex = 0;
-        int bestSize = getSizeOf(regionAttributeValues[0]);
-        for (int i=1; i<regionAttributeValues.length; ++i) {
-            int size = getSizeOf(regionAttributeValues[i]);
+        int bestSize = 0;
+        for (int i=0; i<regionAttributeValues[0].length; ++i) {
+            int size = getSizeOf(regionAttributeValues, i);
             if (size > bestSize) {
                 bestIndex = i;
                 bestSize = size;
             }
         }
-        return regionAttributeValues[bestIndex][0];
+        // TODO: allow for non-distinctive attributes in RA reducer
+        return regionAttributeValues[0][bestIndex];
     }
 
-    private int getSizeOf(String[] regionAttributeValue) {
+    static int getSizeOf(String[][] regionAttributeValues, int attributeIndex) {
         int size = 0;
-        for (int i=1; i<regionAttributeValue.length; ++i) {
+        for (int i=1; i<regionAttributeValues.length; ++i) {
             for (int j=1;; ++j) {
                 if (j >= i) {
                     ++size;
                     break;
                 }
-                if (regionAttributeValue[i].equals(regionAttributeValue[j])) {
+                if (regionAttributeValues[i][attributeIndex].equals(regionAttributeValues[j][attributeIndex])) {
                     break;
                 }
             }

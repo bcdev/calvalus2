@@ -24,6 +24,12 @@ public class CalvalusDataInputsTest {
 
     private static final String DUMMY_REMOTE_USER = "dummyRemoteUser";
     private static final String DUMMY_REMOTE_REF = "1738ad7b-534e-4aca-9861-b26fb9c0f983";
+    private static final String[][] FEATURES = new String[][] {
+        new String[] { "attr1", "attr2", "attr3" },
+        new String[] { "value1", "value1", "value3" },
+        new String[] { "value1", "value2", "value3" },
+        new String[] { "value1", "value3", "value2" }
+    };
     private ExecuteRequestExtractor mockExecuteRequestExtractor;
     private CalvalusProcessor mockCalvalusProcessor;
     private ProductSet[] productSets;
@@ -341,6 +347,11 @@ public class CalvalusDataInputsTest {
                                    "processorParameters : null\n" +
                                    "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
                                    "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
+    }
+
+    @Test
+    public void testDistinctiveAttributes() throws InvalidParameterValueException {
+        assertThat("attr2", equalTo(CalvalusDataInputs.determineMostDistinctiveAttribute(FEATURES)));
     }
 
     private CalvalusFacade getMockCalvalusFacade() {
