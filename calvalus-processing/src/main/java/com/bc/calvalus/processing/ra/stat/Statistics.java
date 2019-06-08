@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ra.stat;
 
-import javax.media.jai.Histogram;
+//import javax.media.jai.Histogram;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,17 +20,17 @@ import java.util.List;
 class Statistics {
 
 
-    private int numValid;
+    private long numValid;
     private double min;
     private double max;
     private double sum;
     private double sumSQ;
-    private int geomNumValid;
+    private long geomNumValid;
     private double geomLogSum;
 
-    private final Histogram histogram;
-    private int belowHistogram;
-    private int aboveHistogram;
+    private final Histogram64 histogram;
+    private long belowHistogram;
+    private long aboveHistogram;
 
     private final int[] percentiles;
     private final Accumulator accu;
@@ -52,7 +52,7 @@ class Statistics {
                int[] percentiles,
                boolean binValuesAsRatio) {
         if (numBins > 0) {
-            histogram = new Histogram(numBins, lowValue, highValue, 1);
+            histogram = new Histogram64(numBins, lowValue, highValue, 1);
         } else {
             histogram = null;
         }
@@ -83,7 +83,7 @@ class Statistics {
             }
         }
         if (histogram != null) {
-            final int[] bins = histogram.getBins(0);
+            final long[] bins = histogram.getBins(0);
             final double lowValue = histogram.getLowValue(0);
             final double highValue = histogram.getHighValue(0);
             final double binWidth = (highValue - lowValue) / bins.length;
@@ -161,7 +161,7 @@ class Statistics {
 
     public List<String> getStatisticsRecords() {
         List<String> stats = new ArrayList<>();
-        stats.add(Integer.toString(numValid));
+        stats.add(Long.toString(numValid));
         if (numValid > 0) {
             final double arithMean = sum / numValid;
             final double sigmaSqr = sumSQ / numValid - arithMean * arithMean;
@@ -194,8 +194,8 @@ class Statistics {
         List<String> stats = new ArrayList<>();
         if (histogram != null) {
             if (! binValuesAsRatio) {
-                stats.add(Integer.toString(belowHistogram));
-                stats.add(Integer.toString(aboveHistogram));
+                stats.add(Long.toString(belowHistogram));
+                stats.add(Long.toString(aboveHistogram));
             } else {
                 stats.add(Double.toString(((double)belowHistogram) / numValid));
                 stats.add(Double.toString(((double)aboveHistogram) / numValid));
@@ -203,10 +203,10 @@ class Statistics {
             stats.add(Integer.toString(histogram.getNumBins(0)));
             stats.add(Double.toString(histogram.getLowValue(0)));
             stats.add(Double.toString(histogram.getHighValue(0)));
-            int[] bins = histogram.getBins(0);
-            for (int bin : bins) {
+            long[] bins = histogram.getBins(0);
+            for (long bin : bins) {
                 if (! binValuesAsRatio) {
-                    stats.add(Integer.toString(bin));
+                    stats.add(Long.toString(bin));
                 } else {
                     stats.add(Double.toString(((double) bin) / numValid));
                     

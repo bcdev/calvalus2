@@ -27,7 +27,7 @@ public class RegionAnalysis {
     private String currentRegionName;
     private long currentTime;
     private int numPasses;
-    private int numObs;
+    private long numObs;
     private String productName = null;
 
     public RegionAnalysis(RADateRanges dateRanges, RAConfig raConfig, boolean binValuesAsRatio, WriterFactory writerFactor) throws IOException, InterruptedException {
@@ -138,7 +138,7 @@ public class RegionAnalysis {
         statisticsWriter.writeRecord(regionIndex, commonStats);
     }
 
-    private List<String> getCommonStats(String dStart, String dEnd, int numPasses, int numObs) {
+    private List<String> getCommonStats(String dStart, String dEnd, int numPasses, long numObs) {
         List<String> records = new ArrayList<>();
         records.add(currentRegionName);
         records.add(dStart);
@@ -147,7 +147,7 @@ public class RegionAnalysis {
             records.add(productName);
         }
         records.add(Integer.toString(numPasses));
-        records.add(Integer.toString(numObs));
+        records.add(Long.toString(numObs));
         return records;
     }
 }
