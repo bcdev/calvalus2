@@ -63,9 +63,10 @@ public class RegionAnalysis {
         }
     }
 
-    public void startRegion(String regionName) throws IOException {
+    public void startRegion(int regionId, String regionName) throws IOException {
         dataRangeHandler.reset();
-        for (int regionIndex : regionHandler.preceedingUnhandledIndices(regionNameList.indexOf(regionName))) {
+        //for (int regionIndex : regionHandler.preceedingUnhandledIndices(regionNameList.indexOf(regionName))) {
+        for (int regionIndex : regionHandler.preceedingUnhandledIndices(regionId)) {
             this.currentRegionName = regionNameList.get(regionIndex);
             statisticsWriter.createWriters(currentRegionName);
             writeEmptyRecords(regionIndex, dataRangeHandler.remaining());

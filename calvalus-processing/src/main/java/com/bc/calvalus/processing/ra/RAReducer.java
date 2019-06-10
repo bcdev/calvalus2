@@ -89,7 +89,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             pixelArchiver = new PixelArchiver(regionName, raConfig.getBandNames());
         }
 
-        regionAnalysis.startRegion(regionName);
+        regionAnalysis.startRegion(regionId, regionName);
 
         long lastTime = -1;
         for (RAValue extract : values) {
