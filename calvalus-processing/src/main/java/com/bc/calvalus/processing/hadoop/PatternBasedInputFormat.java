@@ -260,7 +260,9 @@ public class PatternBasedInputFormat extends InputFormat {
                     searchParameters.put("count", String.valueOf(DEFAULT_SEARCH_CHUNK_SIZE));
                     final String searchUrl = urlEncode(replaceSearchParameters(searchUrlTemplate, searchParameters));
 
-                    //System.out.println(searchUrl);
+                    if (offset == 0) {
+                        LOG.info(searchUrl);
+                    }
                     final GetMethod catalogueRequest = new GetMethod(searchUrl);
                     if (searchCredentials != null) {
                         catalogueRequest.setRequestHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(searchCredentials.getBytes(StandardCharsets.UTF_8)));
