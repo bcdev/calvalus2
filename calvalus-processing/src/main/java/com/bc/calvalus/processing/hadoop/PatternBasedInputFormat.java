@@ -12,6 +12,10 @@ import com.bc.calvalus.processing.geodb.GeodbInputFormat;
 import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.hadoop.conf.Configuration;
@@ -47,6 +51,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,6 +82,7 @@ public class PatternBasedInputFormat extends InputFormat {
     protected static final Logger LOG = CalvalusLogger.getLogger();
     private static final int DEFAULT_SEARCH_CHUNK_SIZE = 20;
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
 
     static class AtomNamespaceContext implements NamespaceContext {
         @Override
@@ -226,6 +232,7 @@ public class PatternBasedInputFormat extends InputFormat {
             final String provider = searchParameters.get("catalogue");
             final String searchUrlTemplate = conf.get("calvalus." + provider + ".searchurl");
             final String searchXPath = conf.get("calvalus." + provider + ".searchxpath");
+            final String searchJPath = conf.get("calvalus." + provider + ".searchjpath");
             final String searchCredentials = conf.get("calvalus." + provider + ".searchcredentials");
             final Pattern pathPattern = conf.get("calvalus." + provider + ".pathpattern") != null
                     ? Pattern.compile(conf.get("calvalus." + provider + ".pathpattern")) : null;
@@ -270,26 +277,46 @@ public class PatternBasedInputFormat extends InputFormat {
                     final InputStream response = inquireCatalogue(httpClient, catalogueRequest);
                     ++numQueries;
 
-                    try {
-                        NodeList pathNodes = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
+                    if (searchXPath != null) {
+                        try {
+                            NodeList pathNodes = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
 
-                        // search results loop
+                            // search results loop
+                            int count = 0;
+                            for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
+                                String productArchivePath = pathNodes.item(i).getTextContent();
+                                if (pathPattern != null && pathReplacement != null) {
+                                    productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+                                }
+                                System.out.println(productArchivePath);
+                                splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
+                                ++count;
+                            }
+                            if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
+                                break;
+                            }
+                            offset += count;
+                        } catch (SAXException | XPathExpressionException | ParserConfigurationException e) {
+                            throw new IOException(e);
+                        }
+                    } else if (searchJPath != null) {
+                        List<String> paths = JsonPath.read(response, searchJPath);
                         int count = 0;
-                        for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
-                            String productArchivePath = pathNodes.item(i).getTextContent();
+                        for (String path : paths) {
+                            String productArchivePath = path;
                             if (pathPattern != null && pathReplacement != null) {
                                 productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
                             }
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
                             ++count;
+                            if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
+                                break;
+                            }
+                            offset += count;
                         }
-                        if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
-                            break;
-                        }
-                        offset += count;
-                    } catch (SAXException | XPathExpressionException | ParserConfigurationException e) {
-                        throw new IOException(e);
+                    } else {
+                        throw new IllegalArgumentException("missing searchXPath or searchJPath configuration");
                     }
                     catalogueRequest.releaseConnection();
                 }
