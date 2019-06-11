@@ -140,7 +140,7 @@ public class RAProductionType extends HadoopProductionType {
                     geometry = geometry.getEnvelope();
                 }
                 geometries.add(geometry);
-                names.add(namedRegion.name);
+                names.add(namedRegion.name.length() > 0 ? namedRegion.name : "noname");
             }
             regionsIterator.close();
             if (names.isEmpty()) {
