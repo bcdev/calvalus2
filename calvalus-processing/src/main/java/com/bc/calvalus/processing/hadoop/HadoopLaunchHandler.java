@@ -42,8 +42,8 @@ import java.util.regex.Pattern;
  */
 public class HadoopLaunchHandler {
 
-    private static final long SHUTDOWN_DELAY = 150 * 1000;
-    private static final long SUPERVISOR_PERIOD = 60 * 1000;
+    private static final int SHUTDOWN_DELAY = 300;
+    private static final int SUPERVISOR_PERIOD = 60;
 
     private static Logger LOG = CalvalusLogger.getLogger();
 
@@ -69,7 +69,7 @@ public class HadoopLaunchHandler {
     public HadoopLaunchHandler(HadoopProcessingService hadoopProcessingService, Configuration configuration) {
         this.hadoopProcessingService = hadoopProcessingService;
         this.configuration = configuration;
-        hadoopProcessingService.getTimer().scheduleAtFixedRate(new ClusterSupervisorTask(), 10000, SUPERVISOR_PERIOD);
+        hadoopProcessingService.getTimer().scheduleAtFixedRate(new ClusterSupervisorTask(), 10000, configuration.getInt("calvalus.launcher.supervisor-period", SUPERVISOR_PERIOD) * 1000);
     }
 
     public void queueWorkflowItem(HadoopWorkflowItem workflowItem) {
@@ -201,7 +201,7 @@ public class HadoopLaunchHandler {
                                 // should never happen ...
                                 clusterState = ClusterState.UP;
                                 hadoopProcessingService.getTimer().schedule(new SubmitTask(), 0);
-                            } else if (System.currentTimeMillis() > idleSince + SHUTDOWN_DELAY) {
+                            } else if (System.currentTimeMillis() > idleSince + configuration.getInt("calvalus.launcher.shutdown-delay", SHUTDOWN_DELAY) * 1000) {
                                 hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
                             }
                             break;
