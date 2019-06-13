@@ -258,6 +258,8 @@ public class PatternBasedInputFormat extends InputFormat {
             for (DateRange dateRange : dateRanges) {
                 searchParameters.put("start", DateUtils.formatDate(dateRange.getStartDate()));
                 searchParameters.put("stop", DateUtils.formatDate(dateRange.getStopDate()));
+                searchParameters.put("startmillis", String.valueOf(dateRange.getStartDate().getTime()));
+                searchParameters.put("stopmillis", String.valueOf(dateRange.getStopDate().getTime()+86399000));
 
                 // incremental query loop
                 int offset = 0;
@@ -310,11 +312,11 @@ public class PatternBasedInputFormat extends InputFormat {
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
                             ++count;
-                            if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
-                                break;
-                            }
-                            offset += count;
                         }
+                        if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
+                            break;
+                        }
+                        offset += count;
                     } else {
                         throw new IllegalArgumentException("missing searchXPath or searchJPath configuration");
                     }
@@ -358,7 +360,9 @@ public class PatternBasedInputFormat extends InputFormat {
                 replaceAll("\\(", "%28").
                 replaceAll("\\)", "%29").
                 replaceAll("\\[", "%5B").
-                replaceAll("\\]", "%5D");
+                replaceAll("\\]", "%5D").
+                replaceAll("<", "%3C").
+                replaceAll(">", "%3E");
     }
 
     private InputStream inquireCatalogue(HttpClient httpClient, GetMethod getMethod) throws IOException {
