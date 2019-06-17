@@ -272,9 +272,9 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     public static String getUserPath(String userName, String dirPath) {
         String path;
         if (dirPath.isEmpty() || "/".equals(dirPath)) {
-            path = String.format("home/%s", userName.toLowerCase());
+            path = String.format("home/%s", userName);
         } else {
-            path = String.format("home/%s/%s", userName.toLowerCase(), dirPath);
+            path = String.format("home/%s/%s", userName, dirPath);
         }
         return path;
     }

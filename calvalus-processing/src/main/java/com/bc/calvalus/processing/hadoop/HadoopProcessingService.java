@@ -212,7 +212,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                     List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                     for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
-                        bundleDescriptor.setOwner(filter.getUserName().toLowerCase());
+                        bundleDescriptor.setOwner(filter.getUserName());
                     }
                     descriptors.addAll(singleUserDescriptors);
                 }

@@ -878,6 +878,6 @@ public class ProductionTool {
     }
 
     private static String getUserName() {
-        return System.getProperty("user.name", "anonymous").toLowerCase();
+        return System.getProperty("user.name", "anonymous");
     }
 }

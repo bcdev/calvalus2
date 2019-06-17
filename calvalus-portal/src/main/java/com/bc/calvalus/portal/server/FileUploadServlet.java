@@ -141,7 +141,7 @@ public class FileUploadServlet extends HttpServlet {
 
         @Override
         public void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception {
-            File uploadDir = new File(this.uploadDir, getUserName(req).toLowerCase());
+            File uploadDir = new File(this.uploadDir, getUserName(req));
             String relPath = req.getParameter("dir");
             if (relPath != null) {
                 uploadDir = new File(uploadDir, relPath);
@@ -171,7 +171,7 @@ public class FileUploadServlet extends HttpServlet {
             ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
             FileSystemService fileSystemService = serviceContainer.getFileSystemService();
 
-            String userName = getUserName(req).toLowerCase();
+            String userName = getUserName(req);
             String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
 
             InputStream in = new BufferedInputStream(item.getInputStream(), 64 * 1024);

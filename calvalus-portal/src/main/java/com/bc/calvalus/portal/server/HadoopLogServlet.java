@@ -62,7 +62,7 @@ public class HadoopLogServlet extends HttpServlet {
                 if (production == null) {
                     throw new ProductionException("Failed to get production for id: " + productionId);
                 }
-                final String userName = getUserName(req).toLowerCase();
+                final String userName = getUserName(req);
                 responseStatus = logHandler.handleProduction(production, outputStream, userName);
             } catch (ProductionException e) {
                 responseStatus = logHandler.showErrorPage("Failed to get production for id: " + productionId,
