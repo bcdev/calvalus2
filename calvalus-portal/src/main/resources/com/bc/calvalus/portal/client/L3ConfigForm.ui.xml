@@ -50,32 +50,29 @@
                     </tr>
                     <tr>
                         <td>
-                            <g:Label>Stepping period:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='steppingPeriodLength' visibleLength="8"/>
-                        </td>
-                        <td>
-                            <g:Label>days</g:Label>
-                        </td>
-                        <td>&nbsp;&nbsp;</td>
-                        <td>
                             <g:Label>Compositing:</g:Label>
                         </td>
-                        <td>
+                        <td colspan="2">
                             <g:ListBox ui:field='compositingType' visibleItemCount="1"/>
                         </td>
+                        <td>&nbsp; </td>
                         <td>
-                            &nbsp;
+                            <g:Label>EPSG:</g:Label>
+                         </td>
+                        <td>
+                            <g:TextBox ui:field="epsgCode" width="5em"/>
                         </td>
+                        <td>
+                            <g:Label>code No.</g:Label>
+                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <g:Label>Compositing period:</g:Label>
-                        </td>
+                            <g:Label>Stepping period:</g:Label>
+                         </td>
                         <td>
-                            <g:IntegerBox ui:field='compositingPeriodLength' visibleLength="8"/>
-                        </td>
+                            <g:IntegerBox ui:field='steppingPeriodLength' visibleLength="8"/>
+                         </td>
                         <td>
                             <g:Label>days</g:Label>
                         </td>
@@ -92,12 +89,14 @@
                     </tr>
                     <tr>
                         <td>
-                            <g:Label>Number of periods:</g:Label>
-                        </td>
+                            <g:Label>Compositing period:</g:Label>
+                         </td>
                         <td>
-                            <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
+                            <g:IntegerBox ui:field='compositingPeriodLength' visibleLength="8"/>
+                         </td>
+                        <td>
+                            <g:Label>days</g:Label>
                         </td>
-                        <td>&nbsp;</td>
                         <td>&nbsp;&nbsp;</td>
                         <td>
                             <g:Label>Supersampling:</g:Label>
@@ -110,8 +109,12 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
+                        <td>
+                            <g:Label>Number of periods:</g:Label>
+                        </td>
+                        <td>
+                            <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
+                        &nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;&nbsp;</td>
                         <td>
