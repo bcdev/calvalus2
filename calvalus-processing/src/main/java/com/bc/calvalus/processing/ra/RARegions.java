@@ -101,9 +101,9 @@ public class RARegions {
             // use given attribute name
             AttributeDescriptor descriptor = schema.getDescriptor(attributeName);
             if (descriptor != null) {
-                if (descriptor.getType().getBinding() == String.class) {
+                //if (descriptor.getType().getBinding() == String.class) {
                     return new AttributeNameProvider(attributeName);
-                }
+                //}
             }
         }
         // use index
@@ -134,7 +134,7 @@ public class RARegions {
 
         @Override
         public String getName(SimpleFeature simpleFeature) {
-            return (String) simpleFeature.getAttribute(attributeName);
+            return String.valueOf(simpleFeature.getAttribute(attributeName));
         }
     }
     
