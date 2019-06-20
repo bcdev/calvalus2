@@ -14,6 +14,7 @@ import java.awt.image.RenderedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -121,28 +122,32 @@ public class CalvalusTileComputationEventLogger extends TileComputationObserver 
     }
 
     private static void printCachedTiles(Collection<CachedTile> tiles) {
-        final Map<String, Long> numTiles = new HashMap<>(100);
-        final Map<String, Long> sizeTiles = new HashMap<>(100);
-        for (CachedTile sct : tiles) {
-            RenderedImage owner = sct.getOwner();
-            if (owner == null) {
-                continue;
+        try {
+            final Map<String, Long> numTiles = new HashMap<>(100);
+            final Map<String, Long> sizeTiles = new HashMap<>(100);
+            for (CachedTile sct : tiles) {
+                RenderedImage owner = sct.getOwner();
+                if (owner == null) {
+                    continue;
+                }
+                String name = owner.getClass().getSimpleName() + " " + getImageComment(owner);
+                increment(numTiles, name, 1);
+                increment(sizeTiles, name, sct.getTileSize());
             }
-            String name = owner.getClass().getSimpleName() + " " + getImageComment(owner);
-            increment(numTiles, name, 1);
-            increment(sizeTiles, name, sct.getTileSize());
-        }
-        List<Map.Entry<String, Long>> sortedBySize = new ArrayList<>(sizeTiles.entrySet());
-        Collections.sort(sortedBySize, (o1, o2) -> (o2.getValue()).compareTo(o1.getValue()));
-        for (Map.Entry<String, Long> entry : sortedBySize) {
-            String name = entry.getKey();
-            Long sizeBytes = entry.getValue();
-            Long tileCount = numTiles.get(name);
+            List<Map.Entry<String, Long>> sortedBySize = new ArrayList<>(sizeTiles.entrySet());
+            Collections.sort(sortedBySize, (o1, o2) -> (o2.getValue()).compareTo(o1.getValue()));
+            for (Map.Entry<String, Long> entry : sortedBySize) {
+                String name = entry.getKey();
+                Long sizeBytes = entry.getValue();
+                Long tileCount = numTiles.get(name);
 
-            System.out.printf("size=%8.2fMB  ", (sizeBytes / (1024.0 * 1024.0)));
-            System.out.printf("#tiles=%5d   ", tileCount);
-            System.out.print("(" + name + ")  ");
-            System.out.println();
+                System.out.printf("size=%8.2fMB  ", (sizeBytes / (1024.0 * 1024.0)));
+                System.out.printf("#tiles=%5d   ", tileCount);
+                System.out.print("(" + name + ")  ");
+                System.out.println();
+            }
+        } catch (ConcurrentModificationException _) {
+            System.out.println("*** Cannot print tile cache content due to concurrent modifiations");
         }
     }
 
