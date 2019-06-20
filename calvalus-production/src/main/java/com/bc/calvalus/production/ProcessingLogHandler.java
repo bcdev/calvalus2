@@ -187,7 +187,7 @@ public class ProcessingLogHandler {
         Path remoteRootLogDir = new Path(conf.get(
                     YarnConfiguration.NM_REMOTE_APP_LOG_DIR,
                     YarnConfiguration.DEFAULT_NM_REMOTE_APP_LOG_DIR));
-        String logDirSuffix = LogAggregationUtils.getRemoteNodeLogDirSuffix(conf);
+        String logDirSuffix = conf.get("yarn.nodemanager.remote-app-log-dir-suffix", "logs");
         // TODO Change this to get a list of files from the LAS.
         Path remoteAppLogDir = LogAggregationUtils.getRemoteAppLogDir(
                     remoteRootLogDir, appId, appOwner, logDirSuffix);
