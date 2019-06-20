@@ -271,7 +271,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             String[] formatNames = readerPlugIn.getFormatNames();
             for (String formatName : formatNames) {
                 if (formatName.startsWith(formatPrefix)) {
-                    DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
+                    DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile.getAbsoluteFile());
                     if (decodeQualification == DecodeQualification.INTENDED) {
                         CalvalusLogger.getLogger().info("formatName = " + formatName);
                         return readerPlugIn;

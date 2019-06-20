@@ -15,9 +15,9 @@
         <!--<hadoop.version>2.9.1-BC</hadoop.version>-->
         <calvalus.version>2.17-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>7.0.0-SNAPSHOT</snap.version>
-        <ceres.version>[6.0.0-SNAPSHOT,7.0.0-SNAPSHOT]</ceres.version>
-        <seadas.reader.version>1.8-SNAPSHOT</seadas.reader.version>
+        <snap.version>7.0.0-rc5</snap.version>
+        <ceres.version>7.0.0-rc5</ceres.version>
+        <seadas.reader.version>1.8-rc5</seadas.reader.version>
         <probav.reader.version>2.1.0-SNAPSHOT</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>17.1</geotools.version>
