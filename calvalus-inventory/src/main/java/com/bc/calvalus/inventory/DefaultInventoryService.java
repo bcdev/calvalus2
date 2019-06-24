@@ -153,7 +153,10 @@ public class DefaultInventoryService implements InventoryService {
             for (Path path : paths) {
                 try {
                     productSetList.addAll(readProductSetFile(fileSystem, path));
-                } catch (AccessControlException ignore) {}
+                } catch (AccessControlException ignore) {
+                } catch (Exception ignore) {
+                    LOG.severe("error parsing product set at " + path + ": " + ignore);
+                }
             }
             return productSetList.toArray(new ProductSet[0]);
         }
