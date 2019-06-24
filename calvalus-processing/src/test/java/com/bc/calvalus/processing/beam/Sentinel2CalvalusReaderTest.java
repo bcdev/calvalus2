@@ -20,6 +20,7 @@ import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -45,6 +46,7 @@ public class Sentinel2CalvalusReaderTest {
 
     }
 
+    @Ignore
     @Test
     public void testRelativePaths() {
         ProductIOPlugInManager manager = ProductIOPlugInManager.getInstance();
