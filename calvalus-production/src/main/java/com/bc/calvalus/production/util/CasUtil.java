@@ -195,21 +195,25 @@ public class CasUtil {
             throw new GeneralSecurityException("Could not retrieve TGT from URL " + casUrl);
         }
         List<String> setCookieFields = headerFields.get("Set-Cookie");
-        if (casVersion.equals("4") && setCookieFields.size() < 2) {
-            InputStream in = conn.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            StringBuilder result = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line);
-            }
-            throw new IOException("Fetching TGT failed. Reply from CAS server:\n" + result.toString());
+        if (setCookieFields == null || (casVersion.equals("4") && setCookieFields.size() < 2)) {
+            return logError(conn);
         }
         int cookieIndex = casVersion.equals("4") ? 1 : 0;
         String setCookie = setCookieFields.get(cookieIndex);
         String tgtPart1 = setCookie.split(";")[0];
 
         return tgtPart1.split("=")[1];
+    }
+
+    private static String logError(HttpURLConnection conn) throws IOException {
+        InputStream in = conn.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        StringBuilder result = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            result.append(line);
+        }
+        throw new IOException("Fetching TGT failed. Reply from CAS server:\n" + result.toString());
     }
 
     private static PrivateKey readPrivateDerKey(String filename) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchProviderException {
