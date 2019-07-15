@@ -86,7 +86,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         Configuration jobConfig = context.getConfiguration();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
+        LOG.info("processing input " + processorAdapter.getInputPaths() + " ...");
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;
         final int progressForSaving = processorAdapter.supportsPullProcessing() ? 95 : 5;
         pm.beginTask("Level 2 processing", progressForProcessing + progressForSaving);
@@ -114,7 +114,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
 
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
                         processMetadata(context,
-                                        processorAdapter.getInputPath().toString(),
+                                        processorAdapter.getInputPaths().toString(),
                                         processorAdapter.getInputProduct(),
                                         processorAdapter.getOutputProductPath().toString(),
                                         processorAdapter.openProcessedProduct());

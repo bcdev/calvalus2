@@ -65,7 +65,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         pm.beginTask("Level 2 format", 100 + 20);
         try {
             Configuration jobConfig = context.getConfiguration();
-            Path inputPath = processorAdapter.getInputPath();
+            Path inputPath = processorAdapter.getInputPaths()[0];
             String productName = getProductName(jobConfig, inputPath.getName());
 
             String format = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT);

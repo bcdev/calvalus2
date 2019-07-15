@@ -26,6 +26,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -257,7 +258,7 @@ public abstract class ProcessorAdapter {
 
     Path appendDatePart(Path path) {
         if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_PRESERVE_DATE_TREE, false)) {
-            String datePart = getDatePart(getInputPath());
+            String datePart = getDatePart(getInputPaths()[0]);
             if (datePart != null) {
                 path = new Path(path, datePart);
             }
@@ -329,13 +330,16 @@ public abstract class ProcessorAdapter {
      *
      * @return The path of the input product.
      */
-    public Path getInputPath() {
+    public Path[] getInputPaths() {
         if (inputSplit instanceof ProductSplit) {
             ProductSplit productSplit = (ProductSplit) inputSplit;
-            return productSplit.getPath();
+            return new Path[] {productSplit.getPath()};
         } else if (inputSplit instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) inputSplit;
-            return fileSplit.getPath();
+            return new Path[] {fileSplit.getPath()};
+        } else if (inputSplit instanceof CombineFileSplit) {
+            CombineFileSplit fileSplit = (CombineFileSplit) inputSplit;
+            return fileSplit.getPaths();
         } else {
             throw new IllegalArgumentException("input split is neither a FileSplit nor a ProductSplit");
         }
@@ -434,8 +438,8 @@ public abstract class ProcessorAdapter {
             CalvalusProductIO.printProductOnStdout(product, "opened from local file");
             return product;
         } else {
-            LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
-            Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPaths()[0], inputFormat));
+            Product product = CalvalusProductIO.readProduct(getInputPaths()[0], getConfiguration(), inputFormat);
 
             if (inputSplit instanceof FileSplit) {
                 FileSplit fileSplit = (FileSplit) inputSplit;

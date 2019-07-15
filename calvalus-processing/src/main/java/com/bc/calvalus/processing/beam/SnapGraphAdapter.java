@@ -239,7 +239,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     private boolean postprocessTargetProduct() throws IOException {
         if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
-            getLogger().info("output subsetting of split " + getInputPath());
+            getLogger().info("output subsetting of split " + getInputPaths());
             targetProduct = createSubsetFromOutput(targetProduct);
         }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
@@ -265,7 +265,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     private GraphContext buildGraphContext(Graph graph, Header header) throws IOException, GraphException {
         List<HeaderSource> sources = header.getSources();
-        Path inputPath = getInputPath();
+        Path inputPath = getInputPaths()[0];
         Path qualifiedInputPath = inputPath.getFileSystem(getConfiguration()).makeQualified(inputPath);
         Operator sourceProducts = new SourceProductContainerOperator();
         for (HeaderSource headerSource : sources) {
@@ -325,7 +325,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     public Graph createGraph() throws GraphException, IOException {
-        Path inputPath = getInputPath();
+        Path inputPath = getInputPaths()[0];
         CalvalusLogger.getLogger().info("Creating graph for input: " + inputPath);
         Configuration conf = getConfiguration();
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);

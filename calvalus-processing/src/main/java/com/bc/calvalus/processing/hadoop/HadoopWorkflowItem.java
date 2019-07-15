@@ -16,10 +16,6 @@
 
 package com.bc.calvalus.processing.hadoop;
 
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
-
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
@@ -45,6 +41,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
 
 /**
  * A workflow item that corresponds to a single Hadoop job.
@@ -213,7 +213,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
                 CalvalusLogger.getLogger().info("-------------------------------");
                 CalvalusLogger.getLogger().info("remoteUser=" + remoteUser.getShortUserName()
-                                                + " mapreduce.job.user.name=" + job.getConfiguration().get("mapreduce.job.user.name"));
+                        + " mapreduce.job.user.name=" + job.getConfiguration().get("mapreduce.job.user.name"));
                 HashMap<String, String> calvalusConfMap = new HashMap<>();
                 for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
                     if (keyValue.getKey().startsWith("calvalus")) {
@@ -230,7 +230,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                             }
                         });
                 CalvalusLogger.getLogger().info("-------------------------------");
-                
+
                 setJobId(jobId);
                 return job;
             });
@@ -287,13 +287,20 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected Class<? extends InputFormat> getInputFormatClass(Configuration conf) throws IOException {
         if (conf.get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
             return TableInputFormat.class;
-        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null || conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null || conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null && conf.get("mapreduce.job.inputformat.class") == null) {
             return PatternBasedInputFormat.class;
+        } else if (conf.get("mapreduce.job.inputformat.class") != null) {
+            String classname = conf.get("mapreduce.job.inputformat.class");
+            try {
+                return (Class<? extends InputFormat>) Class.forName(classname);
+            } catch (ClassNotFoundException e) {
+                throw new IOException("Unable to create class '" + classname + "'", e);
+            }
         } else {
             throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s nor %s had been set.",
-                                                JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
-                                                JobConfigNames.CALVALUS_INPUT_TABLE,
-                                                JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
+                    JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
+                    JobConfigNames.CALVALUS_INPUT_TABLE,
+                    JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
         }
 
     }

@@ -72,7 +72,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
+        LOG.info("processing input " + processorAdapter.getInputPaths() + " ...");
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
         final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
@@ -108,11 +108,11 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
 
         final Exception[] exceptions = spatialBinner.getExceptions();
         for (Exception exception : exceptions) {
-            String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
+            String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPaths());
             LOG.log(Level.SEVERE, m, exception);
         }
         LOG.info(MessageFormat.format("Finishes processing of {0}  ({1} observations seen, {2} bins produced)",
-                                      processorAdapter.getInputPath(),
+                                      processorAdapter.getInputPaths(),
                                       spatialBinEmitter.numObsTotal,
                                       spatialBinEmitter.numBinsTotal));
     }

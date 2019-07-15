@@ -95,6 +95,12 @@ public class CalvalusHadoopRequestConverter {
         }
         LOG.info("reading .calvalus configuration with " + count + " parameters");
 
+        for (Map.Entry<String, String> hadoopParameter : hadoopParameters) {
+            LOG.info(hadoopParameter.getKey() + ": " + hadoopParameter.getValue());
+        }
+
+        LOG.info("############################");
+
         // add parameters of production type, maybe translate and apply function
         count = 0;
         for (Map.Entry<String, Object> entry : productionTypeDef.entrySet()) {
@@ -103,19 +109,37 @@ public class CalvalusHadoopRequestConverter {
                 ++count;
             }
         }
-        LOG.info("reading production type definition from " + "etc/" + productionType + "-cht-type.json with "
+        LOG.info("read production type definition from " + "etc/" + productionType + "-cht-type.json with "
                          + count + " parameters and " + (productionTypeDef.size() - count) + " rules");
+
+        for (Map.Entry<String, String> hadoopParameter : hadoopParameters) {
+            LOG.info(hadoopParameter.getKey() + ": " + hadoopParameter.getValue());
+        }
+
+        LOG.info("############################");
 
         // add parameters of request, maybe translate and apply function
         for (Map.Entry<String, Object> entry : request.entrySet()) {
             translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
         }
 
+        for (Map.Entry<String, String> hadoopParameter : hadoopParameters) {
+            LOG.info(hadoopParameter.getKey() + ": " + hadoopParameter.getValue());
+        }
+
+        LOG.info("############################");
+
         // add parameters of command line, maybe translate and apply function
         for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
             translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
         }
         LOG.fine("adding " + commandLineParameters.size() + " command line parameters");
+
+        for (Map.Entry<String, String> hadoopParameter : hadoopParameters) {
+            LOG.info(hadoopParameter.getKey() + ": " + hadoopParameter.getValue());
+        }
+
+        LOG.info("############################");
 
         // create job client for user and for access to file system
         hadoopConnection.createJobClient(hadoopParameters);
@@ -136,6 +160,12 @@ public class CalvalusHadoopRequestConverter {
         for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
             translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
         }
+
+        for (Map.Entry<String, String> hadoopParameter : hadoopParameters) {
+            LOG.info(hadoopParameter.getKey() + ": " + hadoopParameter.getValue());
+        }
+
+        LOG.info("############################");
 
         // install processor bundles and calvalus and snap bundle
         JobConf jobConf = new JobConf(hadoopParameters);

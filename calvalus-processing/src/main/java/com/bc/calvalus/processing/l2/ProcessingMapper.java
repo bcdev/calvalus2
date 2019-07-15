@@ -182,7 +182,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         final String outputCompression = jobConfig.get(JobConfigNames.OUTPUT_COMPRESSION);
 
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        String inputName = processorAdapter.getInputPath().getName();
+        String inputName = processorAdapter.getInputPaths()[0].getName();
         String productName = null;
         if (processorAdapter.getInputParameters() != null) {
             for (int i = 0; i < processorAdapter.getInputParameters().length; i += 2) {
@@ -195,7 +195,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
             if (! "MTD_MSIL1C.xml".equals(inputName)) {  // TODO
                 productName = getProductName(jobConfig, inputName);
             } else {
-                productName = getProductName(jobConfig, processorAdapter.getInputPath().getParent().getName());
+                productName = getProductName(jobConfig, processorAdapter.getInputPaths()[0].getParent().getName());
             }
         }
         final ProductFormatter productFormatter = outputFormat != null ? new ProductFormatter(productName, outputFormat, outputCompression) : null;
@@ -204,7 +204,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;
         final int progressForSaving = processorAdapter.supportsPullProcessing() ? 95 : 5;
 
-        LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
+        LOG.info("processing input " + processorAdapter.getInputPaths() + " ...");
         pm.beginTask("Level 2 processing", progressForProcessing + progressForSaving);
 
         try {
@@ -244,7 +244,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
             if (jobConfig.get(JobConfigNames.METADATA_TEMPLATE) != null) {
                 context.setStatus("Metadata");
                 processMetadata(context,
-                                processorAdapter.getInputPath().toString(),
+                                processorAdapter.getInputPaths().toString(),
                                 processorAdapter.getInputProduct(),
                                 processorAdapter.getOutputProductPath().toString(),
                                 targetProduct);

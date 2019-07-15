@@ -20,8 +20,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin;
-import com.bc.calvalus.processing.beam.PathConfiguration;
-import com.bc.calvalus.processing.beam.Sentinel2CalvalusReaderPlugin;
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
@@ -107,7 +105,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
-        Path inputPath = getInputPath();
+        Path inputPath = getInputPaths()[0];
         Path outputPath = getOutputDirectoryPath();
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
@@ -145,11 +143,13 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
 
-        Path inputPath = getInputPath();
+        Path[] inputPaths = getInputPaths();
         File inputFile = getInputFile();
-        if (inputFile == null) {
+        for (Path inputPath : inputPaths) {
             inputFile = CalvalusProductIO.copyFileToLocal(inputPath, getConfiguration());
-            setInputFile(inputFile);
+            if (inputFile == null) {
+                setInputFile(inputFile);
+            }
         }
         if (getMapContext().getInputSplit() instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
@@ -162,7 +162,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             productRect = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
         }
 
-        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
+        outputFilesNames = processInput(pm, inputRectangle, inputPaths[0], inputFile, productRect, null);
         return outputFilesNames.length > 0;
     }
 
