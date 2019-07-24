@@ -128,6 +128,7 @@
                 <include>ncsa.hdf:lib-hdf</include>
                 <include>ncsa.hdf:jhdfobj</include>
                 <include>ncsa.hdf:jhdf5obj</include>
+                <include>com.googlecode.json-simple:json-simple</include>
             </includes>
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>
