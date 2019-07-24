@@ -42,24 +42,9 @@
     </modules>
 
     <repositories>
-<!--
         <repository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
-        -->
-        <repository>
-            <id>snap-repo-public_BC</id>
-            <name>Public Maven Repository for SNAP at BC</name>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
             <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
             <releases>
                 <enabled>true</enabled>
@@ -89,6 +74,29 @@
             <url>http://download.osgeo.org/webdav/geotools/</url>
         </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/releases/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </repository>
+        <snapshotRepository>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/snapshots/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
 
     <build>
         <plugins>
