@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.18</version>
+    <version>2.18-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,7 +12,7 @@
 
     <properties>
         <hadoop.version>3.2.1-BC</hadoop.version>
-        <calvalus.version>2.18</calvalus.version>
+        <calvalus.version>2.18-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>7.0.0</snap.version>
         <ceres.version>7.0.0</ceres.version>
