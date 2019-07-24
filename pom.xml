@@ -14,10 +14,10 @@
         <hadoop.version>3.2.1-BC</hadoop.version>
         <calvalus.version>2.18</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>7.0.0-rc5</snap.version>
-        <ceres.version>7.0.0-rc5</ceres.version>
-        <seadas.reader.version>1.8-rc5</seadas.reader.version>
-        <probav.reader.version>2.1.0-SNAPSHOT</probav.reader.version>
+        <snap.version>7.0.0</snap.version>
+        <ceres.version>7.0.0</ceres.version>
+        <seadas.reader.version>1.8</seadas.reader.version>
+        <probav.reader.version>2.1.0</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>17.1</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
@@ -58,9 +58,22 @@
         </repository>
         -->
         <repository>
+            <id>snap-repo-public_BC</id>
+            <name>Public Maven Repository for SNAP at BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
