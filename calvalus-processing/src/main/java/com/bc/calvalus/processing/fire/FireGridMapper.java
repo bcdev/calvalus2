@@ -115,6 +115,7 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
             }
         }
 
+        // TODO: check whether this is still required
         ProductIO.writeProduct(target, "/tmp/deleteme/thomas-ba.nc", "NetCDF4-BEAM");
     }
 

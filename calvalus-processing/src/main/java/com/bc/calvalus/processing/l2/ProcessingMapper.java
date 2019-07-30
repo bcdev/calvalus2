@@ -620,7 +620,8 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         File productFile = productFormatter.createTemporaryProductFile();
         LOG.info("Start writing product to file: " + productFile.getName());
 
-        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        //ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        GPF.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         LOG.info("Formatted product file written");
 
         context.setStatus("Copying");

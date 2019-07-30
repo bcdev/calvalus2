@@ -149,7 +149,8 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         File productFile = productFormatter.createTemporaryProductFile();
         LOG.info("Start writing product to file: " + productFile.getName());
 
-        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        //ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        GPF.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         LOG.info("Finished writing product.");
 
         context.setStatus("Copying");
