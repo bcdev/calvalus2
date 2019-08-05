@@ -21,6 +21,7 @@
 
     <dependencySets>
         <dependencySet>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
             <includes>
                 <!--
                 <include>org.esa.snap:ceres-metadata</include>
@@ -39,16 +40,16 @@
                 -->
 
                 <include>org.esa.snap:ceres-metadata</include>
-        
+
                 <!-- SNAP System Modules -->
-        
+
                 <include>org.esa.snap:snap-core</include>
                 <include>org.esa.snap:snap-runtime</include>
                 <!--<include>org.esa.snap:snap-engine-utilities</include>-->
                 <include>org.esa.snap:snap-gpf</include>
-        
+
                 <!-- SNAP Extension Modules -->
-        
+
                 <include>org.esa.snap:snap-arcbingrid-reader</include>
                 <include>org.esa.snap:snap-bigtiff</include>
                 <include>org.esa.snap:snap-binning</include>
@@ -105,11 +106,11 @@
                 <include>org.esa.s2tbx:s2tbx-commons</include>
                 <include>org.esa.s2tbx:s2tbx-spot-reader</include>
                 <include>org.esa.s2tbx:s2tbx-spot6-reader</include>
-                <include>org.esa.s2tbx:s2tbx-rapideye-reader</include>
                 <include>org.esa.s2tbx:s2tbx-deimos-reader</include>
                 <include>org.esa.s2tbx:s2tbx-sta-adapters-help</include>
                 <include>org.esa.s2tbx:s2tbx-radiometric-indices</include>
                 <include>org.esa.s2tbx:s2tbx-reflectance-to-radiance</include>
+                <!-- <include>org.esa.s2tbx:s2tbx-rapideye-reader</include> -->
                 <!-- <include>org.esa.s2tbx:lib-gdal</include> -->
                 <!-- <include>org.esa.s2tbx:s2tbx-gdal-reader</include>  -->
                 <include>org.esa.s2tbx:s2tbx-grm</include>
@@ -130,7 +131,6 @@
                 <include>ncsa.hdf:jhdf5obj</include>
                 <include>com.googlecode.json-simple:json-simple</include>
             </includes>
-            <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <outputDirectory>/</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
