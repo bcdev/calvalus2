@@ -52,12 +52,19 @@ public class SourceData {
         Band lcClasses = product.addBand("lcClasses", ProductData.TYPE_INT32);
         Band statusPixels = product.addBand("statusPixels", ProductData.TYPE_INT32);
         Band probabilityOfBurn = product.addBand("probabilityOfBurn", ProductData.TYPE_FLOAT64);
+        Band burnable = product.addBand("burnable", ProductData.TYPE_FLOAT64);
 
         burnedPixels.setRasterData(new ProductData.Float(this.burnedPixels));
         areas.setRasterData(new ProductData.Double(this.areas));
         lcClasses.setRasterData(new ProductData.Int((this.lcClasses)));
         statusPixels.setRasterData(new ProductData.Int(this.statusPixels));
         probabilityOfBurn.setRasterData(new ProductData.Double(this.probabilityOfBurn));
+
+        double[] burnableDoubles = new double[width * height];
+        for (int i = 0; i < this.burnable.length; i++) {
+            burnableDoubles[i] = this.burnable[i] ? 1 : 0;
+        }
+        burnable.setRasterData(new ProductData.Double(burnableDoubles));
 
         return product;
     }

@@ -124,7 +124,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
         setDataSource(dataSource);
-        GridCells gridCells = computeGridCells(year, month, pm);
+        GridCells gridCells = computeGridCells(year, month, context);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCells);
     }

@@ -5,7 +5,6 @@ import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.CollocationOp;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
-import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -67,7 +66,7 @@ public class AvhrrGridMapper extends AbstractGridMapper {
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
 
         setDataSource(dataSource);
-        GridCells gridCells = computeGridCells(year, month, new ProgressSplitProgressMonitor(context));
+        GridCells gridCells = computeGridCells(year, month, context);
 
         context.write(new Text(String.format("%d-%02d-%d", year, month, tileIndex)), gridCells);
     }

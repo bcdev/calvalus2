@@ -3,18 +3,27 @@ package com.bc.calvalus.processing.fire.format.grid;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.grid.avhrr.AvhrrFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.avhrr.AvhrrGridMapper;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import com.bc.ceres.core.NullProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static com.bc.calvalus.processing.JobConfigNames.CALVALUS_DEBUG_FIRE;
 
 public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCells> {
 
@@ -28,10 +37,41 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         this.targetRasterHeight = targetRasterHeight;
     }
 
+    private static void writeDebugProduct(Context context, SourceData data) throws IOException {
+        if (context.getConfiguration().getBoolean(CALVALUS_DEBUG_FIRE, false)) {
+            return;
+        }
+        if (data == null) {
+            LOG.warning("Data is null, unable to create debug file.");
+            return;
+        }
+        Product sourceData = data.makeProduct();
+        ProductIO.writeProduct(sourceData, "./debug.nc", "NetCDF4-CF");
+        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/debug.nc");
+
+        FileSystem fs = path.getFileSystem(context.getConfiguration());
+        if (!fs.exists(path)) {
+            FileUtil.copy(new File("./debug.nc"), fs, path, false, context.getConfiguration());
+        }
+
+        LOG.info("created debug file at hdfs://calvalus/calvalus/home/thomas/debug.nc");
+    }
+
+    protected static ProgressMonitor getPM(Context context) {
+        ProgressMonitor pm;
+        if (context != null) {
+            pm = new ProgressSplitProgressMonitor(context);
+        } else {
+            pm = new NullProgressMonitor();
+        }
+        return pm;
+    }
+
     /**
      * Computes the set of grid cells for this mapper.
      */
-    public final GridCells computeGridCells(int year, int month, ProgressMonitor pm) throws IOException {
+    public final GridCells computeGridCells(int year, int month, Context context) throws IOException {
+        ProgressMonitor pm = getPM(context);
         LOG.info("Computing grid cells...");
         if (dataSource == null) {
             throw new NullPointerException("dataSource == null");
@@ -56,20 +96,18 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             baInLc.add(baInLcBuffer);
         }
 
-        float[][] lcFraction = new float[1+getLcClassesCount()][];
-        for (int c=0; c<1+getLcClassesCount(); ++c) {
-            lcFraction[c] = new float[5*5];
+        float[][] lcFraction = new float[1 + getLcClassesCount()][];
+        for (int c = 0; c < 1 + getLcClassesCount(); ++c) {
+            lcFraction[c] = new float[5 * 5];
         }
         int targetGridCellIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
             for (int x = 0; x < targetRasterWidth; x++) {
 
-//                if (x != 31 || y != 4) {
-//                    targetGridCellIndex++;
-//                    continue;
-//                }
-
                 SourceData data = dataSource.readPixels(x, y);
+
+                writeDebugProduct(context, data);
+
                 if (data == null) {
                     targetGridCellIndex++;
                     continue;
@@ -109,7 +147,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         if (data.burnedPixels[i] > 0.0) {
                             burnedArea025 += data.areas[i] * data.burnedPixels[i];
                             // sum up burned area per LC class
-                            for (int c=1; c<19; ++c) {
+                            for (int c = 1; c < 19; ++c) {
                                 burnedLcArea025[c] += data.areas[i] * data.burnedPixels[i] * lcFraction[c][i] / fractionOfBurnable;
                             }
                         }
@@ -117,12 +155,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                     areas[targetGridCellIndex] = area025;
                     ba[targetGridCellIndex] = burnedArea025;
-                    for (int c=1; c<19; ++c) {
-                        baInLc.get(c-1)[targetGridCellIndex] = burnedLcArea025[c];
+                    for (int c = 1; c < 19; ++c) {
+                        baInLc.get(c - 1)[targetGridCellIndex] = burnedLcArea025[c];
                     }
-                    burnableFraction[targetGridCellIndex] = (float)(burnableArea025 / area025);
+                    burnableFraction[targetGridCellIndex] = (float) (burnableArea025 / area025);
                     // tough rather doubtful we map non-burnable to not observed as requested by UAH
-                    coverage[targetGridCellIndex] = burnable20PercentArea025 > 0.0 ? (float)(observedArea025 / burnable20PercentArea025) : 0.0f;
+                    coverage[targetGridCellIndex] = burnable20PercentArea025 > 0.0 ? (float) (observedArea025 / burnable20PercentArea025) : 0.0f;
                     patchNumber[targetGridCellIndex] = data.patchCount;
 
                     if (burnedArea025 >= 0.00001) {
@@ -133,59 +171,59 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 } else {
 
-                double baValue = 0.0F;
-                double coverageValue = 0.0F;
-                double specialCoverageValue = 0.0F;
-                double burnableFractionValue = 0.0;
+                    double baValue = 0.0F;
+                    double coverageValue = 0.0F;
+                    double specialCoverageValue = 0.0F;
+                    double burnableFractionValue = 0.0;
 
-                for (int i = 0; i < data.burnedPixels.length; i++) {
-                    float burnedPixel = data.burnedPixels[i];
-                    boolean isBurnable = data.burnable[i];
-                    if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
-                        double burnedArea = scale(burnedPixel, data.areas[i]);
-                        baValue += burnedArea;
-                        addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
+                    for (int i = 0; i < data.burnedPixels.length; i++) {
+                        float burnedPixel = data.burnedPixels[i];
+                        boolean isBurnable = data.burnable[i];
+                        if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
+                            double burnedArea = scale(burnedPixel, data.areas[i]);
+                            baValue += burnedArea;
+                            addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
+                        }
+
+                        burnableFractionValue += isBurnable ? data.areas[i] : 0.0;
+                        boolean hasBeenObserved = data.statusPixels[i] == 1;
+                        coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
+                        specialCoverageValue += hasBeenObserved ? data.areas[i] : 0.0;
+                        areas[targetGridCellIndex] += data.areas[i];
+                        validate(areas[targetGridCellIndex], targetGridCellIndex);
                     }
 
-                    burnableFractionValue += isBurnable ? data.areas[i] : 0.0;
-                    boolean hasBeenObserved = data.statusPixels[i] == 1;
-                    coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
-                    specialCoverageValue += hasBeenObserved ? data.areas[i] : 0.0;
-                    areas[targetGridCellIndex] += data.areas[i];
-                    validate(areas[targetGridCellIndex], targetGridCellIndex);
-                }
+                    ba[targetGridCellIndex] = baValue;
+                    patchNumber[targetGridCellIndex] = data.patchCount;
 
-                ba[targetGridCellIndex] = baValue;
-                patchNumber[targetGridCellIndex] = data.patchCount;
-
-                if (false) {
+                    if (false) {
 //                if (mustHandleCoverageSpecifially(x)) {
-                    LOG.info("Handling LC specially.");
-                    LOG.info("specialCoverageValue=" + specialCoverageValue);
-                    burnableFractionValue = getSpecialBurnableFractionValue(x, y, null);
+                        LOG.info("Handling LC specially.");
+                        LOG.info("specialCoverageValue=" + specialCoverageValue);
+                        burnableFractionValue = getSpecialBurnableFractionValue(x, y, null);
 
-                    LOG.info("burnableFractionValue=" + burnableFractionValue);
+                        LOG.info("burnableFractionValue=" + burnableFractionValue);
 
-                    coverageValue = specialCoverageValue;
-                }
+                        coverageValue = specialCoverageValue;
+                    }
 
-                if (isInBrokenLCZone(x, y)) {
-                    coverage[targetGridCellIndex] = 0;
-                    burnableFraction[targetGridCellIndex] = 0;
-                } else {
-                    coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
-                    burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
-                    validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
-                }
+                    if (isInBrokenLCZone(x, y)) {
+                        coverage[targetGridCellIndex] = 0;
+                        burnableFraction[targetGridCellIndex] = 0;
+                    } else {
+                        coverage[targetGridCellIndex] = getFraction(coverageValue, burnableFractionValue);
+                        burnableFraction[targetGridCellIndex] = getFraction(burnableFractionValue, areas[targetGridCellIndex]);
+                        validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
+                    }
 
 
                     errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], Float.NaN);
 
-                for (int i = 0; i < errors.length; i++) {
-                    if (ba[i] < 0.00001) {
-                        errors[i] = 0;
+                    for (int i = 0; i < errors.length; i++) {
+                        if (ba[i] < 0.00001) {
+                            errors[i] = 0;
+                        }
                     }
-                }
 
                 }
 
@@ -231,7 +269,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     protected abstract void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc);
 
     public final GridCells computeGridCells(int year, int month) throws IOException {
-        return computeGridCells(year, month, ProgressMonitor.NULL);
+        return computeGridCells(year, month, null);
     }
 
     private void validate(double[] ba, double[] areas) {

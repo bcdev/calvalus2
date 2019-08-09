@@ -163,7 +163,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
                     data.probabilityOfBurn[targetPixelIndex] = sourceCL;
                     data.lcClasses[targetPixelIndex] = sourceLC;
-                    if (numbObs == 0) {
+                    if (numbObs == 0 || numbObs == 4) { // 0=observed, 3=not observed, 4=unburnable
                         data.statusPixels[targetPixelIndex] = 1;
                     } else {
                         data.statusPixels[targetPixelIndex] = 0;

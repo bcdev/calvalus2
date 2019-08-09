@@ -200,131 +200,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     public abstract String createBaseFilename(String year, String month, String version, String areaString);
 
-    static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
-        String area = areaString.split(";")[0];
-        String nicename = areaString.split(";")[1];
-        String left = areaString.split(";")[2];
-        String top = areaString.split(";")[3];
-        String right = areaString.split(";")[4];
-        String bottom = areaString.split(";")[5];
-
-        VelocityEngine velocityEngine = new VelocityEngine();
-        velocityEngine.init();
-        VelocityContext velocityContext = new VelocityContext();
-        velocityContext.put("UUID", UUID.randomUUID().toString());
-        velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
-        velocityContext.put("zoneId", nicename);
-        velocityContext.put("zoneName", nicename);
-        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
-        velocityContext.put("westLon", Integer.parseInt(left) - 180);
-        velocityContext.put("eastLon", Integer.parseInt(right) - 180);
-        velocityContext.put("northLat", Integer.parseInt(top) - 90);
-        velocityContext.put("southLat", Integer.parseInt(bottom) - 90);
-        velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
-        velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
-
-        StringWriter stringWriter = new StringWriter();
-        velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", template.replace("${REPLACE_WITH_VERSION}", version));
-        String intermediateResult = stringWriter.toString();
-
-        try (InputStream stream = new ByteArrayInputStream(intermediateResult.getBytes("UTF-8"))) {
-            SAXBuilder builder = new SAXBuilder();
-            Document anotherDocument = builder.build(stream);
-            StringWriter out = new StringWriter();
-            new XMLOutputter(Format.getPrettyFormat()).output(anotherDocument, out);
-            return out.toString();
-        } catch (JDOMException | NullPointerException e) {
-            throw new IOException(e);
-        }
-    }
-
-    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD, String sensor) {
-        int[] xDirections = new int[]{-1, 0, 1};
-        int[] yDirections = new int[]{-1, 0, 1};
-
-        SortedMap<Integer, Integer[]> values = new TreeMap<>();
-
-        for (int yDirection : yDirections) {
-            for (int xDirection : xDirections) {
-                if (pixelIndex % width == 0 && xDirection == -1
-                        || (pixelIndex + 1) % width == 0 && xDirection == 1) {
-                    continue;
-                }
-
-                int newPixelIndex = pixelIndex + yDirection * width + xDirection;
-                if (newPixelIndex < jdData.length) {
-                    if (newPixelIndex < 0 || newPixelIndex >= jdData.length) {
-                        continue;
-                    }
-                    float neighbourValue = jdData[newPixelIndex];
-
-                    boolean inBurnableLcClass = isInBurnableLcClass(lcArray[newPixelIndex], sensor);
-
-                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && inBurnableLcClass) {
-                        PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
-                        if (values.containsKey((int) positionAndValue.value)) {
-                            Integer[] v = new Integer[]{values.get((int) positionAndValue.value)[0] + 1, positionAndValue.newPixelIndex};
-                            values.put((int) positionAndValue.value, v);
-                        } else {
-                            Integer[] v = new Integer[]{1, positionAndValue.newPixelIndex};
-                            values.put((int) positionAndValue.value, v);
-                        }
-                    }
-                }
-            }
-        }
-
-        PositionAndValue result = null;
-        int maxCount = 0;
-        for (int value : values.keySet()) {
-            Integer count = values.get(value)[0];
-            if (count > maxCount) {
-                maxCount = count;
-                result = new PositionAndValue(values.get(value)[1], value);
-            }
-        }
-
-        if (result == null) {
-            // all neighbours are NaN or not burnable
-
-            if (isJD) {
-                return new PositionAndValue(pixelIndex, -1);
-            } else {
-                return new PositionAndValue(pixelIndex, 0);
-            }
-        }
-        return result;
-    }
-
-    private static boolean isInBurnableLcClass(int sourceLcClass, String sensor) {
-        switch (sensor) {
-            case "S2":
-                return LcRemappingS2.isInBurnableLcClass(sourceLcClass);
-            case "MODIS":
-                return LcRemapping.isInBurnableLcClass(sourceLcClass);
-            default:
-                throw new IllegalStateException("Unknown sensor '" + sensor + "'");
-        }
-    }
-
-    static class PositionAndValue {
-
-        PositionAndValue(int newPixelIndex, float value) {
-            this.newPixelIndex = newPixelIndex;
-            this.value = value;
-        }
-
-        int newPixelIndex;
-        public float value;
-
-    }
-
-    public interface ClScaler {
-
-        float scaleCl(float cl);
-
-    }
-
     static final String MODIS_TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +
@@ -424,7 +299,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel MODIS Burned Area product ${REPLACE_WITH_VERSION} – Area ${zoneId}" +
+            "                        <gco:CharacterString>Fire_cci Pixel MODIS Burned Area product ${REPLACE_WITH_VERSION} – Zone ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -445,7 +320,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2018-09-15</gco:Date>" +
+            "                                <gco:Date>2019-06-15</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -490,7 +365,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
             "An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.2 available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.4 available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.0022457331 deg  (approx. 250m); " +
             "Pixel value = Day of the year, from 1 to 365 (or 366). A value of 0 is included when the pixel is not burned " +
@@ -548,7 +423,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>https://www.esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -581,7 +456,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>https://www.esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -614,7 +489,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>https://www.esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -757,6 +632,92 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
+    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD, String sensor) {
+        int[] xDirections = new int[]{-1, 0, 1};
+        int[] yDirections = new int[]{-1, 0, 1};
+
+        SortedMap<Integer, Integer[]> values = new TreeMap<>();
+
+        for (int yDirection : yDirections) {
+            for (int xDirection : xDirections) {
+                if (pixelIndex % width == 0 && xDirection == -1
+                        || (pixelIndex + 1) % width == 0 && xDirection == 1) {
+                    continue;
+                }
+
+                int newPixelIndex = pixelIndex + yDirection * width + xDirection;
+                if (newPixelIndex < jdData.length) {
+                    if (newPixelIndex < 0 || newPixelIndex >= jdData.length) {
+                        continue;
+                    }
+                    float neighbourValue = jdData[newPixelIndex];
+
+                    boolean inBurnableLcClass = isInBurnableLcClass(lcArray[newPixelIndex], sensor);
+
+                    if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && inBurnableLcClass) {
+                        PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
+                        if (values.containsKey((int) positionAndValue.value)) {
+                            Integer[] v = new Integer[]{values.get((int) positionAndValue.value)[0] + 1, positionAndValue.newPixelIndex};
+                            values.put((int) positionAndValue.value, v);
+                        } else {
+                            Integer[] v = new Integer[]{1, positionAndValue.newPixelIndex};
+                            values.put((int) positionAndValue.value, v);
+                        }
+                    }
+                }
+            }
+        }
+
+        PositionAndValue result = null;
+        int maxCount = 0;
+        for (int value : values.keySet()) {
+            Integer count = values.get(value)[0];
+            if (count > maxCount) {
+                maxCount = count;
+                result = new PositionAndValue(values.get(value)[1], value);
+            }
+        }
+
+        if (result == null) {
+            // all neighbours are NaN or not burnable
+
+            if (isJD) {
+                return new PositionAndValue(pixelIndex, -1);
+            } else {
+                return new PositionAndValue(pixelIndex, 0);
+            }
+        }
+        return result;
+    }
+
+    private static boolean isInBurnableLcClass(int sourceLcClass, String sensor) {
+        switch (sensor) {
+            case "S2":
+                return LcRemappingS2.isInBurnableLcClass(sourceLcClass);
+            case "MODIS":
+                return LcRemapping.isInBurnableLcClass(sourceLcClass);
+            default:
+                throw new IllegalStateException("Unknown sensor '" + sensor + "'");
+        }
+    }
+
+    static class PositionAndValue {
+
+        PositionAndValue(int newPixelIndex, float value) {
+            this.newPixelIndex = newPixelIndex;
+            this.value = value;
+        }
+
+        int newPixelIndex;
+        public float value;
+
+    }
+
+    public interface ClScaler {
+
+        float scaleCl(float cl);
+
+    }
     static final String S2_TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +
@@ -877,7 +838,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2018-09-15</gco:Date>" +
+            "                                <gco:Date>2019-06-15</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -1172,5 +1133,43 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "    </gmd:identificationInfo>" +
             "" +
             "</gmi:MI_Metadata>";
+
+    static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
+        String area = areaString.split(";")[0];
+        String nicename = areaString.split(";")[1];
+        String left = areaString.split(";")[2];
+        String top = areaString.split(";")[3];
+        String right = areaString.split(";")[4];
+        String bottom = areaString.split(";")[5];
+
+        VelocityEngine velocityEngine = new VelocityEngine();
+        velocityEngine.init();
+        VelocityContext velocityContext = new VelocityContext();
+        velocityContext.put("UUID", UUID.randomUUID().toString());
+        velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
+        velocityContext.put("zoneId", area);
+        velocityContext.put("zoneName", nicename);
+        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
+        velocityContext.put("westLon", Integer.parseInt(left) - 180);
+        velocityContext.put("eastLon", Integer.parseInt(right) - 180);
+        velocityContext.put("northLat", 90 - Integer.parseInt(top));
+        velocityContext.put("southLat", 90 - Integer.parseInt(bottom));
+        velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
+        velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
+
+        StringWriter stringWriter = new StringWriter();
+        velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", template.replace("${REPLACE_WITH_VERSION}", version));
+        String intermediateResult = stringWriter.toString();
+
+        try (InputStream stream = new ByteArrayInputStream(intermediateResult.getBytes("UTF-8"))) {
+            SAXBuilder builder = new SAXBuilder();
+            Document anotherDocument = builder.build(stream);
+            StringWriter out = new StringWriter();
+            new XMLOutputter(Format.getPrettyFormat()).output(anotherDocument, out);
+            return out.toString();
+        } catch (JDOMException | NullPointerException e) {
+            throw new IOException(e);
+        }
+    }
 
 }
