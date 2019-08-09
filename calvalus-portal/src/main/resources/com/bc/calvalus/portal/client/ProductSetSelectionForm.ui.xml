@@ -21,7 +21,7 @@
                 </g:HorizontalPanel>
 
                 <g:HorizontalPanel spacing="0">
-                    <g:ListBox ui:field="productSetListBox" width="24em" visibleItemCount="8" name="inputProductSet"/>
+                    <g:ListBox ui:field="productSetListBox" width="30em" visibleItemCount="8" name="inputProductSet"/>
 
                     <g:VerticalPanel width="1em"/>
 

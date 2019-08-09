@@ -36,7 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * The table for edditing the binning aggregators
+ * The table for editing the binning variables
  *
  * @author marcoz
  */
@@ -47,8 +47,17 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
 
     class ConfiguredVariable {
         private final Integer id = ++lastId;
-        private String name = "";
-        private String expression = "";
+        private String name;
+        private String expression;
+
+        public ConfiguredVariable() {
+            this("", "");
+        }
+
+        public ConfiguredVariable(String name, String expr) {
+            this.name = name;
+            this.expression = expr;
+        }
 
         public String getName() {
             return name;
@@ -93,6 +102,10 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
         cellTable.getColumn(0).setCellStyleNames(style.variableName());
         cellTable.getColumn(2).setCellStyleNames(style.variableExpression());
     }
+    
+    public boolean hasSelection() {
+        return selectionModel.getSelectedObject() != null;
+    }
 
     public CellTable<ConfiguredVariable> getCellTable() {
         return cellTable;
@@ -107,6 +120,13 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
         dataProvider.refresh();
     }
 
+    public void addRow(String name, String expr) {
+        getVariableList().add(new ConfiguredVariable(name, expr));
+        dataProvider.refresh();
+        VariableListChangeEvent.fire(L3VariableTable.this);
+    }
+
+
     public void removeSelectedRow() {
         ConfiguredVariable selectedVariable = selectionModel.getSelectedObject();
         if (selectedVariable != null) {
@@ -114,7 +134,7 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
             list.remove(selectedVariable);
             int remainingSize = list.size();
             if (remainingSize > 0) {
-                selectionModel.setSelected(list.get(remainingSize), true);
+                selectionModel.setSelected(list.get(remainingSize - 1), true);
             }
             VariableListChangeEvent.fire(L3VariableTable.this);
             dataProvider.refresh();

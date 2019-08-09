@@ -17,11 +17,13 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new Match-Up production.
@@ -48,7 +50,6 @@ public class OrderMAProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -59,9 +60,11 @@ public class OrderMAProductionView extends OrderProductionView {
 
         maConfigForm = new MAConfigForm(portalContext);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
@@ -98,8 +101,14 @@ public class OrderMAProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override
@@ -121,11 +130,25 @@ public class OrderMAProductionView extends OrderProductionView {
     protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
+        parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
-        parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        maConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

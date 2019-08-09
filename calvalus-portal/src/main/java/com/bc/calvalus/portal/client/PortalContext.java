@@ -11,6 +11,8 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.view.client.ListDataProvider;
 
+import java.util.List;
+
 /**
  * The Calvalus Portal application context.
  * Lets you access static data resources, communicate with the server and control the currently displayed view.
@@ -31,8 +33,6 @@ public interface PortalContext {
     DtoProcessorDescriptor[] getProcessors(String filter);
     DtoAggregatorDescriptor[] getAggregators(String filter);
 
-    DtoMaskDescriptor[] getMasks();
-
     ListDataProvider<DtoProduction> getProductions();
 
     BackendServiceAsync getBackendService();
@@ -46,4 +46,8 @@ public interface PortalContext {
     void setProductionListFiltered(boolean filter);
 
     boolean withPortalFeature(String featureName);
+
+    String[] getRequestQueues();
+
+    OrderProductionView getViewForRestore(String productionType);
 }

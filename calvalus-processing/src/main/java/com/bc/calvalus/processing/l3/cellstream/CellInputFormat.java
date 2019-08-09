@@ -82,11 +82,7 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
     @Override
     protected boolean isSplitable(JobContext context, Path path) {
         String filename = path.getName().toLowerCase();
-        if (filename.startsWith(PART_FILE_PREFIX)) {
-            return true;
-        } else {
-            return false;
-        }
+        return filename.startsWith(PART_FILE_PREFIX);
     }
 
     public Path getFirstInputDirectory(Job job) throws IOException {

@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.boostrapping.BootstrappingWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -26,14 +26,14 @@ public class BootstrappingProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new BootstrappingProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new BootstrappingProductionType(fileSystemService, processing, staging);
         }
     }
 
-    BootstrappingProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    BootstrappingProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                 StagingService stagingService) {
-        super("Bootstrapping", inventoryService, processingService, stagingService);
+        super("Bootstrapping", fileSystemService, processingService, stagingService);
     }
 
     @Override

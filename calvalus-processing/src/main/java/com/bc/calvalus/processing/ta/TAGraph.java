@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.binning.support.VectorImpl;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.util.io.CsvReader;
@@ -45,6 +46,7 @@ import org.jfree.ui.RectangleInsets;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -52,9 +54,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -69,7 +71,7 @@ import java.util.Set;
 public class TAGraph {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd";
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
+    public static final DateFormat DATE_FORMAT = DateUtils.createDateFormat(DATE_PATTERN);
 
     private final TAResult taResult;
 
@@ -111,7 +113,7 @@ public class TAGraph {
         }
 
         DateAxis axis = (DateAxis) plot.getDomainAxis();
-        axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+        axis.setDateFormatOverride(DateUtils.createDateFormat("MMM-yyyy"));
         axis.setTickUnit(new DateTickUnit(DateTickUnitType.YEAR, 1));
 
         return new JFreeChart("Anomaly for " + regionName, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
@@ -125,7 +127,7 @@ public class TAGraph {
 
         XYPlot plot = (XYPlot) chart.getPlot();
         DateAxis axis = (DateAxis) plot.getDomainAxis();
-        axis.setDateFormatOverride(new SimpleDateFormat("MMM"));
+        axis.setDateFormatOverride(DateUtils.createDateFormat("MMM"));
         axis.setTickUnit(new DateTickUnit(DateTickUnitType.MONTH, 3));
 
         return chart;
@@ -139,7 +141,7 @@ public class TAGraph {
 
         XYPlot plot = (XYPlot) chart.getPlot();
         DateAxis axis = (DateAxis) plot.getDomainAxis();
-        axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+        axis.setDateFormatOverride(DateUtils.createDateFormat("MMM-yyyy"));
 
         return chart;
     }
@@ -153,7 +155,7 @@ public class TAGraph {
         YIntervalSeriesCollection dataset2 = createSigmaDataset(records, featureIndex, sigmaIndex);
 
         DateAxis dateAxis = new DateAxis("Time");
-        dateAxis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+        dateAxis.setDateFormatOverride(DateUtils.createDateFormat("MMM-yyyy"));
         NumberAxis numberAxis = new NumberAxis(featureName);
 
         XYLineAndShapeRenderer lineRenderer = new XYLineAndShapeRenderer(true, false);
@@ -200,7 +202,7 @@ public class TAGraph {
 
     private YIntervalSeriesCollection createAnomalyDataset(List<TAResult.Record> records, int featureIndex) {
         Map<Integer, List<Double>> values = new HashMap<Integer, List<Double>>();
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         for (TAResult.Record record : records) {
             try {
                 Date date = getCenterDate(record);
@@ -261,7 +263,7 @@ public class TAGraph {
 
     private XYDataset createYearlyCycleDataset(List<TAResult.Record> records, int featureIndex) {
         Map<Integer, TimeSeries> yearlyTimeSeries = new HashMap<Integer, TimeSeries>();
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         for (TAResult.Record record : records) {
             try {
                 Date date = getCenterDate(record);
@@ -300,7 +302,7 @@ public class TAGraph {
         String featureName = taResult.getOutputFeatureNames()[featureIndex];
         TimeSeries ts = new TimeSeries(featureName);
 
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         for (TAResult.Record record : records) {
             try {
                 Date date = getCenterDate(record);
@@ -430,8 +432,8 @@ public class TAGraph {
         } else {
             inputStream = TAGraph.class.getResourceAsStream("oc_cci.South_Pacific_Gyre.csv");
         }
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-        CsvReader csvReader = new CsvReader(inputStreamReader, new char[]{'\t'});
+        Reader reader = new BufferedReader(new InputStreamReader(inputStream));
+        CsvReader csvReader = new CsvReader(reader, new char[]{'\t'});
         List<String[]> stringRecords = csvReader.readStringRecords();
         TAResult taResult = new TAResult();
         String[] header = stringRecords.get(0);

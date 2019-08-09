@@ -97,8 +97,21 @@ public class ProductRecordSource implements RecordSource {
     }
 
     private static boolean shallApplyTimeCriterion(MAConfig config) {
-        Double maxTimeDifference = config.getMaxTimeDifference();
-        return maxTimeDifference != null && maxTimeDifference > 0;
+        String maxTimeDifference = config.getMaxTimeDifference();
+
+        if (maxTimeDifference != null) {
+            if (maxTimeDifference.trim().endsWith("d")) {
+                String trimmed = maxTimeDifference.trim();
+                if (!trimmed.isEmpty()) {
+                    String daysAsString = trimmed.substring(0, trimmed.length() - 1);
+                    int days = Integer.parseInt(daysAsString);
+                    return days >= 0;
+                }
+            } else {
+                return Double.parseDouble(maxTimeDifference) >= 0;
+            }
+        }
+        return false;
     }
 
     private static boolean canApplyTimeCriterion(Header referenceHeader) {

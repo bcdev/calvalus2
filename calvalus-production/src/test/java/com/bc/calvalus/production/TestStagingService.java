@@ -8,11 +8,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
 
 @Ignore
 public class TestStagingService implements StagingService {
     private List<Staging> stagings = new ArrayList<Staging>();
     private boolean closed;
+    private Observable productionService;
 
     public TestStagingService() {
     }
@@ -38,6 +40,16 @@ public class TestStagingService implements StagingService {
     @Override
     public void close() {
         closed = true;
+    }
+
+    @Override
+    public void setProductionService(Observable productionService) {
+        this.productionService = productionService;
+    }
+
+    @Override
+    public Observable getProductionService() {
+        return productionService;
     }
 
     public boolean isClosed() {

@@ -17,9 +17,10 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
@@ -58,14 +59,14 @@ public class L2toL3ProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new L2toL3ProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new L2toL3ProductionType(fileSystemService, processing, staging);
         }
     }
 
-    L2toL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    L2toL3ProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                          StagingService stagingService) {
-        super("L2toL3", inventoryService, processingService, stagingService);
+        super("L2toL3", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -75,7 +76,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("L2-to-L3 ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
-        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, null);
         if (dateRanges.size() == 0) {
             throw new ProductionException("No time ranges specified.");
         }
@@ -250,7 +251,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
     }
 
     static Date getCenterDate(DateRange dateRange) {
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         long timeDiff = dateRange.getStopDate().getTime() - dateRange.getStartDate().getTime();
         int timeDiffSecondsHalf = (int) timeDiff / 2000;
         calendar.setTime(dateRange.getStartDate());

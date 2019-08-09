@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.snap.core.datamodel.ProductData;
+import com.bc.calvalus.commons.DateUtils;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -17,7 +17,7 @@ import static com.bc.calvalus.processing.ma.PixelExtractor.*;
  */
 public class CsvRecordWriter implements RecordProcessor {
 
-    public static final DateFormat DEFAULT_DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final DateFormat DEFAULT_DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd HH:mm:ss");
     public static final char DEFAULT_COLUMN_SEPARATOR_CHAR = '\t';
     static final String SUFFIX_MEAN = "_mean";
     static final String SUFFIX_SIGMA = "_sigma";

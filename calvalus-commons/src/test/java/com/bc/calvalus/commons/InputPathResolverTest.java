@@ -19,15 +19,13 @@ package com.bc.calvalus.commons;
 import org.junit.Test;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class InputPathResolverTest {
 
@@ -145,10 +143,7 @@ public class InputPathResolverTest {
     }
 
     private Date date(String dateAsString) throws ParseException {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-        final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        dateFormat.setCalendar(calendar);
-        return dateFormat.parse(dateAsString);
+        return DateUtils.createDateFormat("yyyy-MM-dd").parse(dateAsString);
     }
 
 }

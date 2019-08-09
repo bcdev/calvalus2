@@ -12,6 +12,7 @@ public class DtoProduction implements IsSerializable {
     String id;
     String name;
     String user;
+    String productionType;
     String archivePath;
     String downloadPath;
     boolean autoStaging;
@@ -28,6 +29,7 @@ public class DtoProduction implements IsSerializable {
     public DtoProduction(String id,
                          String name,
                          String user,
+                         String productionType,
                          String archivePath,
                          String downloadPath,
                          String[] additionalStagingPaths,
@@ -43,6 +45,9 @@ public class DtoProduction implements IsSerializable {
         if (user == null) {
             throw new NullPointerException("user");
         }
+        if (productionType == null) {
+            throw new NullPointerException("productionType");
+        }
         if (processingStatus == null) {
             throw new NullPointerException("processingStatus");
         }
@@ -52,6 +57,7 @@ public class DtoProduction implements IsSerializable {
         this.id = id;
         this.name = name;
         this.user = user;
+        this.productionType = productionType;
         this.archivePath = archivePath;
         this.downloadPath = downloadPath;
         this.additionalStagingPaths = additionalStagingPaths;
@@ -70,6 +76,10 @@ public class DtoProduction implements IsSerializable {
 
     public String getUser() {
         return user;
+    }
+
+    public String getProductionType() {
+        return productionType;
     }
 
     public String getInventoryPath() {

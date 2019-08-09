@@ -59,6 +59,7 @@ public class GranuleLister {
             } catch (IOException e) {
                 System.out.println("productFile = " + productFile);
                 e.printStackTrace();
+                System.exit(1);
             }
         }
     }
@@ -73,10 +74,11 @@ public class GranuleLister {
                     System.out.print(granuleSpec.getTopDirName());
                     System.out.print(" : ");
                     System.out.print(productFile.getName());
+                    System.out.print(" : N");
+                    System.out.print(granuleSpec.getProcessingBaseline());
                     System.out.print(" : ");
                     System.out.print(granuleSpec.getGranuleName());
                     System.out.println();
-
                 }
             }
         }

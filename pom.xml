@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.9-SNAPSHOT</version>
+    <version>2.14-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,10 +12,12 @@
 
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
-        <calvalus.version>2.9-SNAPSHOT</calvalus.version>
-        <snap.version>4.0.1</snap.version>
-        <ceres.version>4.0.1</ceres.version>
+        <calvalus.version>2.14-SNAPSHOT</calvalus.version>
+        <bc-wps.version>1.2</bc-wps.version>
+        <snap.version>[5.0,6.0.0-SNAPSHOT)</snap.version>
+        <ceres.version>[5.0,6.0.0-SNAPSHOT)</ceres.version>
         <geotools.version>2.7.4</geotools.version>
+        <slf4j.version>1.7.21</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -28,22 +30,12 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
+        <module>calvalus-wps-impl</module>
+        <module>calvalus-reporting</module>
     </modules>
 
     <repositories>
-        <repository>
-            <id>bc-mvn-repo-http</id>
-            <name>Public Maven Repository at Brockmann Consult</name>
-            <url>http://www.brockmann-consult.de/mvn/os</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
+<!--
         <repository>
             <id>bc-mvn-repo-closed</id>
             <name>Private Maven Repository at Brockmann Consult</name>
@@ -57,6 +49,7 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
+        -->
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
@@ -76,7 +69,6 @@
             <url>http://download.osgeo.org/webdav/geotools/</url>
         </repository>
     </repositories>
-
 
     <build>
         <plugins>
@@ -100,8 +92,7 @@
                          -->
                         <property>
                             <name>calvalus.testrunner.hadoopAvailable</name>
-                            <value>false</value>
-                            <!--<value>${calvalus.testrunner.hadoopAvailable}</value>-->
+                            <value>${calvalus.testrunner.hadoopAvailable}</value>
                         </property>
                     </systemProperties>
                 </configuration>
@@ -134,7 +125,7 @@
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ssh</artifactId>
-                <version>3.2.0</version>
+                <version>1.0-beta-7</version>
             </extension>
         </extensions>
 
@@ -182,6 +173,37 @@
                 <groupId>com.bc.calvalus</groupId>
                 <artifactId>calvalus-exchange</artifactId>
                 <version>${calvalus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-portal</artifactId>
+                <version>${calvalus.version}</version>
+                <classifier>classes</classifier>
+            </dependency>
+
+            <!-- BC WPS dependencies -->
+            <dependency>
+                <groupId>com.bc.wps</groupId>
+                <artifactId>bc-wps-commons</artifactId>
+                <version>${bc-wps.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.bc.wps</groupId>
+                <artifactId>bc-wps-api</artifactId>
+                <version>${bc-wps.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!--  Ceres -->
@@ -288,6 +310,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.esa.s3tbx</groupId>
+                <artifactId>s3tbx-landsat-reader</artifactId>
+                <version>${snap.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.esa.snap</groupId>
                 <artifactId>snap-netcdf</artifactId>
                 <version>${snap.version}</version>
@@ -375,11 +402,6 @@
             <dependency>
                 <groupId>org.esa.snap</groupId>
                 <artifactId>snap-runtime</artifactId>
-                <version>${snap.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-collocation</artifactId>
                 <version>${snap.version}</version>
             </dependency>
 
@@ -485,22 +507,22 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-jdk14</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>

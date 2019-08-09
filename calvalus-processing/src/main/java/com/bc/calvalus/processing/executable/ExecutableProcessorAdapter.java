@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.executable;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
@@ -93,6 +94,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
@@ -121,7 +123,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
 
         Path inputPath = getInputPath();
         File inputFile = getInputFile();
@@ -137,7 +139,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
 
         outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
-        return outputFilesNames.length;
+        return outputFilesNames.length > 0;
     }
 
     public File getCurrentWorkingDir() {
@@ -193,11 +195,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
-
         velocityContext.put("productRectangle", productRectangle);
-
         velocityContext.put("outputPath", getOutputDirectoryPath());
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         if (velocityProps != null) {
             for (Map.Entry<String, String> entry : velocityProps.entrySet()) {
@@ -285,6 +286,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Path outputPath = getOutputDirectoryPath();
         velocityContext.put("outputPath", outputPath);
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {

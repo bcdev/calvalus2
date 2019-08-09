@@ -17,11 +17,14 @@ public interface BackendServiceAsync {
 
     void removeUserFile(String path, AsyncCallback<Boolean> callback);
 
+    void removeUserFiles(String[] paths, AsyncCallback<Boolean> callback);
+
     void removeUserDirectory(String path, AsyncCallback<Boolean> callback);
 
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
     void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);
+
     void getAggregators(String filter, AsyncCallback<DtoAggregatorDescriptor[]> callback);
 
     void getProductionRequest(String productionId, AsyncCallback<DtoProductionRequest> callback);
@@ -38,6 +41,12 @@ public interface BackendServiceAsync {
 
     void scpProduction(String productionId, String remotePath, AsyncCallback<Void> callback);
 
+    void saveRequest(DtoProductionRequest productionRequest, AsyncCallback<Void> callback);
+
+    void deleteRequest(String requestId, AsyncCallback<Void> callback);
+
+    void listRequests(AsyncCallback<DtoProductionRequest[] > callback);
+
     void checkUserRecordSource(String s, AsyncCallback<String> callback);
 
     void listUserRecordSource(String s, AsyncCallback<float[]> callback);
@@ -49,4 +58,8 @@ public interface BackendServiceAsync {
     void getCalvalusConfig(AsyncCallback<DtoCalvalusConfig> callback);
 
     void getMasks(AsyncCallback<DtoMaskDescriptor[]> initMasksCallback);
+
+    void calculateL3Periods(String minDate, String maxDate, String periodLength, String compositingPeriodLength, AsyncCallback<String[][]> callback);
+
+    void loadRegionDataInfo(String filePath, AsyncCallback<DtoRegionDataInfo> callback);
 }

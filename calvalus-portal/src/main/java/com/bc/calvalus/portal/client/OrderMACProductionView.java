@@ -17,6 +17,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.ui.CheckBox;
@@ -58,16 +59,21 @@ public class OrderMACProductionView extends OrderProductionView {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
+                for (int i = 0; i < l2MaForms.length; i++) {
+                    l2MaForms[i].l2ConfigForm.setProductSet(productSet);
+                }
             }
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        DtoProductSet selectedProductSet = productSetSelectionForm.getSelectedProductSet();
+        productSetFilterForm.setProductSet(selectedProductSet);
 
         l2MaForms = new L2MaConfigForm[NUM_PROCESSORS];
         boolean selectionMandatory = false;
         for (int i = 0; i < l2MaForms.length; i++) {
             l2MaForms[i] = new L2MaConfigForm(portalContext, selectionMandatory);
+            l2MaForms[i].l2ConfigForm.setProductSet(selectedProductSet);
             selectionMandatory = true;
             if (i >= 2) {
                 l2MaForms[i].enabledCheckbox.setValue(false, true);
@@ -77,7 +83,7 @@ public class OrderMACProductionView extends OrderProductionView {
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.expressionTable.setVisible(false);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 
@@ -125,8 +131,14 @@ public class OrderMACProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override

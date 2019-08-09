@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
 import org.esa.snap.binning.PlanetaryGrid;
@@ -155,7 +156,7 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
     private static Date extractDate(NetcdfFile netcdfFile, String dayName, String yearName) {
         int day = netcdfFile.findGlobalAttribute(dayName).getNumericValue().intValue();
         int year = netcdfFile.findGlobalAttribute(yearName).getNumericValue().intValue();
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         calendar.setTimeInMillis(0);
         calendar.set(Calendar.YEAR, year);
         calendar.set(Calendar.DAY_OF_YEAR, day);

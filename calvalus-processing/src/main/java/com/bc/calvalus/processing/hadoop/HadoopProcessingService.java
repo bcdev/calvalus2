@@ -27,6 +27,7 @@ import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -70,26 +71,33 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.10-SNAPSHOT";
-    public static final String DEFAULT_SNAP_BUNDLE = "snap-5.0-SNAPSHOT";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.14-SNAPSHOT";
+    public static final String DEFAULT_SNAP_BUNDLE = "snap-5.0";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
 
     private final JobClientsMap jobClientsMap;
+    private final String softwareDir;
     private final Map<JobID, ProcessStatus> jobStatusMap;
     private final List<BundleQueryCacheEntry> bundleQueryCache;
     private final Timer bundlesQueryCleaner;
     private final Map<String, BundleCacheEntry> bundleCache;
+    private final Map<String, ShapefileCacheEntry> shapeAttributeCache;
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
+        this(jobClientsMap, CALVALUS_SOFTWARE_PATH);
+    }
+
+    public HadoopProcessingService(JobClientsMap jobClientsMap, String softwareDir) throws IOException {
         this.jobClientsMap = jobClientsMap;
+        this.softwareDir = softwareDir;
         this.jobStatusMap = new WeakHashMap<>();
 
         this.bundleQueryCache = new ArrayList<>();
-        this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner");
+        // TODO there should be one Timer for a process that is used for all timer tasks
+        this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner", true);
         TimerTask bundlesQueryCleanTask = new TimerTask() {
             @Override
             public void run() {
@@ -109,6 +117,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         };
         this.bundlesQueryCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, CACHE_RETENTION, CACHE_RETENTION);
         this.bundleCache = new HashMap<>();
+        this.shapeAttributeCache = new HashMap<>();
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
@@ -212,8 +221,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 descriptors.addAll(allUserDescriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                final String calvalusSoftwarePath = (jobClientsMap.getConfiguration().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
-                String bundleLocationPattern = String.format("%s/%s/%s", calvalusSoftwarePath, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                String bundleLocationPattern = String.format("%s/%s/%s", softwareDir, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
                 FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                 List<BundleDescriptor> systemDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                 descriptors.addAll(systemDescriptors);
@@ -447,6 +455,23 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         bundlesQueryCleaner.cancel();
         executorService.shutdown();
     }
+    
+    @Override
+    public String[][] loadRegionDataInfo(String username, String url) throws IOException {
+        Path path = new Path(url);
+        Configuration conf = createJobConfig(username);
+        FileStatus fileStatus = path.getFileSystem(conf).getFileStatus(path);
+        if (fileStatus != null) {
+            ShapefileCacheEntry cacheEntry = shapeAttributeCache.get(path.toString());
+            if (cacheEntry == null || cacheEntry.modificationTime != fileStatus.getModificationTime()) {
+                String[][] data = RARegions.loadStringAttributes(url, conf);
+                cacheEntry = new ShapefileCacheEntry(fileStatus.getModificationTime(), data);
+                shapeAttributeCache.put(path.toString(), cacheEntry);
+            }
+            return cacheEntry.data;
+        }
+        throw new FileNotFoundException(url);
+    }
 
     /**
      * Updates the status. This method is called periodically after a fixed delay period.
@@ -594,7 +619,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    private class BundleCacheEntry {
+    private static class BundleCacheEntry {
         private final BundleDescriptor bundleDescriptor;
         private final long modificationTime;
 
@@ -603,4 +628,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             this.modificationTime = modificationTime;
         }
     }
+    
+    private static class ShapefileCacheEntry {
+        private final String[][] data;
+        private final long modificationTime;
+
+        public ShapefileCacheEntry(long modificationTime, String[][] data) {
+            this.data = data;
+            this.modificationTime = modificationTime;
+        }
+    }
+    
 }

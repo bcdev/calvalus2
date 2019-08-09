@@ -1,8 +1,12 @@
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.maps.client.MapOptions;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.base.LatLng;
@@ -29,7 +33,7 @@ public class MAConfigForm extends Composite {
     public static final String SYSTEM_POINTDATA_DIR = "pointdata";
 
     private final PortalContext portalContext;
-    private final UserManagedFiles userManagedContent;
+    private final ManagedFiles managedFiles;
 
     interface TheUiBinder extends UiBinder<Widget, MAConfigForm> {
 
@@ -37,7 +41,7 @@ public class MAConfigForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-    @UiField
+    @UiField(provided = true)
     ListBox recordSources;
     @UiField
     Button addRecordSourceButton;
@@ -51,7 +55,7 @@ public class MAConfigForm extends Composite {
     @UiField
     IntegerBox macroPixelSize;
     @UiField
-    DoubleBox maxTimeDifference;
+    TextBox maxTimeDifference;
     @UiField
     DoubleBox filteredMeanCoeff;
     @UiField
@@ -72,10 +76,19 @@ public class MAConfigForm extends Composite {
     public MAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
 
+        // http://stackoverflow.com/questions/22629632/gwt-listbox-onchangehandler
+        // fire selection event even when set programmatically
+        recordSources = new ListBox() {
+            @Override
+            public void setSelectedIndex(int index) {
+                super.setSelectedIndex(index);
+                DomEvent.fireNativeEvent(Document.get().createChangeEvent(), this);
+            }
+        };
         initWidget(uiBinder.createAndBindUi(this));
 
         macroPixelSize.setValue(5);
-        maxTimeDifference.setValue(3.0);
+        maxTimeDifference.setValue("3.0");
         filteredMeanCoeff.setValue(1.5);
         filterOverlapping.setValue(false);
         onlyExtractComplete.setValue(true);
@@ -104,23 +117,28 @@ public class MAConfigForm extends Composite {
                 "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
                 "</ol>");
 
-        userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
-                                                  recordSources,
-                                                  POINT_DATA_DIR,
-                                                  "in-situ or point data",
-                                                  description1,
-                                                  description2);
-        final SystemManagedFiles systemManagedFiles = new SystemManagedFiles(portalContext.getBackendService(),
-                                                                             recordSources,
-                                                                             SYSTEM_POINTDATA_DIR,
-                                                                             "system point data");
-        systemManagedFiles.updateList();
-
-        addRecordSourceButton.addClickHandler(userManagedContent.getAddAction());
-        removeRecordSourceButton.addClickHandler(userManagedContent.getRemoveAction());
+        managedFiles = new ManagedFiles(portalContext.getBackendService(),
+                                        recordSources,
+                                        POINT_DATA_DIR,
+                                        "in-situ or point data",
+                                        description1,
+                                        description2);
+        managedFiles.setAddButton(addRecordSourceButton);
+        managedFiles.setRemoveButton(removeRecordSourceButton);
+        recordSources.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                boolean hasSelection = recordSources.getSelectedIndex() != -1;
+                checkRecordSourceButton.setEnabled(hasSelection);
+                viewRecordSourceButton.setEnabled(hasSelection);
+            }
+        });
         checkRecordSourceButton.addClickHandler(new CheckRecordSourceAction());
+        checkRecordSourceButton.setEnabled(false);
         viewRecordSourceButton.addClickHandler(new ViewRecordSourceAction());
-        userManagedContent.updateList();
+        viewRecordSourceButton.setEnabled(false);
+        managedFiles.loadSystemFiles(SYSTEM_POINTDATA_DIR,"system point data");
+        managedFiles.updateUserFiles(true);
     }
 
     private void checkRecordSource(final String recordSource) {
@@ -204,13 +222,35 @@ public class MAConfigForm extends Composite {
             throw new ValidationException(filteredMeanCoeff, "Filtered mean coefficient must be >= 0 (0 disables this criterion)");
         }
 
-        boolean maxTimeDifferenceValid = maxTimeDifference.getValue() != null && maxTimeDifference.getValue() >= 0;
-        if (!maxTimeDifferenceValid) {
-            throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion)");
+        if (!isMaxTimeDifferenceValid(maxTimeDifference.getValue())) {
+            throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion).<br/>" +
+                    "Alternatively the difference can be given in full days using the 'd' suffix e.g. 0d,1d,...");
         }
 
-        if (userManagedContent.getSelectedFilePath().isEmpty()) {
+        if (managedFiles.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
+        }
+    }
+    
+    private boolean isMaxTimeDifferenceValid(String maxTimeDifference) throws ValidationException {
+        if (maxTimeDifference == null || maxTimeDifference.trim().isEmpty()) {
+            return true;
+        }
+        maxTimeDifference = maxTimeDifference.trim();
+        if (maxTimeDifference.endsWith("d") && maxTimeDifference.length() >= 2) {
+            String daysAsString = maxTimeDifference.substring(0, maxTimeDifference.length() - 1);
+            try {
+                int days = Integer.parseInt(daysAsString);
+                return days >= 0;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+        } else {
+            try {
+                return Double.parseDouble(maxTimeDifference) >= 0;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
         }
     }
 
@@ -220,13 +260,28 @@ public class MAConfigForm extends Composite {
         parameters.put("goodPixelExpression", goodPixelExpression.getText());
         parameters.put("goodRecordExpression", goodRecordExpression.getText());
         parameters.put("macroPixelSize", macroPixelSize.getValue().toString());
-        parameters.put("maxTimeDifference", maxTimeDifference.getValue().toString());
+        parameters.put("maxTimeDifference", maxTimeDifference.getText());
         parameters.put("filteredMeanCoeff", filteredMeanCoeff.getValue().toString());
         parameters.put("filterOverlapping", filterOverlapping.getValue().toString());
         parameters.put("onlyExtractComplete", onlyExtractComplete.getValue().toString());
         parameters.put("outputGroupName", outputGroupName.getText());
-        parameters.put("recordSourceUrl", userManagedContent.getSelectedFilePath());
+        parameters.put("recordSourceUrl", managedFiles.getSelectedFilePath());
         return parameters;
+    }
+
+    public void setValues(Map<String, String> parameters) {
+        goodPixelExpression.setValue(parameters.getOrDefault("goodPixelExpression", ""));
+        goodRecordExpression.setValue(parameters.getOrDefault("goodRecordExpression", ""));
+        macroPixelSize.setText(parameters.getOrDefault("macroPixelSize", "5"));
+        maxTimeDifference.setValue(parameters.getOrDefault("maxTimeDifference", "3.0"));
+        filteredMeanCoeff.setText(parameters.getOrDefault("filteredMeanCoeff", "1.5"));
+        filterOverlapping.setValue(Boolean.valueOf(parameters.getOrDefault("filterOverlapping", "false")));
+        onlyExtractComplete.setValue(Boolean.valueOf(parameters.getOrDefault("onlyExtractComplete", "true")));
+        outputGroupName.setValue(parameters.getOrDefault("outputGroupName", ""));
+        String recordSourceUrl = parameters.get("recordSourceUrl");
+        if (recordSourceUrl != null) {
+            managedFiles.setSelectedFilePath(recordSourceUrl);
+        }
     }
 
 
@@ -235,7 +290,13 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            checkRecordSource(userManagedContent.getSelectedFilePath());
+            String selectedFilePath = managedFiles.getSelectedFilePath();
+            if (selectedFilePath.isEmpty()) {
+                Dialog.error("Check record source",
+                                             "No file selected.");
+            } else {
+                checkRecordSource(selectedFilePath);
+            }
         }
     }
 
@@ -244,7 +305,13 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            viewRecordSource(userManagedContent.getSelectedFilePath());
+            String selectedFilePath = managedFiles.getSelectedFilePath();
+            if (selectedFilePath.isEmpty()) {
+                Dialog.error("View record source",
+                                             "No file selected.");
+            } else {
+                viewRecordSource(selectedFilePath);
+            }
         }
     }
 

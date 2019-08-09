@@ -16,6 +16,8 @@
 
 package com.bc.calvalus.processing.geodb;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -53,11 +55,14 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.text.DateFormat;
+import java.util.logging.Logger;
 
 /**
  * A mapper for generating entries for the product-DB
  */
 public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
+
+    public static final Logger LOGGER = CalvalusLogger.getLogger();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -72,7 +77,7 @@ public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> 
                     String wkt = poylgon.toString();
                     pm.worked(50);
 
-                    DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                    DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                     ProductData.UTC startUTC = product.getStartTime();
                     String startTime = "null";
                     if (startUTC != null) {
@@ -96,7 +101,9 @@ public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> 
     }
 
     private Polygon computeProductGeometry(Product product) {
-        if (product.getProductReader().getClass().getSimpleName().startsWith("Sentinel2OrthoProductReader")) {
+//        LOGGER.info("compute product geometry using reader " + product.getProductReader().getClass().getSimpleName());
+//        if (product.getProductReader().getClass().getSimpleName().startsWith("Sentinel2OrthoProductReader")) {
+//            LOGGER.info("determine detector footprint of S2 product");
             ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
             int nodeCount = maskGroup.getNodeCount();
             Geometry union = new GeometryFactory().createPolygon((Coordinate[]) null);
@@ -124,15 +131,18 @@ public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> 
             Geometry footprint = TopologyPreservingSimplifier.simplify(union, 0.001);
             if (!footprint.isEmpty()) {
                 if (footprint instanceof Polygon) {
+                    LOGGER.info("S2 detector footprint determined: " + footprint);
                     return (Polygon) footprint;
                 } else {
-                    System.out.println("footprint is not a polygon: " + footprint);
+                    LOGGER.warning("S2 detector footprint is not a polygon: " + footprint);
                 }
-            } else {
-                System.out.println("footprint is empty.");
+//            } else {
+//                LOGGER.warning("footprint is empty.");
             }
-        }
-        return computeProductGeometryDefault(product);
+//        }
+        final Polygon productOutline = computeProductGeometryDefault(product);
+        LOGGER.info("product outline: " + productOutline);
+        return productOutline;
     }
 
     private Geometry transformGeometry(Geometry sourceGeom,

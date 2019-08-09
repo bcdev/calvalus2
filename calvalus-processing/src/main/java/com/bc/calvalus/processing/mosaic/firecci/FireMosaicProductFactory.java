@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.mosaic.firecci;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
 import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
@@ -42,7 +43,7 @@ import java.util.Date;
  */
 class FireMosaicProductFactory extends DefaultMosaicProductFactory {
 
-    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     static final float[] MERIS_WAVELENGTH = new float[]{
             412.691f,   // 1

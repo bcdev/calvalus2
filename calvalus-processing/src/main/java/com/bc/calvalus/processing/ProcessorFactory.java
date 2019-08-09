@@ -116,7 +116,7 @@ public class ProcessorFactory {
                         logger.warning("reading bundle descriptor of " + bundlePath + " failed: " + ex);
                     }
                 } else {
-                    throw new IllegalArgumentException("Processor bundle does not exist.");
+                    throw new IllegalArgumentException("Processor bundle " + bundleSpec + " does not exist.");
                 }
             }
             if (processorFiles.size() > 0) {
@@ -252,7 +252,7 @@ public class ProcessorFactory {
                     return;
                 }
             }
-            processorAdapter.processSourceProduct(ProgressMonitor.NULL);
+            processorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
             processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
 
             // MA only: use points from reference data set to restrict roi even further

@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic.firecci;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicProductFactory;
 import org.esa.snap.core.dataio.EncodeQualification;
 import org.esa.snap.core.datamodel.Product;
@@ -40,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
@@ -88,11 +88,7 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     private class FireMainPart implements ProfileInitPartWriter {
 
-        private final SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-
-        FireMainPart() {
-            COMPACT_ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
+        private final SimpleDateFormat COMPACT_ISO_FORMAT = DateUtils.createDateFormat("yyyyMMdd'T'HHmmss'Z'");
 
         @Override
         public void writeProductBody(ProfileWriteContext ctx, Product product) throws IOException {

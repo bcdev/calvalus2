@@ -25,8 +25,6 @@ import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -35,7 +33,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.runtime.Engine;
 
 import java.awt.*;
@@ -43,7 +40,6 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 /**
  * Adapts different processors ( SNAP GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
@@ -88,6 +84,8 @@ import java.util.regex.Pattern;
  */
 public abstract class ProcessorAdapter {
 
+    public enum MODE {TARGET, EXECUTE}
+
     private static final Logger LOG = CalvalusLogger.getLogger();
     public static final String[] EMPTY_PARAMETERS = new String[0];
 
@@ -110,6 +108,7 @@ public abstract class ProcessorAdapter {
             System.setProperty("snap.userdir", cwd);
             System.setProperty("snap.home", cwd);
             System.setProperty("snap.pythonModuleDir", cwd);
+            LOG.info("Set 'snap.userdir', 'snap.home', 'snap.pythonModuleDir' to CWD: " + cwd);
         }
         GpfUtils.init(conf);
         Engine.start();
@@ -162,10 +161,10 @@ public abstract class ProcessorAdapter {
      * <p/>
      *
      * @param pm A progress monitor
-     * @return The number of processed products.
+     * @return False, if the product has not be processed
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
+    public abstract boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException;
 
     /**
      * Returns the product resulting from the processing.
@@ -256,8 +255,7 @@ public abstract class ProcessorAdapter {
             Rectangle sourceRectangle = getInputRectangle();
             if (sourceRectangle == null || !sourceRectangle.isEmpty()) {
                 prepareProcessing();
-                int numProducts = processSourceProduct(pm);
-                if (numProducts > 0) {
+                if (processSourceProduct(MODE.TARGET, pm)) {
                     processedProduct = openProcessedProduct();
                 }
             }
@@ -363,50 +361,13 @@ public abstract class ProcessorAdapter {
                 return ProductIO.readProduct(inputFile);
             }
         } else {
-            // fire-cci hacks!
-            String sensorParam = conf.get("calvalus.sensor");
-            if (sensorParam != null && sensorParam.equals("MODIS")) {
-                String pathString = getInputPath().toString();
-                String tile = pathString.substring(pathString.indexOf("burned_")).split("_")[3].split("\\.")[0];
-                LOG.info("tile=" + tile);
-                Pattern pattern = Pattern.compile(".*" + tile + ".*");
-
-                Path parentPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup-refs");
-                FileSystem fileSystem = parentPath.getFileSystem(conf);
-                FileStatus[] fileStatuses = fileSystem.listStatus(parentPath);
-                if (fileStatuses == null) {
-                    throw new IllegalStateException("No file statuses in path '" + parentPath.toString() + "'");
-                }
-                for (FileStatus fStat : fileStatuses) {
-                    String filename = fStat.getPath().getName();
-                    if (pattern.matcher(filename).matches()) {
-                        CalvalusProductIO.copyFileToLocal(fStat.getPath(), new File("georef.nc"), getConfiguration());
-                        break;
-                    }
-                }
-                Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
-                Product geoRefProduct = ProductIO.readProduct(new File("georef.nc"));
-                if (geoRefProduct == null) {
-                    throw new IllegalStateException("No geo-ref product for tile " + tile);
-                }
-                ProductUtils.copyGeoCoding(geoRefProduct, product);
-                return product;
+            Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            File fileLocation = product.getFileLocation();
+            System.out.println("fileLocation = " + fileLocation);
+            if (fileLocation != null) {
+                setInputFile(fileLocation);
             }
-//            if (sensorParam != null && sensorParam.equals("MSI")) {
-//                String pathString = getInputPath().toString();
-//                if (pathString.endsWith("000001.nc")) {
-//                    CalvalusLogger.getLogger().info("Fixing product '" + pathString + "'");
-//                    Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
-//                    Product fixed = new Product(product.getName(), product.getProductType(), product.getSceneRasterWidth(), product.getSceneRasterHeight());
-//                    ProductUtils.copyGeoCoding(product, fixed);
-//                    ProductUtils.copyMetadata(product, fixed);
-//                    fixed.addBand("JD", "998");
-//                    fixed.addBand("CL", "0");
-//                    return fixed;
-//                }
-//            }
-
-            return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            return product;
         }
     }
 
@@ -439,10 +400,7 @@ public abstract class ProcessorAdapter {
         if (startTime == null || endTime == null) {
             return true;
         }
-        if (endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0) {
-            return true;
-        }
-        return false;
+        return endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0;
     }
 
     public static void copySceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,

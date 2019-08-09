@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.snap.core.datamodel.ProductData;
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.core.util.StringUtils;
 
 import java.io.IOException;
@@ -82,7 +82,7 @@ public class CsvLineReader {
             timeIndices = null;
         }
         if (headerParams.containsKey("dateFormat")) {
-            this.dateFormat = ProductData.UTC.createDateFormat(headerParams.get("dateFormat"));
+            this.dateFormat = DateUtils.createDateFormat(headerParams.get("dateFormat"));
         } else {
             this.dateFormat = dateFormat;
         }

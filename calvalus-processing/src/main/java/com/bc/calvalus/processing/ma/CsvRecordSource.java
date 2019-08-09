@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.datamodel.GeoPos;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -232,8 +233,8 @@ public class CsvRecordSource implements RecordSource {
             } else {
                 inputStream = new URL(url).openStream();
             }
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            return new CsvRecordSource(inputStreamReader, CsvRecordWriter.DEFAULT_DATE_FORMAT);
+            Reader reader = new BufferedReader(new InputStreamReader(inputStream));
+            return new CsvRecordSource(reader, CsvRecordWriter.DEFAULT_DATE_FORMAT);
         }
 
         @Override

@@ -74,4 +74,9 @@ public interface ProcessingService<JobId> {
      * @throws java.io.IOException if an I/O error occurs
      */
     void close() throws Exception;
+
+    /**
+     * Load details about the region data.
+     */
+    public String[][] loadRegionDataInfo(String username, String url) throws IOException;
 }

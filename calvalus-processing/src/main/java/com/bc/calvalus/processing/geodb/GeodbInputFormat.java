@@ -22,12 +22,15 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.ma.MAConfig;
+import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.inventory.search.Constrain;
 import com.bc.inventory.search.StreamFactory;
 import com.bc.inventory.search.coverage.CoverageInventory;
 import com.bc.inventory.utils.SimpleRecord;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -101,22 +104,24 @@ public class GeodbInputFormat extends InputFormat {
     }
 
     public static Set<String> queryGeoInventory(boolean failOnMissingDB, Configuration conf) throws IOException {
-        String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
-        StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
-        CoverageInventory inventory = new CoverageInventory(streamFactory);
-        if (!inventory.hasIndex()) {
-            if (failOnMissingDB) {
-                throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
-            } else {
-                return Collections.EMPTY_SET;
-            }
-        }
-        inventory.loadIndex();
         List<Constrain> constrains = parseConstraint(conf);
         Set<String> paths = new HashSet<>();
-        for (Constrain constrain : constrains) {
-            LOG.fine("query for constrain: " + constrain.toString());
-            paths.addAll(inventory.query(constrain).getPaths());
+        String[] geoInventories = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY).split(",");
+        for (String geoInventory : geoInventories) {
+            StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
+            CoverageInventory inventory = new CoverageInventory(streamFactory);
+            if (!inventory.hasIndex()) {
+                if (failOnMissingDB) {
+                    throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
+                } else {
+                    return Collections.EMPTY_SET;
+                }
+            }
+            inventory.loadIndex();
+            for (Constrain constrain : constrains) {
+                LOG.fine("query for constrain: " + constrain.toString());
+                paths.addAll(inventory.query(constrain).getPaths());
+            }
         }
         return paths;
     }
@@ -124,6 +129,12 @@ public class GeodbInputFormat extends InputFormat {
     private static List<Constrain> parseConstraint(Configuration conf) throws IOException {
         List<Constrain> constrains = new ArrayList<>();
         String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
+            Geometry geometry = GeometryUtils.parseWKT(geometryWkt);
+            if (geometry == null || isBiggerThanAHalfSphere(geometry)) {
+                geometryWkt = null;
+            }
+        }
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         boolean isDateRangeSet = StringUtils.isNotNullAndNotEmpty(dateRangesString);
         if (isDateRangeSet) {
@@ -156,6 +167,16 @@ public class GeodbInputFormat extends InputFormat {
         return constrains;
     }
 
+    private static boolean isBiggerThanAHalfSphere(Geometry geometry) {
+        double geometryArea = geometry.getArea();
+        double halfSphereCartesian = 360 * 180 * 0.5;
+        if (geometryArea > halfSphereCartesian) {
+            System.out.printf("geometryArea %s is bigger than half a sphere an not supported by S2, dropping it for DB query.%n", halfSphereCartesian);
+            return true;
+        }
+        return false;
+    }
+
     private static void parseMatchupParameters(Configuration conf, Constrain.Builder cb) {
         String maXML = conf.get(JobConfigNames.CALVALUS_MA_PARAMETERS);
         if (StringUtils.isNotNullAndNotEmpty(maXML)) {
@@ -181,10 +202,20 @@ public class GeodbInputFormat extends InputFormat {
                 if (hasTime) {
                     cb.useOnlyProductStartDate(false);
                 }
-                Double maxTimeDifference = maConfig.getMaxTimeDifference();
+                String maxTimeDifference = maConfig.getMaxTimeDifference();
                 if (maxTimeDifference != null) {
-                    long timeDelta = Math.round(maxTimeDifference * 60 * 60 * 1000); // h to ms
-                    cb.timeDelta(timeDelta);
+                    if (maxTimeDifference.trim().endsWith("d")) {
+                        String trimmed = maxTimeDifference.trim();
+                        String daysAsString = trimmed.substring(0, trimmed.length() - 1);
+                        int days = Integer.parseInt(daysAsString);
+                        cb.timeDelta((days + 2) * 24 * 60 * 60 * 1000L); // TODO teach geoDB to understand 0d,1d,..
+                    } else {
+                        double timeDifferenceHours = Double.parseDouble(maxTimeDifference);
+                        if (timeDifferenceHours > 0) {
+                            long timeDelta = Math.round(timeDifferenceHours * 60 * 60 * 1000); // h to ms
+                            cb.timeDelta(timeDelta);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to parse matchups parameters.", e);

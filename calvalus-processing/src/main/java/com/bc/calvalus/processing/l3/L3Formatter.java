@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.GeometryUtils;
@@ -38,6 +39,7 @@ import org.esa.snap.binning.operator.FormatterConfig;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.runtime.Engine;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,6 +116,8 @@ public class L3Formatter {
                              String productName ) throws IOException {
 
         Configuration conf = context.getConfiguration();
+        GpfUtils.init(conf);
+        Engine.start();  // TODO is this required here? It was in ProcessorAdapter()
         ConverterRegistry.getInstance().setConverter(Product.class, new ProductConverter(conf));
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);

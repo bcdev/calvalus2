@@ -1,5 +1,6 @@
 package com.bc.calvalus.ingestion;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -10,13 +11,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,17 +35,10 @@ public class IngestionTool {
     public static final String DEFAULT_REVISION = "r03";
     //static final String DEFAULT_PATTERN = "<type>.*\.N1";
 
-    public static final SimpleDateFormat YEAR_MONTH_DAY_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
-    public static final SimpleDateFormat YEAR_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyyyDDD");
-    public static final SimpleDateFormat YEAR2_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyDDD");
-    public static final SimpleDateFormat MONTH_DAY_YEAR2_FORMAT = new SimpleDateFormat("MMddyy");
-
-    static {
-        YEAR_MONTH_DAY_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        YEAR_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        YEAR2_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        MONTH_DAY_YEAR2_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    public static final DateFormat YEAR_MONTH_DAY_FORMAT = DateUtils.createDateFormat("yyyy/MM/dd");
+    public static final DateFormat YEAR_DAY_OF_YEAR_FORMAT = DateUtils.createDateFormat("yyyyDDD");
+    public static final DateFormat YEAR2_DAY_OF_YEAR_FORMAT = DateUtils.createDateFormat("yyDDD");
+    public static final DateFormat MONTH_DAY_YEAR2_FORMAT = DateUtils.createDateFormat("MMddyy");
 
     public static final long MINIMUM_BLOCK_SIZE = 1048576;
     public static final long MAXIMUM_BLOCK_SIZE = 2147483648L;
@@ -232,8 +225,8 @@ public class IngestionTool {
             if (timeElements != null && timeFormat != null) {
                 try {
                     final String timeString = expand(matcher, timeElements);
-                    final Date date = new SimpleDateFormat(timeFormat).parse(timeString);
-                    path = new SimpleDateFormat(path).format(date);
+                    final Date date = DateUtils.createDateFormat(timeFormat).parse(timeString);
+                    path = DateUtils.createDateFormat(path).format(date);
                 } catch (ParseException e) {
                     throw new IOException("parsing of date in " + file.getName() + " using " + pattern.pattern() + " " + timeElements + " " + timeFormat + " failed", e);
                 }

@@ -156,11 +156,7 @@ public final class AggregatedNumber extends Number {
         if (nT != that.nT) {
             return false;
         }
-        if (Double.compare(that.sigma, sigma) != 0) {
-            return false;
-        }
-
-        return true;
+        return Double.compare(that.sigma, sigma) == 0;
     }
 
     @Override

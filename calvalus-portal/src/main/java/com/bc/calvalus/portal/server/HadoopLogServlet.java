@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.store.ProxyWorkflow;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -79,9 +79,9 @@ public class HadoopLogServlet extends HttpServlet {
             showErrorPage("Missing query parameter 'productionId'", resp);
             return;
         }
-        ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
+        ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
         try {
-            Production production = productionService.getProduction(productionId);
+            Production production = serviceContainer.getProductionService().getProduction(productionId);
             final String userName = getUserName(req).toLowerCase();
             ProcessState processState = production.getProcessingStatus().getState();
             WorkflowItem workflow = production.getWorkflow();

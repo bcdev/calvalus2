@@ -1,9 +1,9 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
-import org.esa.snap.core.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;
@@ -26,7 +26,7 @@ import java.util.logging.Level;
 public class SnapSparseCellReader extends AbstractNetcdfCellReader {
 
     private static final int DEFAULT_READAHEAD = 1000;
-    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    private static final DateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     private final String[] featureNames;
     private final int numBins;

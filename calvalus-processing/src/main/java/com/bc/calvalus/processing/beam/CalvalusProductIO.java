@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.GeoCoding;
@@ -43,6 +44,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -79,6 +81,9 @@ public class CalvalusProductIO {
      * @throws java.io.IOException If an I/O error occurs
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
+        if (inputFormat != null) {
+            LOG.info("Trying to find reader for inputFormat: " + inputFormat);
+        }
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
             final Path path = pathConf.getPath();
@@ -96,6 +101,13 @@ public class CalvalusProductIO {
             }
         }
         if (product == null) {
+            LOG.info("No reader found. Available plugin classes:");
+            Iterator<ProductReaderPlugIn> allReaderPlugIns = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+            while (allReaderPlugIns.hasNext()) {
+                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
+                String name = readerPlugIn.getClass().getName();
+                LOG.info(name);
+            }
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();
@@ -120,6 +132,8 @@ public class CalvalusProductIO {
         GeoCoding geoCoding = product.getSceneGeoCoding();
         if (geoCoding != null) {
             LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
+        } else {
+            LOG.warning("GeoCoding: null");
         }
         return product;
     }
@@ -147,7 +161,11 @@ public class CalvalusProductIO {
         return localFile;
     }
 
-    public static File[] uncompressArchiveToLocalDir(Path path, Configuration conf) throws IOException {
+    public static File[] uncompressArchiveToCWD(Path path, Configuration conf) throws IOException {
+        return uncompressArchiveToDir(path, new File("."), conf);
+    }
+
+    public static File[] uncompressArchiveToDir(Path path, File localDir, Configuration conf) throws IOException {
         FileSystem fs = path.getFileSystem(conf);
         InputStream inputStream = new BufferedInputStream(fs.open(path));
         List<File> extractedFiles = new ArrayList<>();
@@ -157,14 +175,14 @@ public class CalvalusProductIO {
             try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
                 ZipEntry entry;
                 while ((entry = zipIn.getNextEntry()) != null) {
-                    extractedFiles.add(handleEntry(entry.getName(), entry.isDirectory(), zipIn));
+                    extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), zipIn));
                 }
             }
         } else if (isTarCompressed(archiveName)) {
             try (TarInputStream tarIn = getTarInputStream(archiveName, inputStream)) {
                 TarEntry entry;
                 while ((entry = tarIn.getNextEntry()) != null) {
-                    extractedFiles.add(handleEntry(entry.getName(), entry.isDirectory(), tarIn));
+                    extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), tarIn));
                 }
             }
         } else {
@@ -173,8 +191,8 @@ public class CalvalusProductIO {
         return extractedFiles.toArray(new File[0]);
     }
 
-    private static File handleEntry(String name, boolean isDirectory, InputStream zipIn) throws IOException {
-        File file = new File(".", name);
+    private static File handleEntry(File localDir, String name, boolean isDirectory, InputStream zipIn) throws IOException {
+        File file = new File(localDir, name);
         if (isDirectory) {
             file.mkdirs();
         } else {

@@ -17,7 +17,7 @@
                 <g:VerticalPanel spacing="2">
                     <g:Label>In-situ and point data files:</g:Label>
 
-                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8" width="20em"/>
+                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="14" width="40em"/>
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addRecordSourceButton' text="Add"/>
                         <g:Button ui:field='checkRecordSourceButton' text="Check"/>
@@ -42,9 +42,18 @@
                                 <g:Label>Maximum time difference:</g:Label>
                             </td>
                             <td>
-                                <g:DoubleBox ui:field="maxTimeDifference" visibleLength="8"/>
+                                <g:TextBox ui:field="maxTimeDifference" visibleLength="8"/>
                             </td>
                             <td>hours</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    The time difference is given in hours.
+                                    Alternatively the difference can be given in full days using the 'd' suffix e.g. 0d,1d,...
+                                    This crititerion can be disabled by entering '0' or leaving it empty.
+                                </g:HTML>
+                            </td>
                         </tr>
                         <tr>
                             <td>

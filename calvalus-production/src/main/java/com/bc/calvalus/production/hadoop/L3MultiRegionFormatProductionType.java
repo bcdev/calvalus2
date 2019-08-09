@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatWorkflowItem;
@@ -24,14 +24,14 @@ public class L3MultiRegionFormatProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new L3MultiRegionFormatProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new L3MultiRegionFormatProductionType(fileSystemService, processing, staging);
         }
     }
 
-    L3MultiRegionFormatProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    L3MultiRegionFormatProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                       StagingService stagingService) {
-        super("L3MultiRegion", inventoryService, processingService, stagingService);
+        super("L3MultiRegion", fileSystemService, processingService, stagingService);
     }
 
     @Override

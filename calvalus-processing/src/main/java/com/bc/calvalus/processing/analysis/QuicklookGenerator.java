@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
@@ -27,21 +28,14 @@ import com.bc.ceres.glayer.support.ImageLayer;
 import com.bc.ceres.grender.Rendering;
 import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
-import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.ColorPaletteDef;
-import org.esa.snap.core.datamodel.GeoCoding;
-import org.esa.snap.core.datamodel.ImageInfo;
-import org.esa.snap.core.datamodel.ImageLegend;
-import org.esa.snap.core.datamodel.Mask;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductNodeGroup;
-import org.esa.snap.core.datamodel.RGBChannelDef;
-import org.esa.snap.core.datamodel.RGBImageProfile;
-import org.esa.snap.core.datamodel.Stx;
+import org.esa.snap.core.datamodel.*;
+import org.esa.snap.core.dataop.barithm.BandArithmetic;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
+import org.esa.snap.core.jexp.ParseException;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;
 import org.esa.snap.core.util.DefaultPropertyMap;
@@ -55,11 +49,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -87,28 +77,41 @@ public class QuicklookGenerator {
         ColoredBandImageMultiLevelSource multiLevelSource;
         Band masterBand;
         if (qlConfig.getRGBAExpressions() != null && qlConfig.getRGBAExpressions().length > 0) {
-            String[] rgbaExpressions;
-            if (qlConfig.getRGBAExpressions().length == 4) {
-                rgbaExpressions = qlConfig.getRGBAExpressions();
-            } else if (qlConfig.getRGBAExpressions().length == 3) {
-                rgbaExpressions = new String[4];
-                System.arraycopy(qlConfig.getRGBAExpressions(), 0, rgbaExpressions, 0,
-                                 qlConfig.getRGBAExpressions().length);
-                rgbaExpressions[3] = "";
-            } else {
+            String[] rgbaExpressions = qlConfig.getRGBAExpressions();
+            if (rgbaExpressions.length != 3 && rgbaExpressions.length != 4) {
                 throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
             }
-            RGBImageProfile.storeRgbaExpressions(product, rgbaExpressions);
-            final Band[] rgbBands = {
-                    product.getBand(RGBImageProfile.RED_BAND_NAME),
-                    product.getBand(RGBImageProfile.GREEN_BAND_NAME),
-                    product.getBand(RGBImageProfile.BLUE_BAND_NAME),
-            };
-            masterBand = rgbBands[0];
-            for (Band band : rgbBands) {
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
+            try {
+                if (!BandArithmetic.areRastersEqualInSize(product, rgbaExpressions)) {
+                    throw new IllegalArgumentException("Referenced rasters are not of the same size");
+                }
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("Expressions are invalid");
             }
+            final Band[] rgbBands = new Band[3];
+            for (int i = 0; i < rgbBands.length; i++) {
+                String expression = rgbaExpressions[i];
+                Band rgbBand = product.getBand(expression);
+                if (rgbBand == null) {
+                    rgbBand = new VirtualBand(RGBImageProfile.RGB_BAND_NAMES[i],
+                                              ProductData.TYPE_FLOAT32,
+                                              determineWidth(expression, product),
+                                              determineHeight(expression, product),
+                                              expression);
+//                    rgbBand.setOwner(product);
+//                    rgbBand.setModified(false);
+                    product.addBand(rgbBand);
+                    rgbBand.setNoDataValue(Float.NaN);
+                    rgbBand.setNoDataValueUsed(true);
+                }
+                rgbBands[i] = rgbBand;
+            }
+            masterBand = rgbBands[0];
+// commented away in order to avoid parsing errors for expressions in RGB statement
+//            for (Band band : rgbBands) {
+//                band.setNoDataValue(Float.NaN);
+//                band.setNoDataValueUsed(true);
+//            }
             multiLevelSource = ColoredBandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
             if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null &&
                 qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {
@@ -168,18 +171,18 @@ public class QuicklookGenerator {
             layerChildren.add(0, createShapefileLayer(product, qlConfig.getShapefileURL()));
         }
 
-//        // TODO generalize
-//        Configuration configuration = context.getConfiguration();
-//        if ("FRESHMON".equalsIgnoreCase(configuration.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
-//            addFreshmonOverlay(qlConfig, masterBand, imageLayer, canUseAlpha, layerChildren);
-//        } else {
-//            if (qlConfig.getOverlayURL() != null) {
-//                addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
-//            }
-//            if (qlConfig.isLegendEnabled()) {
-//                addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
-//            }
-//        }
+        // TODO generalize
+        Configuration configuration = context.getConfiguration();
+        if ("FRESHMON".equalsIgnoreCase(configuration.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
+            addFreshmonOverlay(qlConfig, masterBand, imageLayer, canUseAlpha, layerChildren);
+        } else {
+            if (qlConfig.getOverlayURL() != null) {
+                addOverlay(imageLayer, layerChildren, qlConfig.getOverlayURL());
+            }
+            if (qlConfig.isLegendEnabled()) {
+                addLegend(masterBand, imageLayer, canUseAlpha, layerChildren);
+            }
+        }
 
 
         Rectangle2D modelBounds = collectionLayer.getModelBounds();
@@ -200,17 +203,43 @@ public class QuicklookGenerator {
         collectionLayer.render(new Rendering() {
             @Override
             public Graphics2D getGraphics() {
-//                context.progress();
+                context.progress();
                 return rendering.getGraphics();
             }
 
             @Override
             public Viewport getViewport() {
-//                context.progress();
+                context.progress();
                 return rendering.getViewport();
             }
         });
         return rendering.getImage();
+    }
+
+    private static int determineWidth(String expression, Product product) {
+        int width = product.getSceneRasterWidth();
+        try {
+            final RasterDataNode[] refRasters = BandArithmetic.getRefRasters(expression, product);
+            if (refRasters.length > 0) {
+                width = refRasters[0].getRasterWidth();
+            }
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid expression: " + expression);
+        }
+        return width;
+    }
+
+    private static int determineHeight(String expression, Product product) {
+        int height = product.getSceneRasterHeight();
+        try {
+            final RasterDataNode[] refRasters = BandArithmetic.getRefRasters(expression, product);
+            if (refRasters.length > 0) {
+                height = refRasters[0].getRasterHeight();
+            }
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid expression: " + expression);
+        }
+        return height;
     }
 
     private static Layer createShapefileLayer(final Product product, String shapefileUrl) throws IOException {

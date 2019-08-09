@@ -2,7 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -32,14 +32,14 @@ public class MRProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new MRProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new MRProductionType(fileSystemService, processing, staging);
         }
     }
 
-    MRProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    MRProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                      StagingService stagingService) {
-        super("MR", inventoryService, processingService, stagingService);
+        super("MR", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -55,8 +55,8 @@ public class MRProductionType extends HadoopProductionType {
         final String maxDateStr = ProductionRequest.getDateFormat().format(maxDate);
         final String outputDir;
         try {
-            outputDir = getInventoryService().getQualifiedPath(productionRequest.getUserName(),
-                    productionRequest.getString("calvalus.output.dir") + File.separator + minDateStr);
+            outputDir = getFileSystemService().getQualifiedPath(productionRequest.getUserName(),
+                                                                productionRequest.getString("calvalus.output.dir") + File.separator + minDateStr);
         } catch (IOException e) {
             throw new ProductionException(e);
         }
@@ -69,13 +69,6 @@ public class MRProductionType extends HadoopProductionType {
         processorProductionRequest.configureProcessor(jobConfig);
 
         setInputLocationParameters(productionRequest, jobConfig);
-        if (productionRequest.getParameters().containsKey("inputPath")) {
-            jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-        } else if (productionRequest.getParameters().containsKey("inputTable")) {
-            jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-        } else {
-            throw new ProductionException("missing request parameter inputPath or inputTable");
-        }
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, minDateStr);
         jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, maxDateStr);
@@ -93,31 +86,17 @@ public class MRProductionType extends HadoopProductionType {
 
         jobConfig.set("mapreduce.inputformat.class", productionRequest.getString("calvalus.mapreduce.inputformat.class", defaultInputFormat.getName()));
         jobConfig.set("mapreduce.map.class", productionRequest.getString("calvalus.mapreduce.map.class"));
-
-        String mapOutputKey = productionRequest.getString("calvalus.mapred.mapoutput.key.class", null);
-        if (mapOutputKey != null) {
-            jobConfig.set("mapred.mapoutput.key.class", mapOutputKey);
-            jobConfig.set("mapred.mapoutput.value.class", productionRequest.getString("calvalus.mapred.mapoutput.value.class"));
-        }
-
+        jobConfig.set("mapred.mapoutput.key.class", productionRequest.getString("calvalus.mapred.mapoutput.key.class"));
+        jobConfig.set("mapred.mapoutput.value.class", productionRequest.getString("calvalus.mapred.mapoutput.value.class"));
         jobConfig.set("mapreduce.partitioner.class", productionRequest.getString("calvalus.mapreduce.partitioner.class"));
-        String reducerClass = productionRequest.getString("calvalus.mapreduce.reduce.class", null);
-        boolean doReduce = reducerClass != null;
-        if (doReduce) {
-            jobConfig.set("mapreduce.reduce.class", reducerClass);
-            jobConfig.set("mapred.output.key.class", productionRequest.getString("calvalus.mapred.output.key.class"));
-            jobConfig.set("mapred.output.value.class", productionRequest.getString("calvalus.mapred.output.value.class"));
-            jobConfig.set("mapred.reduce.tasks", productionRequest.getString("calvalus.mapred.reduce.tasks", "8"));
-        } else {
-            jobConfig.set("mapred.reduce.tasks", productionRequest.getString("calvalus.mapred.reduce.tasks", "0"));
-        }
+        jobConfig.set("mapreduce.reduce.class", productionRequest.getString("calvalus.mapreduce.reduce.class"));
+        jobConfig.set("mapred.output.key.class", productionRequest.getString("calvalus.mapred.output.key.class"));
+        jobConfig.set("mapred.output.value.class", productionRequest.getString("calvalus.mapred.output.value.class"));
         jobConfig.set("mapreduce.outputformat.class", productionRequest.getString("calvalus.mapreduce.outputformat.class", SequenceFileOutputFormat.class.getName()));
 
-        boolean doL3 = productionRequest.getString(JobConfigNames.CALVALUS_L3_PARAMETERS, null) != null;
-        if (doL3) {
-            String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
-            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
-        }
+        jobConfig.set("mapred.reduce.tasks", productionRequest.getString("calvalus.mapred.reduce.tasks", "8"));
+        String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
+        jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, "[" + minDateStr + ":" + maxDateStr + "]");
@@ -130,18 +109,18 @@ public class MRProductionType extends HadoopProductionType {
         boolean autoStaging = productionRequest.isAutoStaging();
 
         return new Production(productionId,
-                productionName,
-                outputDir,
-                stagingDir,
-                autoStaging,
-                productionRequest,
-                workflow);
+                              productionName,
+                              outputDir,
+                              stagingDir,
+                              autoStaging,
+                              productionRequest,
+                              workflow);
     }
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                getStagingService().getStagingDir());
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+                               getStagingService().getStagingDir());
     }
 }

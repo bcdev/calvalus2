@@ -20,10 +20,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.util.Calendar;
 
 /**
@@ -86,7 +88,7 @@ public class InventoryLineReport {
         if (!fileSystem.exists(path)) {
             return null;
         }
-        InputStreamReader reader = new InputStreamReader(fileSystem.open(path));
+        Reader reader = new BufferedReader(new InputStreamReader(fileSystem.open(path)));
         try {
             return ProductInventory.createInventory(reader);
         } finally {

@@ -54,19 +54,19 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("L2 Subset");
 
         subsetProduct = createSubset();
         if (subsetProduct == null ||
                 subsetProduct.getSceneRasterWidth() == 0 ||
                 subsetProduct.getSceneRasterHeight() == 0) {
-            return 0;
+            return false;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
                 subsetProduct.getSceneRasterWidth(),
                 subsetProduct.getSceneRasterHeight()));
-        return 1;
+        return true;
     }
 
     @Override
@@ -99,14 +99,18 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected void saveTargetProduct(Product product, ProgressMonitor pm) throws IOException {
-        int tileHeight = DEFAULT_TILE_HEIGHT;
-        Dimension preferredTileSize = product.getPreferredTileSize();
-        if (preferredTileSize != null) {
-            tileHeight = preferredTileSize.height;
+        if (product != null) {
+            int tileHeight = DEFAULT_TILE_HEIGHT;
+            Dimension preferredTileSize = product.getPreferredTileSize();
+            if (preferredTileSize != null) {
+                tileHeight = preferredTileSize.height;
+            } else {
+                product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
+            }
+            StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath(), tileHeight);
         } else {
-            product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
+            getLogger().warning("No 'targetProduct' set. Nothing to save.");
         }
-        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath(), tileHeight);
     }
 
     private Path getWorkOutputProductPath() throws IOException {
@@ -124,7 +128,10 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected Product createSubset() throws IOException {
-        Product product = getInputProduct();
+        return createSubset(getInputProduct());
+    }
+
+    protected Product createSubset(Product product) throws IOException {
         // full region
         Rectangle srcProductRect = getInputRectangle();
         if (srcProductRect == null ||

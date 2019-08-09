@@ -1,6 +1,6 @@
 productionType: MA
 calvalus.processor.package: beam-meris-radiometry
-calvalus.processor.version: 1.0-SNAPSHOT
+calvalus.processor.version: 1.0  
 calvalus.input.format: BEAM-DIMAP
 calvalus.output.dir: hdfs://master00:9000/calvalus/outputs/meris-l2beam-99
 calvalus.input:

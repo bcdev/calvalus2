@@ -8,9 +8,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.text.SimpleDateFormat;
+import java.awt.*;
 
 /**
  * TODO add API doc
@@ -18,7 +16,6 @@ import java.text.SimpleDateFormat;
  * @author Martin Boettcher
  */
 public class WriterTester {
-    private static SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = new Configuration();

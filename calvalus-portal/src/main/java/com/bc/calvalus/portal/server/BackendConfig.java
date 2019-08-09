@@ -38,7 +38,8 @@ public class BackendConfig {
         Map<String, String> configMap = loadConfig(servletContext);
 
         this.configMap = configMap;
-        this.localContextDir = new File(servletContext.getRealPath("."));
+        String realPath = servletContext.getRealPath(".");
+        this.localContextDir = realPath != null ? new File(realPath) : null;
 
         // Init mandatory parameters - absence is not acceptable.
         this.productionServiceFactoryClassName = getProperty("calvalus.portal.productionServiceFactory.class");

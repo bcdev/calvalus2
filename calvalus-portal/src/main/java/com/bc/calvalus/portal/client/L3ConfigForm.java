@@ -40,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
 
 /**
  * Demo view that lets users submit a new L3 production.
@@ -130,7 +128,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.addRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0);
+                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
             }
         });
 
@@ -138,7 +136,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.removeSelectedRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0);
+                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
             }
         });
         removeVariableButton.setEnabled(false);
@@ -147,7 +145,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.addRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0);
+                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
             }
         });
 
@@ -155,9 +153,10 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.removeSelectedRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0);
+                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
             }
         });
+        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
 
         variableTable.addValueChangeHandler(new ValueChangeHandler<L3VariableTable.ConfiguredVariable>() {
             @Override
@@ -192,7 +191,8 @@ public class L3ConfigForm extends Composite {
         });
         compositingType.addItem(COMPOSITING_TYPE_BINNING);
         compositingType.addItem(COMPOSITING_TYPE_MOSAICKING);
-        compositingType.addItem(COMPOSITING_TYPE_EPSG_3067);
+        // disblaed until fully supported
+//        compositingType.addItem(COMPOSITING_TYPE_EPSG_3067);
         compositingType.setSelectedIndex(0);
 
         targetWidth.setEnabled(false);
@@ -239,7 +239,7 @@ public class L3ConfigForm extends Composite {
 
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
-            periodCount.setValue(getPeriodCount(minDate,
+            periodCount.setValue(L3ConfigUtils.getPeriodCount(minDate,
                                                 maxDate,
                                                 steppingPeriodLength.getValue(),
                                                 compositingPeriodLength.getValue()));
@@ -261,7 +261,7 @@ public class L3ConfigForm extends Composite {
     }
 
     private void updateTargetSize() {
-        int[] targetSize = getTargetSizeEstimation(regionBounds, resolution.getValue());
+        int[] targetSize = L3ConfigUtils.getTargetSizeEstimation(regionBounds, resolution.getValue());
         targetWidth.setValue(targetSize[0]);
         targetHeight.setValue(targetSize[1]);
     }
@@ -459,5 +459,63 @@ public class L3ConfigForm extends Composite {
     private String getCompositingType() {
         int index = compositingType.getSelectedIndex();
         return compositingType.getValue(index);
+    }
+
+    public void setValues(Map<String, String> parameters) {
+        String maskExprValue = parameters.get("maskExpr");
+        if (maskExprValue != null) {
+            maskExpr.setValue(maskExprValue);
+        }
+        String periodLengthValue = parameters.get("periodLength");
+        if (periodLengthValue != null) {
+            steppingPeriodLength.setValue(Integer.valueOf(periodLengthValue), true);
+        }
+        String compositingPeriodLengthValue = parameters.get("compositingPeriodLength");
+        if (compositingPeriodLengthValue != null) {
+            compositingPeriodLength.setValue(Integer.valueOf(compositingPeriodLengthValue), true);
+        }
+        String compositingTypeValue = parameters.get("compositingType");
+        for (int i = 0; i < compositingType.getItemCount(); i++) {
+            if (compositingType.getValue(i).equals(compositingTypeValue)) {
+                compositingType.setSelectedIndex(i);
+                break;
+            }
+        }
+        // TODO handle failure
+        String resolutionValue = parameters.getOrDefault("resolution", "9.28");
+        resolution.setValue(Double.valueOf(resolutionValue), true);
+        String superSamplingValue = parameters.getOrDefault("superSampling", "1");
+        superSampling.setValue(Integer.valueOf(superSamplingValue), true);
+
+        variableTable.getVariableList().clear();
+        String eCountValue = parameters.get("expression.count");
+        if (eCountValue != null) {
+            int numExpr = Integer.valueOf(eCountValue);
+            for (int i = 0; i < numExpr; i++) {
+                String vName = parameters.get("expression." + i + ".variable");
+                String vExpr = parameters.get("expression." + i + ".expression");
+                if (vName != null && vExpr != null) {
+                    variableTable.addRow(vName, vExpr);
+                }
+            }
+        }
+
+        aggregatorTable.getAggregatorList().clear();
+        String vCountValue = parameters.get("variables.count");
+        if (vCountValue != null) {
+            int numAggs = Integer.valueOf(vCountValue);
+
+            for (int vIndex = 0; vIndex < numAggs; vIndex++) {
+                String aggName = parameters.get("variables." + vIndex + ".aggregator");
+                int paramCount = Integer.valueOf(parameters.get("variables." + vIndex + ".parameter.count"));
+                String[] names = new String[paramCount];
+                String[] values = new String[paramCount];
+                for (int pIndex = 0; pIndex < paramCount; pIndex++) {
+                    names[pIndex] = parameters.get("variables." + vIndex + ".parameter." + pIndex + ".name");
+                    values[pIndex] = parameters.get("variables." + vIndex + ".parameter." + pIndex + ".value");
+                }
+                aggregatorTable.addRow(aggName, names, values);
+            }
+        }
     }
 }

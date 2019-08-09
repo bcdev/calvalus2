@@ -14,7 +14,7 @@ public class DateRangeTest {
 
     @Test
     public void testToString() throws Exception {
-        DateFormat dateFormat = DateRange.createDateFormat();
+        DateFormat dateFormat = DateRange.DATE_FORMAT;
         Date minDate = dateFormat.parse("1245-04-22");
         Date maxDate = dateFormat.parse("1245-04-23");
         DateRange dateRange = new DateRange(minDate, maxDate);
@@ -29,7 +29,7 @@ public class DateRangeTest {
     @Test
     public void testParseDateRange() throws Exception {
         DateRange dateRange = DateRange.parseDateRange("[1245-04-22:1245-04-23]");
-        DateFormat dateFormat = DateRange.createDateFormat();
+        DateFormat dateFormat = DateRange.DATE_FORMAT;
         Date expectedStartDate = dateFormat.parse("1245-04-22");
         Date expectedStopDate = dateFormat.parse("1245-04-23");
         assertEquals(expectedStartDate, dateRange.getStartDate());

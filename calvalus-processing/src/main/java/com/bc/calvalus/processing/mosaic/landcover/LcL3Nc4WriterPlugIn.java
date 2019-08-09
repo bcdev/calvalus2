@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.core.dataio.EncodeQualification;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -38,7 +39,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
@@ -83,11 +83,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     private class LCMainPart implements ProfileInitPartWriter {
 
-        private final SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-
-        LCMainPart() {
-            COMPACT_ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
+        private final SimpleDateFormat COMPACT_ISO_FORMAT = DateUtils.createDateFormat("yyyyMMdd'T'HHmmss'Z'");
 
         private LcL3SensorConfig sensorConfig = null;
 
@@ -103,13 +99,14 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             }
             int tileY = product.getMetadataRoot().getAttributeInt("tileY");
             int tileX = product.getMetadataRoot().getAttributeInt("tileX");
-            float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
+            //float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
+            float macroTileSize = "MSI".equals(sensor) ? 1.0f : 5.0f;
             float latMax = 90.0f - macroTileSize * tileY;
             float latMin = latMax - macroTileSize;
             float lonMin = -180.0f + macroTileSize * tileX;
             float lonMax = lonMin + macroTileSize;
 
-            String tileName = LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
+            String tileName = "MSI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
             String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
             String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
@@ -197,17 +194,21 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
-            final ArrayByte.D1 valids = new ArrayByte.D1(6);
+            final ArrayByte.D1 valids = new ArrayByte.D1(10);
             valids.set(0, (byte) 0);
             valids.set(1, (byte) 1);
             valids.set(2, (byte) 2);
             valids.set(3, (byte) 3);
             valids.set(4, (byte) 4);
             valids.set(5, (byte) 5);
+            valids.set(6, (byte) 11);
+            valids.set(7, (byte) 12);
+            valids.set(8, (byte) 14);
+            valids.set(9, (byte) 15);
             variable.addAttribute("flag_values", valids);
-            variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow");
+            variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow haze bright temporal_cloud dark");
             variable.addAttribute("valid_min", 0);
-            variable.addAttribute("valid_max", 5);
+            variable.addAttribute("valid_max", 15);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)0);
 
             StringBuffer ancillaryVariables = new StringBuffer("current_pixel_state");

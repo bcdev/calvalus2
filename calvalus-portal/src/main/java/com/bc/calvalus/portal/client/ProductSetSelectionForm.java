@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.Widget;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+
 import java.util.Map;
 
 /**
@@ -95,18 +96,8 @@ public class ProductSetSelectionForm extends Composite {
         predefinedProductSets.addValueChangeHandler(valueChangeHandler);
         userProductionProductSets.addValueChangeHandler(valueChangeHandler);
         allProductionProductSets.addValueChangeHandler(valueChangeHandler);
-        userProductionProductSets.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                if (portal.withPortalFeature("otherSets")) {
-                    allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
-                }
-            }
-        });
 
-        //if (! portal.withPortalFeature("otherSets")) {
-        allProductionProductSets.setEnabled(false);
-        //}
+        allProductionProductSets.setEnabled(portal.withPortalFeature("otherSets"));
         updateListBox(portal.getProductSets());
         updateDetailsView();
 
@@ -242,6 +233,31 @@ public class ProductSetSelectionForm extends Composite {
         }
         return parameters;
     }
+
+    public void setValues(Map<String, String> parameters) {
+        String geoInventory = parameters.get("geoInventory");
+        String inputPath = parameters.get("inputPath");
+        int newSelectionIndex = -2;
+        for (int i = 0; i < currentProductSets.length; i++) {
+            DtoProductSet productSet = currentProductSets[i];
+            if ((geoInventory != null &&
+                    productSet.getGeoInventory() != null &&
+                    geoInventory.equals(productSet.getGeoInventory()))
+                    || (inputPath != null &&
+                    productSet.getPath() != null &&
+                    inputPath.equals(productSet.getPath()))) {
+                newSelectionIndex = i;
+                break;
+            }
+        }
+        // TODO handle error
+
+        if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
+            productSetListBox.setSelectedIndex(newSelectionIndex);
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
+        }
+    }
+
 
     private class UpdateProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
 

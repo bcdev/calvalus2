@@ -1,6 +1,9 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.FileSystemService;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.ServiceContainerFactory;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -66,6 +69,20 @@ public class FileUploadServlet extends HttpServlet {
             fileHandler = new InventoryFileHandler();
         }
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
+        if (getServletContext().getAttribute("serviceContainer") == null) {
+            try {
+                Class<?> productionServiceFactoryClass = Class.forName(
+                        backendConfig.getProductionServiceFactoryClassName());
+                ServiceContainerFactory serviceContainerFactory = (ServiceContainerFactory) productionServiceFactoryClass.newInstance();
+                ServiceContainer serviceContainer = serviceContainerFactory.create(backendConfig.getConfigMap(),
+                                                                                   backendConfig.getLocalAppDataDir(),
+                                                                                   backendConfig.getLocalStagingDir());
+                // Make the production servlet accessible by other servlets:
+                getServletContext().setAttribute("serviceContainer", serviceContainer);
+            } catch (Exception e) {
+                throw new ServletException(e);
+            }
+        }
         try {
             List<FileItem> items = upload.parseRequest(req);
             for (FileItem item : items) {
@@ -150,11 +167,16 @@ public class FileUploadServlet extends HttpServlet {
                 filePath = relPath + "/" + filePath;
             }
 
-            ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
+
+            ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
+            FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+
             String userName = getUserName(req).toLowerCase();
+            String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
+
             InputStream in = new BufferedInputStream(item.getInputStream(), 64 * 1024);
             try {
-                OutputStream out = new BufferedOutputStream(productionService.addUserFile(userName, filePath), 64 * 1024);
+                OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, userPath), 64 * 1024);
                 try {
                     copy(in, out);
                 } finally {

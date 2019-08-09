@@ -115,12 +115,65 @@ public interface BackendService extends RemoteService {
 
     void scpProduction(String productionId, String remotePath) throws BackendServiceException;
 
+    void saveRequest(DtoProductionRequest productionRequest) throws BackendServiceException;
+
+    void deleteRequest(String requestId) throws BackendServiceException;
+
+    DtoProductionRequest[] listRequests() throws BackendServiceException;
+
+    /**
+     * Lists files within the user's file space in the inventory.
+     *
+     * @param dirPath     A path that may contain globs ("*" or "?")
+     *
+     * @return The list of files.
+     *
+     * @throws BackendServiceException If an error occured.
+     */
     String[] listUserFiles(String dirPath) throws BackendServiceException;
 
+    /**
+     * Lists files in the inventory.
+     *
+     * @param dirPath     A path that may contain globs ("*" or "?")
+     *
+     * @return The list of files.
+     *
+     * @throws BackendServiceException If an error occured.
+     */
     String[] listSystemFiles(String dirPath) throws BackendServiceException;
 
+    /**
+     * Deletes a file from the user's file space in the inventory.
+     *
+     * @param filePath     A relative path into the user's file space.
+     *
+     * @return true, if the file could be found and removed.
+     *
+     * @throws BackendServiceException If an error occurred (file exists, but can't be removed).
+     */
     boolean removeUserFile(String filePath) throws BackendServiceException;
 
+    /**
+     * Deletes multiple files from the user's file space in the inventory.
+     *
+     * @param filePaths     A list of relative path into the user's file space.
+     *
+     * @return true, if the files could be found and removed.
+     *
+     * @throws BackendServiceException If an error occurred (file exists, but can't be removed).
+     */
+    boolean removeUserFiles(String[] filePaths) throws BackendServiceException;
+
+    /**
+     * Deletes a directory from the user's file space in the inventory.
+     *
+     * @param filePath     A relative path into the user's file space.
+     *
+     * @return true, if the directory could be found and removed.
+     *
+     * @throws BackendServiceException If an error occurred (directory exists, but can't be removed).
+     */
     boolean removeUserDirectory(String filePath) throws BackendServiceException;
 
     String checkUserRecordSource(String filePath) throws BackendServiceException;
@@ -130,4 +183,16 @@ public interface BackendService extends RemoteService {
     boolean isUserInRole(String role);
 
     DtoCalvalusConfig getCalvalusConfig();
+
+    /**
+     * Computes the periods as defined by the given parameters.
+     * The computation on the frontend is difficult, because "java.util.Calendar" is not supported 
+     * in GWT.
+     */
+    String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength);
+
+    /**
+     * Load details about the region data.
+     */
+    DtoRegionDataInfo loadRegionDataInfo(String filePath) throws BackendServiceException;
 }

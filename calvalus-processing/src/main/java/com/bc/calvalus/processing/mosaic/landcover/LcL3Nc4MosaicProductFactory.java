@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -10,17 +11,14 @@ import org.esa.snap.core.datamodel.IndexCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * The factory for creating the final mosaic product for LC-CCI
@@ -29,13 +27,8 @@ import java.util.TimeZone;
  */
 public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 
-    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
-
-    static {
-        DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        COMPACT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
+    static final SimpleDateFormat COMPACT_DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd");
 
     private final String[] outputFeatures;
     private LcL3SensorConfig sensorConfig = null;
@@ -46,6 +39,10 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 
     public static String tileName(int tileY, int tileX) {
         return String.format("h%02dv%02d", tileX, tileY);
+    }
+
+    public static String tileName3(int tileY, int tileX) {
+        return String.format("h%03dv%03d", tileX, tileY);
     }
 
     @Override
@@ -65,7 +62,7 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        final Calendar calendar = DateUtils.createCalendar();
         calendar.setTime(maxDate);
         calendar.add(Calendar.DATE, 1);
         final Date endDate = calendar.getTime();
@@ -79,7 +76,7 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         final float[] wavelength = sensorConfig.getWavelengths();
         final String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}-{2}-{3}-{4}-v{5}",
                                                   sensor, spatialResolution, temporalResolution,
-                                                  tileName(tileY, tileX), startTime,
+                                                  "MSI".equals(sensor) ? tileName3(tileY, tileX) : tileName(tileY, tileX), startTime,
                                                   version);
 
         final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);

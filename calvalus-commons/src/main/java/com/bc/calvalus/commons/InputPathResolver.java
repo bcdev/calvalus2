@@ -19,12 +19,9 @@ package com.bc.calvalus.commons;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 
 /**
  * Transforms input path patterns into input path regular-expressions.
@@ -162,7 +159,7 @@ public class InputPathResolver {
     }
 
     private Calendar createCalendar() {
-        return GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        return DateUtils.createCalendar();
     }
 
     public static List<String> getInputPathPatterns(String inputPathPattern, Date minDate, Date maxDate,

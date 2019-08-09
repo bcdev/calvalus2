@@ -17,10 +17,10 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.SystemUtils;
+import org.esa.snap.runtime.Config;
 
 import javax.media.jai.JAI;
 import java.util.Map;
@@ -50,6 +50,9 @@ public class GpfUtils {
         SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
+        String tmpDir = System.getProperties().getProperty("java.io.tmpdir");
+        Config.instance().preferences().put(SystemUtils.SNAP_CACHE_DIR_PROPERTY_NAME, tmpDir);
     }
 
     private static void initSystemProperties(Configuration configuration) {

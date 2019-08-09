@@ -13,14 +13,17 @@ mvn clean package --offline -DskipTests=true
 ===========================================================================
 Building the SNAP bundle
 
-the snap bundle fromthe distribution module is no longer used. It doesn't contain
-all modules that are required for SNAP.
+The snap bundle can either be created from a SNAP installation created with an installer for Linux,
+or from a Maven-built software tree containing snap-engine, s2tbx and s3tbx.
 
-* Instead us a local SNAP installation.
 * Execute the class org.esa.snap.runtime.BundleCreator in the module
-  snap-engine/snap-runtime this ist best done from a checked out version of snap-engine.
-  this first parameter is the directory of a SNAP installation the second the name of a zip file
-  for the bundle
+  snap-engine/snap-runtime . The first parameter is the zip file, the second one the directory of
+  a SNAP installation or built project for the bundle, e.g.
+
+for installed SNAP:
+  /opt/java/jdk1.8.0_102/bin/java -cp ./snap/modules/ext/org.esa.snap.snap-engine-utilities/org-esa-snap/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-5.0-bundle.zip /opt/viewer/snap-5.0
+for Maven-built software project:
+  /opt/java/jdk1.8.0_102/bin/java -cp ./snap/snap-engine/snap-runtime/target/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-6.0-SNAPSHOT-bundle.zip .
 
 ===========================================================================
 Software archive
@@ -42,8 +45,8 @@ tar cvzf calvalus-src-$(date +%Y-%m-%d).tgz  --exclude .git --exclude target cal
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.10-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.10-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.14-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.14-SNAPSHOT
 
 for lc-cci
 ----------
@@ -93,8 +96,8 @@ java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.4-fex /h
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.10-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.10-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.14-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.14-SNAPSHOT
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
@@ -156,5 +159,29 @@ cp -r /home/cvop/cc-patch/* webapps/ccprocessing
 # sudo mount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
 rm -rf webapps/ccprocessing/staging/
 mv temp/staging webapps/ccprocessing/
+
+===========================================================================
+BfG Portal Software
+-------------------
+
+(cd calvalus-portal/target; scp -r calvalus-portal.war www/calbfg-patch cvop@bcvm03: )
+
+ssh cvop@bcvm03
+cd /opt/apache-tomcat-7.0.53
+
+# save staging
+mv webapps/calbfg/staging temp/
+
+
+# redeploy
+rm -r webapps/calbfg.war webapps/calbfg
+mv /home/cvop/calvalus-portal.war webapps/calbfg.war
+tail -5f logs/catalina.out
+cp -r /home/cvop/calbfg-patch/* webapps/calbfg
+
+# restore staging
+rm -rf webapps/calbfg/staging/
+mv temp/staging webapps/calbfg/
+
 
 

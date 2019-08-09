@@ -21,7 +21,7 @@
             <ows:Identifier>calvalus.processor.version</ows:Identifier>
             <ows:Title>software installation package version</ows:Title>
             <wps:Data>
-                <wps:LiteralData>1.0-SNAPSHOT</wps:LiteralData>
+                <wps:LiteralData>1.0</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

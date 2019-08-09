@@ -1,0 +1,94 @@
+/** Example rules used by the template application (remove for your app) */
+
+#splashScreen {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    margin: -100px;
+}
+
+#mainPanel {
+    display: block;
+    position: relative;
+    top: 10px;
+    left: 10px;
+}
+
+.title {
+    font-family: Lucida Calligraphy, Calibri, Verdana, Arial, sans-serif;
+    color: #7b8fae;
+    font-size: 32pt;
+    font-weight: bold;
+    text-shadow: #ddd 3px 3px 1px;
+    margin: 0;
+    padding: 0 0 0 4px;
+}
+
+.subTitle {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 16pt;
+    color: #888;
+    margin: 0;
+    padding: 0 0 0 4pt;
+}
+
+.userName {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 10pt;
+    color: #AAA;
+    text-align: right;
+    width: 15%;
+    vertical-align: top;
+}
+
+.copyright {
+	background-color:#B4C1D7;
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 9pt;
+    color: #FFF;
+    text-align: center;
+    vertical-align: bottom;
+    width: 816px
+}
+
+.copyrightApp {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 9pt;
+    color: #AAA;
+    text-align: center;
+    vertical-align: bottom;
+}
+
+.loginPanelWrapper {
+    width: 816px;
+}
+
+.loginPanel {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 12pt;
+    text-align: center;
+    padding-top: 20px;
+    width: 300px;
+    margin:0px auto;
+}
+
+.headerPanel {
+    width: 816px;
+}
+
+.formPanel {
+    margin: 10px;
+    padding: 5px;
+}
+
+p,li {
+    font-family: Georgia, Times, serif;
+    font-size: 10pt;
+}
+
+
+
+
+

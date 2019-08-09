@@ -90,10 +90,10 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
                 final String record = qaElement.getAttributeString("record");
                 context.write(new Text(product.getName()), new Text(record));
             } catch (Exception exception) {
-                exception.printStackTrace();
+                //exception.printStackTrace();
                 final String record = String.format("%s\tfalse\tFailed to read product: %s",
                                                     product != null ? product.getName() : inputPath.getName(), exception.getMessage());
-                context.write(new Text(product.getName()), new Text(record));
+                context.write(new Text(processorAdapter.getInputFile().getName()), new Text(record));
             } finally {
                 processorAdapter.dispose();
             }
