@@ -74,7 +74,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.19-SNAPSHOT";
-    public static final String DEFAULT_SNAP_BUNDLE = "snap-7.0.0";
+    public static final String DEFAULT_SNAP_BUNDLE = "snap-8.0.0-SNAPSHOT";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
 
@@ -622,7 +622,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static boolean isLib(Path libPath) {
         String filename = libPath.getName();
-        return filename.endsWith(".so");
+        return filename.endsWith(".so") || filename.equals("VERSION.txt");
     }
 
 
