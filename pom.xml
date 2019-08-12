@@ -4,20 +4,25 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.14-SNAPSHOT</version>
+    <version>2.19-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
     <description>Calvalus root module</description>
 
     <properties>
-        <hadoop.version>2.7.1</hadoop.version>
-        <calvalus.version>2.14-SNAPSHOT</calvalus.version>
+        <hadoop.version>3.2.1-BC</hadoop.version>
+        <calvalus.version>2.19-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>7.0.0</snap.version>
-        <ceres.version>7.0.0</ceres.version>
-        <geotools.version>2.7.4</geotools.version>
+        <snap.version>8.0.0-SNAPSHOT</snap.version>
+        <ceres.version>8.0.0-SNAPSHOT</ceres.version>
+        <seadas.reader.version>1.8</seadas.reader.version>
+        <probav.reader.version>2.1.0</probav.reader.version>
+        <geo-inventory-version>0.6.1</geo-inventory-version>
+        <geotools.version>17.1</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <ncsa.version>2.7.1</ncsa.version>
+        <ncsaj.version>2.7</ncsaj.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -30,15 +35,17 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
+        <module>calvalus-snap</module>
+        <module>calvalus-wps-impl</module>
         <module>calvalus-reporting</module>
+        <module>calvalus-rest</module>
     </modules>
 
     <repositories>
-<!--
         <repository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -48,11 +55,10 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
-        -->
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -68,6 +74,29 @@
             <url>http://download.osgeo.org/webdav/geotools/</url>
         </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <distributionManagement>
+        <repository>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/releases/</url>
+            <uniqueVersion>true</uniqueVersion>
+        </repository>
+        <snapshotRepository>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/snapshots/</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+    </distributionManagement>
 
     <build>
         <plugins>
@@ -227,156 +256,141 @@
 
             <!--  SNAP -->
 
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-core</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-runtime</artifactId><version>${snap.version}</version></dependency>
+            <!--<dependency><groupId>org.esa.snap</groupId><artifactId>snap-engine-kit</artifactId><version>${snap.version}</version></dependency>-->
+            <!--<dependency><groupId>org.esa.snap</groupId><artifactId>snap-engine-utilities</artifactId><version>${snap.version}</version></dependency>-->
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-gpf</artifactId><version>${snap.version}</version></dependency>
+
+            <!-- SNAP Extension Modules -->
+
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-arcbingrid-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-bigtiff</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-binning</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-classification</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-cluster-analysis</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-collocation</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-csv-dataio</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-dem</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envi-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envisat-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-getasse30-dem</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-geotiff</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-hdf5-writer</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-land-cover</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-ndvi</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-netcdf</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pconvert</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pgx-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pixel-extraction</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-python</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-raster</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-rtp-codec</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-smart-configurator</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-statistics</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-temporal-percentile</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-unmix</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-watermask</artifactId><version>${snap.version}</version></dependency>
+            <!--<dependency><groupId>org.esa.snap</groupId><artifactId>blue-marble-worldmap</artifactId></dependency>-->
+            <!--<dependency><groupId>org.esa.snap</groupId><artifactId>globcover-worldmap</artifactId></dependency>-->
+            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-sta</artifactId><version>${snap.version}</version></dependency>
+
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>lib-hdf</artifactId><version>${ncsa.version}</version></dependency>
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdfobj</artifactId><version>${ncsaj.version}</version></dependency>
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId><version>${ncsaj.version}</version></dependency>
+            <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId><version>${ncsaj.version}</version></dependency>
+
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-avhrr-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-landsat-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-merisl3-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-modis-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-rad2refl</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-sentinel3-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId><version>${seadas.reader.version}</version></dependency>
+            <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId><version>${probav.reader.version}</version></dependency>
+
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-openjpeg</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-commons</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot6-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-rapideye-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-deimos-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-sta-adapters-help</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-radiometric-indices</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-reflectance-to-radiance</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-gdal</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-gdal-reader</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-grm</artifactId><version>${snap.version}</version></dependency>
+
+            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-commons</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-io</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1-ui</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-utilities</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-rcp</artifactId><version>${snap.version}</version></dependency>
+
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-core</artifactId>
-                <version>${snap.version}</version>
+                <groupId>org.xeustechnologies</groupId>
+                <artifactId>jtar</artifactId>
+                <version>1.1</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-gpf</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.thoughtworks.xstream</groupId>
+                <artifactId>xstream</artifactId>
+                <version>1.4.8</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-binning</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.googlecode.json-simple</groupId>
+                <artifactId>json-simple</artifactId>
+                <version>1.1.1</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-envisat-reader</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.2.3</version>
+                <!--<version>2.9.5</version>-->
             </dependency>
             <dependency>
-                <groupId>org.esa.s3tbx</groupId>
-                <artifactId>s3tbx-avhrr-reader</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>2.2.3</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.s3tbx</groupId>
-                <artifactId>s3tbx-landsat-reader</artifactId>
-                <version>${snap.version}</version>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.2.3</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-netcdf</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>jcl-over-slf4j</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.google.protobuf</groupId>
-                        <artifactId>protobuf-java</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.2.3</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>1.19</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-geotiff</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-servlet</artifactId>
+                <version>1.19</version>
             </dependency>
             <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-bigtiff</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-ui</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.esa.snap</groupId>
-                        <artifactId>snap-visat-rcp</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>com.sun.jersey</groupId>
+                <artifactId>jersey-json</artifactId>
+                <version>1.19</version>
             </dependency>
 
             <dependency>
@@ -396,31 +410,17 @@
                         <groupId>javax.media</groupId>
                         <artifactId>jai_imageio</artifactId>
                     </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-runtime</artifactId>
-                <version>${snap.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.snap</groupId>
-                <artifactId>snap-collocation</artifactId>
-                <version>${snap.version}</version>
-                <exclusions>
                     <exclusion>
-                        <groupId>javax.media</groupId>
-                        <artifactId>jai_core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.media</groupId>
-                        <artifactId>jai_codec</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.media</groupId>
-                        <artifactId>jai_imageio</artifactId>
+                        <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hsqldb</groupId>
+                <artifactId>hsqldb</artifactId>
+                <version>2.3.0</version>
             </dependency>
 
             <!--  Test -->
@@ -441,80 +441,44 @@
 
             <!--  Hadoop -->
 
-<!--
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-client</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-common</artifactId>
-                <artifactId>hadoop-client</artifactId>
                 <version>${hadoop.version}</version>
--->
-                <!--
                 <exclusions>
                     <exclusion>
-                        <groupId>org.eclipse.jdt</groupId>
-                        <artifactId>core</artifactId>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty-util</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-runtime</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-compiler</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jsp-api-2.1</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jsp-2.1</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-el</groupId>
-                        <artifactId>commons-el</artifactId>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-core</artifactId>
                     </exclusion>
                 </exclusions>
-                -->
-<!--
             </dependency>
-        -->
-<!--
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                <version>2.6.0</version>
-            </dependency>
--->
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-client</artifactId>
-                <version>${hadoop.version}</version>
-            </dependency>
-
-            <!-- not used currently
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-test</artifactId>
-                <version>${hadoop.version}</version>
-                <scope>test</scope>
-            </dependency>
-            -->
 
             <!-- Stuff used by Hadoop but NOT declared as dependencies in the Hadoop POM. Try to get rid of these later! -->
 
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-mapper-asl</artifactId>
-                <version>1.5.2</version>
+                <version>1.9.13</version>
             </dependency>
 
             <dependency>
@@ -532,6 +496,7 @@
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
+            <!--
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -542,6 +507,7 @@
                 <artifactId>slf4j-jdk14</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
+            -->
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty</artifactId>
@@ -557,8 +523,12 @@
             <dependency>
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
-                <version>20020423</version>
-                <scope>test</scope>
+                <version>3.1</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.4</version>
             </dependency>
             <dependency>
                 <groupId>log4j</groupId>
@@ -610,7 +580,18 @@
             <dependency>
                 <groupId>com.bc</groupId>
                 <artifactId>geo-inventory</artifactId>
-                <version>0.1-SNAPSHOT</version>
+                <version>${geo-inventory-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>23.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>2.11.0</version>
             </dependency>
 
             <!-- Jar Archiver -->

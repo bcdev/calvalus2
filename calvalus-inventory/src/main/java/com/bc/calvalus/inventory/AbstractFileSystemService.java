@@ -17,10 +17,13 @@
 package com.bc.calvalus.inventory;
 
 import com.bc.calvalus.JobClientsMap;
+import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.security.AccessControlException;
 
 import java.io.IOException;
@@ -54,7 +57,6 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     @Override
     public String[] globPaths(String username, List<String> pathPatterns) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
-
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
@@ -66,6 +68,18 @@ public abstract class AbstractFileSystemService implements FileSystemService {
             result[i] = fileStatuses.get(i).getPath().toString();
         }
         return result;
+    }
+
+    @Override
+    public FileStatus[] globFiles(String username, List<String> pathPatterns) throws IOException {
+        Configuration conf = jobClientsMap.getConfiguration();
+        Pattern pattern = createPattern(pathPatterns, conf);
+        String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
+        Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
+        List<FileStatus> fileStatuses = new ArrayList<>(1000);
+        collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
+        return fileStatuses.toArray(new FileStatus[0]);
     }
 
     @Override
@@ -101,13 +115,22 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     }
 
     @Override
-    public boolean pathExists(String path) throws IOException {
+    public boolean pathExists(String path, String username) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
 
-        Path p = new Path(path);
-        FileSystem fileSystem = p.getFileSystem(conf);
+        FileSystem fileSystem;
+        if (username != null) {
+            try {
+                fileSystem = FileSystem.get(new Path(path).toUri(), conf, username);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Unable to access file system.", e);
+            }
+        } else {
+            fileSystem = new Path(path).getFileSystem(conf);
+        }
 
-        return fileSystem.exists(p);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.exists(qualifiedPath);
     }
 
     @Override
@@ -117,6 +140,8 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         return fileSystem.open(qualifiedPath);
     }
 
+    // use globFileStatusIterator instead 
+    @Deprecated
     public FileStatus[] globFileStatuses(List<String> pathPatterns, Configuration conf) throws IOException {
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
@@ -125,6 +150,22 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         return collectFileStatuses(commonFS, qualifiedPath, pattern);
     }
 
+    public RemoteIterator<LocatedFileStatus> globFileStatusIterator(List<String> pathPatterns, Configuration conf, FileSystemPathIterator.FileStatusFilter extraFilter) throws IOException {
+        Pattern pattern = createPattern(pathPatterns, conf);
+        String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        FileSystem fs = new Path(commonPathPrefix).getFileSystem(conf);
+        Path rootPath = makeQualified(fs, commonPathPrefix);
+        List<FileSystemPathIterator.FileStatusFilter> acceptFilter = new ArrayList<>();
+        acceptFilter.add(FileSystemPathIterator.HIDDEN_FILTER);
+        if (pattern != null) {
+            acceptFilter.add(FileSystemPathIterator.filterPattern(pattern));
+        }
+        if (extraFilter != null) {
+            acceptFilter.add(extraFilter);
+        }
+        return new FileSystemPathIterator(fs, acceptFilter).listFiles(rootPath, true);
+    }
+    
     public Path makeQualified(FileSystem fileSystem, String child) {
         Path path = new Path(child);
         if (!path.isAbsolute()) {
@@ -134,7 +175,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     }
 
     public FileSystem getFileSystem(String username) throws IOException {
-        return jobClientsMap.getJobClient(username).getFs();
+        return jobClientsMap.getFileSystem(username);
     }
 
     private Pattern createPattern(List<String> inputRegexs, Configuration conf) throws IOException {
@@ -145,7 +186,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         for (String regex : inputRegexs) {
             FileSystem fileSystem = new Path(regex).getFileSystem(conf);
             Path qualifiedPath = makeQualified(fileSystem, regex);
-            hugePattern.append(qualifiedPath.toString());
+            hugePattern.append(qualifiedPath.toUri().getPath().toString());
             hugePattern.append("|");
         }
         hugePattern.setLength(hugePattern.length() - 1);
@@ -177,7 +218,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
                     if (fStat.isDirectory()) {
                         collectFileStatuses(fileSystem, fStat.getPath(), pattern, result);
                     } else {
-                        String fPath = fStat.getPath().toString();
+                        String fPath = fStat.getPath().toUri().getPath();
                         if (matcher != null) {
                             matcher.reset(fPath);
                             if (matcher.matches()) {
@@ -231,10 +272,14 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     public static String getUserPath(String userName, String dirPath) {
         String path;
         if (dirPath.isEmpty() || "/".equals(dirPath)) {
-            path = String.format("home/%s", userName.toLowerCase());
+            path = String.format("home/%s", userName);
         } else {
-            path = String.format("home/%s/%s", userName.toLowerCase(), dirPath);
+            path = String.format("home/%s/%s", userName, dirPath);
         }
         return path;
+    }
+
+    public JobClientsMap getJobClientsMap() {
+        return jobClientsMap;
     }
 }

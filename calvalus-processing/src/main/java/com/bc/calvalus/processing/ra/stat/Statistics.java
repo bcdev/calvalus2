@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ra.stat;
 
-import javax.media.jai.Histogram;
+//import javax.media.jai.Histogram;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,20 +20,21 @@ import java.util.List;
 class Statistics {
 
 
-    private int numValid;
+    private long numValid;
     private double min;
     private double max;
     private double sum;
     private double sumSQ;
-    private int geomNumValid;
+    private long geomNumValid;
     private double geomLogSum;
 
-    private final Histogram histogram;
-    private int belowHistogram;
-    private int aboveHistogram;
+    private final Histogram64 histogram;
+    private long belowHistogram;
+    private long aboveHistogram;
 
     private final int[] percentiles;
     private final Accumulator accu;
+    private final boolean binValuesAsRatio;
 
     Statistics() {
         this(0, Double.NaN, Double.NaN);
@@ -42,15 +43,16 @@ class Statistics {
     Statistics(int numBins,
                    double lowValue,
                    double highValue) {
-        this(numBins, lowValue, highValue, new int[]{5,25,50,75,95});
+        this(numBins, lowValue, highValue, new int[]{5,25,50,75,95}, false);
     }
 
     Statistics(int numBins,
                double lowValue,
                double highValue,
-               int[] percentiles) {
+               int[] percentiles,
+               boolean binValuesAsRatio) {
         if (numBins > 0) {
-            histogram = new Histogram(numBins, lowValue, highValue, 1);
+            histogram = new Histogram64(numBins, lowValue, highValue, 1);
         } else {
             histogram = null;
         }
@@ -61,6 +63,7 @@ class Statistics {
             this.percentiles = null;
             this.accu = null;
         }
+        this.binValuesAsRatio = binValuesAsRatio;
         reset();
     }
 
@@ -80,7 +83,7 @@ class Statistics {
             }
         }
         if (histogram != null) {
-            final int[] bins = histogram.getBins(0);
+            final long[] bins = histogram.getBins(0);
             final double lowValue = histogram.getLowValue(0);
             final double highValue = histogram.getHighValue(0);
             final double binWidth = (highValue - lowValue) / bins.length;
@@ -115,6 +118,8 @@ class Statistics {
         geomLogSum = 0;
         if (histogram != null) {
             histogram.clearHistogram();
+            belowHistogram = 0;
+            aboveHistogram = 0;
         }
         if (accu != null) {
             accu.clear();
@@ -156,7 +161,7 @@ class Statistics {
 
     public List<String> getStatisticsRecords() {
         List<String> stats = new ArrayList<>();
-        stats.add(Integer.toString(numValid));
+        stats.add(Long.toString(numValid));
         if (numValid > 0) {
             final double arithMean = sum / numValid;
             final double sigmaSqr = sumSQ / numValid - arithMean * arithMean;
@@ -188,14 +193,24 @@ class Statistics {
     public List<String> getHistogramRecords() {
         List<String> stats = new ArrayList<>();
         if (histogram != null) {
-            stats.add(Integer.toString(belowHistogram));
-            stats.add(Integer.toString(aboveHistogram));
+            if (! binValuesAsRatio) {
+                stats.add(Long.toString(belowHistogram));
+                stats.add(Long.toString(aboveHistogram));
+            } else {
+                stats.add(Double.toString(((double)belowHistogram) / numValid));
+                stats.add(Double.toString(((double)aboveHistogram) / numValid));
+            }
             stats.add(Integer.toString(histogram.getNumBins(0)));
             stats.add(Double.toString(histogram.getLowValue(0)));
             stats.add(Double.toString(histogram.getHighValue(0)));
-            int[] bins = histogram.getBins(0);
-            for (int bin : bins) {
-                stats.add(Integer.toString(bin));
+            long[] bins = histogram.getBins(0);
+            for (long bin : bins) {
+                if (! binValuesAsRatio) {
+                    stats.add(Long.toString(bin));
+                } else {
+                    stats.add(Double.toString(((double) bin) / numValid));
+                    
+                }
             }
         }
         return stats;

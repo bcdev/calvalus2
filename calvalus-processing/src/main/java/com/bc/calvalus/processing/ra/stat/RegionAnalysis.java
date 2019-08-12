@@ -22,13 +22,15 @@ public class RegionAnalysis {
     private final Statistics[] stats;
     private final StatisticsWriter statisticsWriter;
     private final List<String> regionNameList;
+    private final boolean withProductNames;
 
     private String currentRegionName;
     private long currentTime;
     private int numPasses;
-    private int numObs;
+    private long numObs;
+    private String productName = null;
 
-    public RegionAnalysis(RADateRanges dateRanges, RAConfig raConfig, WriterFactory writerFactor) throws IOException, InterruptedException {
+    public RegionAnalysis(RADateRanges dateRanges, RAConfig raConfig, boolean binValuesAsRatio, WriterFactory writerFactor) throws IOException, InterruptedException {
         this.dateRanges = dateRanges;
         this.dataRangeHandler = new HandleAll(dateRanges.numRanges());
         String[] internalRegionNames = raConfig.getInternalRegionNames();
@@ -39,12 +41,13 @@ public class RegionAnalysis {
         stats = new Statistics[bandConfigs.length];
         for (int i = 0; i < bandConfigs.length; i++) {
             RAConfig.BandConfig bConfig = bandConfigs[i];
-            stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getMin(), bConfig.getMax(), raConfig.getPercentiles());
+            stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getMin(), bConfig.getMax(), raConfig.getPercentiles(), binValuesAsRatio);
         }
+        withProductNames = raConfig.withProductNames();
         statisticsWriter = new StatisticsWriter(raConfig, stats, writerFactor);
     }
 
-    public void addData(long time, int numObs, float[][] samples) throws IOException {
+    public void addData(long time, int numObs, float[][] samples, String... productNames) throws IOException {
         int newDateRange = dateRanges.findIndex(time);
         if (newDateRange == -1) {
             String out_ouf_range_date = dateRanges.format(time);
@@ -53,32 +56,40 @@ public class RegionAnalysis {
             if (newDateRange != dataRangeHandler.current()) {
                 writeCurrentRecord();
                 resetRecord();
-                writeEmptyRecords(regionHandler.current(), dataRangeHandler.next(newDateRange));
+                writeEmptyRecords(regionHandler.current(), dataRangeHandler.preceedingUnhandledIndices(newDateRange));
             }
             accumulate(time, numObs, samples);
+            productName = productNames.length > 0 ? productNames[0] : null;
         }
     }
 
-    public void startRegion(String regionName) throws IOException {
+    public void startRegion(int regionId, String regionName) throws IOException {
         dataRangeHandler.reset();
-        for (int regionIndex : regionHandler.next(regionNameList.indexOf(regionName))) {
+        //for (int regionIndex : regionHandler.preceedingUnhandledIndices(regionNameList.indexOf(regionName))) {
+        for (int regionIndex : regionHandler.preceedingUnhandledIndices(regionId)) {
             this.currentRegionName = regionNameList.get(regionIndex);
+            statisticsWriter.createWriters(currentRegionName);
             writeEmptyRecords(regionIndex, dataRangeHandler.remaining());
+            statisticsWriter.closeWriters(currentRegionName);
         }
         this.currentRegionName = regionName;
+        statisticsWriter.createWriters(currentRegionName);
     }
 
     public void endRegion() throws IOException {
         writeCurrentRecord();
         resetRecord();
         writeEmptyRecords(regionHandler.current(), dataRangeHandler.remaining());
+        statisticsWriter.closeWriters(currentRegionName);
     }
 
     public void close() throws IOException {
         dataRangeHandler.reset();
         for (int regionIndex : regionHandler.remaining()) {
             this.currentRegionName = regionNameList.get(regionIndex);
+            statisticsWriter.createWriters(currentRegionName);
             writeEmptyRecords(regionIndex, dataRangeHandler.remaining());
+            statisticsWriter.closeWriters(currentRegionName);
         }
         statisticsWriter.close();
     }
@@ -128,13 +139,16 @@ public class RegionAnalysis {
         statisticsWriter.writeRecord(regionIndex, commonStats);
     }
 
-    private List<String> getCommonStats(String dStart, String dEnd, int numPasses, int numObs) {
+    private List<String> getCommonStats(String dStart, String dEnd, int numPasses, long numObs) {
         List<String> records = new ArrayList<>();
         records.add(currentRegionName);
         records.add(dStart);
         records.add(dEnd);
+        if (withProductNames){
+            records.add(productName);
+        }
         records.add(Integer.toString(numPasses));
-        records.add(Integer.toString(numObs));
+        records.add(Long.toString(numObs));
         return records;
     }
 }

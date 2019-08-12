@@ -16,12 +16,16 @@
 
 package com.bc.calvalus.processing.beam;
 
+import org.esa.snap.core.dataio.DecodeQualification;
+import org.esa.snap.core.dataio.ProductIOPlugInManager;
+import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import java.io.File;
+
+import static org.junit.Assert.*;
 
 public class Sentinel2CalvalusReaderTest {
 
@@ -40,5 +44,14 @@ public class Sentinel2CalvalusReaderTest {
         assertEquals("14-FEB-2016 09:35:50.000000", product.getStartTime().format());
         assertEquals("14-FEB-2016 19:35:50.000000", product.getEndTime().format());
 
+    }
+
+    @Ignore
+    @Test
+    public void testRelativePaths() {
+        ProductIOPlugInManager manager = ProductIOPlugInManager.getInstance();
+        ProductReaderPlugIn readerPlugIn = manager.getReaderPlugIns("SENTINEL-2-MSI-MultiRes-UTM35N").next();
+        assertEquals(DecodeQualification.INTENDED, readerPlugIn.getDecodeQualification(new File("./S2A_MSIL1C_20160717T085602_N0204_R007_T35TPK_20160717T090142.SAFE/MTD_MSIL1C.xml").getAbsolutePath()));
+        assertEquals(DecodeQualification.INTENDED, readerPlugIn.getDecodeQualification("./S2A_MSIL1C_20160717T085602_N0204_R007_T35TPK_20160717T090142.SAFE/MTD_MSIL1C.xml"));
     }
 }

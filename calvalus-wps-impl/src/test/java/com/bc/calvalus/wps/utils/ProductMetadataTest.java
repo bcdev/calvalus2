@@ -150,8 +150,10 @@ public class ProductMetadataTest {
 
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
         when(mockProductionRequest.getString("processorName")).thenReturn("Subset");
+        when(mockProductionRequest.getString("processorName", "ra")).thenReturn("Subset");
         when(mockProductionRequest.getString("inputDataSetName")).thenReturn("Urban Footprint Global (Urban TEP)");
         when(mockProductionRequest.getString("regionWKT")).thenReturn("POLYGON((100 -10,100 0,110 0,110 -10,100 -10))");
+        when(mockProductionRequest.getString("regionWKT", null)).thenReturn("POLYGON((100 -10,100 0,110 0,110 -10,100 -10))");
         when(mockProductionRequest.getString("processorBundleVersion")).thenReturn("1.0");
         when(mockProductionRequest.getString("productionType")).thenReturn("L2Plus");
         when(mockProductionRequest.getString("outputFormat")).thenReturn("NetCDF4");

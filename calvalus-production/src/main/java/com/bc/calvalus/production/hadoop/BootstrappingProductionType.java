@@ -64,11 +64,4 @@ public class BootstrappingProductionType extends HadoopProductionType {
                               workflowItem);
     }
 
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
-
 }

@@ -7,22 +7,24 @@ import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.ContextRetrievalService;
+import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
-import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckLayoutPanel;
-import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
@@ -47,25 +49,26 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     public static final String NO_FILTER = "";
     private static final String[] VIEW_NAMES = {
-            "newsView",
-            "l2View",
-            "maView",
-            "raView",
-            "l3View",
-            "taView",
-            "freshmonView",
-            "bootstrappingView",
-            "vicariousCalibrationView",
-            "matchupComparisonView",
-            "l2ToL3ComparisonView",
-            "regionsView",
-            "requestsView",
-            "bundlesView",
-            "masksView",
-            "productionsView"
+                "newsView",
+                "l2View",
+                "maView",
+                "raView",
+                "l3View",
+                "taView",
+                "freshmonView",
+                "bootstrappingView",
+                "vicariousCalibrationView",
+                "matchupComparisonView",
+                "l2ToL3ComparisonView",
+                "regionsView",
+                "requestsView",
+                "bundlesView",
+                "masksView",
+                "productionsView"
     };
 
     private final BackendServiceAsync backendService;
+    private final ContextRetrievalServiceAsync retrievalService;
     private boolean initialised;
 
     // Data provided by various external services
@@ -88,6 +91,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private String[] queues = null;
     private MainMenu mainMenu;
     private PortalView currentView = null;
+    private String userName;
     private Map<String, OrderProductionView> productionTypeViews;
 
     public boolean withPortalFeature(String featureName) {
@@ -101,6 +105,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
+        retrievalService = GWT.create(ContextRetrievalService.class);
         productionListFiltered = true;
     }
 
@@ -127,17 +132,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
                 final BundleFilter systemFilter = new BundleFilter();
                 systemFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
-                backendService.getProcessors(systemFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_SYSTEM));
-                backendService.getAggregators(systemFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_SYSTEM));
+                backendService.getProcessors(systemFilter.toString(),
+                                             new InitProcessorsCallback(BundleFilter.PROVIDER_SYSTEM));
+                backendService.getAggregators(systemFilter.toString(),
+                                              new InitAggregatorsCallback(BundleFilter.PROVIDER_SYSTEM));
 
                 final BundleFilter userFilter = new BundleFilter();
                 userFilter.withProvider(BundleFilter.PROVIDER_USER);
-                backendService.getProcessors(userFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_USER));
-                backendService.getAggregators(userFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_USER));
+                backendService.getProcessors(userFilter.toString(),
+                                             new InitProcessorsCallback(BundleFilter.PROVIDER_USER));
+                backendService.getAggregators(userFilter.toString(),
+                                              new InitAggregatorsCallback(BundleFilter.PROVIDER_USER));
 
                 final BundleFilter allUserFilter = new BundleFilter();
                 allUserFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
-                backendService.getProcessors(allUserFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
+                backendService.getProcessors(allUserFilter.toString(),
+                                             new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 // aggregators from other users are currently not shown
                 // backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
@@ -151,7 +161,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         loadLibraries.add(LoadApi.LoadLibrary.DRAWING);
         loadLibraries.add(LoadApi.LoadLibrary.GEOMETRY);
 
-        LoadApi.go(runnable, loadLibraries, false);
+
+        //LoadApi.go(runnable, loadLibraries, false);
+        // Google API key of martin.boettcher@brockmann-consult.de for test purposes
+        LoadApi.go(runnable, loadLibraries, false, "key=AIzaSyDC6oUduMAdfWa48HkKSQyExtEGEWL2A2I");
     }
 
     @Override
@@ -204,6 +217,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
+    public ContextRetrievalServiceAsync getContextRetrievalService() {
+        return retrievalService;
+    }
+
+    @Override
     public void showView(String id) {
         mainMenu.selectView(id);
     }
@@ -231,6 +249,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return productionTypeViews.get(productionType);
     }
 
+    @Override
+    public String getUserName() {
+        return userName;
+    }
+
     private void maybeInitFrontend() {
         if (!initialised && isAllInputDataAvailable()) {
             initialised = true;
@@ -240,43 +263,43 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private PortalView createViewOf(String name) {
         switch (name) {
-            case "newsView":
-                return new FrameView(this, "NewsView", "News", "calvalus-news.html");
-            case "l2View":
-                return new OrderL2ProductionView(this);
-            case "maView":
-                return new OrderMAProductionView(this);
-            case "raView":
-                return new OrderRAProductionView(this);
-            case "l3View":
-                return new OrderL3ProductionView(this);
-            case "taView":
-                return new OrderTAProductionView(this);
-            case "freshmonView":
-                return new OrderFreshmonProductionView(this);
-            case "bootstrappingView":
-                return new OrderBootstrappingView(this);
-            case "vicariousCalibrationView":
-                return new OrderVCProductionView(this);
-            case "matchupComparisonView":
-                return new OrderMACProductionView(this);
-            case "l2ToL3ComparisonView":
-                return new OrderL2toL3ProductionView(this);
-            case "regionsView":
-                return new ManageRegionsView(this);
-            case "bundlesView":
-                return new ManageBundleView(this);
-            case "requestsView":
-                return new ManageRequestView(this);
-            case "masksView":
-                return new ManageMasksView(this);
-            case "productionsView":
-                manageProductionsView = new ManageProductionsView(this);
-                return manageProductionsView;
-            case "emptyView":
-                return new FrameView(this, "EmptyView", "Empty", "empty.html");
-            default:
-                throw new RuntimeException("unknown view " + name);
+        case "newsView":
+            return new FrameView(this, "NewsView", "News", "calvalus-news.html");
+        case "l2View":
+            return new OrderL2ProductionView(this);
+        case "maView":
+            return new OrderMAProductionView(this);
+        case "raView":
+            return new OrderRAProductionView(this);
+        case "l3View":
+            return new OrderL3ProductionView(this);
+        case "taView":
+            return new OrderTAProductionView(this);
+        case "freshmonView":
+            return new OrderFreshmonProductionView(this);
+        case "bootstrappingView":
+            return new OrderBootstrappingView(this);
+        case "vicariousCalibrationView":
+            return new OrderVCProductionView(this);
+        case "matchupComparisonView":
+            return new OrderMACProductionView(this);
+        case "l2ToL3ComparisonView":
+            return new OrderL2toL3ProductionView(this);
+        case "regionsView":
+            return new ManageRegionsView(this);
+        case "bundlesView":
+            return new ManageBundleView(this);
+        case "requestsView":
+            return new ManageRequestView(this);
+        case "masksView":
+            return new ManageMasksView(this);
+        case "productionsView":
+            manageProductionsView = new ManageProductionsView(this);
+            return manageProductionsView;
+        case "emptyView":
+            return new FrameView(this, "EmptyView", "Empty", "empty.html");
+        default:
+            throw new RuntimeException("unknown view " + name);
         }
     }
 
@@ -303,35 +326,45 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         mainMenu = new MainMenu(views);
 
         DeckLayoutPanel viewPanel = new DeckLayoutPanel();
-        viewPanel.setSize("105em", "220em");  // TODO use as minimum, and fill window size if window is larger
+        viewPanel.getElement().setClassName("view-container");
         viewPanel.setVisible(true);
         for (PortalView view : views) {
             viewPanel.add(view.asWidget());
         }
 
-        HorizontalPanel mainPanel = new HorizontalPanel();
+        Element childElement = viewPanel.getElement().getFirstChildElement();
+        while (childElement != null) {
+            childElement.getStyle().setProperty("overflow", "auto");
+            childElement = childElement.getNextSiblingElement();
+        }
+
+        FlowPanel mainPanel = new FlowPanel();
         mainPanel.add(mainMenu.getWidget());
         mainPanel.add(viewPanel);
         mainPanel.ensureDebugId("mainPanel");
 
+        Element mainMenuElement = mainMenu.getWidget().getElement();
+        mainMenuElement.setClassName("main-menu");
+        mainMenuElement.getParentElement().setClassName("main-panel-sub");
+
         SingleSelectionModel<PortalView> selectionModel = mainMenu.getSelectionModel();
         selectionModel.addSelectionChangeHandler(
-                new SelectionChangeEvent.Handler() {
-                    public void onSelectionChange(SelectionChangeEvent event) {
-                        final PortalView selected = selectionModel.getSelectedObject();
-                        if (selected != null) {
-                            if (currentView != null) {
-                                GWT.log("Now hiding: " + currentView.getTitle());
-                                currentView.onHidden();
+                    new SelectionChangeEvent.Handler() {
+                        public void onSelectionChange(SelectionChangeEvent event) {
+                            final PortalView selected = selectionModel.getSelectedObject();
+                            if (selected != null) {
+                                if (currentView != null) {
+                                    GWT.log("Now hiding: " + currentView.getTitle());
+                                    currentView.onHidden();
+                                }
+                                currentView = selected;
+                                GWT.log("Now showing: " + selected.getTitle());
+                                viewPanel.showWidget(selected.asWidget());
+                                Window.scrollTo(0, 0);
+                                selected.onShowing();
                             }
-                            currentView = selected;
-                            GWT.log("Now showing: " + selected.getTitle());
-                            viewPanel.showWidget(selected.asWidget());
-                            Window.scrollTo (0 , 0);
-                            selected.onShowing();
                         }
-                    }
-                });
+                    });
 
         removeSplashScreen();
 
@@ -358,11 +391,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private boolean isAllInputDataAvailable() {
         return regions != null
-                && productSets != null
-                && systemProcessors != null && userProcessors != null && allUserProcessors != null
-                && systemAggregators != null && userAggregators != null
-                && productions != null
-                && calvalusConfig != null;
+               && productSets != null
+               && systemProcessors != null && userProcessors != null && allUserProcessors != null
+               && systemAggregators != null && userAggregators != null
+               && productions != null
+               && calvalusConfig != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -545,6 +578,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class CalvalusConfigCallback implements AsyncCallback<DtoCalvalusConfig> {
+
         public CalvalusConfigCallback() {
         }
 
@@ -552,17 +586,18 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onSuccess(DtoCalvalusConfig config) {
             calvalusConfig = new HashMap<>();
             List<String> queueList = new ArrayList<>();
+            userName = config.getUser();
             if (config.getConfig().containsKey("calvalus.hadoop.mapreduce.job.queuename")) {
                 queueList.add(config.getConfig().get("calvalus.hadoop.mapreduce.job.queuename"));
             }
             for (String key : config.getConfig().keySet()) {
                 if (key.startsWith("calvalus.portal.")) {
                     calvalusConfig.put(key.substring("calvalus.portal.".length()),
-                            roleSupports(key, config.getRoles(), config.getConfig()));
+                                       roleSupports(key, config.getRoles(), config.getConfig()));
                 } else if (key.startsWith("calvalus.queue.")
-                        && contains(config.getRoles(), key.substring("calvalus.queue.".length()))) {
+                           && contains(config.getRoles(), key.substring("calvalus.queue.".length()))) {
                     for (String queue : config.getConfig().get(key).split(" ")) {
-                        if (! queueList.contains(queue)) {
+                        if (!queueList.contains(queue)) {
                             queueList.add(queue);
                         }
                     }

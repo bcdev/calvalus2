@@ -97,6 +97,10 @@ public class ProductionRequest implements XmlConvertible {
         return value;
     }
 
+    public void setParameter(String key, String value) {
+        productionParameters.put(key, value);
+    }
+
     public void ensureParameterSet(String name) throws ProductionException {
         getString(name);
     }
@@ -405,6 +409,23 @@ public class ProductionRequest implements XmlConvertible {
         Date minDate = getDate("minDate");
         Date maxDate = getDate("maxDate");
         return new DateRange(minDate, maxDate);
+    }
+    
+    /**
+     * Gets an optional String parameter value.
+     * If the string parameters exist the value is XML decoded.
+     * This is the reverse to @see com.bc.calvalus.portal.client.ParametersEditorGenerator#encodeXML(java.lang.String)
+     *
+     * @param name The parameter name.
+     * @param def  The parameter default value.
+     */
+    public String getXmlDecodedString(String name, String def) {
+        String s = getString(name, def);
+        return s != null ? decodeXML(s) : def;
+    }
+
+    private static String decodeXML(String s) {
+        return s.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
     }
 
     /////////////////////////////////////////////////////////////////////////

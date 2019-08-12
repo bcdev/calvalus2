@@ -87,7 +87,7 @@ public class QLMapperMain {
         }
 
         TaskAttemptContext context = createrContext(configuration);
-        RenderedImage image = QuicklookGenerator.createImage(context, product, qlConfig);
+        RenderedImage image = new QuicklookGenerator(context, product, qlConfig).createImage();
         if (image == null) {
             throw new IllegalArgumentException("Failed to generate image from config");
         }

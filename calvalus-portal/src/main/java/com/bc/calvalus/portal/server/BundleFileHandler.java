@@ -57,7 +57,7 @@ class BundleFileHandler implements FileUploadServlet.FileHandler {
                 }
 
                 String bundleDirPath = getSpecifiedDirectory(req) + String.format("%s-%s", bundleName, bundleVersion) + "/";
-                final String userName = BackendServiceImpl.getUserName(req).toLowerCase();
+                final String userName = BackendServiceImpl.getUserName(req);
                 String userBundlePath = AbstractFileSystemService.getUserPath(userName, bundleDirPath);
 
                 ServiceContainer serviceContainer = (ServiceContainer) context.getAttribute("serviceContainer");

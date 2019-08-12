@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -28,11 +29,15 @@ import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.SnapFileFilter;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 
 /**
@@ -42,20 +47,22 @@ import java.util.Locale;
 public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
 
     private static final String FORMAT_15M = "CALVALUS-Landsat-15M";
-    private static final String FORMAT_30M = "CALVALUS-Landsat-30M";
+    public static final String FORMAT_30M = "CALVALUS-Landsat-30M";
     private static final String FORMAT_MULTI = "CALVALUS-Landsat";
 
+    private static final String COLLECTION_FILENAME_REGEX = "L[COTEM]\\d{2}_L1\\w{2}_\\d{3}\\d{3}_\\d{8}_\\d{8}_\\d{2}_(T1|T2|RT)";
     private static final String L4_FILENAME_REGEX = "LT4\\d{13}\\w{3}\\d{2}";
-    private static final String L5_FILENAME_REGEX = "LT5\\d{13}.{3}\\d{2}";
-    private static final String L7_FILENAME_REGEX = "LE7\\d{13}.{3}\\d{2}";
-    private static final String L8_FILENAME_REGEX = "L[O,T,C]8\\d{13}.{3}\\d{2}";
+    private static final String L5_FILENAME_REGEX = "LT5\\d{13}\\w{3}\\d{2}";
+    private static final String L7_FILENAME_REGEX = "LE7\\d{13}\\w{3}\\d{2}";
+    private static final String L8_FILENAME_REGEX = "L[OTC]8\\d{13}\\w{3}\\d{2}";
     private static final String COMPR_FILENAME_REGEX = "\\.(tar\\.gz|tgz|tar\\.bz|tbz|tar\\.bz2|tbz2|zip|ZIP)";
 
-    private static final String[] FILENAME_PATTERNS = {
+    public static final String[] FILENAME_PATTERNS = {
             L4_FILENAME_REGEX + COMPR_FILENAME_REGEX,
             L5_FILENAME_REGEX + COMPR_FILENAME_REGEX,
             L7_FILENAME_REGEX + COMPR_FILENAME_REGEX,
-            L8_FILENAME_REGEX + COMPR_FILENAME_REGEX
+            L8_FILENAME_REGEX + COMPR_FILENAME_REGEX,
+            COLLECTION_FILENAME_REGEX + COMPR_FILENAME_REGEX
     };
 
     @Override
@@ -114,33 +121,51 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
-                // find manifest file
-                File mtlFile = null;
-                for (File file : unzippedFiles) {
-                    if (file.getName().toLowerCase().endsWith("_mtl.txt")) {
-                        mtlFile = file;
-                        break;
+                File localFile = null;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                    // find manifest file
+                    for (File file : unzippedFiles) {
+                        if (file.getName().toLowerCase().endsWith("_mtl.txt")) {
+                            localFile = file;
+                            break;
+                        }
+                    }
+                    if (localFile == null) {
+                        throw new IllegalFileFormatException("input has no MTL file.");
                     }
                 }
-                if (mtlFile == null) {
-                    throw new IllegalFileFormatException("input has no MTL file.");
-                }
+
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_30M);
                 System.out.println("inputFormat = " + inputFormat);
 
                 switch (inputFormat) {
                     case FORMAT_15M:
-                        return ProductIO.readProduct(mtlFile, "Landsat8GeoTIFF15m");
+                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF15m");
+                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF15m"), "panchromatic");
                     case FORMAT_30M:
-                        return ProductIO.readProduct(mtlFile, "Landsat8GeoTIFF30m");
+                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF30m");
+                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF30m"), "red");
                     default:
-                        return ProductIO.readProduct(mtlFile);
+                        CalvalusLogger.getLogger().info("reading with automatic format (inputFormat=" + inputFormat + ")");
+                        return ProductIO.readProduct(localFile);
                 }
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }
+        }
+
+        private Product resample(Product product, String referenceBand) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("referenceBand", referenceBand);
+            Dimension preferredTileSize = product.getPreferredTileSize();
+            CalvalusLogger.getLogger().info("resampling input to " + referenceBand);
+            product = GPF.createProduct("Resample", params, product);
+            product.setPreferredTileSize(preferredTileSize);
+            return product;
         }
 
         @Override

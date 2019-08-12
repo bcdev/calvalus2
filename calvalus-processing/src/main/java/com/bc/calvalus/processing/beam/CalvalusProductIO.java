@@ -17,20 +17,27 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
-import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.RasterDataNode;
+import org.esa.snap.core.datamodel.TiePointGrid;
+import org.esa.snap.core.datamodel.VirtualBand;
 import org.xeustechnologies.jtar.TarEntry;
 import org.xeustechnologies.jtar.TarInputStream;
+import ucar.nc2.Attribute;
+import ucar.nc2.NetcdfFile;
 import ucar.unidata.io.bzip2.CBZip2InputStream;
 
 import javax.imageio.stream.ImageInputStream;
@@ -44,7 +51,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -81,9 +91,8 @@ public class CalvalusProductIO {
      * @throws java.io.IOException If an I/O error occurs
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
-        if (inputFormat != null) {
-            LOG.info("Trying to find reader for inputFormat: " + inputFormat);
-        }
+        long t1 = System.currentTimeMillis();
+        LOG.info(String.format("readProduct: %s [%s]", pathConf.getPath(), inputFormat));
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
             final Path path = pathConf.getPath();
@@ -92,50 +101,81 @@ public class CalvalusProductIO {
             product = readProductImpl(imageInputStream, ImageInputStream.class, inputFormat);
             if (product == null) {
                 File localFile;
-                if (path.getFileSystem(configuration).getScheme().equals("file")) {
+                if ("file".equals(path.toUri().getScheme())) {    // TODO: bad criterion for whether file is "local"
                     localFile = new File(path.toUri());
                 } else {
                     localFile = copyFileToLocal(path, configuration);
                 }
+                maybeUpdateTilingProperties(localFile);  // TODO: maybe add to other locations where product file is opened
                 product = readProductImpl(localFile, File.class, inputFormat);
             }
         }
         if (product == null) {
-            LOG.info("No reader found. Available plugin classes:");
-            Iterator<ProductReaderPlugIn> allReaderPlugIns = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
-            while (allReaderPlugIns.hasNext()) {
-                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
-                String name = readerPlugIn.getClass().getName();
-                LOG.info(name);
+            Iterator<ProductReaderPlugIn> it = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+            while (it.hasNext()) {
+                ProductReaderPlugIn readerPlugIn = it.next();
+                LOG.info("reader candidate " + readerPlugIn + ' ' + Arrays.toString(readerPlugIn.getFormatNames()) + ' ' + Arrays.toString(readerPlugIn.getInputTypes()));
             }
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();
         String pathName = path.getName();
         if (pathName.startsWith("CCI-Fire-MERIS-SDR-L3") && pathName.endsWith(".nc")) {
-            LOG.info("Product " + pathName + " has no time information...extracting it from file name...");
+            LOG.info("readProduct: Product " + pathName + " has no time information...extracting it from file name...");
             setDateToMerisSdrProduct(product, pathName);
-            LOG.info(String.format("...done. Product start time: %s; product end time: %s", product.getStartTime().format(), product.getEndTime().format()));
+            LOG.info(String.format("readProduct: ...done. Product start time: %s; product end time: %s", product.getStartTime().format(), product.getEndTime().format()));
         }
-        LOG.info(String.format("Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
-        Dimension tiling = product.getPreferredTileSize();
-        if (tiling != null) {
-            LOG.info(String.format("Tiling: width = %d height = %d", (int) tiling.getWidth(), (int) tiling.getHeight()));
-        } else {
-            LOG.info("Tiling: NONE");
+        LOG.info(String.format("readProduct: Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
+        if (product.getSceneGeoCoding() == null) {
+            LOG.warning("readProduct: GeoCoding: NULL");
         }
-        ProductReader productReader = product.getProductReader();
-        if (productReader != null) {
-            LOG.info(String.format("ProductReader: %s", productReader.toString()));
-            LOG.info(String.format("ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
-        }
-        GeoCoding geoCoding = product.getSceneGeoCoding();
-        if (geoCoding != null) {
-            LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
-        } else {
-            LOG.warning("GeoCoding: null");
-        }
+        long t2 = System.currentTimeMillis();
+        LOG.info(String.format("readProduct: took %,d ms for %s", t2 - t1, path));
+        printProductOnStdout(product, "opened from " + pathConf.getPath());
         return product;
+    }
+
+    private static void maybeUpdateTilingProperties(File localFile) {
+        if (localFile.getName().endsWith(".nc")
+                && "32".equals(System.getProperty("snap.dataio.reader.tileWidth"))
+                && "32".equals(System.getProperty("snap.dataio.reader.tileHeight"))) {
+            NetcdfFile netcdfFile = null;
+            try {
+                netcdfFile = NetcdfFile.open(localFile.getPath());
+                Attribute tileSizeAttribute = netcdfFile.findGlobalAttribute("TileSize");
+                if (tileSizeAttribute != null) {
+                    String[] tileSizeValues = tileSizeAttribute.getStringValue().split(":");
+                    System.setProperty("snap.dataio.reader.tileWidth", tileSizeValues[0]);
+                    System.setProperty("snap.dataio.reader.tileHeight", tileSizeValues[1]);
+                    LOG.info("tile size adjusted from 32:32 to " + tileSizeAttribute.getStringValue());
+                } else {
+                    LOG.info("tile size not adjusted from 32:32, product has no attribute TileSize");
+                }
+            } catch (Exception e) {
+                LOG.warning("failed to adjusted tile size from 32:32 to product chunking");
+            } finally {
+                if (netcdfFile != null) {
+                    try {
+                        netcdfFile.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }
+    }
+
+    // currently not used
+    private static void logAllAvailableProductReaders() {
+        LOG.severe("No reader found. Available plugin classes:");
+        List<String> readerNames = new ArrayList<>();
+        Iterator<ProductReaderPlugIn> allReaderPlugIns = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+        while (allReaderPlugIns.hasNext()) {
+            readerNames.add(allReaderPlugIns.next().getClass().getName());
+        }
+        readerNames.sort(String::compareTo);
+        for (String readerName : readerNames) {
+            LOG.severe("    " + readerName);
+        }
     }
 
     /**
@@ -143,7 +183,6 @@ public class CalvalusProductIO {
      *
      * @param path The path to the file in the HDFS.
      * @param conf The Hadoop configuration.
-     * @throws IOException
      */
     public static File copyFileToLocal(Path path, Configuration conf) throws IOException {
         File localFile = new File(".", path.getName());
@@ -151,12 +190,17 @@ public class CalvalusProductIO {
     }
 
     public static File copyFileToLocal(Path path, File localFile, Configuration conf) throws IOException {
-        LOG.info("Copying file to local: " + path + " --> " + localFile);
-        if (!localFile.exists()) {
-            FileSystem fs = path.getFileSystem(conf);
-            FileUtil.copy(fs, path, localFile, false, conf);
+        LOG.info("copyFileToLocal: " + path + " --> " + localFile);
+        if (localFile.exists()) {
+            LOG.info("copyFileToLocal: File already exist");
         } else {
-            LOG.info("File already exist");
+            if ("file".equals(path.toUri().getScheme())) {
+                LOG.info("copyFileToLocal: creating symlink");
+                FileUtil.symLink(path.toString(), localFile.getAbsolutePath());                
+            } else {
+                FileSystem fs = path.getFileSystem(conf);
+                FileUtil.copy(fs, path, localFile, false, conf);
+            }
         }
         return localFile;
     }
@@ -166,16 +210,20 @@ public class CalvalusProductIO {
     }
 
     public static File[] uncompressArchiveToDir(Path path, File localDir, Configuration conf) throws IOException {
+        long t1 = System.currentTimeMillis();
         FileSystem fs = path.getFileSystem(conf);
         InputStream inputStream = new BufferedInputStream(fs.open(path));
         List<File> extractedFiles = new ArrayList<>();
 
         String archiveName = path.getName().toLowerCase();
-        if (archiveName.endsWith(".zip")) {
+        long localSize = 0;
+        boolean isZippedSlstrWithoutExtension = path.getName().matches("S3._SL_1_RBT.*_NT_00.");
+        if (archiveName.endsWith(".zip") || isZippedSlstrWithoutExtension) {
             try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
                 ZipEntry entry;
                 while ((entry = zipIn.getNextEntry()) != null) {
                     extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), zipIn));
+                    localSize += entry.getSize();
                 }
             }
         } else if (isTarCompressed(archiveName)) {
@@ -183,11 +231,15 @@ public class CalvalusProductIO {
                 TarEntry entry;
                 while ((entry = tarIn.getNextEntry()) != null) {
                     extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), tarIn));
+                    localSize += entry.getSize();
+                    
                 }
             }
         } else {
             throw new IOException("unsupported archive format: " + archiveName);
         }
+        long t2 = System.currentTimeMillis();
+        LOG.info(String.format("uncompressArchiveToDir: size %,d bytes  took %,d ms  from %s", localSize, t2 - t1, path));
         return extractedFiles.toArray(new File[0]);
     }
 
@@ -229,7 +281,7 @@ public class CalvalusProductIO {
         return name.endsWith(".tar.gz") || name.endsWith(".tgz");
     }
 
-    static boolean isTbz(String name) {
+    private static boolean isTbz(String name) {
         return name.endsWith(".tar.bz") || name.endsWith(".tbz") || name.endsWith(".tar.bz2") || name.endsWith(".tbz2");
     }
 
@@ -247,39 +299,52 @@ public class CalvalusProductIO {
         }
     }
 
-
     private static ImageInputStream openImageInputStream(Path path, Configuration conf) throws IOException {
         FileSystem fs = path.getFileSystem(conf);
         FileStatus status = fs.getFileStatus(path);
         FSDataInputStream in = fs.open(path);
-        return new FSImageInputStream(in, status.getLen());
+        return new FSImageInputStream(in, status.getLen(), path.toString());
     }
 
     private static Product readProductImpl(Object input, Class<?> inputClass, String inputFormat) {
-        if (inputFormat != null) {
-            return readProductWithInputFormat(input, inputClass, inputFormat);
-        } else {
-            return readProductWithAutodetect(input);
-        }
-    }
-
-    private static Product readProductWithInputFormat(Object input, Class<?> inputClass, String inputFormat) {
-        ProductReader productReader = ProductIO.getProductReader(inputFormat);
-        if (productReader != null) {
-            ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
+        Iterator<ProductReaderPlugIn> it = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+        ProductReaderPlugIn selectedPlugIn = null;
+        while (it.hasNext()) {
+            ProductReaderPlugIn readerPlugIn = it.next();
             if (canHandle(readerPlugIn, inputClass)) {
+                if (inputFormat != null && !supportsFormat(readerPlugIn, inputFormat)) {
+                    continue;
+                }
                 try {
-                    // TODO Is it ok to set this in the shared configuration?
-                    if (input instanceof PathConfiguration) {
-                        ((PathConfiguration) input).getConfiguration().set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
+                    DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(input);
+                    if (decodeQualification == DecodeQualification.INTENDED) {
+                        selectedPlugIn = readerPlugIn;
+                        break;
+                    } else if (decodeQualification == DecodeQualification.SUITABLE) {
+                        selectedPlugIn = readerPlugIn;
                     }
-                    return productReader.readProductNodes(input, null);
-                } catch (IOException e) {
-                    return null;
+                } catch (Exception e) {
+                    LOG.severe("readProductImpl: Error attempting to read " + input + " with plugin reader " + readerPlugIn.toString() + ": " + e.getMessage());
                 }
             }
         }
-        return null;
+        if (selectedPlugIn != null) {
+            ProductReader productReader = selectedPlugIn.createReaderInstance();
+            try {
+                return productReader.readProductNodes(input, null);
+            } catch (IOException e) {
+                String msg = String.format("Exception from productReader.readProductNodes from %s", input);
+                LogRecord lr = new LogRecord(Level.WARNING, msg);
+                lr.setSourceClassName("com.bc.calvalus.processing.beam.CalvalusProductIO");
+                lr.setSourceMethodName("readProductImpl");
+                lr.setThrown(e);
+                LOG.log(lr);
+                return null;
+            }
+        } else {
+            LOG.info("looked up reader plugin for " + inputClass + " " + inputFormat);
+            return null;
+        }
     }
 
     private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
@@ -294,15 +359,113 @@ public class CalvalusProductIO {
         return false;
     }
 
-    private static Product readProductWithAutodetect(Object input) {
-        ProductReader productReader = ProductIO.getProductReaderForInput(input);
-        if (productReader != null) {
-            try {
-                return productReader.readProductNodes(input, null);
-            } catch (IOException e) {
-                return null;
+    private static boolean supportsFormat(ProductReaderPlugIn readerPlugIn, String inputFormat) {
+        for (String otherFormatName : readerPlugIn.getFormatNames()) {
+            if (otherFormatName.equalsIgnoreCase(inputFormat)) {
+                return true;
             }
         }
-        return null;
+        return false;
+    }
+
+    public static void printProductOnStdout(Product p, String origin) {
+        System.out.println("-----------------------------------------------------------------------------------------");
+        System.out.println(origin);
+        if (p == null) {
+            System.out.println("product is NULL");
+            System.out.println("-----------------------------------------------------------------------------------------");
+            return;
+        }
+        Dimension preferredTileSize = p.getPreferredTileSize();
+        String productTileSize = "";
+        if (preferredTileSize != null) {
+            productTileSize = String.format("[%d,%d]", preferredTileSize.width, preferredTileSize.height);
+        }
+        System.out.printf("Product: %s (%d,%d)%s%n",
+                p.getName(),
+                p.getSceneRasterWidth(),
+                p.getSceneRasterHeight(),
+                productTileSize
+        );
+        ProductReader productReader = p.getProductReader();
+        if (productReader != null) {
+            System.out.printf("ProductReader: %s%n", productReader.toString());
+            ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
+            if (readerPlugIn != null) {
+                System.out.printf("ProductReaderPlugin: %s%n", readerPlugIn.toString());
+            }
+        }
+        File fileLocation = p.getFileLocation();
+        if (fileLocation != null) {
+            System.out.printf("FileLocation: %s%n", fileLocation);
+        }
+        GeoCoding geoCoding = p.getSceneGeoCoding();
+        if (geoCoding != null) {
+            System.out.printf("GeoCoding: %s%n", geoCoding.getClass().getSimpleName());
+        } else {
+            System.out.println("GeoCoding: NULL");
+        }
+        System.out.println("RasterDataNodes:");
+        int i = 0;
+        List<RasterDataNode> rasterDataNodes = p.getRasterDataNodes();
+        for (RasterDataNode rdn : rasterDataNodes) {
+            if (++i > 3) {
+                System.out.println("...");
+                break;
+            }
+            String rdnTileSize = "";
+            if (rdn.isSourceImageSet()) {
+                MultiLevelImage image = rdn.getSourceImage();
+                rdnTileSize = String.format("[%d,%d]", image.getTileWidth(), image.getTileHeight());
+            }
+            String[] rasterDataNodeInfo = getRasterDataNodeInfo(rdn);
+            String rdnType = rasterDataNodeInfo[0];
+            String rdnDesc = "";
+            if (rasterDataNodeInfo.length == 2) {
+                rdnDesc = " {" + rasterDataNodeInfo[1] + "}";
+            }
+            System.out.printf("    %s %s:%s (%d,%d)%s%s%n",
+                              rdnType,
+                              rdn.getName(),
+                              ProductData.getTypeString(rdn.getDataType()),
+                              rdn.getRasterWidth(),
+                              rdn.getRasterHeight(),
+                              rdnTileSize,
+                              rdnDesc
+            );
+        }
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+    
+    private static String[] getRasterDataNodeInfo(RasterDataNode rdn) {
+        if (rdn instanceof VirtualBand) {
+            return new String[]{"V", ((VirtualBand) rdn).getExpression()};
+        } else if (rdn instanceof Mask) {
+            Mask mask = (Mask) rdn;
+            Mask.ImageType imageType = mask.getImageType();
+            String desc = imageType.getName();
+            if (imageType instanceof Mask.RangeType) {
+                desc += ": " + Mask.RangeType.getExpression(mask);
+            } else if (imageType instanceof Mask.BandMathsType) {
+                desc += ": " + Mask.BandMathsType.getExpression(mask);                
+            } else if (imageType instanceof Mask.VectorDataType) {
+                desc += ": vectorData=" + Mask.VectorDataType.getVectorData(mask).getName();                
+            }
+            return new String[]{"M", desc};
+        } else if (rdn instanceof TiePointGrid) {
+            return new String[]{"T"};
+        } else if (rdn instanceof Band) {
+            Band band = (Band) rdn;
+            if (band.isFlagBand()) {
+                String flags = String.join("|", band.getFlagCoding().getFlagNames());
+                return new String[]{"F", flags};
+            } else if (band.isIndexBand()) {
+                String indices = String.join("|", band.getIndexCoding().getIndexNames());
+                return new String[]{"I", indices};
+            }
+            return new String[]{"B"};
+        } else {
+            return new String[]{"R"};
+        }
     }
 }

@@ -34,4 +34,58 @@ interface CalvalusStyle extends CssResource {
     String variableExpression();
 
     String variableName();
+
+    String panelTitle();
+
+    String panelTitleText();
+
+    String inputFileSetPanel();
+
+    String checkBox();
+
+    String temporalFilterPanel();
+
+    String filterPanel();
+
+    String spatialFilterPanel();
+
+    String radioButton();
+
+    String dateBox();
+
+    String textBox();
+
+    String l2Panel();
+
+    String l2ParametersPanel();
+
+    String processorParametersPanels();
+
+    String l2ProcessorPanel();
+
+    String l2ProcessorPrefMulti();
+
+    String l2ProcessorDescription();
+
+    String l2Help();
+
+    String l2ProcessorPrefContainer();
+
+    String l2ParametersButtonGroup();
+
+    String l2ParametersFileUpload();
+
+    String outputParametersPanel();
+
+    String processingFormatPanel();
+
+    String productionNameTextBox();
+
+    String productionNameText();
+
+    String outputProductionName();
+
+    String flexRow();
+
+    String noteLabel();
 }

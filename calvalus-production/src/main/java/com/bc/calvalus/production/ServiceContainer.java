@@ -18,6 +18,7 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.InventoryService;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * Hold instances of all services in use.
@@ -26,11 +27,16 @@ public class ServiceContainer {
     private final ProductionService productionService;
     private final FileSystemService fileSystemService;
     private final InventoryService inventoryService;
+    private final Configuration hadoopConfiguration;
 
-    public ServiceContainer(ProductionService productionService, FileSystemService fileSystemService, InventoryService inventoryService) {
+    public ServiceContainer(ProductionService productionService, 
+                            FileSystemService fileSystemService, 
+                            InventoryService inventoryService, 
+                            Configuration hadoopConfiguration) {
         this.productionService = productionService;
         this.fileSystemService = fileSystemService;
         this.inventoryService = inventoryService;
+        this.hadoopConfiguration = hadoopConfiguration;
     }
 
     public ProductionService getProductionService() {
@@ -43,6 +49,10 @@ public class ServiceContainer {
 
     public InventoryService getInventoryService() {
         return inventoryService;
+    }
+
+    public Configuration getHadoopConfiguration() {
+        return hadoopConfiguration;
     }
 
     public void close() throws ProductionException {

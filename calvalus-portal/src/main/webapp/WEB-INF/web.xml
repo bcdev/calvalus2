@@ -39,7 +39,6 @@
         <load-on-startup>1</load-on-startup>
     </servlet>
 
-
     <!-- Backend servlet -->
 
     <servlet>
@@ -68,6 +67,16 @@
         <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
     </servlet>
 
+    <servlet>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.InjectInputSelectionServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.ContextRetrievalServiceImpl</servlet-class>
+    </servlet>
+
     <servlet-mapping>
         <servlet-name>stagingServlet</servlet-name>
         <url-pattern>/staging/*</url-pattern>
@@ -90,6 +99,14 @@
         <servlet-name>downloadServlet</servlet-name>
         <url-pattern>/calvalus/download</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <url-pattern>/injectInputSelection</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <url-pattern>/calvalus/retrieve</url-pattern>
+    </servlet-mapping>
 
     <!-- You can set the default session timeout (in minutes) for all newly   -->
     <!-- created sessions by modifying the value below.                       -->
@@ -107,6 +124,7 @@
         <web-resource-collection>
             <web-resource-name>calvalus-protected</web-resource-name>
             <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/insert</url-pattern>
             <url-pattern>/calvalus.jsp</url-pattern>
             <url-pattern>/staging</url-pattern>
             <url-pattern>/staging/*</url-pattern>
@@ -116,6 +134,7 @@
             <url-pattern>/calvalus/backend/*</url-pattern>
             <url-pattern>/calvalus/upload/*</url-pattern>
             <url-pattern>/calvalus/download/*</url-pattern>
+            <url-pattern>/processors.jsp</url-pattern>
             <url-pattern>/pub</url-pattern>
             <url-pattern>/pub/</url-pattern>
             <url-pattern>/pub/docs</url-pattern>

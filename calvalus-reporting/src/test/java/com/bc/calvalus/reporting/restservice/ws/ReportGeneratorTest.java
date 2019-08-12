@@ -1,17 +1,16 @@
 package com.bc.calvalus.reporting.restservice.ws;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
+
+import com.bc.calvalus.reporting.common.UsageStatistic;
 import com.bc.calvalus.reporting.restservice.io.JSONExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.*;
+
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author hans
@@ -25,13 +24,13 @@ public class ReportGeneratorTest {
 
     @Before
     public void setUp() throws Exception {
-        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
+        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
         jsonExtractor = new JSONExtractor();
     }
 
     @Test
     public void canGenerateTextSingleJob() throws Exception {
-        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052","2017-01-10");
+        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052", "2017-01-10");
         reportGenerator = new ReportGenerator();
 
         assertThat(reportGenerator.generateTextSingleJob(usageStatistic), equalTo("Usage statistic for job 'job_1481485063251_20052'\n" +
@@ -67,17 +66,6 @@ public class ReportGeneratorTest {
                                                                                           "}"));
     }
 
-    @Ignore // to avoid creating pdf in every maven install
-    @Test
-    public void canGeneratePdfSingleJob() throws Exception {
-        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_7037","2017-01-10");
-        reportGenerator = new ReportGenerator();
-        String pdfPath = reportGenerator.generatePdfSingleJob(usageStatistic);
-
-        assertThat(pdfPath, containsString("job_1481485063251_7037.pdf"));
-    }
-
-
     @Test
     public void testGenerateAllUserJobSummary() throws Exception {
         reportGenerator = new ReportGenerator();
@@ -110,43 +98,6 @@ public class ReportGeneratorTest {
         String queue = reportGenerator.generateJsonUsageBetween(allUserStatistic, "jobsInQueue");
         assertNotNull(queue);
         //todo mba*** add more assertion
-    }
-
-
-    @Test
-    public void canGenerateTextMonthly() throws Exception {
-        List<UsageStatistic> usageStatistics = jsonExtractor.loadStatisticOf("2017-01-10");
-
-        reportGenerator = new ReportGenerator();
-
-        assertThat(reportGenerator.generateTextMonthly(usageStatistics), equalTo("Usage statistic for user $USER in $MONTH $YEAR\n" +
-                                                                                         "\n" +
-                                                                                         "Jobs processed : 3549" +
-                                                                                         "\nTotal file writing (MB) : 27,181,661\n" +
-                                                                                         "Total file reading (MB) : 73,412,234\n" +
-                                                                                         "Total CPU time spent : 26024:32:29\n" +
-                                                                                         "Total Memory used (MB s) :  334,310,851,755\n" +
-                                                                                         "Total vCores used (vCore s) :  92,738,750\n" +
-                                                                                         "\n" +
-                                                                                         "\n" +
-                                                                                         "Price breakdown\n" +
-                                                                                         "\n" +
-                                                                                         "CPU usage price = (Total vCores used) x € 0.0013 = € 34.05\n" +
-                                                                                         "Memory usage price = (Total Memory used) x € 0.00022 = € 20.22\n" +
-                                                                                         "Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € 1100.24\n" +
-                                                                                         "\n" +
-                                                                                         "Total = € 1154.51\n"));
-    }
-
-    @Ignore // to avoid creating pdf in every maven install
-    @Test
-    public void canGeneratePdfMonthly() throws Exception {
-        List<UsageStatistic> usageStatistics = jsonExtractor.loadStatisticOf("2017-02-10");
-
-        reportGenerator = new ReportGenerator();
-        String pdfPath = reportGenerator.generatePdfMonthly(usageStatistics);
-
-        assertThat(pdfPath, containsString("monthly.pdf"));
     }
 
     @Test

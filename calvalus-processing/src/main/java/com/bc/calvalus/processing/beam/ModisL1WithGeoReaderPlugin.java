@@ -100,7 +100,13 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
             Object input = getInput();
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
-                File localFile = CalvalusProductIO.copyFileToLocal(pathConfig.getPath(), pathConfig.getConfiguration());
+                File localFile;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    Configuration conf = pathConfig.getConfiguration();
+                    localFile = CalvalusProductIO.copyFileToLocal(pathConfig.getPath(), conf);
+                }                
                 copyModisGeoFile(pathConfig);
                 return ProductIO.readProduct(localFile);
             } else {

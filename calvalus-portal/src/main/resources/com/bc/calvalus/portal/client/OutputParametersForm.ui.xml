@@ -4,130 +4,134 @@
 
     <ui:style src="style.css"/>
 
-    <g:HorizontalPanel spacing="16">
-        <g:VerticalPanel spacing="4">
+    <g:FlowPanel styleName="{style.outputParametersPanel}">
 
-            <g:HTMLPanel width="62em">
-                <h3>Output Parameters</h3>
-                <hr/>
-            </g:HTMLPanel>
+        <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+            <g:InlineLabel styleName="{style.panelTitleText}">Output Parameters</g:InlineLabel>
+        </g:HTMLPanel>
 
-            <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                <g:Label>Production name:</g:Label>
-                <g:TextBox ui:field="productionName" visibleLength="48"/>
-            </g:HorizontalPanel>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
-                Provide a name for the production to identify it later on. If left empty,
-                a name will be generated from the given parameters.
-                <p/>
-            </g:HTML>
+        <g:FlowPanel styleName="{style.centeredHorizontalPanel} {style.flexRow} {style.outputProductionName}">
+            <g:Label styleName="{style.productionNameText}">Production name:</g:Label>
+            <g:TextBox ui:field="productionName" styleName="{style.productionNameTextBox}"/>
+        </g:FlowPanel>
+        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="60em">
+            Provide a name for the production to identify it later on. If left empty,
+            a name will be generated from the given parameters.
+            <p/>
+        </g:HTML>
 
-            <g:VerticalPanel spacing="2">
-                <g:FlowPanel ui:field="processingFormatPanel">
-                    <g:VerticalPanel spacing="2">
-                        <g:RadioButton ui:field="processingFormatCluster" name=""
-                                       text="Process to Cluster-Internal-Format"/>
-                            <g:RadioButton ui:field="processingFormatUser" name="" text="User product"/>
-                    </g:VerticalPanel>
-                </g:FlowPanel>
-                <g:FlowPanel ui:field="productRelatedPanel">
-                    <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
-                        <g:Label>Product file format:</g:Label>
-                        <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
-                    </g:HorizontalPanel>
-                    <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                        Note that the available product file formats
-                        may depend on the selected processor.
-                        <p/>
-                    </g:HTML>
-
-                </g:FlowPanel>
-
-                <g:HTML>
-                    <br/>
+        <g:FlowPanel>
+            <g:FlowPanel ui:field="processingFormatPanel" styleName="{style.processingFormatPanel}">
+                <g:RadioButton ui:field="processingFormatCluster"
+                               name=""
+                               text="Process to Cluster-Internal-Format"
+                               styleName="{style.radioButton}"
+                />
+                <g:RadioButton ui:field="processingFormatUser"
+                               name=""
+                               text="User product"
+                               styleName="{style.radioButton}"
+                />
+            </g:FlowPanel>
+            <g:FlowPanel ui:field="productRelatedPanel">
+                <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
+                    <g:Label>Product file format:</g:Label>
+                    <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
+                </g:HorizontalPanel>
+                <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}">
+                    Note that the available product file formats
+                    may depend on the selected processor.
+                    <p/>
                 </g:HTML>
 
-                <g:CheckBox ui:field="enableTailoring"
-                            text="Enable Tailoring"
-                            checked="false"
-                            visible="false"/>
-                <g:FlowPanel ui:field="tailoringPanel" visible="false">
-                    <g:VerticalPanel>
-                        <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                            <g:Label>CRS:</g:Label>
-                            <g:VerticalPanel spacing="2">
-                                <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
-                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                                    Use WKT or EPSG codes (Format: EPSG:&lt;code&gt;) to specify map-projection.
-                                    <br/>
-                                    Use VISAT or the
-                                    <a href="http://www.epsg-registry.org/" target="_blank">EPSG-Registry</a>
-                                    to find the correct code.
-                                    <br/>
-                                    Leave empty for un-projected output.
-                                </g:HTML>
-                            </g:VerticalPanel>
-                        </g:HorizontalPanel>
-                        <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                            <g:CheckBox ui:field="replaceNans"
-                                        text="Replace NaN values by"
-                                        checked="false"/>
-                            <g:DoubleBox ui:field="replaceNanValue" visibleLength="10"/>
-                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                                Only applied if the output is reprojected.
-                            </g:HTML>
-                        </g:HorizontalPanel>
-                        <g:HTML>
-                            <br/>
-                        </g:HTML>
-                    </g:VerticalPanel>
+            </g:FlowPanel>
 
+            <g:HTML>
+                <br/>
+            </g:HTML>
+
+            <g:CheckBox ui:field="enableTailoring"
+                        text="Enable Tailoring"
+                        checked="false"
+                        visible="false"/>
+            <g:FlowPanel ui:field="tailoringPanel" visible="false">
+                <g:VerticalPanel>
                     <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                        <g:Label>Band selection:</g:Label>
-                        <g:ListBox ui:field="bandListBox" multipleSelect="true" visibleItemCount="6"/>
+                        <g:Label>CRS:</g:Label>
+                        <g:VerticalPanel spacing="2">
+                            <g:TextArea ui:field="crsText" characterWidth="45" visibleLines="3"/>
+                            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                Use WKT or EPSG codes (Format: EPSG:&lt;code&gt;) to specify map-projection.
+                                <br/>
+                                Use VISAT or the
+                                <a href="http://www.epsg-registry.org/" target="_blank">EPSG-Registry</a>
+                                to find the correct code.
+                                <br/>
+                                Leave empty for un-projected output.
+                            </g:HTML>
+                        </g:VerticalPanel>
                     </g:HorizontalPanel>
-
-                    <g:CheckBox ui:field="quicklooks"
-                                text="Create Quicklooks"
-                                checked="false"/>
+                    <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                        <g:CheckBox ui:field="replaceNans"
+                                    text="Replace NaN values by"
+                                    checked="false"/>
+                        <g:DoubleBox ui:field="replaceNanValue" visibleLength="10"/>
+                        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                            Only applied if the output is reprojected.
+                        </g:HTML>
+                    </g:HorizontalPanel>
                     <g:HTML>
                         <br/>
                     </g:HTML>
-                </g:FlowPanel>
+                </g:VerticalPanel>
 
-                <g:CheckBox ui:field="autoStaging"
-                            text="Perform staging step after successful production"
-                            checked="true"/>
+                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                    <g:Label>Band selection:</g:Label>
+                    <g:ListBox ui:field="bandListBox" multipleSelect="true" visibleItemCount="6"/>
+                </g:HorizontalPanel>
+
+                <g:CheckBox ui:field="quicklooks"
+                            text="Create Quicklooks"
+                            checked="false"/>
                 <g:HTML>
                     <br/>
                 </g:HTML>
-                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                    <g:Label>Percentage of allowed failing products:</g:Label>
-                    <g:IntegerBox ui:field="allowedFailure" visibleLength="4"/>
-                </g:HorizontalPanel>
+            </g:FlowPanel>
 
-                <g:CheckBox ui:field="autoDelete"
-                            text="Delete production output after successful staging"
-                            checked="false"
-                            visible="false"/>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
-                    Leave unchecked, if output is used as input
-                    for another production step.
-                    <p/>
-                </g:HTML>
+            <g:CheckBox ui:field="autoStaging"
+                        text="Perform staging step after successful production"
+                        checked="true"
+                        styleName="{style.checkBox} {style.explanatoryLabel}"
+            />
+            <g:HTML>
+                <br/>
+            </g:HTML>
+            <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                <g:Label>Percentage of allowed failing products:</g:Label>
+                <g:IntegerBox ui:field="allowedFailure" visibleLength="4"/>
+            </g:HorizontalPanel>
 
-                <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
-                    <g:Label>Request queue:</g:Label>
-                    <g:ListBox ui:field="requestQueue" visibleItemCount="1"/>
-                </g:HorizontalPanel>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
-                    If you are entitled for several queues select the queue for the project you are processing for.
-                    <p/>
-                </g:HTML>
+            <g:CheckBox ui:field="autoDelete"
+                        text="Delete production output after successful staging"
+                        checked="false"
+                        visible="false"/>
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" visible="false">
+                Leave unchecked, if output is used as input
+                for another production step.
+                <p/>
+            </g:HTML>
 
-            </g:VerticalPanel>
+            <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
+                <g:Label>Request queue:</g:Label>
+                <g:ListBox ui:field="requestQueue" visibleItemCount="1"/>
+            </g:HorizontalPanel>
+            <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}">
+                If you are entitled for several queues select the queue for the project you are processing for.
+                <p/>
+            </g:HTML>
 
-        </g:VerticalPanel>
-    </g:HorizontalPanel>
+        </g:FlowPanel>
+
+    </g:FlowPanel>
 
 </ui:UiBinder>

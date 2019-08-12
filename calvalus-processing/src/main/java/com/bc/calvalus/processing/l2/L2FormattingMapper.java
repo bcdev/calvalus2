@@ -149,7 +149,8 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         File productFile = productFormatter.createTemporaryProductFile();
         LOG.info("Start writing product to file: " + productFile.getName());
 
-        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        //ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        GPF.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         LOG.info("Finished writing product.");
 
         context.setStatus("Copying");
@@ -164,12 +165,12 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         List<Quicklooks.QLConfig> qlConfigList = getValidQlConfigs(jobConfig);
         for (Quicklooks.QLConfig qlConfig : qlConfigList) {
             String imageFileName;
-            if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
-                    && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
-                imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
-            } else {
+//            if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+//                    && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+//                imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+//            } else {
                 imageFileName = productName;
-            }
+//            }
             if (qlConfigList.size() > 1) {
                 imageFileName = imageFileName + "_" + qlConfig.getBandName();
             }
@@ -285,7 +286,6 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 newProductName = m.replaceAll(replacement);
                 if (dateElement != null && dateFormat != null) {
                     final String dateString = m.replaceAll(dateElement);
-                    
                     final DateFormat df1 = DateUtils.createDateFormat(dateFormat);
                     final DateFormat df2 = DateUtils.createDateFormat(newProductName);
                     final Date date = df1.parse(dateString);
@@ -295,10 +295,10 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             return newProductName;
         } catch (Exception e) {
             if (dateElement == null || dateFormat == null) {
-                throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex + " by " + replacement);
+                throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex + " by " + replacement, e);
             } else {
                 throw new RuntimeException("failed to convert name " + fileName + " matching regex " + regex +
-                                                   " date ele " + dateElement + " date format " + dateFormat + " by " + replacement);
+                                                   " date ele " + dateElement + " date format " + dateFormat + " by " + replacement, e);
             }
         }
     }

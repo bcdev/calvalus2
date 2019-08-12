@@ -14,7 +14,7 @@ import java.util.HashMap;
  */
 public class GpfTaskTest {
 
-    @Ignore // Ignored because it takes too long.
+    @Ignore("test takes too long")
     @Test
     public void testCreateLcCciSubset() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
@@ -30,7 +30,7 @@ public class GpfTaskTest {
         GPF.createProduct("LCCCI.Subset", parameters, sourceProduct);
     }
 
-    @Ignore // Ignored because it takes too long.
+    @Ignore("test takes too long")
     @Test
     public void testCreateSubset() throws Exception {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();

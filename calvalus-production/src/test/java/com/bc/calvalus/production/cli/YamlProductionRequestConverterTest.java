@@ -57,6 +57,9 @@ public class YamlProductionRequestConverterTest {
         assertNotNull(parameters.get("calvalus.plainText.parameter"));
         String expectedPlainText = "<parameters>\nThis is a multiline\nTextfield\n</parameters>";
         assertEquals(expectedPlainText, parameters.get("calvalus.plainText.parameter"));
+        
+        assertEquals("true", parameters.get("copyInput"));
+        assertEquals("2017-10-01", parameters.get("minDate"));
+        assertEquals("2017-12-31", parameters.get("maxDate"));
     }
-
 }

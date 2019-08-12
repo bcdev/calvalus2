@@ -42,6 +42,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
 import java.io.ByteArrayOutputStream;
@@ -50,11 +51,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,8 +73,8 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.14-SNAPSHOT";
-    public static final String DEFAULT_SNAP_BUNDLE = "snap-5.0";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.19-SNAPSHOT";
+    public static final String DEFAULT_SNAP_BUNDLE = "snap-8.0.0-SNAPSHOT";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
 
@@ -85,6 +87,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final Map<String, ShapefileCacheEntry> shapeAttributeCache;
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
+    private boolean withExternalAccessControl;
+
+    private static JobClientsMap jobClientsMapSingleton = null;
 
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
         this(jobClientsMap, CALVALUS_SOFTWARE_PATH);
@@ -92,9 +97,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public HadoopProcessingService(JobClientsMap jobClientsMap, String softwareDir) throws IOException {
         this.jobClientsMap = jobClientsMap;
+        jobClientsMapSingleton = jobClientsMap;
         this.softwareDir = softwareDir;
         this.jobStatusMap = new WeakHashMap<>();
-
+        this.withExternalAccessControl = Boolean.getBoolean("calvalus.accesscontrol.external");
         this.bundleQueryCache = new ArrayList<>();
         // TODO there should be one Timer for a process that is used for all timer tasks
         this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner", true);
@@ -104,13 +110,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 synchronized (bundleQueryCache) {
                     long now = System.currentTimeMillis();
                     long clearIfOlder = now - CACHE_RETENTION;
-                    Iterator<BundleQueryCacheEntry> iterator = bundleQueryCache.iterator();
-                    while (iterator.hasNext()) {
-                        BundleQueryCacheEntry cacheEntry = iterator.next();
-                        if (cacheEntry.time < clearIfOlder) {
-                            iterator.remove();
-                        }
-                    }
+                    bundleQueryCache.removeIf(cacheEntry -> cacheEntry.time < clearIfOlder);
                 }
 
             }
@@ -123,32 +123,42 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     @Override
     public BundleDescriptor[] getBundles(final String username, final BundleFilter filter) throws IOException {
-        String bundleFilterString = filter.toString();
-        synchronized (bundleQueryCache) {
-            for (BundleQueryCacheEntry entry : bundleQueryCache) {
-                if (entry.bundleFilter.equals(bundleFilterString) && entry.userName.equals(username)) {
-                    try {
-                        return entry.bundles.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        logger.warning(e.getMessage());
+        logger.fine("HadoopProcessingService.getBundles.start username = [" + username + "], filter = [" + filter + "]");
+        long t1 = System.currentTimeMillis();
+        try {
+            String bundleFilterString = filter.toString();
+            Future<BundleDescriptor[]> bundleFuture = null;
+            synchronized (bundleQueryCache) {
+                for (BundleQueryCacheEntry entry : bundleQueryCache) {
+                    if (entry.bundleFilter.equals(bundleFilterString) && entry.userName.equals(username)) {
+                        logger.fine("HadoopProcessingService.getBundles cacheHIT");
+                        bundleFuture = entry.bundles;
+                        break;
                     }
                 }
-            }
-            Future<BundleDescriptor[]> future = executorService.submit(new Callable<BundleDescriptor[]>() {
-                @Override
-                public BundleDescriptor[] call() throws Exception {
-                    return HadoopProcessingService.this.getBundleDescriptorsImpl(username, filter);
+                if (bundleFuture == null) {
+                    logger.fine("HadoopProcessingService.getBundles cacheMISS");
+                    bundleFuture = executorService.submit(new Callable<BundleDescriptor[]>() {
+                        @Override
+                        public BundleDescriptor[] call() throws Exception {
+                            return HadoopProcessingService.this.getBundleDescriptorsImpl(username, filter);
+                        }
+                    });
+                    bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, bundleFuture));
                 }
-            });
-            bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, future));
+            }
             try {
-                return future.get();
+                return bundleFuture.get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
                 logger.warning(e.getMessage());
+                throw new IOException("Failed to load BundleDescriptor", e);
             }
+        } finally {
+            long t2 = System.currentTimeMillis();
+            long delta = t2 - t1;
+            logger.fine("HadoopProcessingService.getBundles.end username = [" + username + "], filter = [" + filter + "] ==> " + delta + "ms");
         }
-        throw new IOException("Failed to load BundleDescriptor");
     }
 
     @Override
@@ -184,59 +194,69 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     public BundleDescriptor[] getBundleDescriptorsImpl(String username, BundleFilter filter) throws IOException {
-        ArrayList<BundleDescriptor> descriptors = new ArrayList<>();
-        String bundleDirName = "*";
-        if (filter.getBundleName() != null) {
-            bundleDirName = filter.getBundleName() + "-" + filter.getBundleVersion();
-        }
         try {
-            if (filter.getNumSupportedProvider() == 0) {
-                logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
-                filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
-            }
-            if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
-                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
-                        BUNDLE_DESCRIPTOR_XML_FILENAME);
-                FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
-                List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
-                for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
-                    bundleDescriptor.setOwner(filter.getUserName().toLowerCase());
+            UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(username);
+            return remoteUser.doAs((PrivilegedExceptionAction<BundleDescriptor[]>) () -> {
+                ArrayList<BundleDescriptor> descriptors = new ArrayList<>();
+                String bundleDirName = "*";
+                if (filter.getBundleName() != null) {
+                    bundleDirName = filter.getBundleName() + "-" + filter.getBundleVersion();
                 }
-                descriptors.addAll(singleUserDescriptors);
-            }
-            if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
-                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
-                FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
-                List<BundleDescriptor> allUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
-                for (BundleDescriptor bundleDescriptor : allUserDescriptors) {
-                    String bundleLocation = bundleDescriptor.getBundleLocation();
-                    String[] pathElems = bundleLocation.split("/");
-                    for (int i = 0; i < pathElems.length; i++) {
-                        if (pathElems[i].equals("home")) {
-                            bundleDescriptor.setOwner(pathElems[i + 1]);
-                            break;
+                if (filter.getNumSupportedProvider() == 0) {
+                    logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
+                    filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
+                }
+                if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
+                    String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
+                                                                 BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
+                    List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
+                    for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
+                        bundleDescriptor.setOwner(filter.getUserName());
+                    }
+                    descriptors.addAll(singleUserDescriptors);
+                }
+                if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
+                    String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
+                    List<BundleDescriptor> allUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
+                    String userPathPattern = String.format("/calvalus/home/%s/software", username);
+                    for (BundleDescriptor bundleDescriptor : allUserDescriptors) {
+                        String bundleLocation = bundleDescriptor.getBundleLocation();
+                        if (bundleLocation.contains(userPathPattern)) {
+                            continue;
                         }
+                        String[] pathElems = bundleLocation.split("/");
+                        for (int i = 0; i < pathElems.length; i++) {
+                            if (pathElems[i].equals("home")) {
+                                bundleDescriptor.setOwner(pathElems[i + 1]);
+                                break;
+                            }
+                        }
+                        descriptors.add(bundleDescriptor);
                     }
                 }
-                descriptors.addAll(allUserDescriptors);
-            }
-            if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                String bundleLocationPattern = String.format("%s/%s/%s", softwareDir, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
-                FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
-                List<BundleDescriptor> systemDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
-                descriptors.addAll(systemDescriptors);
-            }
+                if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
+                    String bundleLocationPattern = String.format("%s/%s/%s", softwareDir, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
+                    List<BundleDescriptor> systemDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
+                    descriptors.addAll(systemDescriptors);
+                }
+                return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
+            });
         } catch (IOException e) {
             logger.warning(e.getMessage());
             throw e;
+        } catch (InterruptedException e) {
+            logger.warning(e.getMessage());
+            throw new IOException("failed to retrieve bundle descriptors for user " + username, e);
         }
-        return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
     }
 
     private List<BundleDescriptor> getBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
         final FileStatus[] fileStatuses;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true) && !withExternalAccessControl) {
             final ArrayList<FileStatus> accu = new ArrayList<>();
             collectAccessibleFiles(fileSystem, bundlePathsGlob, 1, new Path("/"), accu);
             fileStatuses = accu.toArray(new FileStatus[accu.size()]);
@@ -281,7 +301,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private List<MaskDescriptor> getMaskDescriptors(FileSystem fileSystem, String maskLocationPattern) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(maskLocationPattern));
         final FileStatus[] fileStatuses;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true) && !withExternalAccessControl) {
             final List<FileStatus> accu = new ArrayList<>();
             collectAccessibleFiles(fileSystem, maskLocationPattern, 1, new Path("/"), accu);
             fileStatuses = accu.toArray(new FileStatus[accu.size()]);
@@ -455,15 +475,17 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         bundlesQueryCleaner.cancel();
         executorService.shutdown();
     }
-    
+
     @Override
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         Path path = new Path(url);
         Configuration conf = createJobConfig(username);
-        FileStatus fileStatus = path.getFileSystem(conf).getFileStatus(path);
+        //FileStatus fileStatus = path.getFileSystem(conf).getFileStatus(path);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        FileStatus fileStatus = fileSystem.getFileStatus(path);
         if (fileStatus != null) {
             ShapefileCacheEntry cacheEntry = shapeAttributeCache.get(path.toString());
-            if (cacheEntry == null || cacheEntry.modificationTime != fileStatus.getModificationTime()) {
+            if (cacheEntry == null || cacheEntry.modificationTime != fileStatus.getModificationTime() || fileStatus.getModificationTime() == 0) {
                 String[][] data = RARegions.loadStringAttributes(url, conf);
                 cacheEntry = new ShapefileCacheEntry(fileStatus.getModificationTime(), data);
                 shapeAttributeCache.put(path.toString(), cacheEntry);
@@ -488,7 +510,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
         if (jobStatus.getRunState() == JobStatus.FAILED) {
             return new ProcessStatus(ProcessState.ERROR, oldProgress,
-                    "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
+                                     "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
         } else if (jobStatus.getRunState() == JobStatus.KILLED) {
             return new ProcessStatus(ProcessState.CANCELLED, oldProgress);
         } else if (jobStatus.getRunState() == JobStatus.PREP) {
@@ -523,21 +545,20 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
+    public FileSystem getFileSystem(String userName) throws IOException {
+        return jobClientsMap.getFileSystem(userName);
+    }
+
     public FileSystem getFileSystem(String userName, String path) throws IOException {
         return jobClientsMap.getFileSystem(userName, path);
     }
 
-    private static FileSystem getFileSystem(String username, Configuration conf, Path path) throws IOException {
-        try {
-            return FileSystem.get(path.toUri(), conf, username);
-        } catch (InterruptedException e) {
-            throw new IOException(e);
-        }
+    public FileSystem getFileSystem(String userName, Configuration conf, Path path) throws IOException {
+        return jobClientsMap.getFileSystem(userName, conf, path);
     }
 
-
     void addBundleToDistributedCache(Path bundlePath, String username, Configuration conf) throws IOException {
-        final FileSystem fs = getFileSystem(username, conf, bundlePath);
+        final FileSystem fs = jobClientsMap.getFileSystem(username, conf, bundlePath);
 
         addBundleToClassPath(bundlePath, conf);
         addBundleArchives(bundlePath, fs, conf);
@@ -545,7 +566,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     }
 
-    private static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+    public static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
         final FileStatus[] archives = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -553,7 +574,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
         });
         for (FileStatus archive : archives) {
-            URI uri = convertPathToURI(archive.getPath());
+            URI uri = convertPathToURI(fs.makeQualified(archive.getPath()));
             DistributedCache.addCacheArchive(uri, conf);
         }
     }
@@ -586,7 +607,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return null;
     }
 
-    private static void addBundleLibs(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+    public static void addBundleLibs(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
         final FileStatus[] libs = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -594,18 +615,19 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
         });
         for (FileStatus lib : libs) {
-            URI uri = lib.getPath().toUri();
+            URI uri = fs.makeQualified(lib.getPath()).toUri();
             DistributedCache.addCacheFile(uri, conf);
         }
     }
 
     public static boolean isLib(Path libPath) {
         String filename = libPath.getName();
-        return filename.endsWith(".so");
+        return filename.endsWith(".so") || filename.equals("VERSION.txt");
     }
 
 
     private static class BundleQueryCacheEntry {
+
         private final String userName;
         private final String bundleFilter;
         private final long time;
@@ -620,6 +642,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     private static class BundleCacheEntry {
+
         private final BundleDescriptor bundleDescriptor;
         private final long modificationTime;
 
@@ -628,8 +651,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             this.modificationTime = modificationTime;
         }
     }
-    
+
     private static class ShapefileCacheEntry {
+
         private final String[][] data;
         private final long modificationTime;
 
@@ -638,5 +662,31 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             this.modificationTime = modificationTime;
         }
     }
-    
+
+    /**
+     * Opens an InputStream from a given URL
+     */
+    public static InputStream openUrlAsStream(String url, Configuration conf) throws IOException {
+        InputStream inputStream;
+        if (Boolean.getBoolean("calvalus.accesscontrol.external") && jobClientsMapSingleton != null) {
+            String userName = UserGroupInformation.getCurrentUser().getShortUserName();
+            final Path path = new Path(url);
+            FileSystem fs = jobClientsMapSingleton.getFileSystem(userName, conf, path);
+            System.out.println("HadoopProcessingService.openUrlAsStream user " + userName + " path " + url + " fileSystem " + fs);
+            inputStream = fs.open(path);
+        } else if (url.startsWith("hdfs:")) {
+            final Path path = new Path(url);
+            inputStream = path.getFileSystem(conf).open(path);
+        } else {
+            inputStream = new URL(url).openStream();
+        }
+        return inputStream;
+    }
+
+    @Override
+    public void invalidateBundleCache() {
+        synchronized (bundleQueryCache) {
+            bundleQueryCache.clear();
+        }
+    }
 }

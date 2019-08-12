@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * Writes statistics, depending on the configuration to different files.
@@ -32,59 +33,123 @@ class StatisticsWriter {
     private final boolean separateHistogram;
     private final Statistics[] stats;
 
+    private final WriterFactory writerFactory;
     private final Writer[][] writer;
+    private final String[] bandNames;
+    private final RAConfig.BandConfig[] bandConfigs;
+    private final String[] internalRegionNames;
+    private final boolean withProductNames;
 
     StatisticsWriter(RAConfig raConfig, Statistics[] stats, WriterFactory writerFactory) throws IOException {
         this.statisticsPerRegion = raConfig.isWritePerRegion();
         this.separateHistogram = raConfig.isWriteSeparateHistogram();
         this.stats = stats;
-        String[] bandNames = raConfig.getBandNames();
+        this.bandNames = raConfig.getBandNames();
+        this.bandConfigs = raConfig.getBandConfigs();
+        this.writerFactory = writerFactory;
+        internalRegionNames = raConfig.getInternalRegionNames();
         int numWriter = 1;
+        withProductNames = raConfig.withProductNames();
+
         if (separateHistogram) {
             numWriter = 1 + bandNames.length;
         }
-
-        RAConfig.BandConfig[] bandConfigs = raConfig.getBandConfigs();
-        List<String> commonHeader = getCommonHeader();
         if (statisticsPerRegion) {
-            writer = new Writer[raConfig.getInternalRegionNames().length][numWriter];
-            String[] internalRegionNames = raConfig.getInternalRegionNames();
-            for (int r = 0; r < internalRegionNames.length; r++) {
-                String regionName = internalRegionNames[r];
-                if (separateHistogram) {
-                    // stat
-                    List<String> records = new ArrayList<>(commonHeader);
-                    records.addAll(getStatHeader(bandNames));
-                    writer[r][0] = writerFactory.createWriter("region-" + regionName + "-statistics.csv");
-                    writeLine(writer[r][0], records);
-
-                    for (int b = 0; b < bandConfigs.length; b++) {
-                        if (bandConfigs[b].getNumBins() > 0) {
-                            // histo
-                            records = new ArrayList<>(commonHeader);
-                            records.addAll(getHistoHeader(b, bandNames[b]));
-
-                            writer[r][1 + b] = writerFactory.createWriter("region-" + regionName + "-histogram-" + bandNames[b] + ".csv");
-                            writeLine(writer[r][1 + b], records);
-                        }
-                    }
-                } else {
-                    // stat + histo
-                    List<String> records = new ArrayList<>(commonHeader);
-                    records.addAll(getStatAndHistoHeader(bandNames));
-                    writer[r][0] = writerFactory.createWriter("region-" + regionName + "-statistics.csv");
-                    writeLine(writer[r][0], records);
-                }
-            }
+            writer = new Writer[internalRegionNames.length][numWriter];
         } else {
             writer = new Writer[1][numWriter];
-            if (separateHistogram) {
+        }
+//        List<String> commonHeader = getCommonHeader();
+//        if (statisticsPerRegion) {
+//            writer = new Writer[raConfig.getInternalRegionNames().length][numWriter];
+//            String[] internalRegionNames = raConfig.getInternalRegionNames();
+//            for (int r = 0; r < internalRegionNames.length; r++) {
+//                String regionName = internalRegionNames[r];
+//                if (separateHistogram) {
+//                    // stat
+//                    List<String> records = new ArrayList<>(commonHeader);
+//                    records.addAll(getStatHeader(bandNames));
+//                    writer[r][0] = writerFactory.createWriter("region-" + regionName + "-statistics.csv");
+//                    writeLine(writer[r][0], records);
+//
+//                    for (int b = 0; b < bandConfigs.length; b++) {
+//                        if (bandConfigs[b].getNumBins() > 0) {
+//                            // histo
+//                            records = new ArrayList<>(commonHeader);
+//                            records.addAll(getHistoHeader(b, bandNames[b]));
+//
+//                            writer[r][1 + b] = writerFactory.createWriter("region-" + regionName + "-histogram-" + bandNames[b] + ".csv");
+//                            writeLine(writer[r][1 + b], records);
+//                        }
+//                    }
+//                } else {
+//                    // stat + histo
+//                    List<String> records = new ArrayList<>(commonHeader);
+//                    records.addAll(getStatAndHistoHeader(bandNames));
+//                    writer[r][0] = writerFactory.createWriter("region-" + regionName + "-statistics.csv");
+//                    writeLine(writer[r][0], records);
+//                }
+//            }
+//        } else {
+//            writer = new Writer[1][numWriter];
+//            if (separateHistogram) {
+//                // stat
+//                List<String> records = new ArrayList<>(commonHeader);
+//                records.addAll(getStatHeader(bandNames));
+//                writer[0][0] = writerFactory.createWriter("region-statistics.csv");
+//                writeLine(writer[0][0], records);
+//
+//                for (int b = 0; b < bandConfigs.length; b++) {
+//                    if (bandConfigs[b].getNumBins() > 0) {
+//                        // histo
+//                        records = new ArrayList<>(commonHeader);
+//                        records.addAll(getHistoHeader(b, bandNames[b]));
+//                        writer[0][1 + b] = writerFactory.createWriter("region-histogram-" + bandNames[b] + ".csv");
+//                        writeLine(writer[0][1 + b], records);
+//                    }
+//                }
+//            } else {
+//                // stat + histo
+//                List<String> records = new ArrayList<>(commonHeader);
+//                records.addAll(getStatAndHistoHeader(bandNames));
+//                writer[0][0] = writerFactory.createWriter("region-statistics.csv");
+//                writeLine(writer[0][0], records);
+//            }
+//        }
+    }
+
+    void createWriters(String regionName) throws IOException {
+        List<String> commonHeader = getCommonHeader();
+        if (statisticsPerRegion && separateHistogram) {
+            int r = regionIndexOf(regionName);
+            // stat
+            List<String> records = new ArrayList<>(commonHeader);
+            records.addAll(getStatHeader(bandNames));
+            writer[r][0] = writerFactory.createWriter("region-" + regionName + "-statistics.csv");
+            writeLine(writer[r][0], records);
+            for (int b = 0; b < bandConfigs.length; b++) {
+                if (bandConfigs[b].getNumBins() > 0) {
+                    // histo
+                    records = new ArrayList<>(commonHeader);
+                    records.addAll(getHistoHeader(b, bandNames[b]));
+                    writer[r][1 + b] = writerFactory.createWriter("region-" + regionName + "-histogram-" + bandNames[b] + ".csv");
+                    writeLine(writer[r][1 + b], records);
+                }
+            }
+        } else if (statisticsPerRegion) {
+            int r = regionIndexOf(regionName);
+            // stat + histo
+            List<String> records = new ArrayList<>(commonHeader);
+            records.addAll(getStatAndHistoHeader(bandNames));
+            writer[r][0] = writerFactory.createWriter("region-" + regionName + "-statistics.csv");
+            writeLine(writer[r][0], records);
+        } else if (separateHistogram) {
+            if (writer[0][0] == null) {
                 // stat
                 List<String> records = new ArrayList<>(commonHeader);
                 records.addAll(getStatHeader(bandNames));
                 writer[0][0] = writerFactory.createWriter("region-statistics.csv");
                 writeLine(writer[0][0], records);
-
                 for (int b = 0; b < bandConfigs.length; b++) {
                     if (bandConfigs[b].getNumBins() > 0) {
                         // histo
@@ -94,14 +159,39 @@ class StatisticsWriter {
                         writeLine(writer[0][1 + b], records);
                     }
                 }
-            } else {
+            }
+        } else {
+             if (writer[0][0] == null) {
                 // stat + histo
                 List<String> records = new ArrayList<>(commonHeader);
                 records.addAll(getStatAndHistoHeader(bandNames));
                 writer[0][0] = writerFactory.createWriter("region-statistics.csv");
                 writeLine(writer[0][0], records);
+             }
+        }
+    }
+
+    void closeWriters(String regionName) throws IOException {
+        if (statisticsPerRegion) {
+            int r = regionIndexOf(regionName);
+            for (int b = 0; b < writer[r].length; b++) {
+                if (writer[r][b] != null) {
+                    writer[r][b].close();
+                    writer[r][b] = null;
+                }
+            }
+        } else {
+             // do nothing
+        }
+    }
+
+    private int regionIndexOf(String regionName) {
+        for (int r = 0; r < internalRegionNames.length; ++r) {
+            if (internalRegionNames[r].equals(regionName)) {
+                return r;
             }
         }
+        throw new NoSuchElementException(regionName);
     }
 
     void writeRecord(int region, List<String> commonStats) throws IOException {
@@ -149,6 +239,9 @@ class StatisticsWriter {
         records.add("RegionId");
         records.add("TimeWindow_start");
         records.add("TimeWindow_end");
+        if (withProductNames) {
+            records.add("Product");
+        }
         records.add("numPasses");
         records.add("numObs");
         return records;

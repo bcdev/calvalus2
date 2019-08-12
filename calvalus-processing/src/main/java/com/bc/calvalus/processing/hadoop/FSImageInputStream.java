@@ -16,10 +16,12 @@ public class FSImageInputStream extends ImageInputStreamImpl {
 
     private FSDataInputStream fsInStream;
     private final long length;
+    private final String path;
 
-    public FSImageInputStream(FSDataInputStream fsInStream, long length) {
+    public FSImageInputStream(FSDataInputStream fsInStream, long length, String path) {
         this.fsInStream = fsInStream;
         this.length = length;
+        this.path = path;
     }
 
     public int read() throws IOException {
@@ -63,5 +65,10 @@ public class FSImageInputStream extends ImageInputStreamImpl {
         } finally {
             fsInStream = null;
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("FSImageInputStream{path='%s'} ", path);
     }
 }

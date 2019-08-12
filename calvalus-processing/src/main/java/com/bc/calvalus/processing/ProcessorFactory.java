@@ -16,9 +16,6 @@
 
 package com.bc.calvalus.processing;
 
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isArchive;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isLib;
-
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
@@ -30,20 +27,18 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.esa.snap.core.datamodel.Product;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isArchive;
 
 /**
  * Creates a {@code ProcessorAdapter} for the given processor.
@@ -72,24 +67,24 @@ public class ProcessorFactory {
         throw new IllegalArgumentException("Unknown processor type.");
     }
 
-    public static void installProcessorBundles(String username, Configuration conf) throws IOException {
+    public static void installProcessorBundles(String username, Configuration conf, FileSystem fs) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
         if (conf.get(JobConfigNames.CALVALUS_BUNDLES) != null) {
             final String[] aBundle = conf.get(JobConfigNames.CALVALUS_BUNDLES).split(",");
             List<String> processorFiles = new ArrayList<>();
             for (int i = 0; i < aBundle.length; i++) {
                 final String bundleSpec = aBundle[i];
-                Path bundlePath = getBundlePath(bundleSpec, conf);
+                Path bundlePath = getBundlePath(bundleSpec, conf, fs);
                 if (bundlePath != null) {
-                    FileSystem fs;
-                    try {
-                        fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
-                    } catch (InterruptedException e) {
-                        throw new IOException(e);
-                    }
+//                    FileSystem fs;
+//                    try {
+//                        fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+//                    } catch (InterruptedException e) {
+//                        throw new IOException(e);
+//                    }
                     HadoopProcessingService.addBundleToClassPathStatic(bundlePath, conf, fs);
-                    addBundleArchives(bundlePath, fs, conf);
-                    addBundleLibs(bundlePath, fs, conf);
+                    HadoopProcessingService.addBundleArchives(bundlePath, fs, conf);
+                    HadoopProcessingService.addBundleLibs(bundlePath, fs, conf);
 
                     String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + "");
                     if (executable != null) {
@@ -108,8 +103,8 @@ public class ProcessorFactory {
                             if (bundleDescriptor.getIncludeBundle() != null) {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
                                 HadoopProcessingService.addBundleToClassPathStatic(includeBundlePath, conf, fs);
-                                addBundleArchives(includeBundlePath, fs, conf);
-                                addBundleLibs(includeBundlePath, fs, conf);
+                                HadoopProcessingService.addBundleArchives(includeBundlePath, fs, conf);
+                                HadoopProcessingService.addBundleLibs(includeBundlePath, fs, conf);
                             }
                         }
                     } catch (Exception ex) {
@@ -151,19 +146,19 @@ public class ProcessorFactory {
         return ProcessorType.OPERATOR;
     }
 
-    private static Path getBundlePath(String bundleSpec, Configuration conf) throws IOException {
+    private static Path getBundlePath(String bundleSpec, Configuration conf, FileSystem fs) throws IOException {
         final Path bundlePath;
         if (isAbsolutePath(bundleSpec)) {
             bundlePath = new Path(bundleSpec);
         } else {
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
-        FileSystem fs;
-        try {
-            fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
-        } catch (InterruptedException e) {
-            throw new IOException(e);
-        }
+//        FileSystem fs;
+//        try {
+//            fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+//        } catch (InterruptedException e) {
+//            throw new IOException(e);
+//        }
         if (fs.exists(bundlePath)) {
             FileStatus bundleStatus = fs.getFileStatus(bundlePath);
             if (bundleStatus != null && bundleStatus.isDirectory()) {
@@ -177,6 +172,7 @@ public class ProcessorFactory {
         return bundleSpec.charAt(0) == '/';
     }
 
+/*
     private static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
         final FileStatus[] archives = fs.listStatus(bundlePath, new PathFilter() {
             @Override
@@ -185,7 +181,7 @@ public class ProcessorFactory {
             }
         });
         for (FileStatus archive : archives) {
-            URI uri = convertPathToURI(archive.getPath());
+            URI uri = convertPathToURI(fs.makeQualified(archive.getPath()));
             DistributedCache.addCacheArchive(uri, conf);
         }
     }
@@ -217,10 +213,11 @@ public class ProcessorFactory {
             }
         });
         for (FileStatus lib : libs) {
-            URI uri = lib.getPath().toUri();
+            URI uri = fs.makeQualified(lib.getPath()).toUri();
             DistributedCache.addCacheFile(uri, conf);
         }
     }
+*/
 
     private static String[] getBundleProcessorFiles(final String processorName, Path bundlePath, FileSystem fs) throws IOException {
         final FileStatus[] processorStatuses = fs.listStatus(bundlePath, new PathFilter() {

@@ -35,10 +35,15 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.runtime.Engine;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 /**
@@ -112,6 +117,7 @@ public abstract class ProcessorAdapter {
         }
         GpfUtils.init(conf);
         Engine.start();
+        CalvalusLogger.restoreCalvalusLogFormatter();
     }
 
     protected MapContext getMapContext() {
@@ -128,10 +134,53 @@ public abstract class ProcessorAdapter {
 
     /**
      * Prepares the processing.
-     * The default implementation does nothing.
+     * The default implementation does nothing except creating a shallow copy tree with symlinks to files of patch packages.
      */
     public void prepareProcessing() throws IOException {
+        shallowCopyPatches(new File(".").getAbsolutePath());
     }
+
+    protected static void shallowCopyPatches(String wd) throws IOException {
+        java.nio.file.Path dir = Paths.get(wd);
+        try (DirectoryStream<java.nio.file.Path> directoryStream =
+                     Files.newDirectoryStream(dir,
+                                              new DirectoryStream.Filter<java.nio.file.Path>() {
+                                                  @Override
+                                                  public boolean accept(java.nio.file.Path entry) throws IOException {
+                                                      return entry.getFileName().toString().endsWith("-patch") && Files.isSymbolicLink(entry);
+                                                  }
+                                              })) {
+            for (java.nio.file.Path srcChild : directoryStream) {
+                String srcName = srcChild.getFileName().toString();
+                String destName = srcName.substring(0, srcName.length() - "-patch".length());
+                java.nio.file.Path destChild = dir.resolve(destName);
+                try {
+                    Files.createDirectory(destChild);
+                } catch (FileAlreadyExistsException ignore) {}
+                shallowCopyRecursive(srcChild, destChild);
+            }
+        }
+    }
+
+    private static void shallowCopyRecursive(java.nio.file.Path src, java.nio.file.Path dest) throws IOException {
+        try (DirectoryStream<java.nio.file.Path> directoryStream = Files.newDirectoryStream(src)) {
+            for (java.nio.file.Path srcChild : directoryStream) {
+                String name = srcChild.getFileName().toString();
+                java.nio.file.Path destChild = dest.resolve(name);
+                if (Files.isDirectory(srcChild, LinkOption.NOFOLLOW_LINKS)) {
+                    try {
+                        Files.createDirectory(destChild);
+                    } catch (FileAlreadyExistsException ignore) {}
+                    shallowCopyRecursive(srcChild, destChild);
+                } else {
+                    try {
+                        Files.createSymbolicLink(destChild, srcChild);
+                    } catch (FileAlreadyExistsException ignore) {}
+                }
+            }
+        }
+    }
+
 
     /**
      * Returns whether the adapter can skip processing the current input product.
@@ -296,7 +345,7 @@ public abstract class ProcessorAdapter {
      * Returns parameters from TableInputFormat/ParameterizedSplit, or empty array for other input formats.
      * The return value is encoded as key1, value1, key2, value2 ... in a string array
      */
-    protected String[] getInputParameters() {
+    public String[] getInputParameters() {
         if (inputSplit instanceof ParameterizedSplit) {
             return ((ParameterizedSplit) inputSplit).getParameters();
         } else {
@@ -311,10 +360,26 @@ public abstract class ProcessorAdapter {
      * @return The input region to process, or {@code null} if no restriction is given.
      */
     public Rectangle getInputRectangle() throws IOException {
+        // Unclear why we had introduced this in November 2018.
+        // Removed January 2019 because it is harmful for graphs that do resamping and output subsetting
+        // because they will process all inputs including the non-overlapping ones.
+        //boolean processCompleteInputFile = !getMapContext().getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true);
+        //if (processCompleteInputFile) {
+        //    return null;
+        //}
+
         if (inputRectangle == null) {
-            String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
+            String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            // check table for table input format
+            for (int i=0; i<getInputParameters().length; i += 2) {
+                if ("regionGeometry".equals(getInputParameters()[i])) {
+                    geometryWkt = getInputParameters()[i+1];
+                    break;
+                }
+            }
             Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
+            LOG.info("getInputRectangle: for geometryWkt = " + geometryWkt);
             ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
                     roiRectangle,
                     inputSplit,
@@ -324,8 +389,10 @@ public abstract class ProcessorAdapter {
                     return getInputProduct();
                 }
             };
-            inputRectangle = calculator.computeRect();
-            LOG.info("computed inputRectangle = " + inputRectangle);
+            try {
+                inputRectangle = calculator.computeRect();
+            } catch (IOException _) {}
+            LOG.info("getInputRectangle: calculated inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
     }
@@ -355,15 +422,27 @@ public abstract class ProcessorAdapter {
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         if (inputFile != null) {
+            Product product;
+            getMapContext().getCounter("Direct File System Counters", "INPUT_FILE_BYTES_READ").setValue(inputFile.length());
             if (inputFormat != null) {
-                return ProductIO.readProduct(inputFile, inputFormat);
+                LOG.info(String.format("openInputProduct: inputFile  = %s inputFormat  = %s", inputFile, inputFormat));
+                product = ProductIO.readProduct(inputFile, inputFormat);
             } else {
-                return ProductIO.readProduct(inputFile);
+                LOG.info(String.format("openInputProduct: inputFile  = %s", inputFile));
+                product = ProductIO.readProduct(inputFile);
             }
+            CalvalusProductIO.printProductOnStdout(product, "opened from local file");
+            return product;
         } else {
+            LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
             Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+
+            if (inputSplit instanceof FileSplit) {
+                FileSplit fileSplit = (FileSplit) inputSplit;
+                getMapContext().getCounter("Direct File System Counters", "FILE_SPLIT_BYTES_READ").setValue(fileSplit.getLength());
+            }
             File fileLocation = product.getFileLocation();
-            System.out.println("fileLocation = " + fileLocation);
+            LOG.info(String.format("openInputProduct: fileLocation  = %s", fileLocation));
             if (fileLocation != null) {
                 setInputFile(fileLocation);
             }

@@ -1,0 +1,339 @@
+/** Example rules used by the template application (remove for your app) */
+
+#splashScreen {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    margin: -100px;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+}
+
+.main-panel {
+    display: flex;
+    height: calc(100% - 140px);
+    overflow-x: hidden;
+}
+
+.main-panel-sub {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.header-panel {
+    background-color: #373B50;
+    height: 80px;
+    display: flex;
+    flex-direction: row;
+}
+
+.header-logo {
+    flex: 0 0 200px;
+    margin: 15px 0 0 0;
+    text-align: center;
+}
+
+.header-title {
+    width: 100%;
+    padding-left: 15px;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: white;
+    font-size: 32pt;
+    font-weight: bold;
+    margin: auto 0;
+}
+
+.header-info {
+    display: flex;
+    flex: 0 0 300px;
+    flex-direction: row;
+    padding: 0 10px;
+}
+
+.header-info-user {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    font-weight: 900;
+    color: #7ac6cf;
+    margin: auto;
+    text-align: center;
+}
+
+.header-user-logout {
+    margin: auto;
+    text-align: center;
+}
+
+.header-info-help {
+    margin: auto;
+    text-align: center;
+}
+
+.header-info-about {
+    margin: auto;
+    text-align: center;
+}
+
+.header-username-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12pt;
+    font-weight: 900;
+    color: white;
+}
+
+.header-info-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12pt;
+    font-weight: 900;
+    color: #7ac6cf;
+}
+
+.header-info-text:hover {
+    color: white;
+}
+
+.footer {
+    background-color: #333;
+    display: flex;
+    flex-direction: row;
+    color: white;
+    height: 60px;
+}
+
+.footer-left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.footer-calvalus-version {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    color: #888;
+    flex: 0 0 50%;
+}
+
+.footer-copyright-legal-privacy {
+    flex: 0 0 50%;
+    display: flex;
+}
+
+.footer-copyright {
+    margin: auto;
+    flex: 0 0 230px;
+}
+
+.footer-legal {
+    margin: auto;
+    text-align: center;
+    flex: 0 0 100px;
+}
+
+.footer-privacy {
+    margin: auto;
+    text-align: center;
+    flex: 0 0 130px;
+}
+
+.footer-empty {
+    width: 100%;
+}
+
+.copyright-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.legal-privacy-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.legal-privacy-text:hover {
+    color: #7ac6cf;
+}
+
+.footer-info {
+    display: flex;
+    flex: 0 0 250px;
+    flex-direction: row;
+}
+
+.footer-info-help {
+    width: 100%;
+    margin: auto;
+    text-align: center;
+}
+
+.footer-info-about {
+    width: 100%;
+    margin: auto;
+    text-align: center;
+}
+
+.footer-info-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+}
+
+.footer-info-text:hover {
+    color: #7ac6cf;
+}
+
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeItemValue {
+    color: white;
+}
+
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeSelectedItem {
+    background: #7ac6cf none !important;
+}
+
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeSelectedItem .com-google-gwt-user-cellview-client-CellTree-Style-cellTreeItemValue {
+    color: #373B50;
+}
+
+.gwt-Button {
+    padding: 13px 15px !important;
+    background: #373B50 none !important;
+    color: white;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+.gwt-Button:hover {
+    background: black none !important;
+}
+
+.gwt-Button:disabled {
+    background: #e1e2e1 none !important;
+    color: #888;
+}
+
+.gwt-Label {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-size: 14px;
+    color: #373B50 !important;
+}
+
+.gwt-ListBox {
+    background-color: rgba(122, 198, 207, 0.3);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.gwt-ListBox:disabled {
+    background-color: #e1e2e1;
+    color: #888;
+}
+
+.gwt-TextArea {
+    background-color: rgba(122, 198, 207, 0.3);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+/* not working at the moment. Without "multiple" selector, it affects both listbox and dropdown list,
+which is undesirable */
+select[multiple]:focus option:checked {
+    background: #373B50 -webkit-linear-gradient(bottom, #373B50 0%, #373B50 100%);
+}
+
+.view-container {
+    height: 100%;
+    width: calc(100% - 180px);
+}
+
+.main-menu {
+    background-color: #373B50;
+    color: white;
+    flex: 0 0 200px;
+    font-size: 14px;
+    overflow-y: auto;
+}
+
+.title {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #7ac6cf;
+    font-size: 32pt;
+    font-weight: bold;
+    margin: 0;
+    padding: 0 0 0 4px;
+}
+
+.userName {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    color: #7ac6cf;
+    text-align: right;
+    width: 15%;
+    vertical-align: top;
+}
+
+.copyright {
+    background-color: #B4C1D7;
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 9pt;
+    color: #FFF;
+    text-align: center;
+    vertical-align: bottom;
+    width: 816px
+}
+
+.loginPanelWrapper {
+    width: 816px;
+}
+
+.loginPanel {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 12pt;
+    text-align: center;
+    padding-top: 20px;
+    width: 300px;
+    margin: 0 auto;
+}
+
+.headerPanel {
+    width: 816px;
+}
+
+.formPanel {
+    margin: 10px;
+    padding: 5px;
+}
+
+p, li {
+    font-family: Georgia, Times, serif;
+    font-size: 10pt;
+}
+
+.panelGeneric {
+    overflow: auto;
+    background-color: red;
+}
+
+/* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
+.anchor:hover {
+    cursor: pointer;
+    color: #373B50;
+}
+
+.anchor {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin-left: 5px;
+}

@@ -55,7 +55,7 @@ public class OrderMACProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
@@ -181,8 +181,8 @@ public class OrderMACProductionView extends OrderProductionView {
                 String identifier = form.getProcessorIdentifierSafe();
                 String suffix = "." + identifier;
                 parameters.putAll(form.l2ConfigForm.getValueMap(suffix));
-                parameters.put("goodPixelExpression" + suffix, form.goodPixelExpression.getText());
-                parameters.put("goodRecordExpression" + suffix, form.goodRecordExpression.getText());
+                parameters.put("goodPixelExpression" + suffix, ParametersEditorGenerator.encodeXML(form.goodPixelExpression.getText()));
+                parameters.put("goodRecordExpression" + suffix, ParametersEditorGenerator.encodeXML(form.goodRecordExpression.getText()));
                 if (allIdentifiers.isEmpty()) {
                     allIdentifiers = identifier;
                 } else {

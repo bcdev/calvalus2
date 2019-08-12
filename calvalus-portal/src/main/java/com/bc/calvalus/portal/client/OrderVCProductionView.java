@@ -59,7 +59,7 @@ public class OrderVCProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
@@ -202,8 +202,8 @@ public class OrderVCProductionView extends OrderProductionView {
 
         parameters.putAll(maConfigForm.getValueMap());
         // overwrite with local values
-        parameters.put("goodPixelExpression", goodPixelExpression.getText());
-        parameters.put("goodRecordExpression", goodRecordExpression.getText());
+        parameters.put("goodPixelExpression", ParametersEditorGenerator.encodeXML(goodPixelExpression.getText()));
+        parameters.put("goodRecordExpression", ParametersEditorGenerator.encodeXML(goodRecordExpression.getText()));
 
         parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());

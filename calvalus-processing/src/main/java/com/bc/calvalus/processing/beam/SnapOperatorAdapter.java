@@ -26,9 +26,11 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.annotations.ParameterDescriptorFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -65,28 +67,27 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
             String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
+            Product inputProduct = getInputProduct();
             Product sourceProduct;
-            // TODO defaults for subsetting preserve old behaviour
             if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
-                sourceProduct = createSubset();
+                sourceProduct = createSubsetFromInput(inputProduct);
             } else {
-                sourceProduct = getInputProduct();
+                sourceProduct = inputProduct;
             }
-            Product subsetProduct = createSubset();
             int minWidth = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, 0);
             int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
-            if (subsetProduct.getSceneRasterWidth() < minWidth &&
-                subsetProduct.getSceneRasterHeight() < minHeight) {
+            if (sourceProduct.getSceneRasterWidth() < minWidth && sourceProduct.getSceneRasterHeight() < minHeight) {
                 String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
                                     "It will be suppressed from the processing.";
-                getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
-                                               subsetProduct.getSceneRasterHeight()));
+                getLogger().info(String.format(msgPattern, sourceProduct.getSceneRasterWidth(),
+                                               sourceProduct.getSceneRasterHeight()));
                 return false;
             }
+            Product processedProduct = getProcessedProduct(sourceProduct, processorName, processorParameters);
             if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
-                targetProduct = createSubset(getProcessedProduct(subsetProduct, processorName, processorParameters));
+                targetProduct = createSubsetFromOutput(processedProduct);
             } else {
-                targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+                targetProduct = processedProduct;
             }
             if (targetProduct == null ||
                 targetProduct.getSceneRasterWidth() == 0 ||
@@ -98,7 +99,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                                            targetProduct.getSceneRasterWidth(),
                                            targetProduct.getSceneRasterHeight()));
             if (hasInvalidStartAndStopTime(targetProduct)) {
-                copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+                copySceneRasterStartAndStopTime(inputProduct, targetProduct, null);
             }
         } finally {
             pm.done();
@@ -131,9 +132,13 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             // transform request into parameter objects
             Map<String, Object> parameterMap;
             try {
-                parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+                parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
                 for (int i=0; i<getInputParameters().length; i+=2) {
-                    if (! "output".equals(getInputParameters()[i])) {
+                    if ("output".equals(getInputParameters()[i])) {
+                        // drop parameter, is used later in SubsetProcessorAdapter
+                    } else if ("regionGeometry".equals(getInputParameters()[i])) {
+                        // drop parameter here
+                    } else {
                         parameterMap.put(getInputParameters()[i], getInputParameters()[i + 1]);
                     }
                 }
@@ -141,17 +146,28 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                 throw new IllegalArgumentException("Invalid operator parameters: " + e.getMessage(), e);
             }
             product = GPF.createProduct(operatorName, parameterMap, product);
+            CalvalusProductIO.printProductOnStdout(product, "computed by operator " + operatorName);
         }
         return product;
     }
 
-    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws
-                                                                                                            BindingException {
+    public static Map<String, Object> getOperatorParameterMap(Product inputProduct, 
+                                                              String operatorName, 
+                                                              String level2Parameters) throws BindingException {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }
         Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
-        return new ParameterBlockConverter().convertXmlToMap(level2Parameters, operatorClass);
+        ParameterBlockConverter parameterBlockConverter;
+        if (inputProduct != null) {
+            Map<String, Product> sourceProductMap = new HashMap<>();
+            sourceProductMap.put("source", inputProduct);
+            ParameterDescriptorFactory descriptorFactory = new ParameterDescriptorFactory(sourceProductMap);
+            parameterBlockConverter = new ParameterBlockConverter(descriptorFactory);
+        } else {
+            parameterBlockConverter = new ParameterBlockConverter();
+        }
+        return parameterBlockConverter.convertXmlToMap(level2Parameters, operatorClass);
     }
 
     private static Class<? extends Operator> getOperatorClass(String operatorName) {

@@ -83,13 +83,6 @@ public class MAProductionType extends HadoopProductionType {
                               workflowItem);
     }
 
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
-
     static String getMAConfigXml(ProductionRequest productionRequest) throws ProductionException {
         String maParametersXml = productionRequest.getString("calvalus.ma.parameters", null);
         if (maParametersXml == null) {
@@ -112,8 +105,8 @@ public class MAProductionType extends HadoopProductionType {
         maConfig.setFilteredMeanCoeff(productionRequest.getDouble("filteredMeanCoeff", 1.5));
         maConfig.setFilterOverlapping(productionRequest.getBoolean("filterOverlapping", false));
         maConfig.setCopyInput(productionRequest.getBoolean("copyInput", true));
-        maConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression", ""));
-        maConfig.setGoodRecordExpression(productionRequest.getString("goodRecordExpression", ""));
+        maConfig.setGoodPixelExpression(productionRequest.getXmlDecodedString("goodPixelExpression", ""));
+        maConfig.setGoodRecordExpression(productionRequest.getXmlDecodedString("goodRecordExpression", ""));
         String maxTimeDifference = productionRequest.getString("maxTimeDifference", "");
         if (!MAConfig.isMaxTimeDifferenceValid(maxTimeDifference)) {
             throw new ProductionException("Production parameter 'maxTimeDifference' must be hours (number > 0) or " +

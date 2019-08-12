@@ -32,6 +32,7 @@ import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -121,6 +122,15 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected void setInputLocationParameters(ProductionRequest productionRequest, Configuration conf) throws ProductionException {
         Map<String, String> productionRequestParameters = productionRequest.getParameters();
+        if(productionRequestParameters.containsKey("productIdentifiers")){
+            conf.set(JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS, productionRequest.getString("productIdentifiers"));
+        }
+        if(productionRequestParameters.containsKey("collectionName")){
+            conf.set(JobConfigNames.CALVALUS_INPUT_COLLECTION_NAME, productionRequest.getString("collectionName"));
+        }
+        if(productionRequestParameters.containsKey("inputProductType")){
+            conf.set(JobConfigNames.CALVALUS_INPUT_PRODUCT_TYPE, productionRequest.getString("inputProductType"));
+        }
         if (productionRequestParameters.containsKey("inputTable")) {
             conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
         } else if (productionRequestParameters.containsKey("geoInventory")) {
@@ -132,11 +142,25 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    protected abstract Staging createUnsubmittedStaging(Production production) throws IOException;
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
+        String userName = production.getProductionRequest().getUserName();
+        Configuration conf = getProcessingService().getJobClient(userName).getConf();
+        return new CopyStaging(production,
+                               conf,
+                               getProcessingService().getFileSystem(userName, conf, new Path(production.getOutputPath())),
+                               getStagingService().getStagingDir());
+    }
 
     protected final Configuration createJobConfig(ProductionRequest productionRequest) throws ProductionException {
         try {
             Configuration jobConfig = getProcessingService().createJobConfig(productionRequest.getUserName());
+            // the following values have defaults in mapred-default.xml
+            // we instead want to apply our settings in the mapred-site.xml or yarn-site.xml on the RM
+            // user provided still values take precedence
+            jobConfig.unset("mapreduce.map.memory.mb");
+            jobConfig.unset("mapreduce.reduce.memory.mb");
+            jobConfig.unset("mapreduce.jobhistory.address");
+            jobConfig.unset("mapreduce.jobhistory.webapp.address");
             jobConfig.set(JobConfigNames.CALVALUS_USER, productionRequest.getUserName());
             jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, productionRequest.getProductionType());
             return jobConfig;
@@ -193,7 +217,7 @@ public abstract class HadoopProductionType implements ProductionType {
      */
     protected boolean successfullyCompleted(String outputDir) {
         try {
-            return fileSystemService.pathExists(outputDir + "/_SUCCESS");
+            return fileSystemService.pathExists(outputDir + "/_SUCCESS", null);
         } catch (IOException e) {
             return false;
         }
@@ -221,7 +245,10 @@ public abstract class HadoopProductionType implements ProductionType {
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
                 jobConfig.set(hadoopName, entry.getValue());
-            } else if (name.startsWith("calvalus.") && !name.startsWith("calvalus.portal")) {
+            } else if (name.startsWith("calvalus.")
+                    && !name.startsWith("calvalus.portal")
+                    && !name.startsWith("calvalus.queue")
+                    && !name.startsWith("calvalus.crypt")) {
                 jobConfig.set(name, entry.getValue());
             }
         }

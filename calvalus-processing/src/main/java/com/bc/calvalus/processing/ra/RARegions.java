@@ -101,9 +101,9 @@ public class RARegions {
             // use given attribute name
             AttributeDescriptor descriptor = schema.getDescriptor(attributeName);
             if (descriptor != null) {
-                if (descriptor.getType().getBinding() == String.class) {
+                //if (descriptor.getType().getBinding() == String.class) {
                     return new AttributeNameProvider(attributeName);
-                }
+                //}
             }
         }
         // use index
@@ -134,7 +134,7 @@ public class RARegions {
 
         @Override
         public String getName(SimpleFeature simpleFeature) {
-            return (String) simpleFeature.getAttribute(attributeName);
+            return String.valueOf(simpleFeature.getAttribute(attributeName));
         }
     }
     
@@ -144,7 +144,7 @@ public class RARegions {
 
         RAConfig.NamedRegion next();
 
-        void close() throws Exception;
+        void close() throws IOException;
     }
 
     public static class FilterRegionIterator implements RegionIterator {
@@ -156,7 +156,6 @@ public class RARegions {
 
         public FilterRegionIterator(RegionIterator regionIterator, String filter) {
             this.delegate = regionIterator;
-            nextMatch();
             if (filter != null && !filter.isEmpty()) {
                 String[] filters = filter.split(",");
                 patterns = new Pattern[filters.length];
@@ -166,6 +165,7 @@ public class RARegions {
             } else {
                 patterns = null;
             }
+            nextMatch();
         }
 
         @Override
@@ -202,7 +202,7 @@ public class RARegions {
                 return true;
             }
             for (Pattern pattern : patterns) {
-                if (pattern.matcher(regionName).matches()) {
+                if (pattern.matcher(regionName).find()) {
                     return true;
                 }
             }
@@ -210,7 +210,7 @@ public class RARegions {
         }
 
         @Override
-        public void close() throws Exception {
+        public void close() throws IOException {
             delegate.close();   
         }
     }

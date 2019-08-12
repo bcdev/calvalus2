@@ -5,17 +5,17 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.14-SNAPSHOT</version>
+        <version>2.19-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-distribution</artifactId>
     <packaging>pom</packaging>
 
     <properties>
-        <snap.bundle.version>5.0.1</snap.bundle.version>
+        <snap.bundle.version>5-cv-2.14</snap.bundle.version>
     </properties>
 
-    <name>Calvalus Distribution</name>
+    <name>Calvalus Distribution CPT+Bundle</name>
     <description>
         Provides the various distributions of calvalus artifacts.
     </description>
@@ -23,6 +23,7 @@
     <dependencies>
 
         <!--  Calvalus -->
+
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-commons</artifactId>
@@ -40,115 +41,6 @@
             <artifactId>calvalus-production</artifactId>
         </dependency>
 
-        <!--  Ceres -->
-         <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
-         commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
-        <!--
-         <dependency>
-             <groupId>org.esa.snap</groupId>
-             <artifactId>ceres-metadata</artifactId>
-         </dependency>
-            -->
-         <!--  SNAP -->
-        <!--
-         <dependency>
-             <groupId>org.esa.snap</groupId>
-             <artifactId>snap-core</artifactId>
-         </dependency>
-         <dependency>
-             <groupId>org.esa.snap</groupId>
-             <artifactId>snap-gpf</artifactId>
-         </dependency>
-         <dependency>
-             <groupId>org.esa.snap</groupId>
-             <artifactId>snap-netcdf</artifactId>
-         </dependency>
-         <dependency>
-             <groupId>org.esa.snap</groupId>
-             <artifactId>snap-binning</artifactId>
-         </dependency>
-        <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-envisat-reader</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-avhrr-reader</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-geotiff</artifactId>
-        </dependency>
-         <dependency>
-             <groupId>org.esa.snap</groupId>
-             <artifactId>snap-bigtiff</artifactId>
-         </dependency>
-         <dependency>
-             <groupId>org.slf4j</groupId>
-             <artifactId>slf4j-simple</artifactId>
-         </dependency>
-         <dependency>
-             <groupId>log4j</groupId>
-             <artifactId>log4j</artifactId>
-         </dependency>
-         <dependency>
-             <groupId>org.esa.snap.seadas</groupId>
-             <artifactId>seadas-reader</artifactId>
-             <version>1.5.7</version>
-             <exclusions>
-                 <exclusion>
-                     <groupId>org.esa.snap</groupId>
-                     <artifactId>snap-ui</artifactId>
-                 </exclusion>
-                 <exclusion>
-                     <groupId>org.esa.snap</groupId>
-                     <artifactId>snap-desktop</artifactId>
-                 </exclusion>
-                 <exclusion>
-                     <groupId>org.esa.snap</groupId>
-                     <artifactId>snap-rcp</artifactId>
-                 </exclusion>
-                 <exclusion>
-                     <groupId>org.esa.snap</groupId>
-                     <artifactId>snap-core</artifactId>
-                 </exclusion>
-                 <exclusion>
-                     <groupId>org.esa.snap</groupId>
-                     <artifactId>snap-netcdf</artifactId>
-                 </exclusion>
-                 <exclusion>
-                     <groupId>org.esa.snap</groupId>
-                     <artifactId>s3tbx-merisl3-reader</artifactId>
-                 </exclusion>
-             </exclusions>
-         </dependency>
-         <dependency>
-             <groupId>org.esa.s3tbx</groupId>
-             <artifactId>s3tbx-spot-vgt-reader</artifactId>
-             <version>2.0.0</version>
-         </dependency>
-        <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-landsat-reader</artifactId>
-            <version>2.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-envi-reader</artifactId>
-            <version>2.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>1.8.0.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-render</artifactId>
-        </dependency>
-        -->
-
         <!--  JFreeChart -->
 
         <dependency>
@@ -160,37 +52,43 @@
             <artifactId>jcommon</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+
         <!--  BC Geo - Inventory -->
 
         <dependency>
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.5.3</version>
                 <executions>
-                    <!--
-                    <execution>
-                        <id>snap-bundle</id>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/snap.xml</descriptor>
-                            </descriptors>
-                            <finalName>snap-bundle</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <attach>false</attach>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                    -->
                     <execution>
                         <id>calvalus-bundle</id>
                         <configuration>
@@ -228,21 +126,6 @@
                                 </manifestEntries>
                             </archive>
                             <finalName>cpt</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <attach>false</attach>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>snap-buildin-bundle</id>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/snap-buildin.xml</descriptor>
-                            </descriptors>
-                            <finalName>snap-buildin-bundle</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>

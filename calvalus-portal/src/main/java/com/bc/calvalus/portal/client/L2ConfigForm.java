@@ -30,7 +30,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Anchor;
@@ -44,6 +43,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -214,7 +214,10 @@ public class L2ConfigForm extends Composite {
                 productSetChanged = false;
             }
         }
-        processorList.setSelectedIndex(selectionMandatory ? newSelectionIndex : newSelectionIndex + 1);
+        if (newSelectionIndex == 0 && !selectionMandatory && processorDescriptors.size() > 0) {
+            newSelectionIndex = 1; // always select the fist processor
+        }
+        processorList.setSelectedIndex(newSelectionIndex);
         if (productSetChanged) {
             DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
         }
@@ -350,7 +353,9 @@ public class L2ConfigForm extends Composite {
             parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION + suffix, processorDescriptor.getBundleVersion());
             parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION + suffix, processorDescriptor.getBundleLocation());
             parameters.put(ProcessorProductionRequest.PROCESSOR_NAME + suffix, processorDescriptor.getExecutableName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_DESCRIPTION + suffix, processorDescriptor.getProcessorName());
             parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + suffix, getProcessorParameters());
+            parameters.put(ProcessorProductionRequest.OUTPUT_PRODUCT_TYPE + suffix, processorDescriptor.getOutputProductType());
         }
         return parameters;
     }
@@ -369,7 +374,7 @@ public class L2ConfigForm extends Composite {
                                                bundleLocationValue, processorNameValue);
             if (selectionIndex > -1) {
                 processorList.setSelectedIndex(selectionMandatory ? selectionIndex : selectionIndex + 1);
-                updateProcessorDetails();
+                DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
                 if (processorParameterValue != null) {
                     processorParametersArea.setValue(processorParameterValue);
                 }
@@ -379,7 +384,7 @@ public class L2ConfigForm extends Composite {
         if (!processorSelected) {
             // no matching processor found, select the first
             processorList.setSelectedIndex(0);
-            updateProcessorDetails();
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
         }
         // TODO handle failure
     }

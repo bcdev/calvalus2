@@ -87,8 +87,8 @@ public class MACompareProductionType extends HadoopProductionType {
             setRequestParameters(productionRequest, maJobConfig);
             processorProductionRequest.configureProcessor(maJobConfig);
 
-            maConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression" + suffix, ""));
-            maConfig.setGoodRecordExpression(productionRequest.getString("goodRecordExpression" + suffix, ""));
+            maConfig.setGoodPixelExpression(productionRequest.getXmlDecodedString("goodPixelExpression" + suffix, ""));
+            maConfig.setGoodRecordExpression(productionRequest.getXmlDecodedString("goodRecordExpression" + suffix, ""));
 
             List<DateRange> dateRanges = productionRequest.getDateRanges();
             setInputLocationParameters(productionRequest, maJobConfig);
@@ -124,13 +124,6 @@ public class MACompareProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               workflow);
-    }
-
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
     }
 
     static MAConfig getMAConfig(ProductionRequest productionRequest) throws ProductionException {

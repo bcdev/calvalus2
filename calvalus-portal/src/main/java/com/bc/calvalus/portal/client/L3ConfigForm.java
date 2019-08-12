@@ -28,6 +28,7 @@ import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +51,7 @@ public class L3ConfigForm extends Composite {
 
     public static final String COMPOSITING_TYPE_BINNING = "BINNING";
     public static final String COMPOSITING_TYPE_MOSAICKING = "MOSAICKING";
-    public static final String COMPOSITING_TYPE_EPSG_3067 = "MOSAICKING-EPSG:3067"; // TODO input field for CRS
+    public static final String COMPOSITING_TYPE_EPSG = "MOSAICKING-EPSG";
 
     private final List<String> l3InputVarNames;
     private final L3AggregatorTable aggregatorTable;
@@ -79,6 +80,8 @@ public class L3ConfigForm extends Composite {
 
     @UiField
     ListBox compositingType;
+    @UiField
+    TextBox epsgCode;
     @UiField
     DoubleBox resolution;
     @UiField
@@ -128,7 +131,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.addRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+                updateRemoveVariableButtonEnablement();
             }
         });
 
@@ -136,27 +139,25 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.removeSelectedRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+                updateRemoveVariableButtonEnablement();
             }
         });
-        removeVariableButton.setEnabled(false);
+        updateRemoveVariableButtonEnablement();
 
         addAggregatorButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.addRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
-            }
+                updateRemoveAggregatorButtonEnablement();            }
         });
 
         removeAggregatorButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.removeSelectedRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
-            }
+                updateRemoveAggregatorButtonEnablement();            }
         });
-        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
+        updateRemoveAggregatorButtonEnablement();
 
         variableTable.addValueChangeHandler(new ValueChangeHandler<L3VariableTable.ConfiguredVariable>() {
             @Override
@@ -164,13 +165,25 @@ public class L3ConfigForm extends Composite {
                 updateAvailableVariables();
             }
         });
+        variableTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                updateRemoveVariableButtonEnablement();                 
+            }
+        });
+        aggregatorTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                updateRemoveAggregatorButtonEnablement();                 
+            }
+        });
+        
         ValueChangeHandler<Integer> periodCountUpdater = new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
                 updatePeriodCount();
             }
         };
-
         steppingPeriodLength.setValue(10);
         steppingPeriodLength.addValueChangeHandler(periodCountUpdater);
 
@@ -191,9 +204,13 @@ public class L3ConfigForm extends Composite {
         });
         compositingType.addItem(COMPOSITING_TYPE_BINNING);
         compositingType.addItem(COMPOSITING_TYPE_MOSAICKING);
-        // disblaed until fully supported
-//        compositingType.addItem(COMPOSITING_TYPE_EPSG_3067);
+        compositingType.addItem(COMPOSITING_TYPE_EPSG);
         compositingType.setSelectedIndex(0);
+        compositingType.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) { updateEpsgCodeEnablement(); }
+        });
+        updateEpsgCodeEnablement();
 
         targetWidth.setEnabled(false);
         targetHeight.setEnabled(false);
@@ -202,7 +219,19 @@ public class L3ConfigForm extends Composite {
 
         HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
     }
+    
+    private void updateRemoveAggregatorButtonEnablement() {
+        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
+    }
 
+    private void updateRemoveVariableButtonEnablement() {
+        removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+    }
+
+    private void updateEpsgCodeEnablement() {
+        epsgCode.setEnabled(compositingType.getSelectedValue().endsWith("EPSG"));
+    }
+    
     private List<DtoAggregatorDescriptor> retrieveAggregatorDescriptors(PortalContext portalContext, String[] filterAggregatorNamesArray) {
         List<DtoAggregatorDescriptor> allAvailable = new ArrayList<DtoAggregatorDescriptor>();
         if (true) {
@@ -289,15 +318,17 @@ public class L3ConfigForm extends Composite {
                 defaultValidMask = defaultMaskExpression;
             }
         } else {
-            String[] bandNames = productSet.getBandNames();
-            Collections.addAll(l3InputVarNames, bandNames);
+            if (productSet != null) {
+                String[] bandNames = productSet.getBandNames();
+                Collections.addAll(l3InputVarNames, bandNames);
+            }
         }
         updateAvailableVariables();
         if (aggregatorTable.getAggregatorList().size() == 0) {
             aggregatorTable.addRow();
         }
 
-        maskExpr.setValue(defaultValidMask);
+        maskExpr.setValue(ParametersEditorGenerator.decodeXML(defaultValidMask));
     }
 
     public void validateForm() throws ValidationException {
@@ -307,14 +338,14 @@ public class L3ConfigForm extends Composite {
         }
 
         Integer steppingP = steppingPeriodLength.getValue();
-        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -30);
+        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -10 || steppingP == -30);
         if (!periodLengthValid) {
             throw new ValidationException(steppingPeriodLength, "Period length must be >= 1");
         }
 
         Integer compositingP = compositingPeriodLength.getValue();
         boolean compositingPeriodLengthValid = compositingP != null &&
-                (compositingP >= 1 || compositingP == -7 || compositingP == -30);
+                (compositingP >= 1 || compositingP == -7 || compositingP == -10 || compositingP == -30);
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
                                           "Compositing period length must be >= 1");
@@ -322,7 +353,11 @@ public class L3ConfigForm extends Composite {
 
         boolean resolutionValid = resolution.getValue() != null && resolution.getValue() > 0.0;
         if (!resolutionValid) {
-            throw new ValidationException(resolution, "Resolution must greater than zero");
+            throw new ValidationException(resolution, "Resolution must be greater than zero");
+        }
+        boolean projectionValid = ! compositingType.getSelectedValue().equals("MOSAICKING-EPSG") || (epsgCode.getValue() != null && epsgCode.getValue().length() > 0);
+        if (!projectionValid) {
+            throw new ValidationException(epsgCode, "missing EPSG code for MOSAICKING-EPSG compositing");
         }
 
         Integer superSamplingValue = superSampling.getValue();
@@ -421,27 +456,23 @@ public class L3ConfigForm extends Composite {
         parameters.put("variables.count", vIndex + "");
 
         List<L3VariableTable.ConfiguredVariable> variableList = variableTable.getVariableList();
-        int eIndex = 0;
         for (int i = 0; i < variableList.size(); i++) {
             L3VariableTable.ConfiguredVariable variable = variableList.get(i);
-            if (!variable.getExpression().isEmpty()) {
-                parameters.put("expression." + i + ".variable", variable.getName());
-                parameters.put("expression." + i + ".expression", variable.getExpression());
-                eIndex++;
-            }
+            parameters.put("expression." + i + ".variable", variable.getName());
+            parameters.put("expression." + i + ".expression", ParametersEditorGenerator.encodeXML(variable.getExpression()));
         }
-        if (eIndex > 0) {
-            parameters.put("expression.count", eIndex + "");
+        if (variableList.size() > 0) {
+            parameters.put("expression.count", variableList.size() + "");
         }
 
-        parameters.put("maskExpr", maskExpr.getText());
+        parameters.put("maskExpr", ParametersEditorGenerator.encodeXML(maskExpr.getText()));
         parameters.put("periodLength", steppingPeriodLength.getValue().toString());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
         parameters.put("compositingType", getCompositingType());
         if (COMPOSITING_TYPE_MOSAICKING.equals(getCompositingType())) {
             parameters.put("planetaryGrid", "org.esa.snap.binning.support.PlateCarreeGrid");
-        } else if (COMPOSITING_TYPE_EPSG_3067.equals(getCompositingType())) {
-            parameters.put("planetaryGrid", "org.esa.snap.binning.support.CrsGridEpsg3067");
+        } else if (COMPOSITING_TYPE_EPSG.equals(getCompositingType())) {
+            parameters.put("planetaryGrid", "EPSG:" + epsgCode.getValue().toString());
             parameters.put("compositingType", COMPOSITING_TYPE_MOSAICKING);
         }
         parameters.put("resolution", resolution.getValue().toString());
@@ -464,7 +495,7 @@ public class L3ConfigForm extends Composite {
     public void setValues(Map<String, String> parameters) {
         String maskExprValue = parameters.get("maskExpr");
         if (maskExprValue != null) {
-            maskExpr.setValue(maskExprValue);
+            maskExpr.setValue(ParametersEditorGenerator.decodeXML(maskExprValue));
         }
         String periodLengthValue = parameters.get("periodLength");
         if (periodLengthValue != null) {
@@ -474,13 +505,21 @@ public class L3ConfigForm extends Composite {
         if (compositingPeriodLengthValue != null) {
             compositingPeriodLength.setValue(Integer.valueOf(compositingPeriodLengthValue), true);
         }
+        String planetaryGridValue = parameters.get("planetaryGrid");
         String compositingTypeValue = parameters.get("compositingType");
+        String epsgCodeValue = "";
+        if (planetaryGridValue.startsWith("EPSG:")) {
+            compositingTypeValue = "MOSAICKING-EPSG";
+            epsgCodeValue = planetaryGridValue.substring(5);
+        }
         for (int i = 0; i < compositingType.getItemCount(); i++) {
             if (compositingType.getValue(i).equals(compositingTypeValue)) {
                 compositingType.setSelectedIndex(i);
                 break;
             }
         }
+        epsgCode.setValue(epsgCodeValue);
+        updateEpsgCodeEnablement();
         // TODO handle failure
         String resolutionValue = parameters.getOrDefault("resolution", "9.28");
         resolution.setValue(Double.valueOf(resolutionValue), true);
@@ -493,8 +532,8 @@ public class L3ConfigForm extends Composite {
             int numExpr = Integer.valueOf(eCountValue);
             for (int i = 0; i < numExpr; i++) {
                 String vName = parameters.get("expression." + i + ".variable");
-                String vExpr = parameters.get("expression." + i + ".expression");
-                if (vName != null && vExpr != null) {
+                String vExpr = parameters.getOrDefault("expression." + i + ".expression", "");
+                if (vName != null) {
                     variableTable.addRow(vName, vExpr);
                 }
             }

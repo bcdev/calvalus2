@@ -3,6 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 
 import java.io.IOException;
 import java.util.Observer;
@@ -68,6 +69,18 @@ public interface ProductionService {
      * @throws ProductionException If a service error occurred.
      */
     ProductionResponse orderProduction(ProductionRequest request) throws ProductionException;
+
+    /**
+     * Orders a new productions.
+     *
+     * @param request The request.
+     * @param jobHook a hook run before each job is submitted.
+     *
+     * @return The response.
+     *
+     * @throws ProductionException If a service error occurred.
+     */
+    ProductionResponse orderProduction(ProductionRequest request, HadoopJobHook jobHook) throws ProductionException;
 
     /**
      * Requests cancellation of productions with given IDs.
@@ -151,5 +164,9 @@ public interface ProductionService {
      * Load details about the region data.
      */
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
-    
+
+    /**
+     * Invalidates bundle cache after upload or delete
+     */
+    void invalidateBundleCache();
 }

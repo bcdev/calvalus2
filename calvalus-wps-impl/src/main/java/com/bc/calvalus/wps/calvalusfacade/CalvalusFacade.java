@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
@@ -15,8 +16,10 @@ import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.Execute;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,5 +97,20 @@ public class CalvalusFacade extends ProcessFacade {
 
     private ServiceContainer getServices() throws ProductionException, IOException {
         return CalvalusProductionService.getServiceContainerSingleton();
+    }
+
+    public String[] getRegionFiles() throws IOException {
+        return calvalusProcessorExtractor.getRegionFiles(remoteUserName);
+    }
+
+    public String[][] loadRegionDataInfo(String url) throws IOException, ProductionException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(remoteUserName);
+        try {
+            return remoteUser.doAs((PrivilegedExceptionAction<String[][]>) () -> {
+                return getServices().getProductionService().loadRegionDataInfo(remoteUserName, url);
+            });
+        } catch (InterruptedException e) {
+            throw new ProductionException("region data info failed, url=" + url, e);
+        }
     }
 }

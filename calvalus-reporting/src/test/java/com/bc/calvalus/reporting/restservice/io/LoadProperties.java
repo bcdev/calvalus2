@@ -1,13 +1,13 @@
 package com.bc.calvalus.reporting.restservice.io;
 
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.runner.*;
+import org.junit.runner.notification.*;
+import org.junit.runners.*;
+import org.junit.runners.model.*;
+
 import java.io.IOException;
 import java.nio.file.Paths;
-import org.junit.runner.Description;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
 
 /**
  * @author muhammad.bc.

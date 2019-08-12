@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.wpsoperations;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
@@ -53,6 +54,7 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
 
     public Capabilities getCapabilities()
                 throws BindingException, IOException, URISyntaxException, WpsProcessorNotFoundException {
+        CalvalusLogger.getLogger().info("GetCapabilities for user " + this.calvalusFacade.getRemoteUserName());
         return CapabilitiesBuilder.create()
                     .withOperationsMetadata(getOperationsMetadata())
                     .withServiceIdentification(getServiceIdentification())

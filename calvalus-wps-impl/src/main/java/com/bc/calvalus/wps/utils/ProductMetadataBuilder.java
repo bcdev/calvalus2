@@ -206,9 +206,9 @@ public class ProductMetadataBuilder {
             this.collectionUrl = getBaseStagingUrl() + "/" + this.production.getStagingPath();
             try {
                 this.productionName = encodeSpecialCharacters(this.production.getName());
-                this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
+                this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier(), "ra");
                 this.inputDatasetName = productionRequest.getString("inputDataSetName");
-                String regionWktRaw = productionRequest.getString(("regionWKT"));
+                String regionWktRaw = productionRequest.getString(("regionWKT"), null);
                 this.regionWkt = extractRegionWkt(regionWktRaw);
                 this.regionBox = parseRegionBox();
                 this.startDate = getStartDate(productionRequest);
@@ -252,7 +252,7 @@ public class ProductMetadataBuilder {
     private String getProcessorId(ProductionRequest productionRequest) throws ProductionException {
         String processorBundle = productionRequest.getString("processorBundleName");
         String processorBundleVersion = productionRequest.getString("processorBundleVersion");
-        String processorName = productionRequest.getString("processorName");
+        String processorName = productionRequest.getString("processorName", "ra");
         return processorBundle + "~" + processorBundleVersion + "~" + processorName;
     }
 
@@ -273,6 +273,9 @@ public class ProductMetadataBuilder {
     }
 
     private String extractRegionWkt(String regionWkt) {
+        if (regionWkt == null) {
+            regionWkt = "POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))";
+        }
         String[] elements = regionWkt.split("[(, )]+");
         if (!"polygon".equals(elements[0].toLowerCase())) {
             throw new IllegalArgumentException(regionWkt);

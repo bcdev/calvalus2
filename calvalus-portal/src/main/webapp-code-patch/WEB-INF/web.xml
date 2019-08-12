@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+        PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+    <display-name>Calvalus Portal</display-name>
+    <description>Calvalus Portal</description>
+
+    <!-- Configuration properties for the Calvalus portal -->
+
+    <context-param>
+        <param-name>calvalus.properties</param-name>
+        <param-value>config/calvalus.properties</param-value>
+    </context-param>
+
+    <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
+
+    <servlet>
+        <servlet-name>stagingServlet</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readmeFile</param-name>
+            <param-value>/staging/directory-listing-readme.txt</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextXsltFile</param-name>
+            <param-value>/staging/directory-listing.xsl</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <!-- Backend servlet -->
+
+    <servlet>
+        <servlet-name>backendServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.BackendServiceImpl</servlet-class>
+    </servlet>
+
+    <!-- File upload & echo servlet -->
+
+    <servlet>
+        <servlet-name>uploadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
+    </servlet>
+
+    <!-- Hadoop logfile servlet -->
+
+    <servlet>
+        <servlet-name>hadoopLogServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.HadoopLogServlet</servlet-class>
+    </servlet>
+
+    <!-- File download servlet -->
+
+    <servlet>
+        <servlet-name>downloadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.InjectInputSelectionServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.ContextRetrievalServiceImpl</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>stagingServlet</servlet-name>
+        <url-pattern>/staging/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>backendServlet</servlet-name>
+        <url-pattern>/calvalus/backend</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>uploadServlet</servlet-name>
+        <url-pattern>/calvalus/upload</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>hadoopLogServlet</servlet-name>
+        <url-pattern>/calvalus/hadoopLogs</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>downloadServlet</servlet-name>
+        <url-pattern>/calvalus/download</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <url-pattern>/injectInputSelection</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <url-pattern>/calvalus/retrieve</url-pattern>
+    </servlet-mapping>
+
+    <!-- You can set the default session timeout (in minutes) for all newly   -->
+    <!-- created sessions by modifying the value below.                       -->
+    <session-config>
+        <session-timeout>120</session-timeout>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>calvalus.jsp</welcome-file>
+    </welcome-file-list>
+
+    <filter>
+        <filter-name>CAS Authentication Filter</filter-name>
+        <filter-class>org.jasig.cas.client.authentication.AuthenticationFilter</filter-class>
+        <init-param>
+            <param-name>casServerLoginUrl</param-name>
+            <param-value>https://sso.eoc.dlr.de/cas-codede/login</param-value>
+        </init-param>
+        <init-param>
+            <param-name>service</param-name>
+            <param-value>https://processing.code-de.org/calvalus.jsp</param-value>
+        </init-param>
+    </filter>
+    <filter>
+        <filter-name>CAS Validation Filter</filter-name>
+        <filter-class>com.bc.calvalus.portal.server.SamlCreateTicketValidationFilter</filter-class>
+        <init-param>
+            <param-name>casServerUrlPrefix</param-name>
+            <param-value>https://sso.eoc.dlr.de/cas-codede/</param-value>
+        </init-param>
+        <init-param>
+            <param-name>service</param-name>
+            <param-value>https://processing.code-de.org/calvalus.jsp</param-value>
+        </init-param>
+        <init-param>
+            <param-name>artifactParameterName</param-name>
+            <param-value>ticket</param-value>
+        </init-param>
+        <init-param>
+            <param-name>redirectAfterValidation</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>calvalus.crypt.samlkey-private-key</param-name>
+            <param-value>/home/cvop/.calvalus/samlkey_priv.der</param-value>
+        </init-param>
+
+    </filter>
+
+    <filter>
+        <filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>
+        <filter-class>org.jasig.cas.client.util.HttpServletRequestWrapperFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CAS Authentication Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS Validation Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>CAS HttpServletRequest Wrapper Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+</web-app>

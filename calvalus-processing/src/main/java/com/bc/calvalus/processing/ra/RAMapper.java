@@ -17,22 +17,26 @@
 package com.bc.calvalus.processing.ra;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.ra.stat.Extractor;
+import com.bc.calvalus.processing.ra.stat.RADateRanges;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**
@@ -60,9 +64,20 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, numRegions));
             if (product != null) {
+                if (product.getSceneTimeCoding() == null && product.getStartTime() == null && product.getEndTime() == null) {
+                    String dateRangesString = jobConfig.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
+                    try {
+                        RADateRanges dateRanges = RADateRanges.create(dateRangesString);
+                        product.setStartTime(ProductData.UTC.parse(dateRanges.formatStart(0), "yyyy-MM-dd HH:mm:ss"));
+                        product.setEndTime(ProductData.UTC.parse(dateRanges.formatStart(0), "yyyy-MM-dd HH:mm:ss"));
+                        LOG.warning("Product has no time information, assuming " + dateRanges.formatStart(0));
+                    } catch (ParseException e) {
+                        throw new IOException(e);
+                    }
+                }
                 final AtomicBoolean foundPixel = new AtomicBoolean(false);
-                final AtomicInteger numObsTotal = new AtomicInteger(0);
-                final AtomicInteger numSamplesTotal = new AtomicInteger(0);
+                final AtomicLong numObsTotal = new AtomicLong(0);
+                final AtomicLong numSamplesTotal = new AtomicLong(0);
                 final Set<Integer> regionIdSet = new HashSet<>();
                 final String productName = product.getName();
                 RARegions.RegionIterator regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());

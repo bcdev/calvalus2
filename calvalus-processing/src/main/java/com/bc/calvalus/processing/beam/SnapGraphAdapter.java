@@ -27,7 +27,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
-import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.MetadataAttribute;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
@@ -64,12 +63,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -128,7 +122,13 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
             if (mode == MODE.EXECUTE && calvalusAppData != null) {
                 boolean success = executeGraphAndCollectOutput(graph, calvalusAppData, pm);
-                if (success && target != null && target.getNodeId() != null && graphContext.getOutputProducts().length > 0) {
+                Product[] outputProducts;
+                try {
+                    outputProducts = graphContext.getOutputProducts();
+                } catch (NullPointerException e) {
+                    outputProducts = new Product[0];
+                }
+                if (success && target != null && target.getNodeId() != null && outputProducts.length > 0) {
                     //graphContext.getOutputProducts()[0];
                     targetProduct = getTargetProductFromGraph(graph, target.getNodeId());
                     return postprocessTargetProduct();
@@ -150,17 +150,10 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     private void logGraphState() {
-        for (NodeContext nodeContext : graphContext.getInitNodeContextDeque()) {
-            Node node = nodeContext.getNode();
-            System.out.println("Node = " + node.getId() + " Operator = " + nodeContext.getOperator().getClass().getSimpleName());
-            Product p = nodeContext.getTargetProduct();
-            System.out.println("Product: " + p.getName());
-            System.out.println("Bands:");
-            Band[] bands = p.getBands();
-            for (Band band : bands) {
-                System.out.println("     " + band.toString());
-            }
-            System.out.println();
+        for (Iterator<NodeContext> iterator = graphContext.getInitNodeContextDeque().descendingIterator(); iterator.hasNext(); ) {
+            NodeContext nodeContext = iterator.next();
+            CalvalusProductIO.printProductOnStdout(nodeContext.getTargetProduct(),
+                                                   "computed by node " + nodeContext.getNode().getId());
         }
     }
 
@@ -247,7 +240,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     private boolean postprocessTargetProduct() throws IOException {
         if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
             getLogger().info("output subsetting of split " + getInputPath());
-            targetProduct = createSubset(targetProduct);
+            targetProduct = createSubsetFromOutput(targetProduct);
         }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
             getLogger().info("Skip processing");
@@ -285,12 +278,17 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             }
             Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
             Product sourceProduct;
-            if (qualifiedInputPath.equals(qualifiedSourcePath)) {
-                // main input
-                sourceProduct = getInputProduct();
+            if (qualifiedInputPath.equals(qualifiedSourcePath) ) {
+                // main input, maybe re-read with specific input format
+                if (inputFormat == null) {
+                    sourceProduct = getInputProduct();
+                } else {
+                    getConfiguration().set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
+                    sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
+                }
                 if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
                     getLogger().info("input subsetting of split " + sourcePath);
-                    sourceProduct = createSubset(sourceProduct);
+                    sourceProduct = createSubsetFromInput(sourceProduct);
                 }
             } else {
                 // other source product
@@ -336,7 +334,11 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
         for (int i = 0; i < getInputParameters().length; i += 2) {
-            if (!"output".equals(getInputParameters()[i])) {
+            if ("output".equals(getInputParameters()[i])) {
+                // drop parameter, is used later in SubsetProcessorAdapter
+            } else if ("regionGeometry".equals(getInputParameters()[i])) {
+                conf.set("calvalus.regionGeometry", getInputParameters()[i+1]);
+            } else {
                 processingParameters.put(getInputParameters()[i], getInputParameters()[i + 1]);
             }
         }

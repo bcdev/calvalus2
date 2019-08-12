@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.l3;
 
 import org.apache.hadoop.io.Writable;
 import org.esa.snap.binning.SpatialBin;
+import org.esa.snap.binning.support.GrowableVector;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -27,8 +28,8 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
         super();
     }
 
-    public L3SpatialBin(long index, int numFeatures) {
-        super(index, numFeatures);
+    public L3SpatialBin(long index, int numFeatures, int numGrowableFeatures) {
+        super(index, numFeatures, numGrowableFeatures);
     }
 
     public L3SpatialBin(String metadata) {
@@ -47,11 +48,7 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
     public void write(DataOutput dataOutput) throws IOException {
          // Note, we don't serialise the index, because it is usually the MapReduce key
         if (metadata == null) {
-            dataOutput.writeInt(getNumObs());
-            dataOutput.writeInt(getFeatureValues().length);
-            for (float value : getFeatureValues()) {
-                dataOutput.writeFloat(value);
-            }
+            super.write(dataOutput);
         } else {
             dataOutput.writeInt(METADATA_MAGIC_NUMBER);
             int chunkSize = 65535 / 3;  // UTF may blow up the string to trice the size in bytes
@@ -77,6 +74,17 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
              }
              for (int i = 0; i < numFeatures; i++) {
                  getFeatureValues()[i] = dataInput.readFloat();
+             }
+
+             final int numVectors = dataInput.readInt();
+             vectors = new GrowableVector[numVectors];
+             for (int i = 0; i < numVectors; i++) {
+                 final int vectorLength = dataInput.readInt();
+                 final GrowableVector vector = new GrowableVector(vectorLength);
+                 vectors[i] = vector;
+                 for (int k = 0; k < vectorLength; k++) {
+                     vector.add(dataInput.readFloat());
+                 }
              }
          } else {
              int noOfChunks = dataInput.readInt();

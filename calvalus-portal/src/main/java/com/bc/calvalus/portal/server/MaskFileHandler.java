@@ -29,7 +29,7 @@ class MaskFileHandler implements FileUploadServlet.FileHandler {
     @Override
     public void handleFileItem(HttpServletRequest req, HttpServletResponse resp, FileItem item) throws Exception {
         String maskDirPath = getSpecifiedDirectory(req);
-        final String userName = getUserName(req).toLowerCase();
+        final String userName = getUserName(req);
 
         ServiceContainer serviceContainer = (ServiceContainer) context.getAttribute("serviceContainer");
 

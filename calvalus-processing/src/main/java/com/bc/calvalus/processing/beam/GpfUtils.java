@@ -23,6 +23,9 @@ import org.esa.snap.core.util.SystemUtils;
 import org.esa.snap.runtime.Config;
 
 import javax.media.jai.JAI;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -31,9 +34,7 @@ import java.util.logging.Logger;
  */
 public class GpfUtils {
 
-    private static final int M = 1024 * 1024;
-    public static final int DEFAULT_TILE_CACHE_SIZE = 512 * M; // 512 M
-
+    private static final long OneMiB = 1024L * 1024L;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     /**
@@ -46,9 +47,12 @@ public class GpfUtils {
     }
 
     public static void initGpf(Configuration configuration, Class aClass) {
+        reportJvmMemory();
         initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
+        final long tileCacheSize = JAI.getDefaultInstance().getTileCache().getMemoryCapacity() / OneMiB;
+        LOG.info(String.format("JAI tile cache size is %d MiB", tileCacheSize));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         String tmpDir = System.getProperties().getProperty("java.io.tmpdir");
@@ -65,5 +69,27 @@ public class GpfUtils {
                 System.setProperty(propertyName, propertyValue);
             }
         }
+    }
+
+    private static void reportJvmMemory() {
+        LOG.info("------------------ JVM Memory -----------------");
+        // https://stackoverflow.com/questions/3571203/what-are-runtime-getruntime-totalmemory-and-freememory/18375641#18375641
+        Runtime runtime = Runtime.getRuntime();
+        LOG.info("Runtime used:      " + mb(runtime.totalMemory() - runtime.freeMemory()));
+        LOG.info("Runtime allocated: " + mb(runtime.totalMemory()));
+        LOG.info("Runtime max:       " + mb(runtime.maxMemory()));
+
+        MemoryMXBean m = ManagementFactory.getMemoryMXBean();
+        LOG.info("Non-heap: " + mb(m.getNonHeapMemoryUsage().getMax()));
+        LOG.info("Heap:     " + mb(m.getHeapMemoryUsage().getMax()));
+
+        for (MemoryPoolMXBean mp : ManagementFactory.getMemoryPoolMXBeans()) {
+            LOG.info(String.format("Pool: %s (type %s) = %s", mp.getName(), mp.getType(), mb(mp.getUsage().getMax())));
+        }
+        LOG.info("-----------------------------------------------");
+    }
+
+    static String mb(long memBytes) {
+        return String.format("%8.2f MiB", (double) memBytes / OneMiB);
     }
 }

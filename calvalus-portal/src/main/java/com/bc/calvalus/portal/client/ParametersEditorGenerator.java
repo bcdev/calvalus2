@@ -215,11 +215,11 @@ public class ParametersEditorGenerator {
         }
     }
 
-    private static String encodeXML(String s) {
+    public static String encodeXML(String s) {
         return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     }
 
-    private static String decodeXML(String s) {
+    public static String decodeXML(String s) {
         return s.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
     }
 

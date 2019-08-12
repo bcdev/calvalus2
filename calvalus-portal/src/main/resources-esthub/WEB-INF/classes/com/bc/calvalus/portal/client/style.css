@@ -1,0 +1,229 @@
+.variableName input {
+    width: 20em;
+}
+
+.variableExpression input {
+    width: 50em;
+}
+
+/*******************************
+* Input File Set Panel styling *
+********************************/
+
+.inputFileSetPanel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
+}
+
+/***********************
+* Filter Panel styling *
+************************/
+
+.filterPanel {
+    display: flex;
+    margin-top: 15px;
+}
+
+.temporalFilterPanel {
+    margin: 0 15px;
+}
+
+.spatialFilterPanel {
+    margin: 0 15px;
+}
+
+/*******************
+* L2 Panel styling *
+********************/
+
+.l2Panel {
+    display: flex;
+    flex-direction: column;
+    margin-top: 50px;
+}
+
+.processorParametersPanels {
+    display: flex;
+}
+
+.l2ProcessorPanel {
+    margin: 0 15px;
+}
+
+.l2ProcessorPrefContainer {
+    display: flex;
+    margin: 10px 0;
+}
+
+.l2ProcessorPrefMulti {
+    display: flex;
+    flex-direction: column;
+}
+
+.l2ParametersPanel {
+    margin: 0 15px;
+}
+
+.l2ParametersButtonGroup {
+    display: flex;
+    margin: 10px 0;
+    justify-content: space-between;
+}
+
+.l2ParametersFileUpload {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    color: #373B50;
+    margin: auto 0;
+}
+
+.l2ProcessorDescription {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 10px 0 0 10px;
+}
+
+.l2Help {
+    margin: 10px 0 0 15px;
+}
+
+/**********************************
+* Output Parameters Panel styling *
+***********************************/
+
+.outputParametersPanel {
+    margin: 50px 15px;
+    width: 62em;
+}
+
+.outputProductionName {
+    margin: 10px 0;
+}
+
+.processingFormatPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.productionNameText {
+    flex: 0 0 130px;
+    margin: auto 0;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+}
+
+.productionNameTextBox {
+    width: 100%;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+}
+
+/**********************
+* Input files styling *
+***********************/
+.inputFilePanel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
+}
+
+.inputFileListPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.fileCount {
+    display: flex;
+}
+
+.fileCountLabel{
+    font-weight: 700;
+    margin: 0 10px 0 0;
+}
+
+.inputFileButtonContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.marginTop10 {
+    margin-top: 10px;
+}
+
+/******************
+* General styling *
+*******************/
+
+.panelTitleText {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: white;
+}
+
+/* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
+.anchor:hover {
+    cursor: pointer;
+    color: #373B50;
+}
+
+.anchor {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.panelTitle {
+    background-color: #373B50;
+    margin: 0 0 5px 0;
+    padding: 5px;
+}
+
+.checkBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
+}
+
+.radioButton {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.dateBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.textBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.flexRow {
+    display: flex;
+    flex-direction: row;
+}
+
+.centeredHorizontalPanel {
+    vertical-align: middle;
+}
+
+.explanatoryLabel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.noteLabel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    color: #888;
+}
+
+.explanatoryValue {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #373B50;
+}

@@ -1,6 +1,6 @@
 <!doctype html>
 
-<%@page language="java" import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
+<%@page import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
 <%@ page import="java.security.Principal" %>
 
 <html>

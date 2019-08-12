@@ -257,8 +257,8 @@ public class MAConfigForm extends Composite {
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put("copyInput", "true");
-        parameters.put("goodPixelExpression", goodPixelExpression.getText());
-        parameters.put("goodRecordExpression", goodRecordExpression.getText());
+        parameters.put("goodPixelExpression", ParametersEditorGenerator.encodeXML(goodPixelExpression.getText()));
+        parameters.put("goodRecordExpression", ParametersEditorGenerator.encodeXML(goodRecordExpression.getText()));
         parameters.put("macroPixelSize", macroPixelSize.getValue().toString());
         parameters.put("maxTimeDifference", maxTimeDifference.getText());
         parameters.put("filteredMeanCoeff", filteredMeanCoeff.getValue().toString());
@@ -270,8 +270,8 @@ public class MAConfigForm extends Composite {
     }
 
     public void setValues(Map<String, String> parameters) {
-        goodPixelExpression.setValue(parameters.getOrDefault("goodPixelExpression", ""));
-        goodRecordExpression.setValue(parameters.getOrDefault("goodRecordExpression", ""));
+        goodPixelExpression.setValue(ParametersEditorGenerator.decodeXML(parameters.getOrDefault("goodPixelExpression", "")));
+        goodRecordExpression.setValue(ParametersEditorGenerator.decodeXML(parameters.getOrDefault("goodRecordExpression", "")));
         macroPixelSize.setText(parameters.getOrDefault("macroPixelSize", "5"));
         maxTimeDifference.setValue(parameters.getOrDefault("maxTimeDifference", "3.0"));
         filteredMeanCoeff.setText(parameters.getOrDefault("filteredMeanCoeff", "1.5"));

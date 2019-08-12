@@ -16,11 +16,10 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -42,6 +41,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
+    private ProductsFromCatalogueForm productsFromCatalogueForm;
     private L2ConfigForm l2ConfigForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
@@ -50,24 +50,31 @@ public class OrderL2ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
-            @Override
-            public void onProductSetChanged(DtoProductSet productSet) {
-                productSetFilterForm.setProductSet(productSet);
-                l2ConfigForm.setProductSet(productSet);
-            }
+        productSetSelectionForm.addChangeHandler(productSet -> {
+            productSetFilterForm.setProductSet(productSet);
+            l2ConfigForm.setProductSet(productSet);
         });
 
-        l2ConfigForm = new L2ConfigForm(portalContext, true);
-        l2ConfigForm.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                handleProcessorChanged();
-            }
-        });
+        l2ConfigForm = new L2ConfigForm(portalContext, false);
+        l2ConfigForm.addChangeHandler(event -> handleProcessorChanged());
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
+            productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
+                @Override
+                public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                    return new InputSelectionCallback();
+                }
+
+                @Override
+                public void onClearSelectionClick() {
+                    productsFromCatalogueForm.removeSelections();
+                }
+            });
+        }
 
         outputParametersForm = new OutputParametersForm(portalContext);
         l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
@@ -77,37 +84,20 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)){
+            panel.add(productsFromCatalogueForm);
+        }
         panel.add(l2ConfigForm);
         panel.add(outputParametersForm);
         Anchor l2Help = new Anchor("Show Help");
+        l2Help.getElement().getStyle().setProperty("textDecoration", "none");
+        l2Help.addStyleName("anchor");
         panel.add(l2Help);
         HelpSystem.addClickHandler(l2Help, "l2Processing");
         //panel.add(new HTML("<br/>"));
         panel.add(createOrderPanel());
 
         this.widget = panel;
-    }
-
-    private void handleProcessorChanged() {
-        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
-        if (processorDescriptor != null) {
-            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
-            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
-            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
-            String formattingType = processorDescriptor.getFormattingType();
-            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
-            if (!implicitlyFormatted) {
-                add("NetCDF4", outputFormats);
-                add("BigGeoTiff", outputFormats);
-            }
-            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
-        }
-    }
-
-    private static void add(String format, List<String> outputFormats) {
-        if (!outputFormats.contains(format)) {
-            outputFormats.add(format);
-        }
     }
 
     @Override
@@ -133,12 +123,9 @@ public class OrderL2ProductionView extends OrderProductionView {
     @Override
     public void onShowing() {
         // make sure #triggerResize is called after the new view is shown
-        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
-            @Override
-            public void execute() {
-                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
-            }
+        Scheduler.get().scheduleFinally(() -> {
+            // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+            productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
         });
     }
 
@@ -147,12 +134,17 @@ public class OrderL2ProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
+            if (productsFromCatalogueForm != null) {
+                productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            }
             l2ConfigForm.validateForm();
             outputParametersForm.validateForm();
-            if (! getPortal().withPortalFeature("unlimitedJobSize")) {
+
+
+            if (!getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numDaysValue = Integer.parseInt(productSetFilterForm.numDays.getValue());
-                    if (numDaysValue > 365+366) {
+                    if (numDaysValue > 365 + 366) {
                         throw new ValidationException(productSetFilterForm.numDays, "time range larger than allowed");
                     }
                 } catch (NumberFormatException e) {
@@ -168,9 +160,12 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     @Override
     protected HashMap<String, String> getProductionParameters() {
-        HashMap<String, String> parameters = new HashMap<String, String>();
+        HashMap<String, String> parameters = new HashMap<>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        if (productsFromCatalogueForm != null) {
+            parameters.putAll(productsFromCatalogueForm.getValueMap());
+        }
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
@@ -185,7 +180,48 @@ public class OrderL2ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
+        if (productsFromCatalogueForm != null) {
+            productsFromCatalogueForm.setValues(parameters);
+        }
         l2ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
+            productsFromCatalogueForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
+    }
+
+    private void handleProcessorChanged() {
+        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
+        if (processorDescriptor != null) {
+            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
+            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
+            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
+            String formattingType = processorDescriptor.getFormattingType();
+            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
+            if (!implicitlyFormatted) {
+                add("NetCDF4", outputFormats);
+                add("BigGeoTiff", outputFormats);
+            }
+            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
+        }
+    }
+
+    private static void add(String format, List<String> outputFormats) {
+        if (!outputFormats.contains(format)) {
+            outputFormats.add(format);
+        }
     }
 }

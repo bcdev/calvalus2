@@ -384,7 +384,7 @@ public class RAConfigForm extends Composite {
         parameters.put("regionSourceAttributeName", regionSourceAttributeNames.getSelectedValue());
         parameters.put("regionSourceAttributeFilter", regionSourceAttributeFilter.getValue());
         
-        parameters.put("goodPixelExpression", goodPixelExpression.getText());
+        parameters.put("goodPixelExpression", ParametersEditorGenerator.encodeXML(goodPixelExpression.getText()));
         parameters.put("percentiles", percentiles.getText());
         parameters.put("writePerRegion", writePerRegion.getValue().toString());
         parameters.put("writeSeparateHistogram", writeSeparateHistogram.getValue().toString());
@@ -420,7 +420,7 @@ public class RAConfigForm extends Composite {
             }
         }
         
-        goodPixelExpression.setValue(parameters.getOrDefault("goodPixelExpression", ""));
+        goodPixelExpression.setValue(ParametersEditorGenerator.decodeXML(parameters.getOrDefault("goodPixelExpression", "")));
         percentiles.setValue(parameters.getOrDefault("percentiles", ""));
         writePerRegion.setValue(Boolean.valueOf(parameters.getOrDefault("writePerRegion", "true")));
         writeSeparateHistogram.setValue(Boolean.valueOf(parameters.getOrDefault("writeSeparateHistogram", "true")));

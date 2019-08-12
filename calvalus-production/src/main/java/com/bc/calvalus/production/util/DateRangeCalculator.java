@@ -127,6 +127,9 @@ public class DateRangeCalculator {
         if (periodText.equals("-7")) {
             return new WeekPeriod(1);
         }
+        if (periodText.equals("-10")) {
+            return new TenDaysPeriod(1);
+        }
         if (periodText.equals("-30")) {
             return new MonthPeriod(1);
         }
@@ -202,6 +205,35 @@ public class DateRangeCalculator {
         @Override
         public String toString() {
             return "WeekPeriod{" + period + "}";
+        }
+    }
+
+    private static class TenDaysPeriod implements Period {
+
+        private final int period;
+
+        private TenDaysPeriod(int period) {
+            if (period <= 0) {
+                throw new IllegalArgumentException("period must be greater than 0, is " + period);
+            }
+            this.period = period;
+        }
+
+        @Override
+        public void next(GregorianCalendar cal) {
+
+            final int dayOfMonthBefore = cal.get(Calendar.DAY_OF_MONTH);
+            if (dayOfMonthBefore < 20) {
+                cal.add(Calendar.DATE, 10);
+            } else {
+                cal.add(Calendar.DAY_OF_MONTH, -dayOfMonthBefore + 1);
+                cal.add(Calendar.MONTH, 1);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "TenDayPeriod{" + period + "}";
         }
     }
 

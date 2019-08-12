@@ -25,6 +25,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -114,6 +115,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             }
             if (effectiveGeometry.isEmpty()) {
                 LOG.info("Product geometry does not intersect region");
+                return 0;
+            }
+            if (effectiveGeometry instanceof GeometryCollection) {
+                LOG.info("Product geometry intersection with region does not form a proper polygon");
                 return 0;
             }
         }

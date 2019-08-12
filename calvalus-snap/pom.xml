@@ -1,0 +1,258 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.bc.calvalus</groupId>
+        <artifactId>calvalus</artifactId>
+        <version>2.19-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>calvalus-snap</artifactId>
+    <packaging>pom</packaging>
+
+    <properties>
+        <snap.bundle.version>6.0-SNAPSHOT</snap.bundle.version>
+    </properties>
+
+    <name>Calvalus Distribution SNAP</name>
+    <description>
+        Provides the SNAP artifacts of a Calvalus distribution.
+    </description>
+
+    <dependencies>
+
+        <!-- The SNAP dependencies must be listed first to avoid that transitive dependencies are found first
+        with other dependencies. They would not be included in the snap bundle else.
+        We have to list all dependencies instead of using the kits and exclude the processors
+        because the metaInf-services containerDescriptorHandler does not obey excludes
+        and we get unresolved service configurations if we do so.-->
+
+        <!-- SNAP -->
+
+        <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
+        commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
+        <dependency><groupId>org.esa.snap</groupId><artifactId>ceres-metadata</artifactId></dependency>
+
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-core</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-runtime</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-gpf</artifactId></dependency>
+
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-arcbingrid-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-bigtiff</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-binning</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-classification</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-cluster-analysis</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-collocation</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-csv-dataio</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-dem</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envi-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envisat-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-getasse30-dem</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-geotiff</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-hdf5-writer</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-land-cover</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-ndvi</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-netcdf</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pconvert</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pgx-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pixel-extraction</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-python</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-raster</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-rtp-codec</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-smart-configurator</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-statistics</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-temporal-percentile</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-unmix</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-watermask</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-sta</artifactId></dependency>
+
+
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdfobj</artifactId></dependency>
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId></dependency>
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId></dependency>
+        <dependency><groupId>ncsa.hdf</groupId><artifactId>lib-hdf</artifactId></dependency>
+
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-avhrr-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-landsat-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-merisl3-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-modis-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-rad2refl</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-sentinel3-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId></dependency>
+        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId></dependency>
+        <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId></dependency>
+
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-openjpeg</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-commons</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot6-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-rapideye-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-deimos-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-sta-adapters-help</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-radiometric-indices</artifactId></dependency>
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-reflectance-to-radiance</artifactId></dependency>
+        <!--<dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-gdal</artifactId></dependency>-->
+        <!--<dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-gdal-reader</artifactId></dependency>-->
+        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-grm</artifactId></dependency>
+
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-commons</artifactId></dependency>
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-io</artifactId></dependency>
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1</artifactId></dependency>
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1-ui</artifactId></dependency>
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-utilities</artifactId></dependency>
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-rcp</artifactId></dependency>
+
+        <dependency><groupId>org.xeustechnologies</groupId><artifactId>jtar</artifactId></dependency>
+        <dependency><groupId>com.thoughtworks.xstream</groupId><artifactId>xstream</artifactId></dependency>
+        <dependency><groupId>xerces</groupId><artifactId>xercesImpl</artifactId></dependency>
+        <dependency><groupId>com.googlecode.json-simple</groupId><artifactId>json-simple</artifactId></dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.portals.jetspeed-2</groupId>
+                <artifactId>jetspeed-unpack-maven-plugin</artifactId>
+                <version>2.2.2</version>
+                <executions>
+                    <execution>
+                        <id>libs</id>
+                        <configuration>
+                            <unpack>
+                                <artifact>ncsa.hdf:lib-hdf:jar</artifact>
+                                <resources>
+                                    <resource>
+                                        <path>lib/amd64</path>
+                                        <include>libjhdf*.so</include>
+                                    </resource>
+                                </resources>
+                                <targetDirectory>target/snap-bundle</targetDirectory>
+                            </unpack>
+                            <verbose>true</verbose>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>libs2</id>
+                        <configuration>
+                            <unpack>
+                                <artifact>org.esa.s2tbx:lib-openjpeg:jar</artifact>
+                                <resources>
+                                    <resource>
+                                        <path>auxdata/openjpeg/openjpeg-2.1.0-linux64/bin</path>
+                                        <include>libopenjp2.so</include>
+                                    </resource>
+                                </resources>
+                                <targetDirectory>target/snap-bundle</targetDirectory>
+                            </unpack>
+                            <verbose>true</verbose>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ncsa.hdf</groupId>
+                        <artifactId>lib-hdf</artifactId>
+                        <version>${ncsa.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.esa.s2tbx</groupId>
+                        <artifactId>lib-openjpeg</artifactId>
+                        <version>${snap.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ncsa.hdf</groupId>
+                        <artifactId>jhdfobj</artifactId>
+                        <version>2.7</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>ncsa.hdf</groupId>
+                        <artifactId>jhdf5obj</artifactId>
+                        <version>2.7</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.5.3</version>
+                <executions>
+                    <execution>
+                        <id>snap-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/snap.xml</descriptor>
+                            </descriptors>
+                            <archive>
+                                <manifestEntries>
+                                    <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
+                                    <Specification-Version>1.0-mr</Specification-Version>
+                                    <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                    <Implementation-Title>com.sun.media.imageio</Implementation-Title>
+                                    <Implementation-Version>1.0_01</Implementation-Version>
+                                    <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
+                                    <Extension-Name>com.sun.media.imageio</Extension-Name>
+                                </manifestEntries>
+                            </archive>
+                            <finalName>snap-bundle/snap-all</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>snap-buildin-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/snap-buildin.xml</descriptor>
+                            </descriptors>
+                            <finalName>snap-buildin-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

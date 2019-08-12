@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 /**
  * Computes the rectangle of fo the input product that should be processed.
  */
-abstract class ProcessingRectangleCalculator {
+public abstract class ProcessingRectangleCalculator {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -46,7 +46,7 @@ abstract class ProcessingRectangleCalculator {
      * @throws IOException
      */
     public Rectangle computeRect() throws IOException {
-        Rectangle geometryRect = getGeometryAsRectangle(regionGeometry);
+        Rectangle geometryRect = getGeometryAsRectangle(getProduct(), regionGeometry);
         Rectangle productSplitRect = getProductSplitAsRectangle();
 
         Rectangle pixelRectangle = intersectionSafe(geometryRect, productSplitRect);
@@ -75,14 +75,14 @@ abstract class ProcessingRectangleCalculator {
         return null;
     }
 
-    Rectangle getGeometryAsRectangle(Geometry regionGeometry) {
+    public static Rectangle getGeometryAsRectangle(Product product, Geometry regionGeometry) {
         if (!(regionGeometry == null || regionGeometry.isEmpty() || GeometryUtils.isGlobalCoverageGeometry(regionGeometry))) {
             try {
-                if (getProduct().getSceneGeoCoding() != null) {
+                if (product.getSceneGeoCoding() != null) {
                     LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
-                    return SubsetOp.computePixelRegion(getProduct(), regionGeometry, 1);
+                    return SubsetOp.computePixelRegion(product, regionGeometry, 1);
                 } else {
-                    return EosRectangleCalculator.computePixelRegion(getProduct(), regionGeometry, 1);
+                    return EosRectangleCalculator.computePixelRegion(product, regionGeometry, 1);
                 }
             } catch (Exception e) {
                 String msg = "Exception from SubsetOp.computePixelRegion: " + e.getMessage();

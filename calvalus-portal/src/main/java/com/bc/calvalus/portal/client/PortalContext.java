@@ -3,15 +3,13 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
-import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.view.client.ListDataProvider;
-
-import java.util.List;
 
 /**
  * The Calvalus Portal application context.
@@ -37,6 +35,8 @@ public interface PortalContext {
 
     BackendServiceAsync getBackendService();
 
+    ContextRetrievalServiceAsync getContextRetrievalService();
+
     void showView(String id);
 
     Timer getProductionsUpdateTimer();
@@ -50,4 +50,6 @@ public interface PortalContext {
     String[] getRequestQueues();
 
     OrderProductionView getViewForRestore(String productionType);
+
+    String getUserName();
 }

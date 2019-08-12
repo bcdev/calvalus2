@@ -30,9 +30,9 @@ import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
+import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -101,6 +101,10 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
     public void setStyle(CalvalusStyle style) {
         cellTable.getColumn(0).setCellStyleNames(style.variableName());
         cellTable.getColumn(2).setCellStyleNames(style.variableExpression());
+    }
+    
+    public void addSelectionChangeHandler(SelectionChangeEvent.Handler handler) {
+        selectionModel.addSelectionChangeHandler(handler);
     }
     
     public boolean hasSelection() {

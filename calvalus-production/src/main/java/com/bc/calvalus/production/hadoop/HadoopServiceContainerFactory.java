@@ -1,18 +1,18 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.inventory.DefaultInventoryService;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.store.MemoryProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
@@ -45,8 +45,16 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         String archiveRootDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir", "eodata");
         String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
                                                                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
+        // disable cache, otherwise org.apache.hadoop.fs.FileSystem.Cache grows forever
+        serviceConfiguration.put("calvalus.hadoop.fs.hdfs.impl.disable.cache", "true");
+        // transfer configuration from calvalus.properties to system properties
+        if (serviceConfiguration.containsKey("calvalus.accesscontrol.external")) {
+            System.setProperty("calvalus.accesscontrol.external",
+                               serviceConfiguration.get("calvalus.accesscontrol.external"));
+        }
 
-        JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
+        Configuration hadoopConfiguration = createHadoopConfiguration(serviceConfiguration);
+        JobConf jobConf = new JobConf(hadoopConfiguration);
         try {
             JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
             final HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
@@ -73,7 +81,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                                                             productionStore,
                                                                             productionTypes);
             stagingService.setProductionService((Observable) productionService);
-            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService);
+            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService, hadoopConfiguration);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
@@ -91,7 +99,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         return list.toArray(new ProductionType[list.size()]);
     }
 
-    private static Configuration createJobConfiguration(Map<String, String> serviceConfiguration) {
+    private static Configuration createHadoopConfiguration(Map<String, String> serviceConfiguration) {
         Configuration jobConfiguration = new Configuration();
         HadoopProductionType.setJobConfig(serviceConfiguration, jobConfiguration);
         return jobConfiguration;

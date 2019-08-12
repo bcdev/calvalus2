@@ -58,6 +58,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         Configuration conf = context.getConfiguration();
         this.raConfig = RAConfig.get(conf);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
+        boolean binValuesAsRatio = conf.getBoolean("calvalus.ra.binValuesAsRatio", false);
         RADateRanges dateRanges;
         try {
             dateRanges = RADateRanges.create(dateRangesString);
@@ -66,8 +67,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         }
 
         HdfsWriterFactory hdfsWriterFactory = new HdfsWriterFactory(context);
-
-        regionAnalysis = new RegionAnalysis(dateRanges, raConfig, hdfsWriterFactory);
+        regionAnalysis = new RegionAnalysis(dateRanges, raConfig, binValuesAsRatio, hdfsWriterFactory);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             pixelArchiver = new PixelArchiver(regionName, raConfig.getBandNames());
         }
 
-        regionAnalysis.startRegion(regionName);
+        regionAnalysis.startRegion(regionId, regionName);
 
         long lastTime = -1;
         for (RAValue extract : values) {
@@ -102,7 +102,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             String timeFormatted = RADateRanges.dateFormat.format(new Date(time));
             LOG.info(String.format("    time: %s numObs: %8d  numSamples: %8d   %s", timeFormatted, numObs, numSamples, productName));
 
-            regionAnalysis.addData(time, numObs, samples);
+            regionAnalysis.addData(time, numObs, samples, productName);
             if (pixelArchiver != null) {
                 if (time != lastTime && lastTime != -1) {
                     pixelArchiver.writeTempNetcdf();

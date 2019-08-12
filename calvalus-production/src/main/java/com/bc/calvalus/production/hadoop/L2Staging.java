@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
+import com.bc.ceres.core.NullProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,6 +33,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
@@ -103,7 +105,8 @@ class L2Staging extends ProductionStaging {
                 String name = seqProductPath.getName();
                 String productFileName = FileUtils.exchangeExtension(name, extension);
                 File productFile = new File(tmpDir, productFileName);
-                ProductIO.writeProduct(product, productFile, outputFormat, false);
+                //ProductIO.writeProduct(product, productFile, outputFormat, false);
+                GPF.writeProduct(product, productFile, outputFormat, false, new NullProgressMonitor());
                 product.dispose();
 
                 String zipFileName = FileUtils.exchangeExtension(name, ".zip");

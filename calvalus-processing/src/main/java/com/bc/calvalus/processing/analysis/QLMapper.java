@@ -25,7 +25,6 @@ import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -38,8 +37,6 @@ import java.awt.image.RenderedImage;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -51,19 +48,6 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     private static final String FILE_BYTES_WRITTEN = "FILE_BYTES_WRITTEN";
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
-
-    static {
-        try {
-            // Make "hdfs:" a recognised URL protocol
-            URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
-        } catch (Throwable e) {
-            // ignore as it is most likely already set
-            String msg = String.format("Cannot set URLStreamHandlerFactory (message: '%s'). " +
-                                       "This may not be a problem because it is most likely already set.",
-                                       e.getMessage());
-            LOGGER.fine(msg);
-        }
-    }
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
@@ -100,7 +84,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
                                        Quicklooks.QLConfig config) throws IOException, InterruptedException {
 //        try {
-            RenderedImage quicklookImage = QuicklookGenerator.createImage(context, product, config);
+            RenderedImage quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
                 OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);

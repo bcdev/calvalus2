@@ -16,10 +16,12 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -41,6 +43,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
+    private ProductsFromCatalogueForm productsFromCatalogueForm;
     private L2ConfigForm l2ConfigForm;
     private L3ConfigForm l3ConfigForm;
     private OutputParametersForm outputParametersForm;
@@ -51,11 +54,12 @@ public class OrderL3ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(),
+                                                    productSetSelectionForm.getSelectedProductSet());
                 l2ConfigForm.setProductSet(productSet);
             }
         });
@@ -75,16 +79,33 @@ public class OrderL3ProductionView extends OrderProductionView {
             }
         });
 
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
+            productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
+                @Override
+                public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                    return new InputSelectionCallback();
+                }
+
+                @Override
+                public void onClearSelectionClick() {
+                    productsFromCatalogueForm.removeSelections();
+                }
+            });
+        }
+
         l2ConfigForm = new L2ConfigForm(portalContext, false);
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(),
+                                                    productSetSelectionForm.getSelectedProductSet());
             }
         });
 
         l3ConfigForm = new L3ConfigForm(portalContext);
-        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(),
+                                            productSetSelectionForm.getSelectedProductSet());
         l3ConfigForm.steppingPeriodLength.setValue(30);
         l3ConfigForm.compositingPeriodLength.setValue(30);
 
@@ -98,6 +119,9 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
+        if (productsFromCatalogueForm != null) {
+            panel.add(productsFromCatalogueForm);
+        }
         panel.add(l2ConfigForm);
         panel.add(l3ConfigForm);
         panel.add(outputParametersForm);
@@ -108,6 +132,22 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(createOrderPanel());
 
         this.widget = panel;
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
+            productsFromCatalogueForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
     }
 
     private void updateTemporalParameters(Map<String, String> data) {
@@ -177,15 +217,21 @@ public class OrderL3ProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
+            if (productsFromCatalogueForm != null) {
+                productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            }
             l2ConfigForm.validateForm();
             l3ConfigForm.validateForm();
             outputParametersForm.validateForm();
-            if (! getPortal().withPortalFeature("unlimitedJobSize")) {
+
+
+            if (!getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numPeriods = l3ConfigForm.periodCount.getValue();
                     final int periodLength = l3ConfigForm.compositingPeriodLength.getValue();
-                    if (numPeriods * periodLength > 365+366) {
-                        throw new ValidationException(productSetFilterForm.numDays, "days to be processed larger than allowed");
+                    if (numPeriods * periodLength > 365 + 366) {
+                        throw new ValidationException(productSetFilterForm.numDays,
+                                                      "days to be processed larger than allowed");
                     }
                 } catch (NumberFormatException e) {
                     // ignore
@@ -204,6 +250,9 @@ public class OrderL3ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        if (productsFromCatalogueForm != null) {
+            parameters.putAll(productsFromCatalogueForm.getValueMap());
+        }
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
@@ -219,6 +268,9 @@ public class OrderL3ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
+        if (productsFromCatalogueForm != null) {
+            productsFromCatalogueForm.setValues(parameters);
+        }
         l2ConfigForm.setValues(parameters);
         l3ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);

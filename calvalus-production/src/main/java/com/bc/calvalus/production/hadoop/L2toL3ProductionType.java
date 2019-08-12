@@ -258,11 +258,4 @@ public class L2toL3ProductionType extends HadoopProductionType {
         calendar.add(Calendar.SECOND, timeDiffSecondsHalf);
         return calendar.getTime();
     }
-
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
 }

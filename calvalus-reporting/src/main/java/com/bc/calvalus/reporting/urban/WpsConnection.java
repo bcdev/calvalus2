@@ -1,6 +1,8 @@
 package com.bc.calvalus.reporting.urban;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.reporting.common.Report;
+import com.bc.calvalus.reporting.common.Reporter;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -19,15 +21,16 @@ import java.util.logging.Logger;
  * @author Martin Boettcher
  */
 public class WpsConnection {
-    static final Logger LOGGER = CalvalusLogger.getLogger();
-    private final UrbanTepReporting reporter;
-    JSch jsch = new JSch();
-    ChannelExec channel = null;
-    Session session = null;
-    BufferedReader in = null;
-    String cursor;
 
-    WpsConnection(UrbanTepReporting reporter) {
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
+    private final Reporter reporter;
+    private JSch jsch = new JSch();
+    private ChannelExec channel = null;
+    private Session session = null;
+    private BufferedReader in = null;
+    private String cursor;
+
+    WpsConnection(Reporter reporter) {
         this.reporter = reporter;
         JSch.setConfig("StrictHostKeyChecking", "no");
         JSch.setConfig("HashKnownHosts", "yes");
@@ -36,7 +39,7 @@ public class WpsConnection {
     /**
      * Runs forever in main thread of application after initialisation
      */
-    void run() {
+    public void run() {
         cursor = reporter.getConfig().getProperty("reporting.wps.cursor");
         while (true) {
             try {
@@ -49,19 +52,21 @@ public class WpsConnection {
                     handleLine(line);
                 }
             } catch (Exception e) {
-                LOGGER.warning("connection to WPS reports at " + reporter.getConfig().getProperty("reporting.wps.host") + " failed: " + e.getMessage() + " - sleeping ...");
+                LOGGER.warning("connection to WPS reports at " + reporter.getConfig().getProperty(
+                            "reporting.wps.host") + " failed: " + e.getMessage() + " - sleeping ...");
                 disconnect();
                 // sleeps for one minute before retrying after failure
                 try {
                     Thread.currentThread().wait(60 * 1000);
-                } catch (InterruptedException _) {}
-                drainTimer();
+                } catch (InterruptedException ignore) {
+                }
+                drainExecutorService();
                 LOGGER.info("queue drained and renewed");
             }
         }
     }
 
-    void handleLine(String line) {
+    private void handleLine(String line) {
         if (line.startsWith("#")) {
             return;
         }
@@ -81,17 +86,20 @@ public class WpsConnection {
             LOGGER.info("skipping " + report.job + " with " + report.creationTime + " before cursor " + cursor);
         } else {
             LOGGER.info("record " + report.job + " received");
-            reporter.getTimer().execute(report);
+            reporter.getExecutorService().execute(report);
             reporter.getStatusHandler().setRunning(report.job, report.creationTime);
         }
     }
 
-    void connect() throws JSchException, IOException {
+    private void connect() throws JSchException, IOException {
         jsch.addIdentity(reporter.getConfig().getProperty("reporting.wps.keypath"));
-        session = jsch.getSession(reporter.getConfig().getProperty("reporting.wps.user"), reporter.getConfig().getProperty("reporting.wps.host"), 22);
+        session = jsch.getSession(reporter.getConfig().getProperty("reporting.wps.user"),
+                                  reporter.getConfig().getProperty("reporting.wps.host"), 22);
         session.connect();
         channel = (ChannelExec) session.openChannel("exec");
-        channel.setCommand(String.format("tail -%sf %s", reporter.getConfig().getProperty("reporting.wps.backlog", "100"), reporter.getConfig().getProperty("reporting.wps.report")));
+        channel.setCommand(
+                    String.format("tail -%sf %s", reporter.getConfig().getProperty("reporting.wps.backlog", "100"),
+                                  reporter.getConfig().getProperty("reporting.wps.report")));
         channel.connect();
         in = new BufferedReader(new InputStreamReader(channel.getInputStream(), "utf-8"));
     }
@@ -100,7 +108,7 @@ public class WpsConnection {
         if (in != null) {
             try {
                 in.close();
-            } catch (IOException _) {
+            } catch (IOException ignore) {
             }
             in = null;
         }
@@ -114,13 +122,14 @@ public class WpsConnection {
         }
     }
 
-    private void drainTimer() {
-        reporter.getTimer().shutdownNow();
+    private void drainExecutorService() {
+        reporter.getExecutorService().shutdownNow();
         try {
-            reporter.getTimer().awaitTermination(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {}
+            reporter.getExecutorService().awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
         reporter.getStatusHandler().running.clear();
         reporter.getStatusHandler().failed.clear();
-        reporter.setTimer(new ScheduledThreadPoolExecutor(1));
+        reporter.setExecutorService(new ScheduledThreadPoolExecutor(1));
     }
 }

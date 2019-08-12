@@ -228,6 +228,7 @@ public class OutputParametersForm extends Composite {
                         break;
                     }
                 }
+                processingFormatUser.setValue(true, true);
             }
         } else {
             outputFormat.setSelectedIndex(0);

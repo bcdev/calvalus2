@@ -30,6 +30,7 @@ import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
+import org.apache.hadoop.conf.Configuration;
 
 import java.io.File;
 import java.io.IOException;
@@ -154,7 +155,7 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
                                                                     "autoStaging", "false"));
         }
 
-        return new ServiceContainer(productionService, fileSystemService, inventoryService);
+        return new ServiceContainer(productionService, fileSystemService, inventoryService, new Configuration());
 
     }
 

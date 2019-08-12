@@ -24,6 +24,12 @@ public class CalvalusDataInputsTest {
 
     private static final String DUMMY_REMOTE_USER = "dummyRemoteUser";
     private static final String DUMMY_REMOTE_REF = "1738ad7b-534e-4aca-9861-b26fb9c0f983";
+    private static final String[][] FEATURES = new String[][] {
+        new String[] { "attr1", "attr2", "attr3" },
+        new String[] { "value1", "value1", "value3" },
+        new String[] { "value1", "value2", "value3" },
+        new String[] { "value1", "value3", "value2" }
+    };
     private ExecuteRequestExtractor mockExecuteRequestExtractor;
     private CalvalusProcessor mockCalvalusProcessor;
     private ProductSet[] productSets;
@@ -48,9 +54,9 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         //assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L2Plus"));
@@ -68,9 +74,9 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
         ProductSet[] productSetsWithDateRange = getMockProductSetsWithDates();
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithDateRange, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithDateRange, mockCalvalusFacade);
 
 //        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L2Plus"));
@@ -88,9 +94,9 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.10-SNAPSHOT");
         ProductSet[] productSetsWithGeoDb = getMockProductSetsWithGeoDb();
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithGeoDb, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithGeoDb, mockCalvalusFacade);
 
 //        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L2Plus"));
@@ -108,9 +114,9 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
 //        assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L2Plus"));
@@ -127,9 +133,9 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getBundleName()).thenReturn("beam-idepix");
         when(mockCalvalusProcessor.getBundleVersion()).thenReturn("2.0.9");
         when(mockCalvalusProcessor.getName()).thenReturn("Idepix.Water");
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("processorBundleName"), equalTo("beam-idepix"));
         assertThat(calvalusDataInputs.getValue("processorBundleVersion"), equalTo("2.0.9"));
@@ -140,9 +146,9 @@ public class CalvalusDataInputsTest {
     public void canHandleNoProcessorInfoParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("processorBundleName"), equalTo(null));
         assertThat(calvalusDataInputs.getValue("processorBundleVersion"), equalTo(null));
@@ -153,9 +159,9 @@ public class CalvalusDataInputsTest {
     public void canGetProductSetParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProductSetParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
         assertThat(calvalusDataInputs.getValue("minDate"), equalTo("2009-06-01"));
@@ -170,13 +176,13 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getProductSetParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ProductSet[] productSetsMultiPattern = getMockProductSetsWithMultiPatterns();
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsMultiPattern, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsMultiPattern, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                                     "/calvalus/eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                                     "/calvalus/eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
+                                                                             "/calvalus/eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                                             "/calvalus/eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
         assertThat(calvalusDataInputs.getValue("minDate"), equalTo("2009-06-01"));
         assertThat(calvalusDataInputs.getValue("maxDate"), equalTo("2009-06-30"));
         assertThat(calvalusDataInputs.getValue("periodLength"), equalTo("30"));
@@ -191,15 +197,15 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
-                                                                               "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
-                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
-                                                                               "<outputNormReflec>true</outputNormReflec>\n" +
-                                                                               "</parameters>"));
+                                                                                       "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
+                                                                                       "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                                       "<outputNormReflec>true</outputNormReflec>\n" +
+                                                                                       "</parameters>"));
     }
 
     @Test
@@ -208,14 +214,14 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
-                                                                               "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
-                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
-                                                                               "</parameters>"));
+                                                                                       "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
+                                                                                       "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                                       "</parameters>"));
     }
 
     @Test
@@ -224,13 +230,13 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
-                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
-                                                                               "</parameters>"));
+                                                                                       "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                                       "</parameters>"));
     }
 
     @Test
@@ -238,33 +244,33 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultParameters()).thenReturn(getMockDefaultParameters());
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("########################\n" +
-                                                                               "# POLYMER COMMAND FILE #\n" +
-                                                                               "########################\n" +
-                                                                               "# NB: paths can be given as relative or absolute\n" +
-                                                                               "# lines starting with character '#' are ignored\n" +
-                                                                               "# INPUT/OUTPUT ######\n" +
-                                                                               "L1_FORMAT MERIS\n" +
-                                                                               "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
-                                                                               "OUTPUT_FORMAT NETCDF\n" +
-                                                                               "# uncomments this to process only a subset of the rows in the L1 file\n" +
-                                                                               "# PROCESS_ROWS 7700 9000\n" +
-                                                                               "# NCEP and TOMS filenames\n" +
-                                                                               "# if commented or missing, MERIS level1 ancillary data will be used\n" +
-                                                                               "# ${ncep_toms}FILE_METEO $file_meteo\n" +
-                                                                               "# ${ncep_toms}FILE_OZONE $file_oz\n" +
-                                                                               "# possible values ERA_INTERIM or NCEP\n" +
-                                                                               "AUXDATA NCEP\n" +
-                                                                               "# BANDS DEFINITION #######\n" +
-                                                                               "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
-                                                                               "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
-                                                                               "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
-                                                                               "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
-                                                                               "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900"));
+                                                                                       "# POLYMER COMMAND FILE #\n" +
+                                                                                       "########################\n" +
+                                                                                       "# NB: paths can be given as relative or absolute\n" +
+                                                                                       "# lines starting with character '#' are ignored\n" +
+                                                                                       "# INPUT/OUTPUT ######\n" +
+                                                                                       "L1_FORMAT MERIS\n" +
+                                                                                       "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
+                                                                                       "OUTPUT_FORMAT NETCDF\n" +
+                                                                                       "# uncomments this to process only a subset of the rows in the L1 file\n" +
+                                                                                       "# PROCESS_ROWS 7700 9000\n" +
+                                                                                       "# NCEP and TOMS filenames\n" +
+                                                                                       "# if commented or missing, MERIS level1 ancillary data will be used\n" +
+                                                                                       "# ${ncep_toms}FILE_METEO $file_meteo\n" +
+                                                                                       "# ${ncep_toms}FILE_OZONE $file_oz\n" +
+                                                                                       "# possible values ERA_INTERIM or NCEP\n" +
+                                                                                       "AUXDATA NCEP\n" +
+                                                                                       "# BANDS DEFINITION #######\n" +
+                                                                                       "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
+                                                                                       "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
+                                                                                       "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
+                                                                                       "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
+                                                                                       "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900"));
     }
 
     @Test
@@ -274,39 +280,42 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
         when(mockCalvalusProcessor.getBundleLocation()).thenReturn("hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0");
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
-        assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
-                                                          "calvalus.output.compression : none\n" +
-                                                          "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
-                                                          "calvalus.wps.remote.user : dummyRemoteUser\n" +
+        assertThat(calvalusDataInputs.toString(),
+                   equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
+                                   "minDate : 2016-01-01T01:00:00+01:00\n" +
+                                   "calvalus.output.compression : none\n" +
+                                   "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
+                                   "calvalus.wps.remote.user : dummyRemoteUser\n" +
 //                                                          "productionType : L3\n" +
-                                                          "productionType : L2Plus\n" +
-                                                          "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
-                                                          "processorBundleVersion : null\n" +
-                                                          "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
-                                                          "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                                          "minDateSource : 2016-01-01T01:00:00+01:00\n" +
-                                                          "quicklooks : true\n" +
-                                                          "autoStaging : true\n" +
-                                                          "calvalus.snap.bundle : snap-3.0.0\n" +
-                                                          "processorName : null\n" +
-                                                          "processorBundleName : null\n" +
-                                                          "processorParameters : null\n" +
-                                                          "productionName : dummyProductionName\n" +
-                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
-                                                          "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
+                                   "productionType : L2Plus\n" +
+                                   "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
+                                   "processorBundleVersion : null\n" +
+                                   "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
+                                   "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                   "minDateSource : 2016-01-01T01:00:00+01:00\n" +
+                                   "quicklooks : true\n" +
+                                   "autoStaging : true\n" +
+                                   "calvalus.snap.bundle : snap-3.0.0\n" +
+                                   "processorName : null\n" +
+                                   "maxDate : 2017-01-01T01:00:00+01:00\n" +
+                                   "processorBundleName : null\n" +
+                                   "processorParameters : null\n" +
+                                   "productionName : dummyProductionName\n" +
+                                   "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
+                                   "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 
     @Test(expected = InvalidParameterValueException.class)
     public void canThrowExceptionWhenInputDataSetNameNotPresent() throws Exception {
         Map<String, String> mockInputMapRaw = getRawMapWithoutInputDataSetName();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
     }
 
     @Test
@@ -315,26 +324,40 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn(null);
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn(null);
-        Map<String, String> mockRequestHeader = getMockRequestHeader();
+        CalvalusFacade mockCalvalusFacade = getMockCalvalusFacade();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockCalvalusFacade);
 
-        assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
-                                                          "calvalus.output.compression : none\n" +
-                                                          "processorBundleLocation : null\n" +
-                                                          "calvalus.wps.remote.user : dummyRemoteUser\n" +
-                                                          "productionType : L2Plus\n" +
-                                                          "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
-                                                          "processorBundleVersion : null\n" +
-                                                          "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                                          "minDateSource : 2016-01-01T01:00:00+01:00\n" +
-                                                          "quicklooks : true\n" +
-                                                          "autoStaging : true\n" +
-                                                          "processorName : null\n" +
-                                                          "processorBundleName : null\n" +
-                                                          "processorParameters : null\n" +
-                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
-                                                          "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
+        assertThat(calvalusDataInputs.toString(),
+                   equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
+                                   "minDate : 2016-01-01T01:00:00+01:00\n" +
+                                   "calvalus.output.compression : none\n" +
+                                   "processorBundleLocation : null\n" +
+                                   "calvalus.wps.remote.user : dummyRemoteUser\n" +
+                                   "productionType : L2Plus\n" +
+                                   "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
+                                   "processorBundleVersion : null\n" +
+                                   "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                   "minDateSource : 2016-01-01T01:00:00+01:00\n" +
+                                   "quicklooks : true\n" +
+                                   "autoStaging : true\n" +
+                                   "processorName : null\n" +
+                                   "maxDate : 2017-01-01T01:00:00+01:00\n" +
+                                   "processorBundleName : null\n" +
+                                   "processorParameters : null\n" +
+                                   "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
+                                   "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
+    }
+
+    @Test
+    public void testDistinctiveAttributes() throws InvalidParameterValueException {
+        assertThat("attr2", equalTo(CalvalusDataInputs.determineMostDistinctiveAttribute(FEATURES)));
+    }
+
+    private CalvalusFacade getMockCalvalusFacade() {
+        CalvalusFacade calvalusFacade = mock(CalvalusFacade.class);
+        when(calvalusFacade.getRequestHeaderMap()).thenReturn(getMockRequestHeader());
+        return calvalusFacade;
     }
 
     private Map<String, String> getMockRequestHeader() {
@@ -356,8 +379,8 @@ public class CalvalusDataInputsTest {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                  "eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                  "eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
+                                                          "eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                          "eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
         when(mockProductSet.getProductType()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         return new ProductSet[]{mockProductSet};
     }
@@ -383,28 +406,28 @@ public class CalvalusDataInputsTest {
 
     private String getMockDefaultParameters() {
         return "########################\n" +
-               "# POLYMER COMMAND FILE #\n" +
-               "########################\n" +
-               "# NB: paths can be given as relative or absolute\n" +
-               "# lines starting with character '#' are ignored\n" +
-               "# INPUT/OUTPUT ######\n" +
-               "L1_FORMAT MERIS\n" +
-               "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
-               "OUTPUT_FORMAT NETCDF\n" +
-               "# uncomments this to process only a subset of the rows in the L1 file\n" +
-               "# PROCESS_ROWS 7700 9000\n" +
-               "# NCEP and TOMS filenames\n" +
-               "# if commented or missing, MERIS level1 ancillary data will be used\n" +
-               "# ${ncep_toms}FILE_METEO $file_meteo\n" +
-               "# ${ncep_toms}FILE_OZONE $file_oz\n" +
-               "# possible values ERA_INTERIM or NCEP\n" +
-               "AUXDATA NCEP\n" +
-               "# BANDS DEFINITION #######\n" +
-               "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
-               "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
-               "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
-               "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
-               "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900";
+                "# POLYMER COMMAND FILE #\n" +
+                "########################\n" +
+                "# NB: paths can be given as relative or absolute\n" +
+                "# lines starting with character '#' are ignored\n" +
+                "# INPUT/OUTPUT ######\n" +
+                "L1_FORMAT MERIS\n" +
+                "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
+                "OUTPUT_FORMAT NETCDF\n" +
+                "# uncomments this to process only a subset of the rows in the L1 file\n" +
+                "# PROCESS_ROWS 7700 9000\n" +
+                "# NCEP and TOMS filenames\n" +
+                "# if commented or missing, MERIS level1 ancillary data will be used\n" +
+                "# ${ncep_toms}FILE_METEO $file_meteo\n" +
+                "# ${ncep_toms}FILE_OZONE $file_oz\n" +
+                "# possible values ERA_INTERIM or NCEP\n" +
+                "AUXDATA NCEP\n" +
+                "# BANDS DEFINITION #######\n" +
+                "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
+                "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
+                "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
+                "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
+                "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900";
     }
 
     private ParameterDescriptor[] getMockParameterDescriptorArray() {

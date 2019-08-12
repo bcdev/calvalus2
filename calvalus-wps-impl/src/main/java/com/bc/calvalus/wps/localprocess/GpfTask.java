@@ -75,7 +75,7 @@ class GpfTask implements Callable<Boolean> {
                     "              </configs>\n" +
                     "            </quicklooks>\n";
             Quicklooks.QLConfig config = Quicklooks.fromXml(xml).getConfigs()[0];
-            RenderedImage quicklookImage = QuicklookGenerator.createImage(context, subset, config);
+            RenderedImage quicklookImage = new QuicklookGenerator(context, subset, config).createImage();
             if (quicklookImage != null) {
                 OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(targetDir, sourceProduct.getName() + "-subset" + "." + config.getImageType())));
                 try {
