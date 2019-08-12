@@ -1,10 +1,12 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -34,10 +36,11 @@ public class S2BaPostInputFormat extends InputFormat {
         List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);
 
-        HdfsInventoryService inventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
-        FileStatus[] fileStatuses = inventoryService.globFileStatuses(inputPatterns, conf);
+        FileStatus[] fileStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
         createSplits(fileStatuses, intermediateResultSplits);
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d intermediate split(s).", intermediateResultSplits.size()));
 
@@ -54,7 +57,7 @@ public class S2BaPostInputFormat extends InputFormat {
 
             String currentPathPattern = outputDir + "/" + tile + "/intermediate.*" + tile + ".*" + currentPostDateString + ".nc";
             List<String> currentPattern = inputPathResolver.resolve(currentPathPattern);
-            FileStatus[] matchingStatuses = inventoryService.globFileStatuses(currentPattern, conf);
+            FileStatus[] matchingStatuses = hdfsInventoryService.globFileStatuses(currentPattern, conf);
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
             for (FileStatus matchingStatus : matchingStatuses) {

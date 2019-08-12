@@ -1,8 +1,10 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
@@ -13,6 +15,7 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -32,25 +35,26 @@ public class FireSen2CorInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
+
         String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
 
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService fileSystemService = new HdfsFileSystemService(jobClientsMap);
 
         List<InputSplit> splits = new ArrayList<>(1000);
-        FileStatus[] fileStatuses = getFilteredInputFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
+        FileStatus[] fileStatuses = getFilteredInputFileStatuses(fileSystemService, inputPathPatterns, conf);
 
         createSplits(fileStatuses, splits, conf);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
-    private FileStatus[] getFilteredInputFileStatuses(HdfsInventoryService inventoryService,
-                                                      String inputPathPattern,
-                                                      Configuration conf) throws IOException {
-        FileStatus[] inputFileStatuses = getFileStatuses(inventoryService, inputPathPattern, conf);
+    private FileStatus[] getFilteredInputFileStatuses(HdfsFileSystemService fileSystemService,
+                                                      String inputPathPattern, Configuration conf) throws IOException {
+        FileStatus[] inputFileStatuses = getFileStatuses(fileSystemService, inputPathPattern, conf);
         List<FileStatus> filteredInputFileStatuses = new ArrayList<>();
         for (FileStatus inputFileStatus : inputFileStatuses) {
-            if (!sen2CorExists(inputFileStatus.getPath(), inventoryService)) {
+            if (!sen2CorExists(inputFileStatus.getPath(), fileSystemService)) {
                 filteredInputFileStatuses.add(inputFileStatus);
             } else {
                 Logger.getLogger("com.bc.calvalus").info("already exists, skipping");
@@ -60,7 +64,7 @@ public class FireSen2CorInputFormat extends InputFormat {
         return filteredInputFileStatuses.toArray(new FileStatus[0]);
     }
 
-    private boolean sen2CorExists(Path path, HdfsInventoryService inventoryService) throws IOException {
+    private boolean sen2CorExists(Path path, FileSystemService fileSystemService) throws IOException {
         // ".../S2A_OPER_PRD_MSIL1C_PDMC_20161201T105416_R106_V20161201T073232_20161201T073232_T37KEA.zip"
         // -->  S2A_OPER_PRD_MSIL2A_PDMC_20161201T105416_R106_V20161201T073232_20161201T073232_T37KEA.tif
         // or
@@ -93,7 +97,7 @@ public class FireSen2CorInputFormat extends InputFormat {
         Logger.getLogger("com.bc.calvalus").info("sen2cor path: " + sen2CorPath);
 
 
-        return inventoryService.pathExists(sen2CorPath);
+        return fileSystemService.pathExists(sen2CorPath);
     }
 
     protected void createSplits(FileStatus[] fileStatuses,
@@ -129,13 +133,12 @@ public class FireSen2CorInputFormat extends InputFormat {
         }
     }
 
-    private FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
-                                         String inputPathPatterns,
-                                         Configuration conf) throws IOException {
+    private FileStatus[] getFileStatuses(HdfsFileSystemService fileSystemService,
+                                         String inputPathPatterns, Configuration conf) throws IOException {
 
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns, conf);
+        return fileSystemService.globFileStatuses(inputPatterns, conf);
     }
 
     @Override

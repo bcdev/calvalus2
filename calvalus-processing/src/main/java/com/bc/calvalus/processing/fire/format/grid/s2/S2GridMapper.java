@@ -1,7 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
@@ -12,6 +13,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
@@ -249,7 +251,8 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     private FileStatus[] getFileStatuses(String inputPathPatterns, Configuration conf) throws IOException {
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);

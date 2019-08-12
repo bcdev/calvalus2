@@ -51,6 +51,18 @@
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-gpf</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-bigtiff</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-geotiff</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-collocation</artifactId>
+        </dependency>
         <!--
         <dependency>
             <groupId>org.esa.snap</groupId>
@@ -146,6 +158,15 @@
         <dependency>
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.rauschig</groupId>
+            <artifactId>jarchivelib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.renjin</groupId>
+            <artifactId>renjin-core</artifactId>
         </dependency>
 
     </dependencies>

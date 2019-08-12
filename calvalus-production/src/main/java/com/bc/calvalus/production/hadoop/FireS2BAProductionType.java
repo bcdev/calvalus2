@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.fire.S2BaInputFormat;
@@ -50,14 +50,15 @@ public class FireS2BAProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new FireS2BAProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new FireS2BAProductionType(fileSystemService, processing, staging);
         }
+
     }
 
-    private FireS2BAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    private FireS2BAProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                    StagingService stagingService) {
-        super("Fire-S2-BA", inventoryService, processingService, stagingService);
+        super("Fire-S2-BA", fileSystemService, processingService, stagingService);
     }
 
     @Override

@@ -1,13 +1,15 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -32,7 +34,8 @@ public class FireBAInputFormat extends InputFormat {
         String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
         validatePattern(inputPathPatterns);
 
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
 
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getAllFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
@@ -42,17 +45,17 @@ public class FireBAInputFormat extends InputFormat {
         return splits;
     }
 
-    private FileStatus[] getAllFileStatuses(HdfsInventoryService inventoryService,
+    private FileStatus[] getAllFileStatuses(HdfsFileSystemService hdfsInventoryService,
                                             String inputPathPattern,
                                             Configuration conf) throws IOException {
-        FileStatus[] sameYearStatuses = getFileStatuses(inventoryService, inputPathPattern, conf);
+        FileStatus[] sameYearStatuses = getFileStatuses(hdfsInventoryService, inputPathPattern, conf);
 
         String[] wingsPathPatterns = createWingsPathPatterns(inputPathPattern);
 
-        FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? getFileStatuses(inventoryService, wingsPathPatterns[0], conf) : new FileStatus[0];
-        FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? getFileStatuses(inventoryService, wingsPathPatterns[1], conf) : new FileStatus[0];
+        FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? getFileStatuses(hdfsInventoryService, wingsPathPatterns[0], conf) : new FileStatus[0];
+        FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? getFileStatuses(hdfsInventoryService, wingsPathPatterns[1], conf) : new FileStatus[0];
         String auxdataPathPattern = createAuxdataPathPattern(inputPathPattern, getTile(sameYearStatuses[0]));
-        FileStatus[] auxdataStatuses = getFileStatuses(inventoryService, auxdataPathPattern, conf);
+        FileStatus[] auxdataStatuses = getFileStatuses(hdfsInventoryService, auxdataPathPattern, conf);
 
         FileStatus[] allFileStatuses = new FileStatus[sameYearStatuses.length + beforeStatuses.length + afterStatuses.length + auxdataStatuses.length];
         System.arraycopy(sameYearStatuses, 0, allFileStatuses, 0, sameYearStatuses.length);
@@ -100,13 +103,13 @@ public class FireBAInputFormat extends InputFormat {
         }
     }
 
-    private FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+    private FileStatus[] getFileStatuses(HdfsFileSystemService hdfsInventoryService,
                                          String inputPathPatterns,
                                          Configuration conf) throws IOException {
 
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns, conf);
+        return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
     }
 
     private static void validatePattern(String inputPathPatterns) throws IOException {

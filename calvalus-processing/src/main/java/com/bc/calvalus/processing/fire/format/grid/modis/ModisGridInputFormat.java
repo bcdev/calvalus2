@@ -1,14 +1,16 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.hadoop.ProgressSplit;
 import com.google.gson.Gson;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -129,7 +131,8 @@ public class ModisGridInputFormat extends InputFormat {
     private FileStatus[] getFileStatuses(String inputPathPatterns,
                                          Configuration conf) throws IOException {
 
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);

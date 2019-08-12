@@ -1,8 +1,9 @@
 package com.bc.calvalus.processing.fire.format.pixel.meris;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
@@ -11,6 +12,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -37,14 +39,15 @@ public class MerisPixelInputFormat extends InputFormat {
         String inputPathPattern = getInputPathPattern(context.getConfiguration().get("calvalus.year"), context.getConfiguration().get("calvalus.month"), area);
         CalvalusLogger.getLogger().info("Input path pattern = " + inputPathPattern);
 
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
 
         List<InputSplit> splits = new ArrayList<>(1000);
-        FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPattern, conf);
+        FileStatus[] fileStatuses = getFileStatuses(hdfsFileSystemService, inputPathPattern, conf);
 
         fileStatuses = CommonUtils.filterFileStatuses(fileStatuses);
 
-        createSplits(fileStatuses, splits, conf, hdfsInventoryService);
+        createSplits(fileStatuses, splits, conf, hdfsFileSystemService);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
@@ -79,7 +82,7 @@ public class MerisPixelInputFormat extends InputFormat {
         return String.format("hdfs://calvalus/calvalus/projects/fire/aux/lc/lc-%s-(%s).*nc", CommonUtils.lcYear(Integer.parseInt(year)), groupsForArea.substring(0, groupsForArea.length() - 1));
     }
 
-    private void createSplits(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, HdfsInventoryService hdfsInventoryService) throws IOException {
+    private void createSplits(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, HdfsFileSystemService hdfsFileSystemService) throws IOException {
         List<String> usedTiles = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {
             List<Path> filePaths = new ArrayList<>();
@@ -103,7 +106,7 @@ public class MerisPixelInputFormat extends InputFormat {
         }
         lcInputPathPattern = lcInputPathPattern.replace("|)", ")");
         CalvalusLogger.getLogger().info("LC input path pattern = " + lcInputPathPattern);
-        FileStatus[] lcFileStatuses = getFileStatuses(hdfsInventoryService, lcInputPathPattern, conf);
+        FileStatus[] lcFileStatuses = getFileStatuses(hdfsFileSystemService, lcInputPathPattern, conf);
         for (FileStatus lcFileStatus : lcFileStatuses) {
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
@@ -131,13 +134,13 @@ public class MerisPixelInputFormat extends InputFormat {
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
     }
 
-    private FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+    private FileStatus[] getFileStatuses(HdfsFileSystemService hdfsFileSystemService,
                                          String inputPathPatterns,
                                          Configuration conf) throws IOException {
 
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns, conf);
+        return hdfsFileSystemService.globFileStatuses(inputPatterns, conf);
     }
 
     public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {

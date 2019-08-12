@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.fire.MerisPixelMergeInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridReducer;
@@ -10,7 +11,6 @@ import com.bc.calvalus.processing.fire.format.pixel.GlobalPixelProductAreaProvid
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelCell;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelInputFormat;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMapper;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMergeInputFormat;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMergeMapper;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelReducer;
 import com.bc.calvalus.processing.fire.format.pixel.meris.PixelVariableType;

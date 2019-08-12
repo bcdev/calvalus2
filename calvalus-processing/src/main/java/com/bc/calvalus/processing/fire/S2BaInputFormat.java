@@ -1,10 +1,12 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -35,21 +37,22 @@ public class S2BaInputFormat extends InputFormat {
 
         Set<InputSplit> splits = new HashSet<>(1000);
 
-        HdfsInventoryService inventoryService = new HdfsInventoryService(conf, "eodata");
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
+        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        FileStatus[] fileStatuses = inventoryService.globFileStatuses(inputPatterns, conf);
+        FileStatus[] fileStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
 
         // for each split, a single mapper is run
         // --> fileStatuses must contain filestatus for each input product at this stage
-        createSplits(fileStatuses, tile, splits, inventoryService, conf);
+        createSplits(fileStatuses, tile, splits, hdfsInventoryService, conf);
         // here, each split must contain two files: pre and post period.
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d split(s).", splits.size()));
         return Arrays.asList(splits.toArray(new InputSplit[0]));
     }
 
     private void createSplits(FileStatus[] fileStatuses, String tile,
-                              Set<InputSplit> splits, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
+                              Set<InputSplit> splits, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         /*
         for each file status r:
             take r and (up to) latest 4 or 8 matching files d, c, b, a (getPeriodStatuses)
@@ -64,12 +67,12 @@ public class S2BaInputFormat extends InputFormat {
             String postDate = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(referenceDate);
             String path = "hdfs://calvalus/calvalus/projects/fire/s2-ba/" + tile + "/BA-" + tile + "-" + postDate + ".nc";
             Logger.getLogger("com.bc.calvalus").info("Checking if BA output file '" + path + "' already exists...");
-            if (inventoryService.pathExists(path)) {
+            if (hdfsInventoryService.pathExists(path)) {
                 Logger.getLogger("com.bc.calvalus").info("already exists, moving to next reference date.");
                 continue;
             }
             Logger.getLogger("com.bc.calvalus").info("does not already exist, create splits accordingly.");
-            FileStatus[] periodStatuses = getPeriodStatuses(referenceFileStatus, inventoryService, conf);
+            FileStatus[] periodStatuses = getPeriodStatuses(referenceFileStatus, hdfsInventoryService, conf);
             for (FileStatus preStatus : periodStatuses) {
                 splits.add(createSplit(referenceFileStatus, preStatus));
                 Logger.getLogger("com.bc.calvalus").info(String.format("Created split with postStatus %s and preStatus %s.", referenceDate, getDate(preStatus)));
@@ -88,13 +91,13 @@ public class S2BaInputFormat extends InputFormat {
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
     }
 
-    private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
+    private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         String referencePath = referenceFileStatus.getPath().toString();
         String periodInputPathPattern = getPeriodInputPathPattern(referencePath);
 
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(periodInputPathPattern);
-        FileStatus[] periodStatuses = inventoryService.globFileStatuses(inputPatterns, conf);
+        FileStatus[] periodStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
         sort(periodStatuses);
 
         List<FileStatus> filteredList = new ArrayList<>();

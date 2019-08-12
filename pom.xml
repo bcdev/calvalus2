@@ -30,7 +30,6 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
-        <module>calvalus-wps-impl</module>
         <module>calvalus-reporting</module>
     </modules>
 
@@ -404,6 +403,25 @@
                 <artifactId>snap-runtime</artifactId>
                 <version>${snap.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.esa.snap</groupId>
+                <artifactId>snap-collocation</artifactId>
+                <version>${snap.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.media</groupId>
+                        <artifactId>jai_core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.media</groupId>
+                        <artifactId>jai_codec</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.media</groupId>
+                        <artifactId>jai_imageio</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 
             <!--  Test -->
 
@@ -593,6 +611,21 @@
                 <groupId>com.bc</groupId>
                 <artifactId>geo-inventory</artifactId>
                 <version>0.1-SNAPSHOT</version>
+            </dependency>
+
+            <!-- Jar Archiver -->
+
+            <dependency>
+                <groupId>org.rauschig</groupId>
+                <artifactId>jarchivelib</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+
+            <!-- Renjin Script Engine -->
+            <dependency>
+                <groupId>org.renjin</groupId>
+                <artifactId>renjin-core</artifactId>
+                <version>0.8.1977</version>
             </dependency>
 
         </dependencies>

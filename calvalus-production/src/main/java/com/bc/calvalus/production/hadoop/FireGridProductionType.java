@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.SensorStrategy;
@@ -51,14 +51,14 @@ public class FireGridProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new FireGridProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new FireGridProductionType(fileSystemService, processing, staging);
         }
     }
 
-    FireGridProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    FireGridProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                            StagingService stagingService) {
-        super("Fire-Grid-Formatting", inventoryService, processingService, stagingService);
+        super("Fire-Grid-Formatting", fileSystemService, processingService, stagingService);
     }
 
     @Override
