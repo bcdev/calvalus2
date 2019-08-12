@@ -3,9 +3,9 @@ package com.bc.calvalus.processing.fire.format;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridInputFormat;
-import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridMapper;
-import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridReducer;
+import com.bc.calvalus.processing.fire.format.grid.olci.OlciGridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.olci.OlciGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.olci.OlciGridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.GlobalPixelProductAreaProvider;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelCell;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelInputFormat;
@@ -27,11 +27,11 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
-public class MerisStrategy implements SensorStrategy {
+public class OlciStrategy implements SensorStrategy {
 
     private final PixelProductAreaProvider areaProvider;
 
-    public MerisStrategy() {
+    public OlciStrategy() {
         areaProvider = new GlobalPixelProductAreaProvider();
     }
 
@@ -47,17 +47,17 @@ public class MerisStrategy implements SensorStrategy {
 
     @Override
     public Class<? extends InputFormat> getGridInputFormat() {
-        return MerisGridInputFormat.class;
+        return OlciGridInputFormat.class;
     }
 
     @Override
     public Class<? extends Mapper> getGridMapperClass() {
-        return MerisGridMapper.class;
+        return OlciGridMapper.class;
     }
 
     @Override
     public Class<? extends Reducer> getGridReducerClass() {
-        return MerisGridReducer.class;
+        return OlciGridReducer.class;
     }
 
     @Override

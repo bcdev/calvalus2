@@ -14,8 +14,8 @@
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.14-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>[5.0,6.0.0-SNAPSHOT)</snap.version>
-        <ceres.version>[5.0,6.0.0-SNAPSHOT)</ceres.version>
+        <snap.version>7.0.0</snap.version>
+        <ceres.version>7.0.0</ceres.version>
         <geotools.version>2.7.4</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

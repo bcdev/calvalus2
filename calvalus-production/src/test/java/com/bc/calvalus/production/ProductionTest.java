@@ -3,9 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 import org.junit.Test;
@@ -13,8 +11,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static com.jidesoft.utils.Lm.n;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ProductionTest {
 

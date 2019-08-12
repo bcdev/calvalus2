@@ -63,12 +63,11 @@
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-collocation</artifactId>
         </dependency>
-        <!--
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-netcdf</artifactId>
         </dependency>
-        -->
+
         <dependency>
             <groupId>org.xeustechnologies</groupId>
             <artifactId>jtar</artifactId>
