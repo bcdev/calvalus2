@@ -67,8 +67,8 @@ public class CalvalusTileComputationEventLogger extends TileComputationObserver 
 
         @Override
         public String toString() {
-            return String.format("%s, tileX=%d, tileY=%d, tileWidth=%d, tileHeight=%d, time=%f",
-                                 image, tileX, tileY, image.getTileWidth(), image.getTileHeight(), duration);
+            return String.format("%s tile=%d,%d (%d,%d) time=%f",
+                                 image, tileY, tileX, image.getTileHeight(), image.getTileWidth(), duration);
         }
 
         private static double nanosToRoundedSecs(long nanos) {
@@ -96,6 +96,12 @@ public class CalvalusTileComputationEventLogger extends TileComputationObserver 
                 recordedEventSet.add(tileEvent);
                 newEvent = true;
             }
+        }
+        if (tileEvent.image.getTileCache() instanceof SunTileCache) {
+            message += " cache=" + ((SunTileCache)tileEvent.image.getTileCache()).getCacheTileCount()
+                     + " (" + (((SunTileCache)tileEvent.image.getTileCache()).getCacheMemoryUsed() / 1024 / 1024)
+                     + "/" + (((SunTileCache)tileEvent.image.getTileCache()).getMemoryCapacity() / 1024 / 1024)
+                     + ")";
         }
         if (newEvent) {
             getLogger().log(Level.INFO, "Tile computed: " + message);
