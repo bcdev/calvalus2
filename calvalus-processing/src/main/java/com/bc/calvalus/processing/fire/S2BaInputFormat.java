@@ -67,7 +67,7 @@ public class S2BaInputFormat extends InputFormat {
             String postDate = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(referenceDate);
             String path = "hdfs://calvalus/calvalus/projects/fire/s2-ba/" + tile + "/BA-" + tile + "-" + postDate + ".nc";
             Logger.getLogger("com.bc.calvalus").info("Checking if BA output file '" + path + "' already exists...");
-            if (hdfsInventoryService.pathExists(path)) {
+            if (hdfsInventoryService.pathExists(path, "cvop")) {
                 Logger.getLogger("com.bc.calvalus").info("already exists, moving to next reference date.");
                 continue;
             }

@@ -61,7 +61,7 @@ public class OlciGridMapper extends AbstractGridMapper {
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
-        if (inputSplit.getPaths().length != 4) {
+        if (inputSplit.getPaths().length != 3) {
             throw new IllegalStateException("3 input paths needed: classification, fraction of observed area, LandCover");
         }
         Path[] paths = inputSplit.getPaths();
@@ -84,11 +84,11 @@ public class OlciGridMapper extends AbstractGridMapper {
 
         setDataSource(new OlciDataSource(baProduct, foaProduct, uncertaintyProduct, lcProduct));
 
-        GridCells gridCells = computeGridCells(year, month);
+        GridCells gridCells = computeGridCells(year, month, context);
 
         context.progress();
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[3].toString()))), gridCells);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCells);
     }
 
     static File[] untar(File tarFile, String filterRegEx) {

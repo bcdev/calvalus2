@@ -102,7 +102,7 @@ public class ModisGridReducer extends AbstractGridReducer {
         File localOverlay = fetchAuxFile(context, "world.png");
         qlConfig.setOverlayURL(localOverlay.toURI().toURL().toExternalForm());
         Product product = ProductIO.readProduct(fileLocation);
-        RenderedImage image = QuicklookGenerator.createImage(context, product, qlConfig);
+        RenderedImage image = new QuicklookGenerator(context, product, qlConfig).createImage();
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
         FileSystem fileSystem = FileSystem.get(context.getConfiguration());
         if (image != null) {

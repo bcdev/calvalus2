@@ -97,7 +97,7 @@ public class FireSen2CorInputFormat extends InputFormat {
         Logger.getLogger("com.bc.calvalus").info("sen2cor path: " + sen2CorPath);
 
 
-        return fileSystemService.pathExists(sen2CorPath);
+        return fileSystemService.pathExists(sen2CorPath, "cvop");
     }
 
     protected void createSplits(FileStatus[] fileStatuses,
