@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid.olci;
 
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
+import org.apache.hadoop.io.Text;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
@@ -61,6 +63,19 @@ public class OlciGridReducer extends AbstractGridReducer {
         }
     }
 
+
+    @Override
+    protected void reduce(Text key, Iterable<GridCells> values, Context context) throws IOException, InterruptedException {
+        super.reduce(key, values, context);
+        GridCells currentGridCells = getCurrentGridCells();
+        try {
+            int x = getX(key.toString());
+            int y = getY(key.toString());
+            writeFloatChunk(x, y, ncFile, "fraction_of_burnable_area", currentGridCells.burnableFraction);
+        } catch (InvalidRangeException e) {
+            throw new IOException(e);
+        }
+    }
     @Override
     protected String getFilename(String year, String month, String version) {
         return String.format("%s%s01-C3S-L3S_FIRE-BA-OLCI-fv%s.nc", year, month, version);
@@ -80,4 +95,19 @@ public class OlciGridReducer extends AbstractGridReducer {
     protected int getTargetHeight() {
         return CHUNK_SIZE;
     }
+
+    @Override
+    protected int getX(String key) {
+        // key == "2018-01-h10v08"
+        int h = new Integer(key.substring("2018-01-h".length(), "2018-01-h".length() + 2));
+        return h * 40;
+    }
+
+    @Override
+    protected int getY(String key) {
+        // key == "2018-01-h10v08"
+        int v = new Integer(key.substring("2018-01-hxxv".length(), "2018-01-hxxv".length() + 2));
+        return v * 40;
+    }
+
 }

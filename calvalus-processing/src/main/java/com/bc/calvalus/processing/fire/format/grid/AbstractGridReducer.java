@@ -257,11 +257,24 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         }
     }
 
+    /**
+     * Returns the start x for the given tile, where <code>targetWidth * targetHeight</code> many values are written to
+     * the target raster.
+     *
+     * @param key The mapper key.
+     * @return The start x.
+     */
     protected int getX(String key) {
         int x = Integer.parseInt(key.substring(12));
         return x * targetWidth;
     }
 
+    /**
+     * Returns the start y for the given tile, where <code>targetWidth * targetHeight</code> many values are written to
+     * the target raster.
+     * @param key The mapper key.
+     * @return The start y.
+     */
     protected int getY(String key) {
         int y = Integer.parseInt(key.substring(9, 11));
         return y * targetHeight;

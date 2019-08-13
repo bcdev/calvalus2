@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.olci;
 
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
@@ -44,11 +45,18 @@ public class OlciDataSource extends AbstractFireGridDataSource {
         Band lcClassification = lcProduct.getBand("lccs_class");
         lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
 
-        setAreas(geoCoding, sourceWidth, sourceHeight, data.areas);
+        for (int i = 0; i < data.lcClasses.length; i++) {
+            data.burnable[i] = LcRemapping.isInBurnableLcClass(data.lcClasses[i]);
+        }
+
+        Band pbBand = uncertaintyProduct.getBand("band_1");
+        pbBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.probabilityOfBurn);
 
         Band statusBand = foaProduct.getBand("band_1");
         statusBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.statusPixels);
         remodelStatusPixels(data.statusPixels);
+
+        setAreas(geoCoding, sourceWidth, sourceHeight, data.areas);
 
         return data;
     }
