@@ -3,17 +3,23 @@ package com.bc.calvalus.processing.fire.format.pixel;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.S2Strategy;
 import com.bc.calvalus.processing.fire.format.pixel.modis.ModisPixelFinaliseMapper;
+import com.bc.calvalus.processing.fire.format.pixel.olci.OlciPixelFinaliseMapper;
 import com.bc.calvalus.processing.fire.format.pixel.s2.S2PixelFinaliseMapper;
 import com.bc.ceres.core.ProgressMonitor;
+import com.sun.media.jai.util.SunTileCache;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
+import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
+import javax.media.jai.JAI;
 import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -81,6 +87,27 @@ public class PixelFinaliseMapperTest {
         Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "wumpel", lcProduct, 0, "");
 
         ProductIO.writeProduct(product, "C:\\ssd\\test6.nc", "NetCDF4-CF");
+    }
+
+    @Ignore
+    @Test
+    public void writeTestProduct() throws IOException {
+        JAI.getDefaultInstance().setTileCache(new SunTileCache(0));
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
+
+        Product lcProduct = ProductIO.readProduct("C:\\ssd\\c3s\\C3S-LC-L4-LCCS-Map-300m-P1Y-2017-v2.1.1.nc");
+        lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
+        final File localL3 = new File("c:\\ssd\\c3s\\L3_2018-01-01_2018-01-31.nc");
+        Product product = new OlciPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "does_not_matter", lcProduct, JD, "");
+
+        final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        String localFilename = "c:\\ssd\\c3s\\pixel-format-test-JD.tif";
+        geotiffWriter.writeProductNodes(product, localFilename);
+        geotiffWriter.writeBandRasterData(product.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
     }
 
     private static PixelFinaliseMapper getPixelFinaliseMapper() {

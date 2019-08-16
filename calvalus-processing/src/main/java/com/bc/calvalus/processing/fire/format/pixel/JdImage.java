@@ -92,7 +92,6 @@ class JdImage extends SingleBandedOpImage {
                 float sourceCl = sourceClArray[pixelIndex];
                 int sourceLcClass = lcArray[pixelIndex];
 
-//                boolean notCloudy = sourceJd != 998 && sourceJd != -1.0;
                 sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, sensor);
 
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {

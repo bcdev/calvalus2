@@ -17,27 +17,19 @@
 package com.bc.calvalus.processing.fire.format.grid.olci;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -72,10 +64,10 @@ public class OlciGridMapper extends AbstractGridMapper {
         File foaTarFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration());
 
-        File[] output = untar(outputTarFile, "(.*Classification.*|.*Uncertainty.*)");
+        File[] output = CommonUtils.untar(outputTarFile, "(.*Classification.*|.*Uncertainty.*)");
         File classificationFile = output[0];
         File uncertaintyFile = output[1];
-        File foa = untar(foaTarFile, ".*FractionOfObservedArea.*")[0];
+        File foa = CommonUtils.untar(foaTarFile, ".*FractionOfObservedArea.*")[0];
 
         Product baProduct = ProductIO.readProduct(classificationFile);
         Product foaProduct = ProductIO.readProduct(foa);
@@ -89,53 +81,6 @@ public class OlciGridMapper extends AbstractGridMapper {
         context.progress();
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCells);
-    }
-
-    static File[] untar(File tarFile, String filterRegEx) {
-        return untar(tarFile, filterRegEx, null);
-    }
-
-    static File[] untar(File tarFile, String filterRegEx, List<String> newDirs) {
-        List<File> result = new ArrayList<>();
-        try (FileInputStream in = new FileInputStream(tarFile);
-             GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
-             TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn)) {
-
-            TarArchiveEntry entry;
-
-            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    boolean created = new File(entry.getName()).mkdirs();
-                    if (!created) {
-                        throw new IOException(String.format("Unable to create directory '%s' during extraction of contents of archive: '", entry.getName()));
-                    }
-                } else {
-                    int count;
-                    byte[] data = new byte[1024];
-                    if (!entry.getName().matches(filterRegEx)) {
-                        continue;
-                    }
-                    int lastIndex = entry.getName().lastIndexOf("/");
-                    boolean created = new File(entry.getName().substring(0, lastIndex)).mkdirs();
-                    if (created && newDirs != null) {
-                        Collections.addAll(newDirs, entry.getName().substring(0, lastIndex).split("/"));
-                    }
-                    FileOutputStream fos = new FileOutputStream(entry.getName(), false);
-                    try (BufferedOutputStream dest = new BufferedOutputStream(fos, 1024)) {
-                        while ((count = tarIn.read(data, 0, 1024)) != -1) {
-                            dest.write(data, 0, count);
-                        }
-                    }
-                    result.add(new File(entry.getName()));
-                }
-            }
-
-        } catch (IOException e) {
-            throw new IllegalStateException("Unable to extract tar archive '" + tarFile + "'", e);
-        }
-        File[] untarredFiles = result.toArray(new File[0]);
-        Arrays.sort(untarredFiles, Comparator.comparing(File::getName));
-        return untarredFiles;
     }
 
     static String getTile(String path) {

@@ -81,7 +81,20 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         String year = configuration.get("calvalus.year");
         String month = configuration.get("calvalus.month");
-        String template = configuration.get("calvalus.sensor").equals("MSI") ? S2_TEMPLATE : MODIS_TEMPLATE;
+        String template;
+        switch (configuration.get("calvalus.sensor")) {
+            case "OLCI":
+                template = S2_TEMPLATE;
+                break;
+            case "MODIS":
+                template = MODIS_TEMPLATE;
+                break;
+            case "S2":
+                template = S2_TEMPLATE;
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown sensor '" + configuration.get("calvalus.sensor") + "'");
+        }
 
         String baseFilename = createBaseFilename(year, month, version, areaString);
 
