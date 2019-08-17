@@ -210,6 +210,10 @@ public class CalvalusHadoopTool {
             JobStatus[] jobs = hadoopConnection.getAllJobs();
             for (String id : ids) {
                 JobStatus status = CalvalusHadoopStatusConverter.findById(id, jobs);
+                // ask history server if job is no longer in resource manager
+                if (status == null) {
+                    status = hadoopConnection.getJobStatus(JobID.forName(id));
+                }
                 statusConverter.accumulateJobStatus(id, status, accu);
             }
         }
