@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import org.apache.hadoop.mapreduce.Job;
 
 import java.io.IOException;
+import java.util.Timer;
 
 /**
  * Service offered by some processing system. Includes processor information and job management.
@@ -83,4 +84,6 @@ public interface ProcessingService<JobId> {
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
 
     void invalidateBundleCache();
+
+    Timer getTimer();
 }

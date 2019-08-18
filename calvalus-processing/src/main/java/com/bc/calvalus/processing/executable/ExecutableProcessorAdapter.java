@@ -354,6 +354,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
+        long t0 = System.currentTimeMillis();
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
@@ -386,6 +387,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             }
             pm.done();
         }
+        getLogger().info("archiving done in [ms]: " + (System.currentTimeMillis() - t0));
     }
 
     @Override

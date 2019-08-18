@@ -26,7 +26,6 @@ import org.apache.hadoop.security.AccessControlException;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Stack;
@@ -40,21 +39,47 @@ import java.util.regex.Pattern;
  * org.apache.hadoop.fs.FileSystem.listFiles(Path p, boolean recursive)
  * org.apache.hadoop.fs.FileSystem.listLocatedStatus(Path p, PathFilter pf)
  */
-public class FileSystemPathIterator {
+public class FileSystemPathIteratorFactory {
 
     public static final FileStatusFilter HIDDEN_FILTER = new HiddenFileStatusFilter();
 
     private final FileSystem fs;
     private final FileStatusFilter filter;
 
-    public FileSystemPathIterator(FileSystem fs, List<FileStatusFilter> filter) {
+    public FileSystemPathIteratorFactory(FileSystem fs, List<FileStatusFilter> filter) {
         this(fs, filter.toArray(new FileStatusFilter[0]));
     }
 
-    public FileSystemPathIterator(FileSystem fs, FileStatusFilter... filter) {
+    public FileSystemPathIteratorFactory(FileSystem fs, FileStatusFilter... filter) {
         this.fs = fs;
         this.filter = new CombinedFileStatusFilter(filter);
     }
+
+    private RemoteIterator<LocatedFileStatus> applyFilter(RemoteIterator<LocatedFileStatus> fileStatusIt) throws IOException {
+        return new RemoteIterator<LocatedFileStatus>() {
+            LocatedFileStatus next = getNext();
+            @Override
+            public boolean hasNext() throws IOException {
+                return next != null;
+            }
+            @Override
+            public LocatedFileStatus next() throws IOException {
+                LocatedFileStatus current = next;
+                next = getNext();
+                return current;
+            }
+            private LocatedFileStatus getNext() throws IOException {
+                while (fileStatusIt.hasNext()) {
+                    LocatedFileStatus candidate = fileStatusIt.next();
+                    if (filter.accept(candidate)) {
+                        return candidate;
+                    }
+                }
+                return null;
+            }
+        };
+    }
+
 
     /**
      * List the statuses and block locations of the files in the given path.
@@ -73,9 +98,9 @@ public class FileSystemPathIterator {
      * @return an iterator that traverses statuses of the files
      * @throws IOException see specific implementation
      */
-    public RemoteIterator<LocatedFileStatus> listFiles(final Path f, final boolean recursive) throws IOException {
+    public RemoteIterator<LocatedFileStatus> listFiles(final Path f, final boolean recursive, boolean withDirs, int maxDepth) throws IOException {
         try {
-            return new LocatedFileStatusRemoteIterator(f, recursive);
+            return applyFilter(new LocatedFileStatusRemoteIterator(f, recursive, withDirs, maxDepth));
         } catch (FileNotFoundException fnfe) {
             return new EmptyRemoteIterator<>();
         }
@@ -130,7 +155,9 @@ public class FileSystemPathIterator {
         } catch (AccessControlException ignore) {
             return new FileStatus[0];
         }
-        return Arrays.stream(listing).filter(filter::accept).toArray(FileStatus[]::new);
+        // TODO: seems that this applies the filter to directories too early
+        //return Arrays.stream(listing).filter(filter::accept).toArray(FileStatus[]::new);
+        return listing;
     }
 
 
@@ -139,14 +166,34 @@ public class FileSystemPathIterator {
         private final Stack<RemoteIterator<LocatedFileStatus>> itors;
         private final Path rootPath;
         private final boolean recursive;
+        private boolean withDirs;
         private RemoteIterator<LocatedFileStatus> curItor;
         private LocatedFileStatus curFile;
+        private int depth;
 
-        LocatedFileStatusRemoteIterator(Path rootPath, boolean recursive) throws IOException {
+        LocatedFileStatusRemoteIterator(Path rootPath, boolean recursive, boolean withDirs, int maxDepth) throws IOException {
             this.rootPath = rootPath;
             this.recursive = recursive;
+            this.withDirs = withDirs;
             itors = new Stack<>();
-            curItor = listLocatedStatus(rootPath);
+            if (withDirs) {
+                curFile = new LocatedFileStatus(new FileStatus(0, true, 0, 0, 0, rootPath), null);
+            }
+            if (maxDepth > 0) {
+                curItor = listLocatedStatus(rootPath);
+            } else {
+                curItor = new RemoteIterator<LocatedFileStatus>() {
+                    @Override
+                    public boolean hasNext() throws IOException {
+                        return false;
+                    }
+                    @Override
+                    public LocatedFileStatus next() throws IOException {
+                        return null;
+                    }
+                };
+            }
+            this.depth = maxDepth - 1;
         }
 
         @Override
@@ -156,6 +203,7 @@ public class FileSystemPathIterator {
                     handleFileStat(curItor.next());
                 } else if (!itors.empty()) {
                     curItor = itors.pop();
+                    ++depth;
                 } else {
                     return false;
                 }
@@ -173,11 +221,17 @@ public class FileSystemPathIterator {
          * @throws IOException if any IO error occurs
          */
         private void handleFileStat(LocatedFileStatus stat) throws IOException {
-            if (stat.isFile()) { // file
+            if (stat.isFile()) {
                 curFile = stat;
-            } else if (recursive) { // directory
-                itors.push(curItor);
-                curItor = listLocatedStatus(stat.getPath());
+            } else {
+                if (withDirs) {
+                    curFile = stat;
+                }
+                if (recursive && depth > 0) { // directory
+                    itors.push(curItor);
+                    --depth;
+                    curItor = listLocatedStatus(stat.getPath());
+                }
             }
         }
 
@@ -192,8 +246,8 @@ public class FileSystemPathIterator {
         }
     }
 
-    public static FileStatusFilter filterPattern(Pattern pattern) {
-        return new PatternFileStatusFilter(pattern);
+    public static FileStatusFilter filterPattern(Pattern pattern, boolean withDirs) {
+        return new PatternFileStatusFilter(pattern, withDirs);
     }
 
     public interface FileStatusFilter {
@@ -229,14 +283,16 @@ public class FileSystemPathIterator {
 
     private static class PatternFileStatusFilter implements FileStatusFilter {
         private final Matcher matcher;
+        private boolean withDirs;
 
-        public PatternFileStatusFilter(Pattern pattern) {
+        public PatternFileStatusFilter(Pattern pattern, boolean withDirs) {
             matcher = pattern.matcher("");
+            this.withDirs = withDirs;
         }
 
         @Override
         public boolean accept(FileStatus fileStatus) {
-            if (fileStatus.isFile()) {
+            if (fileStatus.isFile() || withDirs) {
                 String fPath = fileStatus.getPath().toUri().getPath();
                 matcher.reset(fPath);
                 return matcher.matches();

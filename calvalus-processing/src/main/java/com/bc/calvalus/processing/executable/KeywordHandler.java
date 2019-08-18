@@ -40,13 +40,13 @@ public class KeywordHandler extends ProcessObserver.DefaultHandler {
     private final String programName;
     private final MapContext mapContext;
 
-    private final Pattern progressPattern;
-    private final Pattern outputProductPattern;
-    private final Pattern namedOutputProductPattern;
-    private final Pattern inputProductPattern;
-    private final Pattern productTransformationPattern;
+    protected Pattern progressPattern;
+    protected Pattern outputProductPattern;
+    protected Pattern namedOutputProductPattern;
+    protected Pattern inputProductPattern;
+    protected Pattern productTransformationPattern;
 
-    private final List<String> outputFiles;
+    protected final List<String> outputFiles;
     private final List<NamedOutput> namedOutputFiles;
     private String inputFile = null;
     private int lastScan = 0;

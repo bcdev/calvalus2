@@ -91,6 +91,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         final int progressForSaving = processorAdapter.supportsPullProcessing() ? 95 : 5;
         pm.beginTask("Level 2 processing", progressForProcessing + progressForSaving);
         try {
+            long t0 = System.currentTimeMillis();
             processorAdapter.prepareProcessing();
             if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
                 LOG.info("testing whether target product exists ...");
@@ -106,6 +107,8 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 LOG.warning("product does not cover region, skipping processing.");
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
+                LOG.info("preparing done in [ms]: " + (System.currentTimeMillis() - t0));
+                t0 = System.currentTimeMillis();
                 // process input and write target product
                 if (processorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, SubProgressMonitor.create(pm, progressForProcessing))) {
                     LOG.info(context.getTaskAttemptID() + " target product created");
@@ -119,6 +122,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                                         processorAdapter.getOutputProductPath().toString(),
                                         processorAdapter.openProcessedProduct());
                     }
+                    LOG.info("processing done in [ms]: " + (System.currentTimeMillis() - t0));
                 } else {
                     LOG.warning("product has not been processed.");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not processed").increment(1);

@@ -3,19 +3,27 @@ package com.bc.calvalus.processing.hadoop;
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
+import com.bc.calvalus.inventory.hadoop.FileSystemPathIteratorFactory;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.geodb.GeodbInputFormat;
 import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobConf;
@@ -25,16 +33,36 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.esa.snap.core.util.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Base64;
 
 /**
  * An input format that maps each input file to a single (file) split.
@@ -52,6 +80,33 @@ import java.util.logging.Logger;
 public class PatternBasedInputFormat extends InputFormat {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
+    private static final int DEFAULT_SEARCH_CHUNK_SIZE = 20;
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
+
+    static class AtomNamespaceContext implements NamespaceContext {
+        @Override
+        public String getNamespaceURI(String prefix) {
+            if ("a".equals(prefix))
+                return "http://www.w3.org/2005/Atom";
+            if ("m".equals(prefix))
+                return "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata";
+            if ("d".equals(prefix))
+                return "http://schemas.microsoft.com/ado/2007/08/dataservices";
+            if ("odata".equals(prefix))
+                return "https://scihub.copernicus.eu/dhus/odata/v1/";
+            throw new IllegalArgumentException(prefix);
+        }
+        @Override
+        public String getPrefix(String namespaceURI) {
+            throw new UnsupportedOperationException();
+        }
+        @Override
+        public Iterator<String> getPrefixes(String namespaceURI) {
+            throw new UnsupportedOperationException();
+        }
+    }
+    private static NamespaceContext ATOM_NAMESPACE_CONTEXT = new AtomNamespaceContext();
 
     /**
      * Maps each input file to a single (file) split.
@@ -59,6 +114,16 @@ public class PatternBasedInputFormat extends InputFormat {
      * Input files are given by the configuration parameter
      * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_INPUT_PATH_PATTERNS}. Its value is expected to
      * be a comma-separated list of file path patterns (HDFS URLs). These patterns can contain dates and region names.
+     *
+     * Alternatively, inputs are specified by geoInventory, dateRange, and regionGeoemtry.
+     *
+     * Alternatively, inputs are specified by catalogue, searchurl, searchxpath:
+     *     "catalogue"        : "provider=mundi&collection=Sentinel2&type=MSIL1C&level=L1C",
+     *    "catalogue.mundi.searchurl"     : "https://mundiwebservices.com/acdc/catalog/proxy/search/${collection}/opensearch?q=(sensingStartDate:[${start}T00:00:00Z%20TO%20${stop}T23:59:59Z]%20AND%20footprint:"Intersects(${polygon})")&processingLevel=${level}&startIndex=${offset}&maxRecords=${count}",
+     *    "catalogue.mundi.searchxpath" : "concat('s3a:/',substring-after(/a:feed/a:entry/a:link[@rel="enclosure"]/@href,'https://obs.eu-de.otc.t-systems.com'))",
+     *
+     *    "dateRanges"       : "[2018-04-24:2018-04-24]",
+     *    "regionGeometry"   : "POLYGON((10.624552319335976 45.58429059451441,10.719458959961003 45.58525169665108,10.71877231445319 45.55964882024322,10.625238964843788 45.5586872798687,10.624552319335976 45.58429059451441))",
      */
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
@@ -74,7 +139,9 @@ public class PatternBasedInputFormat extends InputFormat {
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
 
         List<InputSplit> splits;
-        if (geoInventory != null && inputPathPatterns == null) {
+        long t0 = System.currentTimeMillis();
+
+        if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns == null) {
             Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
             LOG.info(String.format("%d files returned from geo-inventory '%s'.", paths.size(), geoInventory));
             if (!productIdentifiers.isEmpty()) {
@@ -92,6 +159,7 @@ public class PatternBasedInputFormat extends InputFormat {
             }
             splits = GeodbInputFormat.createInputSplits(conf, paths, requestSizeLimit);
             LOG.info(String.format("%d splits created.", splits.size()));
+            LOG.info("geo-inventory query done in [ms]: " + (System.currentTimeMillis() - t0));
         } else if (geoInventory == null && inputPathPatterns != null) {
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -105,11 +173,11 @@ public class PatternBasedInputFormat extends InputFormat {
                     List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(),
                                                                   dateRange.getStopDate(), regionName);
                     RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
-                                                                                     inputPatterns, conf, null);
+                                                                                     inputPatterns, conf, null, true);
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
-                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, true);
                     if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
                         splits = splits.subList(0, requestSizeLimit);
                         break;
@@ -118,13 +186,14 @@ public class PatternBasedInputFormat extends InputFormat {
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
                 RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
-                                                                                 conf, null);
+                                                                                 conf, null, true);
                 if (!productIdentifiers.isEmpty()) {
                     fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                 }
-                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, true);
             }
-        } else if (geoInventory != null && inputPathPatterns != null) {
+            LOG.info("file system query done in [ms]: " + (System.currentTimeMillis() - t0));
+        } else if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
             Set<String> pathInDB = GeodbInputFormat.queryGeoInventory(false, conf);
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -138,11 +207,11 @@ public class PatternBasedInputFormat extends InputFormat {
                     List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(),
                                                                   dateRange.getStopDate(), regionName);
                     RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
-                                                                                     inputPatterns, conf, pathInDB);
+                                                                                     inputPatterns, conf, pathInDB, false);
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
-                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, false);
                     if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
                         splits = splits.subList(0, requestSizeLimit);
                         break;
@@ -151,12 +220,111 @@ public class PatternBasedInputFormat extends InputFormat {
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
                 RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
-                                                                                 conf, pathInDB);
+                                                                                 conf, pathInDB, false);
                 if (!productIdentifiers.isEmpty()) {
                     fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                 }
-                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, false);
             }
+            LOG.info("geo-inventory query and complementary file system query done in [ms]: " + (System.currentTimeMillis() - t0));
+        } else if (geoInventory != null && geoInventory.startsWith("catalogue")) {
+            final Map<String, String> searchParameters = parseSearchParameters(geoInventory);
+            final String provider = searchParameters.get("catalogue");
+            final String searchUrlTemplate = conf.get("calvalus." + provider + ".searchurl");
+            final String searchXPath = conf.get("calvalus." + provider + ".searchxpath");
+            final String searchJPath = conf.get("calvalus." + provider + ".searchjpath");
+            final String searchCredentials = conf.get("calvalus." + provider + ".searchcredentials");
+            final Pattern pathPattern = conf.get("calvalus." + provider + ".pathpattern") != null
+                    ? Pattern.compile(conf.get("calvalus." + provider + ".pathpattern")) : null;
+            final String pathReplacement = conf.get("calvalus." + provider + ".pathreplacement");
+            final String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            final List<DateRange> dateRanges = createDateRangeList(dateRangesString);
+
+            if (geometryWkt != null) {
+                searchParameters.put("polygon", geometryWkt);
+            } else {
+                searchParameters.put("polygon", "POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))");
+            }
+
+            final HttpClient httpClient = new HttpClient();
+            final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            docFactory.setNamespaceAware(true);
+            docFactory.setValidating(false);
+            final XPathFactory xPathfactory = XPathFactory.newInstance();
+            splits = new ArrayList<>(1000);
+            int numQueries = 0;
+
+            // date ranges loop
+            for (DateRange dateRange : dateRanges) {
+                searchParameters.put("start", DateUtils.formatDate(dateRange.getStartDate()));
+                searchParameters.put("stop", DateUtils.formatDate(dateRange.getStopDate()));
+                searchParameters.put("startmillis", String.valueOf(dateRange.getStartDate().getTime()));
+                searchParameters.put("stopmillis", String.valueOf(dateRange.getStopDate().getTime()+86399000));
+
+                // incremental query loop
+                int offset = 0;
+                while (true) {
+                    searchParameters.put("offset", String.valueOf(offset));
+                    searchParameters.put("offset1", String.valueOf(offset+1));
+                    searchParameters.put("count", String.valueOf(DEFAULT_SEARCH_CHUNK_SIZE));
+                    final String searchUrl = urlEncode(replaceSearchParameters(searchUrlTemplate, searchParameters));
+
+                    if (offset == 0) {
+                        LOG.info(searchUrl);
+                    }
+                    final GetMethod catalogueRequest = new GetMethod(searchUrl);
+                    if (searchCredentials != null) {
+                        catalogueRequest.setRequestHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(searchCredentials.getBytes(StandardCharsets.UTF_8)));
+                    }
+                    final InputStream response = inquireCatalogue(httpClient, catalogueRequest);
+                    ++numQueries;
+
+                    if (searchXPath != null) {
+                        try {
+                            NodeList pathNodes = parseCatalogueResponse(docFactory, xPathfactory, response, searchXPath);
+
+                            // search results loop
+                            int count = 0;
+                            for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
+                                String productArchivePath = pathNodes.item(i).getTextContent();
+                                if (pathPattern != null && pathReplacement != null) {
+                                    productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+                                }
+                                System.out.println(productArchivePath);
+                                splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
+                                ++count;
+                            }
+                            if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
+                                break;
+                            }
+                            offset += count;
+                        } catch (SAXException | XPathExpressionException | ParserConfigurationException e) {
+                            throw new IOException(e);
+                        }
+                    } else if (searchJPath != null) {
+                        List<String> paths = JsonPath.read(response, searchJPath);
+                        int count = 0;
+                        for (String path : paths) {
+                            String productArchivePath = path;
+                            if (pathPattern != null && pathReplacement != null) {
+                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+                            }
+                            System.out.println(productArchivePath);
+                            splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
+                            ++count;
+                        }
+                        if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
+                            break;
+                        }
+                        offset += count;
+                    } else {
+                        throw new IllegalArgumentException("missing searchXPath or searchJPath configuration");
+                    }
+                    catalogueRequest.releaseConnection();
+                }
+            }
+            LOG.info(String.format("%d splits created.", splits.size()));
+            LOG.info("catalogue query " + numQueries + " cycles done in [ms]: " + (System.currentTimeMillis() - t0));
         } else {
             throw new IOException(
                         String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
@@ -165,6 +333,65 @@ public class PatternBasedInputFormat extends InputFormat {
         }
         LOG.info("Total files to process : " + splits.size());
         return splits;
+    }
+
+    private Map<String, String> parseSearchParameters(String catalogue) {
+        Map<String,String> searchParameters = new HashMap<>();
+        for (String param : catalogue.split("&")) {
+            int p = param.indexOf('=');
+            searchParameters.put(param.substring(0,p), param.substring(p+1));
+        }
+        return searchParameters;
+    }
+
+
+    private String replaceSearchParameters(String searchUrl,
+                                           Map<String, String> searchParameters) {
+        for (Map.Entry<String,String> param : searchParameters.entrySet()) {
+            searchUrl = searchUrl.replaceAll("\\$\\{"+param.getKey()+"\\}", param.getValue());
+        }
+        return searchUrl;
+    }
+
+    private String urlEncode(String searchUrl) {
+        return searchUrl.
+                replaceAll(" ", "%20").
+                replaceAll("\"", "%22").
+                replaceAll("\\(", "%28").
+                replaceAll("\\)", "%29").
+                replaceAll("\\[", "%5B").
+                replaceAll("\\]", "%5D").
+                replaceAll("<", "%3C").
+                replaceAll(">", "%3E");
+    }
+
+    private InputStream inquireCatalogue(HttpClient httpClient, GetMethod getMethod) throws IOException {
+        int statusCode = httpClient.executeMethod(getMethod);
+        if (statusCode > 299) {
+            String message = getMethod.getResponseBodyAsString();
+            throw new IOException("search error: " + message + " query: " + getMethod.getQueryString());
+        }
+        return getMethod.getResponseBodyAsStream();
+    }
+
+    private NodeList parseCatalogueResponse(DocumentBuilderFactory factory, XPathFactory xPathfactory, InputStream response, String searchXPath) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+        if (true) {  // TODO fix for CreoDias that returns XML with missing namespace declaration
+            response = new TokenReplacingStream(response,
+                                                "xmlns:media=".getBytes(),
+                                                "xmlns:resto=\"http://whereeverrestoresides\" xmlns:media=".getBytes());
+        }
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(response);
+        XPath xpath = xPathfactory.newXPath();
+        xpath.setNamespaceContext(ATOM_NAMESPACE_CONTEXT);
+        XPathExpression expr = xpath.compile(searchXPath);
+        return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
+    }
+
+    private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement) {
+        Matcher matcher = pathPattern.matcher(productArchivePath);
+        productArchivePath = matcher.replaceAll(pathReplacement);
+        return productArchivePath;
     }
 
     private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(
@@ -229,10 +456,10 @@ public class PatternBasedInputFormat extends InputFormat {
     protected void createSplits(ProductInventory productInventory,
                                 RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
-                                Configuration conf, int requestSizeLimit) throws IOException {
+                                Configuration conf, int requestSizeLimit, boolean withDirs) throws IOException {
         while (fileStatusIt.hasNext()) {
             LocatedFileStatus locatedFileStatus = fileStatusIt.next();
-            InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
+            InputSplit split = createSplit(productInventory, conf, locatedFileStatus, withDirs);
             if (split != null) {
                 splits.add(split);
                 if (requestSizeLimit > 0 && splits.size() == requestSizeLimit) {
@@ -242,7 +469,7 @@ public class PatternBasedInputFormat extends InputFormat {
         }
     }
 
-    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file) throws
+    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file, boolean withDirs) throws
                                                                                                              IOException {
         long fileLength = file.getLen();
 
@@ -272,6 +499,8 @@ public class PatternBasedInputFormat extends InputFormat {
                     return new ProductSplit(file.getPath(), fileLength, block.getHosts());
                 }
             }
+        } else if (withDirs) {
+            return new ProductSplit(file.getPath(), 0, EMPTY_STRING_ARRAY);
         } else {
             String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
             LOG.warning(String.format(msgFormat, file.getPath()));
@@ -283,15 +512,16 @@ public class PatternBasedInputFormat extends InputFormat {
     protected RemoteIterator<LocatedFileStatus> getFileStatuses(HdfsFileSystemService fileSystemService,
                                                                 List<String> inputPatterns,
                                                                 Configuration conf,
-                                                                Set<String> existingPathes) throws IOException {
-        FileSystemPathIterator.FileStatusFilter extraFilter = null;
+                                                                Set<String> existingPathes,
+                                                                boolean withDirs) throws IOException {
+        FileSystemPathIteratorFactory.FileStatusFilter extraFilter = null;
         if (existingPathes != null && existingPathes.size() > 0) {
             extraFilter = fileStatus -> {
                 String dbPath = GeodbScanMapper.getDBPath(fileStatus.getPath(), conf);
                 return !existingPathes.contains(dbPath);
             };
         }
-        return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter);
+        return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter, withDirs);
     }
 
     protected List<String> getInputPatterns(String inputPathPatterns, Date minDate, Date maxDate, String regionName) {
@@ -306,5 +536,72 @@ public class PatternBasedInputFormat extends InputFormat {
                                                                        TaskAttemptContext context)
                 throws IOException, InterruptedException {
         return new NoRecordReader();
+    }
+
+    /** from https://stackoverflow.com/questions/7743534/filter-search-and-replace-array-of-bytes-in-an-inputstream */
+
+    public class TokenReplacingStream extends InputStream {
+
+        private final InputStream source;
+        private final byte[] oldBytes;
+        private final byte[] newBytes;
+        private int tokenMatchIndex = 0;
+        private int bytesIndex = 0;
+        private boolean unwinding;
+        private int mismatch;
+        private int numberOfTokensReplaced = 0;
+
+        public TokenReplacingStream(InputStream source, byte[] oldBytes, byte[] newBytes) {
+            assert oldBytes.length > 0;
+            this.source = source;
+            this.oldBytes = oldBytes;
+            this.newBytes = newBytes;
+        }
+
+        @Override
+        public int read() throws IOException {
+
+            if (unwinding) {
+                if (bytesIndex < tokenMatchIndex) {
+                    return oldBytes[bytesIndex++];
+                } else {
+                    bytesIndex = 0;
+                    tokenMatchIndex = 0;
+                    unwinding = false;
+                    return mismatch;
+                }
+            } else if (tokenMatchIndex == oldBytes.length) {
+                if (bytesIndex == newBytes.length) {
+                    bytesIndex = 0;
+                    tokenMatchIndex = 0;
+                    numberOfTokensReplaced++;
+                } else {
+                    return newBytes[bytesIndex++];
+                }
+            }
+
+            int b = source.read();
+            if (b == oldBytes[tokenMatchIndex]) {
+                tokenMatchIndex++;
+            } else if (tokenMatchIndex > 0) {
+                mismatch = b;
+                unwinding = true;
+            } else {
+                return b;
+            }
+
+            return read();
+
+        }
+
+        @Override
+        public void close() throws IOException {
+            source.close();
+        }
+
+        public int getNumberOfTokensReplaced() {
+            return numberOfTokensReplaced;
+        }
+
     }
 }

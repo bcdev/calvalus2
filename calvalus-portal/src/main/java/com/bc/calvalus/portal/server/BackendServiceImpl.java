@@ -904,8 +904,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private void startObservingProductionService() {
-        statusObserver = new Timer("StatusObserver", true);
-        statusObserver.scheduleAtFixedRate(new TimerTask() {
+        //statusObserver = new Timer("StatusObserver", true);
+        Timer statusObserver2 = serviceContainer.getProductionService().getProcessingService().getTimer();
+        statusObserver2.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 updateProductionStatuses();

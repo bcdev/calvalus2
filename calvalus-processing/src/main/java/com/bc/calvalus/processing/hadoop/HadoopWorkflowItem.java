@@ -195,6 +195,14 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
 
     @Override
     public void submit() throws WorkflowException {
+        if (processingService.getHadoopLaunchHandler() == null) {
+            submitInternal();
+        } else {
+            processingService.getHadoopLaunchHandler().queueWorkflowItem(this);
+        }
+    }
+
+    public void submitInternal() throws WorkflowException {
         try {
             UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
             remoteUser.doAs((PrivilegedExceptionAction<Job>) () -> {

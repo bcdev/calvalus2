@@ -141,6 +141,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     private Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,
                                      Configuration jobConfig, String outputFormat, ProgressMonitor pm) throws
             IOException {
+        long t0 = System.currentTimeMillis();
         Map<String, Object> bandSubsetParameter = createBandSubsetParameter(targetProduct, jobConfig);
         if (!bandSubsetParameter.isEmpty()) {
             targetProduct = GPF.createProduct("Subset", bandSubsetParameter, targetProduct);
@@ -151,11 +152,13 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
         //ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         GPF.writeProduct(targetProduct, productFile, outputFormat, false, pm);
-        LOG.info("Finished writing product.");
+        LOG.info("formatting done in [ms]: " + (System.currentTimeMillis() - t0));
 
+        t0 = System.currentTimeMillis();
         context.setStatus("Copying");
         productFormatter.compressToHDFS(context, productFile);
         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
+        LOG.info("archiving done in [ms]: " + (System.currentTimeMillis() - t0));
         return targetProduct;
     }
 

@@ -53,6 +53,7 @@
     "_translate.productionName"   : "mapreduce.job.name",
     "_translate.inputPath"        : [ "calvalus.input.pathPatterns", "mapreduce.input.fileinputformat.inputdir" ],
     "_translate.inputInventory"   : "calvalus.input.geoInventory",
+    "_translate.catalogue"        : "calvalus.input.geoInventory",
     "_translate.dateRanges"       : [ "calvalus.input.dateRanges", [ "calvalus.minDate", "minDateOf" ], [ "calvalus.maxDate", "maxDateOf" ] ],
     "_translate.regionGeometry"   : [ "calvalus.regionGeometry", "calvalus.mosaic.regionGeometry" ],
     "_translate.processorName"    : "calvalus.l2.operator",

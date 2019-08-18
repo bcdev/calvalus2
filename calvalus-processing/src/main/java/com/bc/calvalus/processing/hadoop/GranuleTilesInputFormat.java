@@ -48,7 +48,7 @@ public class GranuleTilesInputFormat extends PatternBasedInputFormat {
     protected void createSplits(ProductInventory productInventory,
                                 RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
-                                Configuration conf, int requestSizeLimit) throws IOException {
+                                Configuration conf, int requestSizeLimit, boolean withDirs) throws IOException {
         while (fileStatusIt.hasNext()) {
             LocatedFileStatus locatedFileStatus = fileStatusIt.next();
             String fileName = locatedFileStatus.getPath().getName();
@@ -56,7 +56,7 @@ public class GranuleTilesInputFormat extends PatternBasedInputFormat {
                 continue;
             }
             LOG.info("tile " + fileName + " represents " + tileNameOf(fileName));
-            InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
+            InputSplit split = createSplit(productInventory, conf, locatedFileStatus, withDirs);
             if (split != null) {
                 splits.add(split);
                 if (requestSizeLimit > 0 && splits.size() == requestSizeLimit) {

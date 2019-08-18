@@ -103,6 +103,9 @@ public class CalvalusProductIO {
                 File localFile;
                 if ("file".equals(path.toUri().getScheme())) {    // TODO: bad criterion for whether file is "local"
                     localFile = new File(path.toUri());
+                } else if (("s3a".equals(path.toUri().getScheme())
+                            || "swift".equals(path.toUri().getScheme())) && "MTD_MSIL1C.xml".equals(path.getName())) {
+                    localFile = copyFileToLocal(path.getParent(), configuration);
                 } else {
                     localFile = copyFileToLocal(path, configuration);
                 }

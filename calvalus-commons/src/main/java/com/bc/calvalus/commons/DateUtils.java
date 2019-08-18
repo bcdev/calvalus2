@@ -19,6 +19,7 @@ package com.bc.calvalus.commons;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -30,8 +31,10 @@ import java.util.TimeZone;
 public class DateUtils {
 
     public static final String ISO_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String DATE_FORMAT_STRING = "yyyy-MM-dd";
     public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
     public static final DateFormat ISO_FORMAT = createDateFormat(ISO_FORMAT_STRING);
+    public static final DateFormat DATE_FORMAT = createDateFormat(DATE_FORMAT_STRING);
 
     public static GregorianCalendar createCalendar() {
         final GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE, Locale.ENGLISH);
@@ -43,5 +46,9 @@ public class DateUtils {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
         dateFormat.setCalendar(createCalendar());
         return dateFormat;
+    }
+
+    public static String formatDate(Date date) {
+        return DATE_FORMAT.format(date);
     }
 }

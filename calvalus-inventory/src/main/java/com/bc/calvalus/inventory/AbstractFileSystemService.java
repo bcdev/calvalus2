@@ -17,7 +17,7 @@
 package com.bc.calvalus.inventory;
 
 import com.bc.calvalus.JobClientsMap;
-import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
+import com.bc.calvalus.inventory.hadoop.FileSystemPathIteratorFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -150,22 +150,47 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         return collectFileStatuses(commonFS, qualifiedPath, pattern);
     }
 
-    public RemoteIterator<LocatedFileStatus> globFileStatusIterator(List<String> pathPatterns, Configuration conf, FileSystemPathIterator.FileStatusFilter extraFilter) throws IOException {
+    public RemoteIterator<LocatedFileStatus> globFileStatusIterator(List<String> pathPatterns, Configuration conf, FileSystemPathIteratorFactory.FileStatusFilter extraFilter, boolean withDirs) throws IOException {
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        int maxDepth = levelOf(pathPatterns) - levelOf(commonPathPrefix);
         FileSystem fs = new Path(commonPathPrefix).getFileSystem(conf);
         Path rootPath = makeQualified(fs, commonPathPrefix);
-        List<FileSystemPathIterator.FileStatusFilter> acceptFilter = new ArrayList<>();
-        acceptFilter.add(FileSystemPathIterator.HIDDEN_FILTER);
+        List<FileSystemPathIteratorFactory.FileStatusFilter> acceptFilter = new ArrayList<>();
+        acceptFilter.add(FileSystemPathIteratorFactory.HIDDEN_FILTER);
         if (pattern != null) {
-            acceptFilter.add(FileSystemPathIterator.filterPattern(pattern));
+            acceptFilter.add(FileSystemPathIteratorFactory.filterPattern(pattern, withDirs));
         }
         if (extraFilter != null) {
             acceptFilter.add(extraFilter);
         }
-        return new FileSystemPathIterator(fs, acceptFilter).listFiles(rootPath, true);
+        return new FileSystemPathIteratorFactory(fs, acceptFilter).listFiles(rootPath, true, withDirs, maxDepth);
     }
-    
+
+    private int levelOf(List<String> pathPatterns) {
+        if (pathPatterns.size() == 0) {
+            return Integer.MAX_VALUE;
+        }
+        int maxDepth = 0;
+        for (String pathPattern : pathPatterns) {
+            int levels = levelOf(pathPattern);
+            if (maxDepth < levels) {
+                maxDepth = levels;
+            }
+        }
+        return maxDepth;
+    }
+
+    private int levelOf(String pathPattern) {
+        int level = 1;
+        for (int i=1; i<pathPattern.length(); ++i) {
+            if (pathPattern.charAt(i) == '/') {
+                ++level;
+            }
+        }
+        return level;
+    }
+
     public Path makeQualified(FileSystem fileSystem, String child) {
         Path path = new Path(child);
         if (!path.isAbsolute()) {
@@ -187,6 +212,9 @@ public abstract class AbstractFileSystemService implements FileSystemService {
             FileSystem fileSystem = new Path(regex).getFileSystem(conf);
             Path qualifiedPath = makeQualified(fileSystem, regex);
             hugePattern.append(qualifiedPath.toUri().getPath().toString());
+            if (hugePattern.charAt(hugePattern.length()-1) != '$') {
+                hugePattern.append('$');
+            }
             hugePattern.append("|");
         }
         hugePattern.setLength(hugePattern.length() - 1);

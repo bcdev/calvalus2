@@ -20,6 +20,8 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
@@ -41,6 +43,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,6 +55,8 @@ import java.util.regex.Pattern;
  */
 public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
     private static final String FORMAT_10M = "CALVALUS-SENTINEL-2-MSI-10M";
     public static final String FORMAT_20M = "CALVALUS-SENTINEL-2-MSI-20M";
     private static final String FORMAT_60M = "CALVALUS-SENTINEL-2-MSI-60M";
@@ -62,6 +67,10 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
+            if (pathConfig.getPath().toString().startsWith("file://")
+                    && ! filename.endsWith(".zip")) {
+                return DecodeQualification.UNABLE;
+            }
             if (filename.matches("^S2.*_MSIL1C.*") ||
                     filename.matches("^S2.*_...L2A.*")) {
                 return DecodeQualification.INTENDED;
@@ -122,15 +131,27 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 Configuration configuration = pathConfig.getConfiguration();
                 File localFile = null;
                 String snapFormatName = "SENTINEL-2-MSI-MultiRes";
-                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                if ("file".equals(pathConfig.getPath().toUri().getScheme()) && new File(pathConfig.getPath().toUri()).getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
                     localFile = new File(pathConfig.getPath().toUri());
-                    if (localFile.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
-                        snapFormatName = "SENTINEL-2-MSI-MultiRes";
-                    } else if (localFile.getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
-                        snapFormatName = FORMAT_L2_SEN2AGRI;
-                    }
+                    snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                } else if ("file".equals(pathConfig.getPath().toUri().getScheme()) && new File(pathConfig.getPath().toUri()).getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                    snapFormatName = FORMAT_L2_SEN2AGRI;
+                } else if ("s3a".equals(pathConfig.getPath().toUri().getScheme()) || "swift".equals(pathConfig.getPath().toUri().getScheme())) {
+                    // download the folder
+                    FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
+                    File dst = new File(pathConfig.getPath().getName());
+                    LOG.info("copyFileToLocal: " + pathConfig.getPath().toString() + " --> " + dst);
+                    long t0 = System.currentTimeMillis();
+                    FileUtil.copy(fs, pathConfig.getPath(), dst, false, configuration);
+                    LOG.info("time for s3/swift input retrieval [ms]: " + (System.currentTimeMillis() - t0));
+                    // TODO: support L2A as well
+                    localFile = new File(dst, "MTD_MSIL1C.xml");
+                    snapFormatName = "SENTINEL-2-MSI-MultiRes";
                 } else {
+                    long t0 = System.currentTimeMillis();
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                    LOG.info("time for zip input retrieval [ms]: " + (System.currentTimeMillis() - t0));
 
                     // find *MTD*xml file in top directory
                     for (File file : unzippedFiles) {
@@ -168,20 +189,6 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, snapFormatName);
-
-//                // hack so that L3 of Sen2Agri runs. Todo: ensure resampling works with Sen2Agri data!
-//                if (snapFormatName.equals(FORMAT_L2_SEN2AGRI)) {
-//                    for (Band band : product.getBands()) {
-//                        if (!"FRE_R1_B2".equals(band.getName())
-//                                && !"FRE_R1_B3".equals(band.getName())
-//                                && !"FRE_R1_B4".equals(band.getName())
-//                                && !"FRE_R1_B8".equals(band.getName())
-//                                && !"CLD_R1".equals(band.getName())
-//                                && !"MSK_R1".equals(band.getName())) {
-//                            product.removeBand(band);
-//                        }
-//                    }
-//                }
 
                 CalvalusLogger.getLogger().info("Band names: " + Arrays.toString(product.getBandNames()));
                 if (product.getStartTime() == null && product.getEndTime() == null) {

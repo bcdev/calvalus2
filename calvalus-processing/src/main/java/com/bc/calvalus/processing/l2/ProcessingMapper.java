@@ -211,14 +211,16 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
             // check and prepare, localise
 
+            long t0 = System.currentTimeMillis();
             if (productFormatter != null && checkFormattedOutputExists(jobConfig, context, productFormatter.getOutputFilename())) { return; }
             processorAdapter.prepareProcessing();
             if (checkNativeOutputExists(jobConfig, context, processorAdapter)) { return; }
             if (checkInputIntersectsRoi(jobConfig, context, processorAdapter)) { return; }
-            LOG.info("processing prepared");
+            LOG.info("preparing done in [ms]: " + (System.currentTimeMillis() - t0));
 
             // process and write native product
 
+            t0 = System.currentTimeMillis();
             if (!processorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE,
                                                        SubProgressMonitor.create(pm, progressForProcessing))) {
                 LOG.warning("product has not been processed.");
@@ -262,6 +264,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
                 writeQuicklooks(context, jobConfig, productName, targetProduct);
             }
             pm.worked(5);
+            LOG.info("processing done in [ms]: " + (System.currentTimeMillis() - t0));
 
             context.setStatus("Writing");
             if (productFormatter != null) {
@@ -617,6 +620,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
     protected Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,
                                        Configuration jobConfig, String outputFormat, ProgressMonitor pm) throws
             IOException, InterruptedException {
+        long t0 = System.currentTimeMillis();
         Map<String, Object> bandSubsetParameter = createBandSubsetParameter(targetProduct, jobConfig);
         if (!bandSubsetParameter.isEmpty()) {
             targetProduct = GPF.createProduct("Subset", bandSubsetParameter, targetProduct);
@@ -627,12 +631,14 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
         //ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         GPF.writeProduct(targetProduct, productFile, outputFormat, false, pm);
-        LOG.info("Formatted product file written");
+        LOG.info("formatting done in [ms]: " + (System.currentTimeMillis() - t0));
 
+        t0 = System.currentTimeMillis();
         context.setStatus("Copying");
         productFormatter.compressToHDFS(context, productFile);
         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
         LOG.info("Formatted product " + productFile.getName() + " archived in " + FileOutputFormat.getWorkOutputPath(context));
+        LOG.info("archiving done in [ms]: " + (System.currentTimeMillis() - t0));
         return targetProduct;
     }
 

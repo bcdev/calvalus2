@@ -11,6 +11,7 @@ import org.junit.Ignore;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Timer;
 
 /**
  * Test implementation of ProductionStore.
@@ -81,4 +82,9 @@ public class TestProcessingService implements ProcessingService<String> {
 
     @Override
     public void invalidateBundleCache() {}
+
+    @Override
+    public Timer getTimer() {
+        return null;
+    }
 }

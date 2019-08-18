@@ -43,10 +43,18 @@
             <version>1.14</version>
           </dependency>
 
-        <!-- Used for staging -->
+        <!-- Used for staging, for parameterblockconverter -->
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-gpf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-binning</artifactId>
         </dependency>
         <!--
         <dependency>

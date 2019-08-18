@@ -23,6 +23,7 @@ class LocalProcessingService implements ProcessingService<String> {
     private final BundleDescriptor[] bundleDescriptors;
     private final Map<String, Job> jobs;
     private final Map<String, ProcessStatus> jobStatuses;
+    private Timer timer = null;
 
     static long jobNum = System.nanoTime();
 
@@ -87,6 +88,10 @@ class LocalProcessingService implements ProcessingService<String> {
 
     @Override
     public void close() throws IOException {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
     }
 
     public synchronized String submitJob() {
@@ -161,4 +166,12 @@ class LocalProcessingService implements ProcessingService<String> {
 
     @Override
     public void invalidateBundleCache() {}
+
+    @Override
+    public Timer getTimer() {
+        if (timer == null) {
+            timer = new Timer("localprocessingservicetimer", true);
+        }
+        return timer;
+    }
 }

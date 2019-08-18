@@ -88,6 +88,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private boolean withExternalAccessControl;
+    private HadoopLaunchHandler hadoopLaunchHandler = null;
 
     private static JobClientsMap jobClientsMapSingleton = null;
 
@@ -119,7 +120,17 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.bundleCache = new HashMap<>();
         this.shapeAttributeCache = new HashMap<>();
         this.logger = Logger.getLogger("com.bc.calvalus");
+        if (jobClientsMap.getConfiguration().get("calvalus.openstack.startcmd") != null) {
+             hadoopLaunchHandler = new HadoopLaunchHandler(this, jobClientsMap.getConfiguration());
+        }
     }
+
+    public HadoopLaunchHandler getHadoopLaunchHandler() {
+        return hadoopLaunchHandler;
+    }
+
+    @Override
+    public Timer getTimer() { return bundlesQueryCleaner; }
 
     @Override
     public BundleDescriptor[] getBundles(final String username, final BundleFilter filter) throws IOException {
@@ -422,6 +433,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return jobClientsMap.getJobClient(username);
     }
 
+    public void clearCache() {
+        jobClientsMap.removeAllEntries();
+    }
+
     @Override
     public JobIdFormat<JobID> getJobIdFormat() {
         return new HadoopJobIdFormat();
@@ -430,7 +445,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     @Override
     public void updateStatuses(String username) throws IOException {
         JobClient jobClient = jobClientsMap.getJobClient(username);
-        JobStatus[] jobStatuses = jobClient.getAllJobs();
+        String rmHostname = jobClientsMap.getConfiguration().get("yarn.resourcemanager.hostname");
+        logger.info("rm host for status polling is " + rmHostname);
+        JobStatus[] jobStatuses;
+        if (rmHostname != null && ! "0.0.0.0".equals(rmHostname)) {
+            jobClient.getConf().set("yarn.resourcemanager.hostname", rmHostname);
+            jobStatuses = jobClient.getAllJobs();
+        } else {
+            jobStatuses = new JobStatus[0];
+        }
         synchronized (jobStatusMap) {
             if (jobStatuses != null && jobStatuses.length > 0) {
                 Set<JobID> allJobs = new HashSet<>(jobStatusMap.keySet());
