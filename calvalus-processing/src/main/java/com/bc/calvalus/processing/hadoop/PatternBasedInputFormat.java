@@ -142,6 +142,9 @@ public class PatternBasedInputFormat extends InputFormat {
         long t0 = System.currentTimeMillis();
 
         if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns == null) {
+
+            // geo-inventory
+
             Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
             LOG.info(String.format("%d files returned from geo-inventory '%s'.", paths.size(), geoInventory));
             if (!productIdentifiers.isEmpty()) {
@@ -160,7 +163,10 @@ public class PatternBasedInputFormat extends InputFormat {
             splits = GeodbInputFormat.createInputSplits(conf, paths, requestSizeLimit);
             LOG.info(String.format("%d splits created.", splits.size()));
             LOG.info("geo-inventory query done in [ms]: " + (System.currentTimeMillis() - t0));
+
         } else if (geoInventory == null && inputPathPatterns != null) {
+
+            // input paths
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
             HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
@@ -193,8 +199,11 @@ public class PatternBasedInputFormat extends InputFormat {
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, true);
             }
             LOG.info("file system query done in [ms]: " + (System.currentTimeMillis() - t0));
+
         } else if (geoInventory != null && ! geoInventory.startsWith("catalogue") && inputPathPatterns != null) {
-            // --> update index: splits for all products that are NOT in the geoDB
+
+            // update geo-index: splits for all products that are NOT in the geoDB
+
             Set<String> pathInDB = GeodbInputFormat.queryGeoInventory(false, conf);
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
             HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
@@ -227,7 +236,11 @@ public class PatternBasedInputFormat extends InputFormat {
                 createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit, false);
             }
             LOG.info("geo-inventory query and complementary file system query done in [ms]: " + (System.currentTimeMillis() - t0));
+
         } else if (geoInventory != null && geoInventory.startsWith("catalogue")) {
+
+            // catalogue query
+
             final Map<String, String> searchParameters = parseSearchParameters(geoInventory);
             final String provider = searchParameters.get("catalogue");
             final String searchUrlTemplate = conf.get("calvalus." + provider + ".searchurl");
@@ -259,13 +272,13 @@ public class PatternBasedInputFormat extends InputFormat {
                 searchParameters.put("start", DateUtils.formatDate(dateRange.getStartDate()));
                 searchParameters.put("stop", DateUtils.formatDate(dateRange.getStopDate()));
                 searchParameters.put("startmillis", String.valueOf(dateRange.getStartDate().getTime()));
-                searchParameters.put("stopmillis", String.valueOf(dateRange.getStopDate().getTime()+86399000));
+                searchParameters.put("stopmillis", String.valueOf(dateRange.getStopDate().getTime() + 86399000));
 
                 // incremental query loop
                 int offset = 0;
                 while (true) {
                     searchParameters.put("offset", String.valueOf(offset));
-                    searchParameters.put("offset1", String.valueOf(offset+1));
+                    searchParameters.put("offset1", String.valueOf(offset + 1));
                     searchParameters.put("count", String.valueOf(DEFAULT_SEARCH_CHUNK_SIZE));
                     final String searchUrl = urlEncode(replaceSearchParameters(searchUrlTemplate, searchParameters));
 
@@ -285,7 +298,7 @@ public class PatternBasedInputFormat extends InputFormat {
 
                             // search results loop
                             int count = 0;
-                            for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit==0 || splits.size() < requestSizeLimit); ++i) {
+                            for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit == 0 || splits.size() < requestSizeLimit); ++i) {
                                 String productArchivePath = pathNodes.item(i).getTextContent();
                                 if (pathPattern != null && pathReplacement != null) {
                                     productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
@@ -325,6 +338,16 @@ public class PatternBasedInputFormat extends InputFormat {
             }
             LOG.info(String.format("%d splits created.", splits.size()));
             LOG.info("catalogue query " + numQueries + " cycles done in [ms]: " + (System.currentTimeMillis() - t0));
+
+        } else if (productIdentifiers.isEmpty()) {
+
+            // TODO This is an abuse of calvalus.input.productIdentifiers for a path list that is not checked on the client side
+
+            splits = new ArrayList<>();
+            for (String identifier : productIdentifiers) {
+                splits.add(new ProductSplit(new Path(identifier), -1, null));
+            }
+
         } else {
             throw new IOException(
                         String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
