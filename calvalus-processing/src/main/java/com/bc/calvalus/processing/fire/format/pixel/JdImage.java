@@ -9,7 +9,6 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.image.ResolutionLevel;
 import org.esa.snap.core.image.SingleBandedOpImage;
 
@@ -27,14 +26,12 @@ class JdImage extends SingleBandedOpImage {
     private final Band lcBand;
     private final String sensor;
     private final String area;
-    private final Band sourceClBand;
     private Product maskProduct;
     private float[] maskPixels;
 
-    JdImage(Band sourceJdBand, Band sourceClBand, Band lcBand, String sensor, String area, Configuration configuration) {
+    JdImage(Band sourceJdBand, Band lcBand, String sensor, String area, Configuration configuration) {
         super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
         this.sourceJdBand = sourceJdBand;
-        this.sourceClBand = sourceClBand;
         this.lcBand = lcBand;
         this.sensor = sensor;
         this.area = area;
@@ -69,12 +66,10 @@ class JdImage extends SingleBandedOpImage {
             CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of JD image of area '" + area + "'.");
         }
         float[] sourceJdArray = new float[destRect.width * destRect.height];
-        float[] sourceClArray = new float[destRect.width * destRect.height];
         int[] lcArray = new int[destRect.width * destRect.height];
         try {
             lcBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcArray);
-            sourceClBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, sourceClArray);
-            sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
+            sourceJdBand.readPixels(destRect.x, destRect.y, destRect.width, destRect.height, sourceJdArray);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -89,7 +84,6 @@ class JdImage extends SingleBandedOpImage {
                 pixelPos.y = y;
 
                 float sourceJd = sourceJdArray[pixelIndex];
-                float sourceCl = sourceClArray[pixelIndex];
                 int sourceLcClass = lcArray[pixelIndex];
 
                 sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, sensor);
@@ -97,7 +91,6 @@ class JdImage extends SingleBandedOpImage {
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {
                     PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, sensor);
                     sourceJd = neighbourValue.value;
-                    sourceCl = sourceClArray[neighbourValue.newPixelIndex];
                     sourceLcClass = lcArray[neighbourValue.newPixelIndex];
                 }
 

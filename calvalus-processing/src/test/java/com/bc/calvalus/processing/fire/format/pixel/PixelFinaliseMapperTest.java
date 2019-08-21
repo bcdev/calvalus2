@@ -108,6 +108,7 @@ public class PixelFinaliseMapperTest {
         String localFilename = "c:\\ssd\\c3s\\pixel-format-test-JD.tif";
         geotiffWriter.writeProductNodes(product, localFilename);
         geotiffWriter.writeBandRasterData(product.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
+        geotiffWriter.close();
     }
 
     private static PixelFinaliseMapper getPixelFinaliseMapper() {

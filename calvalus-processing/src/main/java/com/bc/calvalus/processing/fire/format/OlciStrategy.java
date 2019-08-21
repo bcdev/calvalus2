@@ -73,7 +73,7 @@ public class OlciStrategy implements SensorStrategy {
     @Override
     public Workflow getPixelFormattingWorkflow(WorkflowConfig workflowConfig) {
         Workflow workflow = new Workflow.Sequential();
-        workflow.setSustainable(false);
+        workflow.setSustainable(true);
         Configuration jobConfig = workflowConfig.jobConfig;
         String area = workflowConfig.area;
         String year = workflowConfig.year;

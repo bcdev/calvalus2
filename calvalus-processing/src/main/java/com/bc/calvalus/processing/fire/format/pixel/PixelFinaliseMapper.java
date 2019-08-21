@@ -187,7 +187,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         switch (band) {
             case JD:
                 Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
-                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceClBand, sourceLcBand, sensor, area, configuration));
+                jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand, sensor, area, configuration));
                 break;
             case CL:
                 Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
@@ -708,6 +708,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             case "S2":
                 return LcRemappingS2.isInBurnableLcClass(sourceLcClass);
             case "MODIS":
+            case "OLCI":
                 return LcRemapping.isInBurnableLcClass(sourceLcClass);
             default:
                 throw new IllegalStateException("Unknown sensor '" + sensor + "'");

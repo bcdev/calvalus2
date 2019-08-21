@@ -66,6 +66,7 @@ public class OlciJDAggregator extends AbstractAggregator {
         if (preferToPreviousValue) {
             targetVector.set(0, jd);
             targetVector.set(1, cl);
+            validJdSet = true;
         } else if (jd == UNBURNABLE && previousJDValue == NOT_OBSERVED) {
             // unburnable beats only not observed
             targetVector.set(0, UNBURNABLE);
