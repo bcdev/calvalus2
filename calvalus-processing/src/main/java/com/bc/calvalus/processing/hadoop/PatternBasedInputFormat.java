@@ -339,7 +339,7 @@ public class PatternBasedInputFormat extends InputFormat {
             LOG.info(String.format("%d splits created.", splits.size()));
             LOG.info("catalogue query " + numQueries + " cycles done in [ms]: " + (System.currentTimeMillis() - t0));
 
-        } else if (productIdentifiers.isEmpty()) {
+        } else if (! productIdentifiers.isEmpty()) {
 
             // TODO This is an abuse of calvalus.input.productIdentifiers for a path list that is not checked on the client side
 
@@ -350,9 +350,10 @@ public class PatternBasedInputFormat extends InputFormat {
 
         } else {
             throw new IOException(
-                        String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
+                        String.format("Missing job parameter for inputFormat. Neither %s nor %s nor %s had been set.",
                                       JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
-                                      JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
+                                      JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY,
+                                      JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
         }
         LOG.info("Total files to process : " + splits.size());
         return splits;
