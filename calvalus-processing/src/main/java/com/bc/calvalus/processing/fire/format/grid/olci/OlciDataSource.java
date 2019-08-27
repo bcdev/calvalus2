@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.fire.format.grid.olci;
 
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
-import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
@@ -39,8 +38,6 @@ public class OlciDataSource extends AbstractFireGridDataSource {
 
         Band baBand = classificationProduct.getBand("band_1");
         baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.burnedPixels);
-
-        data.patchCount = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), GridFormatUtils.make2Dims(data.burnable));
 
         Band lcClassification = lcProduct.getBand("lccs_class");
         lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);

@@ -54,7 +54,6 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         currentGridCells = iterator.next();
 
         double[] burnedArea = currentGridCells.ba;
-        float[] patchNumbers = currentGridCells.patchNumber;
         float[] errors = currentGridCells.errors;
         List<double[]> baInLc = currentGridCells.baInLc;
         float[] coverage = currentGridCells.coverage;
@@ -69,7 +68,6 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         try {
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "burned_area", burnedAreaFloat);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "standard_error", errors);
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "number_of_patches", patchNumbers);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "fraction_of_observed_area", coverage);
 
             for (int i = 0; i < baInLc.size(); i++) {
@@ -105,7 +103,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     protected abstract NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException;
 
-    protected void prepareTargetProducts(Context context) throws IOException {
+    private void prepareTargetProducts(Context context) throws IOException {
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
         String version = context.getConfiguration().get("calvalus.version", "v5.1");

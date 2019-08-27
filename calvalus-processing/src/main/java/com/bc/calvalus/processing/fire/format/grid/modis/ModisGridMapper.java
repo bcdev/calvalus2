@@ -4,23 +4,17 @@ import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
-import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
@@ -196,56 +190,6 @@ public class ModisGridMapper extends AbstractGridMapper {
     @Override
     protected void predict(double[] ba, double[] areas, float[] originalErrors) {
         // just keep the original errors
-    }
-
-    @Override
-    protected boolean mustHandleCoverageSpecifially(int x) {
-        boolean northWest = (targetCell.equals("0,64") || targetCell.equals("0,96")) && x == 0;
-        boolean northEast = (targetCell.equals("1408,64") || targetCell.equals("1408,96")) && x == 31;
-        return northEast || northWest;
-    }
-
-    @Override
-    protected double getSpecialBurnableFractionValue(int x, int y, Product lcProduct) throws IOException {
-        // return sum of all burnable areas for the given grid cell
-
-        SubsetOp subsetOp = new SubsetOp();
-        Geometry geometry;
-        double lon0 = (Integer.parseInt(targetCell.split(",")[0]) / 4.0 + x * 0.25) - 180.0;
-        double lat0 = 90.0 - (Integer.parseInt(targetCell.split(",")[1]) / 4.0 + y * 0.25);
-        try {
-            geometry = new WKTReader().read(String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                    lon0, lat0,
-                    lon0 + 0.25, lat0,
-                    lon0 + 0.25, lat0 - 0.25,
-                    lon0, lat0 - 0.25,
-                    lon0, lat0));
-        } catch (ParseException e) {
-            throw new IllegalStateException(e);
-        }
-
-        subsetOp.setGeoRegion(geometry);
-        subsetOp.setSourceProduct(lcProduct);
-        Product lcSubset = subsetOp.getTargetProduct();
-        AreaCalculator areaCalculator = new AreaCalculator(lcSubset.getSceneGeoCoding());
-
-        double burnableFractionSum = 0.0;
-        Band lcBand = lcSubset.getBand("band_1");
-        int width = lcBand.getRasterWidth();
-        int height = lcBand.getRasterHeight();
-        int[] lcClasses = new int[width * height];
-        lcBand.readPixels(0, 0, width, height, lcClasses);
-        int pixelIndex = 0;
-        for (int y0 = 0; y0 < height; y0++) {
-            for (int x0 = 0; x0 < width; x0++) {
-                if (LcRemapping.isInBurnableLcClass(lcClasses[pixelIndex])) {
-                    burnableFractionSum += areaCalculator.calculatePixelSize(x0, y0, width - 1, height - 1);
-                }
-                pixelIndex++;
-            }
-        }
-
-        return burnableFractionSum;
     }
 
 }

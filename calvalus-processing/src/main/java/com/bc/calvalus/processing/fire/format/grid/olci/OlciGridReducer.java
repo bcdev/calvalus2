@@ -78,7 +78,8 @@ public class OlciGridReducer extends AbstractGridReducer {
     }
     @Override
     protected String getFilename(String year, String month, String version) {
-        return String.format("%s%s01-C3S-L3S_FIRE-BA-OLCI-fv%s.nc", year, month, version);
+        String paddedMonth = String.format("%02d", Integer.parseInt(month));
+        return String.format("%s%s01-C3S-L3S_FIRE-BA-OLCI-fv%s.nc", year, paddedMonth, version);
     }
 
     @Override

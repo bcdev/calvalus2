@@ -107,7 +107,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
-    protected static double[] setAreas(GeoCoding gc, int width, int height, double[] areas) {
+    protected static void setAreas(GeoCoding gc, int width, int height, double[] areas) {
         AreaCalculator areaCalculator = new AreaCalculator(gc);
         int pixelIndex = 0;
         for (int y = 0; y < height; y++) {
@@ -115,7 +115,6 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
                 areas[pixelIndex++] = areaCalculator.calculatePixelSize(x, y);
             }
         }
-        return areas;
     }
 
     protected static boolean isValidPixel(int doyFirstOfMonth, int doyLastOfMonth, int pixel) {

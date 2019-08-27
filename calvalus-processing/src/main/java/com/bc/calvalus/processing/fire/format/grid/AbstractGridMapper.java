@@ -173,7 +173,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                     double baValue = 0.0F;
                     double coverageValue = 0.0F;
-                    double specialCoverageValue = 0.0F;
                     double burnableFractionValue = 0.0;
 
                     for (int i = 0; i < data.burnedPixels.length; i++) {
@@ -188,24 +187,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         burnableFractionValue += isBurnable ? data.areas[i] : 0.0;
                         boolean hasBeenObserved = data.statusPixels[i] == 1;
                         coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
-                        specialCoverageValue += hasBeenObserved ? data.areas[i] : 0.0;
                         areas[targetGridCellIndex] += data.areas[i];
                         validate(areas[targetGridCellIndex], targetGridCellIndex);
                     }
 
                     ba[targetGridCellIndex] = baValue;
                     patchNumber[targetGridCellIndex] = data.patchCount;
-
-                    if (false) {
-//                if (mustHandleCoverageSpecifially(x)) {
-                        LOG.info("Handling LC specially.");
-                        LOG.info("specialCoverageValue=" + specialCoverageValue);
-                        burnableFractionValue = getSpecialBurnableFractionValue(x, y, null);
-
-                        LOG.info("burnableFractionValue=" + burnableFractionValue);
-
-                        coverageValue = specialCoverageValue;
-                    }
 
                     if (isInBrokenLCZone(x, y)) {
                         coverage[targetGridCellIndex] = 0;
@@ -253,14 +240,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     }
 
     protected boolean isInBrokenLCZone(int x, int y) {
-        return false;
-    }
-
-    protected double getSpecialBurnableFractionValue(int x, int y, Product lcProduct) throws IOException {
-        throw new IllegalStateException("This must not be called.");
-    }
-
-    protected boolean mustHandleCoverageSpecifially(int x) {
         return false;
     }
 
@@ -325,11 +304,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    public float getFraction(double value, double area) {
+    protected float getFraction(double value, double area) {
         if (area < 0.0001) {
             return 0.0F;
         }
-        float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
+        float fraction = Math.min((float) (value / area), 1.0F);
         if (Float.isNaN(fraction) || area == 0.0) {
             return 0.0F;
         }
