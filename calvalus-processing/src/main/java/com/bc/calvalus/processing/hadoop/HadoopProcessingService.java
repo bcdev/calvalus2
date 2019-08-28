@@ -645,7 +645,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static boolean isLib(Path libPath) {
         String filename = libPath.getName();
-        return filename.endsWith(".so") || filename.equals("VERSION.txt");
+        return filename.endsWith(".so") || filename.contains(".so.") || filename.equals("VERSION.txt");
     }
 
 
