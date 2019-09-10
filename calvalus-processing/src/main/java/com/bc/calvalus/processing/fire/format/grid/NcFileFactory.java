@@ -60,7 +60,7 @@ public abstract class NcFileFactory {
         Variable observedAreaFractionVar = ncFile.addVariable(null, "fraction_of_observed_area", DataType.FLOAT, "time lat lon");
         observedAreaFractionVar.addAttribute(new Attribute("units", "1"));
         observedAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of observed area"));
-        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of lack of input data (non-existing data for that location and period)."));
+        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of the lack of input data (non-existing data for that location and period)."));
         Variable burnedAreaInVegClassVar = ncFile.addVariable(null, "burned_area_in_vegetation_class", DataType.FLOAT, "time vegetation_class lat lon");
         burnedAreaInVegClassVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("long_name", "burned area in vegetation class"));
@@ -81,21 +81,21 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("source", getSource()));
         ncFile.addGroupAttribute(null, new Attribute("history", "Created on " + createNiceTimeString(Instant.now())));
-        ncFile.addGroupAttribute(null, new Attribute("references", "See www.esa-fire-cci.org"));
+        ncFile.addGroupAttribute(null, new Attribute("references", getReference()));
         ncFile.addGroupAttribute(null, new Attribute("tracking_id", UUID.randomUUID().toString()));
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
         ncFile.addGroupAttribute(null, new Attribute("product_version", version));
         ncFile.addGroupAttribute(null, new Attribute("summary", getSummary()));
         ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, GCOS"));
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
-        ncFile.addGroupAttribute(null, new Attribute("naming_authority", "org.esa-fire-cci"));
+        ncFile.addGroupAttribute(null, new Attribute("naming_authority", getNamingAuthority()));
         ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
         ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "burned area, fire"));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
         ncFile.addGroupAttribute(null, new Attribute("comment", "These data were produced as part of the ESA Fire_cci programme."));
         ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
         ncFile.addGroupAttribute(null, new Attribute("creator_name", "University of Alcala"));
-        ncFile.addGroupAttribute(null, new Attribute("creator_url", "www.esa-fire-cci.org"));
+        ncFile.addGroupAttribute(null, new Attribute("creator_url", getCreatorUrl()));
         ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
         ncFile.addGroupAttribute(null, new Attribute("project", "Climate Change Initiative - European Space Agency"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
@@ -109,7 +109,7 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", "P1M"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", "P1M"));
         ncFile.addGroupAttribute(null, new Attribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention"));
-        ncFile.addGroupAttribute(null, new Attribute("license", "ESA CCI Data Policy: free and open access"));
+        ncFile.addGroupAttribute(null, new Attribute("license", getLicense()));
         ncFile.addGroupAttribute(null, new Attribute("platform", getPlatformGlobalAttribute()));
         ncFile.addGroupAttribute(null, new Attribute("sensor", getSensorGlobalAttribute()));
         ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25 degrees"));
@@ -117,6 +117,22 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", "0.25"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
+    }
+
+    protected String getLicense() {
+        return "ESA CCI Data Policy: free and open access";
+    }
+
+    protected String getCreatorUrl() {
+        return "www.esa-fire-cci.org";
+    }
+
+    protected String getNamingAuthority() {
+        return "org.esa-fire-cci";
+    }
+
+    protected String getReference() {
+        return "See www.esa-fire-cci.org";
     }
 
     protected abstract String getSummary();

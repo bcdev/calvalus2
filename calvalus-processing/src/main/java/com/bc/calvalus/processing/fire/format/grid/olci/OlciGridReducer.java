@@ -79,12 +79,12 @@ public class OlciGridReducer extends AbstractGridReducer {
     @Override
     protected String getFilename(String year, String month, String version) {
         String paddedMonth = String.format("%02d", Integer.parseInt(month));
-        return String.format("%s%s01-C3S-L3S_FIRE-BA-OLCI-fv%s.nc", year, paddedMonth, version);
+        return String.format("%s%s01-C3S-L4_FIRE-BA-OLCI-fv%s.nc", year, paddedMonth, version);
     }
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return fileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18);
+        return fileFactory.createNcFile(filename, "v" + version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18);
     }
 
     @Override

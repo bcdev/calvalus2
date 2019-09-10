@@ -35,11 +35,36 @@ public class OlciNcFileFactory extends NcFileFactory {
     }
 
     @Override
+    protected String getReference() {
+        return "See climate.copernicus.eu";
+    }
+
+    @Override
+    protected String getNamingAuthority() {
+        return "climate.copernicus.eu";
+    }
+
+    @Override
+    protected String getCreatorUrl() {
+        return "climate.copernicus.eu";
+    }
+
+    @Override
+    protected String getLicense() {
+        return "TBD";
+    }
+
+    @Override
+    protected String getBurnedAreaInVegClassComment() {
+        return "Burned area by land cover classes; land cover classes are from C3S Land Cover, https://climate.copernicus.eu/.";
+    }
+
+    @Override
     protected void addBurnableAreaFractionVar(NetcdfFileWriter ncFile) {
         Variable burnableAreaFractionVar = ncFile.addVariable(null, "fraction_of_burnable_area", DataType.FLOAT, "time lat lon");
         burnableAreaFractionVar.addAttribute(new Attribute("units", "1"));
         burnableAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of burnable area"));
-        burnableAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of burnable area is the fraction of the cell that corresponds to vegetated land covers that could burn. The land cover classes are those from CCI Land Cover, http://www.esa-landcover-cci.org/"));
+        burnableAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of burnable area is the fraction of the cell that corresponds to vegetated land covers that could burn. The land cover classes are those from C3S Land Cover, https://climate.copernicus.eu/."));
     }
 
     @Override
