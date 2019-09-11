@@ -128,7 +128,7 @@ public class OlciGridMapper extends AbstractGridMapper {
         int n = probabilityOfBurnMasked.length;
 
         if (n == 1) {
-            return (float) gridCellArea;
+            return (float) (gridCellArea / probabilityOfBurn.length);
         }
 
         // pb_i = value of confidence level of pixel /100
@@ -140,8 +140,8 @@ public class OlciGridMapper extends AbstractGridMapper {
                 .sum();
 
         // SE = sqr(var_c*(n/(n-1))) * pixel area
-        // pixel area is the sum of the area of the pixels.
-        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * gridCellArea);
+        // pixel area is the average area of a pixel contributing to the grid cell.
+        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * (gridCellArea / probabilityOfBurn.length));
     }
 
     @Override
