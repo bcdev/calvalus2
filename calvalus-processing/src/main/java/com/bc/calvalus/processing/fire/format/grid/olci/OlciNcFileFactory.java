@@ -15,38 +15,38 @@ public class OlciNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSensorGlobalAttribute() {
-        return "OLCI, MODIS";
+        return "OLCI";
     }
 
     @Override
     protected String getPlatformGlobalAttribute() {
-        return "Sentinel-3, Terra, Aqua";
+        return "Sentinel-3";
     }
 
 
     @Override
     protected String getSource() {
-        return "Sentinel-3 A+B OLCI FR, MODIS MCD14ML Collection 6, C3S Land Cover dataset v2.1.1";
+        return "ESA Sentinel-3 OLCI, C3S Land Cover dataset v2.1.1";
     }
 
     @Override
     protected String getDoi() {
-        return "tbd";
+        return "TBD";
     }
 
     @Override
     protected String getReference() {
-        return "See climate.copernicus.eu";
+        return "See https://climate.copernicus.eu/";
     }
 
     @Override
     protected String getNamingAuthority() {
-        return "climate.copernicus.eu";
+        return "TBD";
     }
 
     @Override
     protected String getCreatorUrl() {
-        return "climate.copernicus.eu";
+        return "https://climate.copernicus.eu/";
     }
 
     @Override
@@ -69,9 +69,11 @@ public class OlciNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSummary() {
-        return "The grid product is the result of summing up burned " +
-                "area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in monthly " +
-                "composites. The attributes stored are sum of burned area, standard error, observed area fraction, " +
-                "number of patches, burnable area fraction and the burned area for 18 land cover classes of C3S LC.";
+        return "The grid product is the result of summing up burned area pixels and their " +
+                "attributes, as extracted from their original sinusoidal projection, within each cell of " +
+                "0.25 degrees in a regular grid covering the whole Earth in monthly composites. The " +
+                "attributes stored are sum of burned area, standard error, fraction of burnable area, " +
+                "fraction of observed area, number of patches and the burned area for 18 land cover classes " +
+                "of C3S Land Cover.";
     }
 }
