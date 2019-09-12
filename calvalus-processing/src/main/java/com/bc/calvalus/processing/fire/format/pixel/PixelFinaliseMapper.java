@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -128,7 +129,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
             Runnable worker = () -> {
 
                 try {
-                    CalvalusLogger.getLogger().info("Writing final product " + (finalI + 1) + "/" + BAND_TYPES.length + "...");
+                    LocalTime time = LocalTime.now();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                    CalvalusLogger.getLogger().info(time.format(formatter) + ": Writing final product " + (finalI + 1) + "/" + BAND_TYPES.length + "...");
                     Path tifPath = outputPaths[finalI];
                     Path alternativeTifPath = new Path(outputPaths[finalI].toString().replace("-Formatting", "-Formatting_format"));
 
@@ -143,7 +146,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     geotiffWriter.writeProductNodes(result, localFilename);
 
                     geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
-                    CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
+                    CalvalusLogger.getLogger().info(String.format("...done with " + BAND_TYPES[finalI] + ". Copying final product to %s...", tifPath.getParent().toString()));
                     FileUtil.copy(new File(localFilename), fs, tifPath, false, configuration);
                 } catch (IOException e) {
                     throw new IllegalStateException(e);

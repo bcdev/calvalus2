@@ -61,7 +61,7 @@ public class OlciDataSource extends AbstractFireGridDataSource {
 
     private static void remodelStatusPixels(int[] statusPixels) {
         for (int i = 0; i < statusPixels.length; i++) {
-            if (statusPixels[i] == 0 || statusPixels[i] == 4) {
+            if (statusPixels[i] == 0 || statusPixels[i] == 4) { // 0=observed, 3=not observed, 4=unburnable
                 statusPixels[i] = 1;
             } else {
                 statusPixels[i] = 0;

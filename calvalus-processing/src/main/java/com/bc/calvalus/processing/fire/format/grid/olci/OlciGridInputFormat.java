@@ -86,7 +86,7 @@ public class OlciGridInputFormat extends InputFormat {
                                                Configuration conf) throws IOException {
 
         InputPathResolver inputPathResolver = new InputPathResolver();
-        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7/.*/%s-%02d/ba-outputs-.*-%s-%02d.tar.gz", year, month, year, month);
+        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7.5/.*/%s-%02d/ba-outputs-.*-%s-%02d.tar.gz", year, month, year, month);
         System.out.println(inputPathPattern);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);

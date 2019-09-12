@@ -37,26 +37,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         this.targetRasterHeight = targetRasterHeight;
     }
 
-    private static void writeDebugProduct(Context context, SourceData data) throws IOException {
-        if (context.getConfiguration().getBoolean(CALVALUS_DEBUG_FIRE, false)) {
-            return;
-        }
-        if (data == null) {
-            LOG.warning("Data is null, unable to create debug file.");
-            return;
-        }
-        Product sourceData = data.makeProduct();
-        ProductIO.writeProduct(sourceData, "./debug.nc", "NetCDF4-CF");
-        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/debug.nc");
-
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        if (!fs.exists(path)) {
-            FileUtil.copy(new File("./debug.nc"), fs, path, false, context.getConfiguration());
-        }
-
-        LOG.info("created debug file at hdfs://calvalus/calvalus/home/thomas/debug.nc");
-    }
-
     protected static ProgressMonitor getPM(Context context) {
         ProgressMonitor pm;
         if (context != null) {
@@ -325,6 +305,26 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
     public void setDataSource(FireGridDataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    private static void writeDebugProduct(Context context, SourceData data) throws IOException {
+        if (context.getConfiguration().getBoolean(CALVALUS_DEBUG_FIRE, false)) {
+            return;
+        }
+        if (data == null) {
+            LOG.warning("Data is null, unable to create debug file.");
+            return;
+        }
+        Product sourceData = data.makeProduct();
+        ProductIO.writeProduct(sourceData, "./debug.nc", "NetCDF4-CF");
+        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/debug.nc");
+
+        FileSystem fs = path.getFileSystem(context.getConfiguration());
+        if (!fs.exists(path)) {
+            FileUtil.copy(new File("./debug.nc"), fs, path, false, context.getConfiguration());
+        }
+
+        LOG.info("created debug file at hdfs://calvalus/calvalus/home/thomas/debug.nc");
     }
 
 }
