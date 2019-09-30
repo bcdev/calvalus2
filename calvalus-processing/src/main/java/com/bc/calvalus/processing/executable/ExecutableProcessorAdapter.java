@@ -159,7 +159,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Rectangle inputRectangle = getInputRectangle();
         if (inputRectangle != null) {
             Product inputProduct = getInputProduct();
-            productRect = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+            if (inputProduct != null) {
+                productRect = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+            } else {
+                productRect = inputRectangle;
+            }
         }
 
         outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);

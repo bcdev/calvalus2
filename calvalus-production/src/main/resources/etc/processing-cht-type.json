@@ -71,7 +71,8 @@
     "_translate.outputUmask"      : "fs.permissions.umask-mode",
     "_translate.processingMemory" : [ [ "mapreduce.map.java.opts", "javaOptsOfMem" ], [ "mapreduce.map.memory.mb", "add512" ] ],
     "_translate.aggregationMemory" : [ [ "mapreduce.reduce.java.opts", "javaOptsOfMem" ], [ "mapreduce.reduce.memory.mb", "add512" ] ],
-    
+    "_translate.snap.tileCache"   : "calvalus.system.snap.jai.tileCacheSize",
+
     "_translate.calvalus"         : "calvalus.calvalus.bundle",
     "_translate.snap"             : "calvalus.snap.bundle",
     "_translate.processorBundles" : "calvalus.bundles"

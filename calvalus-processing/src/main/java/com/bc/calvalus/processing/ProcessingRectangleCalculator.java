@@ -76,7 +76,7 @@ public abstract class ProcessingRectangleCalculator {
     }
 
     public static Rectangle getGeometryAsRectangle(Product product, Geometry regionGeometry) {
-        if (!(regionGeometry == null || regionGeometry.isEmpty() || GeometryUtils.isGlobalCoverageGeometry(regionGeometry))) {
+        if (!(product == null || regionGeometry == null || regionGeometry.isEmpty() || GeometryUtils.isGlobalCoverageGeometry(regionGeometry))) {
             try {
                 if (product.getSceneGeoCoding() != null) {
                     LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");

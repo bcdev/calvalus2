@@ -78,7 +78,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
             if (sourceProduct.getSceneRasterWidth() < minWidth && sourceProduct.getSceneRasterHeight() < minHeight) {
                 String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
-                                    "It will be suppressed from the processing.";
+                                    "Processing skipped.";
                 getLogger().info(String.format(msgPattern, sourceProduct.getSceneRasterWidth(),
                                                sourceProduct.getSceneRasterHeight()));
                 return false;
