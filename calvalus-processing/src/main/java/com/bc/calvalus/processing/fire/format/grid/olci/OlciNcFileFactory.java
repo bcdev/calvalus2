@@ -26,7 +26,7 @@ public class OlciNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSource() {
-        return "ESA Sentinel-3 OLCI, C3S Land Cover dataset v2.1.1";
+        return "ESA Sentinel-3 A+B OLCI FR, MODIS MCD14ML Collection 6, C3S Land Cover dataset v2.1.1";
     }
 
     @Override
@@ -41,17 +41,17 @@ public class OlciNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getNamingAuthority() {
-        return "TBD";
+        return "org.esa-cci";
     }
 
     @Override
     protected String getCreatorUrl() {
-        return "https://climate.copernicus.eu/";
+        return "https://www.uah.es/";
     }
 
     @Override
     protected String getLicense() {
-        return "TBD";
+        return "EC C3S FIRE BURNED AREA Data Policy";
     }
 
     @Override
@@ -69,11 +69,11 @@ public class OlciNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSummary() {
-        return "The grid product is the result of summing up burned area pixels and their " +
-                "attributes, as extracted from their original sinusoidal projection, within each cell of " +
-                "0.25 degrees in a regular grid covering the whole Earth in monthly composites. The " +
+        return "The grid product is the result of summing burned area pixels and their " +
+                "attributes, within each cell of " +
+                "0.25x0.25 degrees in a regular grid covering the whole Earth in monthly composites. The " +
                 "attributes stored are sum of burned area, standard error, fraction of burnable area, " +
-                "fraction of observed area, number of patches and the burned area for 18 land cover classes " +
+                "fraction of observed area and the burned area for 18 land cover classes " +
                 "of C3S Land Cover.";
     }
 }
