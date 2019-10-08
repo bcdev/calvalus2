@@ -4,6 +4,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.ProductData;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -107,11 +108,11 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
-    protected static void setAreas(GeoCoding gc, int width, int height, double[] areas) {
+    protected static void setAreas(GeoCoding gc, Rectangle sourceRect, double[] areas) {
         AreaCalculator areaCalculator = new AreaCalculator(gc);
         int pixelIndex = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+        for (int y = sourceRect.y; y < sourceRect.y + sourceRect.height; y++) {
+            for (int x = sourceRect.x; x < sourceRect.x + sourceRect.width; x++) {
                 areas[pixelIndex++] = areaCalculator.calculatePixelSize(x, y);
             }
         }

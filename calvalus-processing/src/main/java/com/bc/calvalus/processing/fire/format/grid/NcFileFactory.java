@@ -89,7 +89,7 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, C3S, GCOS"));
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", getNamingAuthority()));
-        ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
+//        ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
         ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "NASA Global Change Master Directory (GCMD) Science keywords"));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
         ncFile.addGroupAttribute(null, new Attribute("comment", "These data were produced as part of the Copernicus Climate Change Service programme."));

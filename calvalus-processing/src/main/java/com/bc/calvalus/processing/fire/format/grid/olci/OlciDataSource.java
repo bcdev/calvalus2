@@ -53,7 +53,7 @@ public class OlciDataSource extends AbstractFireGridDataSource {
         statusBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.statusPixels);
         remodelStatusPixels(data.statusPixels);
 
-        setAreas(geoCoding, sourceWidth, sourceHeight, data.areas);
+        setAreas(geoCoding, sourceRect, data.areas);
 
         return data;
     }

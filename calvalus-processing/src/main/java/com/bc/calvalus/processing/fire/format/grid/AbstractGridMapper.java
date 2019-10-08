@@ -86,12 +86,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 SourceData data = dataSource.readPixels(x, y);
 
-                writeDebugProduct(context, data);
-
-                if (data == null) {
+                if (data == null || targetGridCellIndex != 287) {
                     targetGridCellIndex++;
                     continue;
                 }
+
+                writeDebugProduct(context, data);
 
                 if (this instanceof AvhrrGridMapper) {
                     double avhrrBurnedPercentage = Double.NaN;
@@ -160,6 +160,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         boolean isBurnable = data.burnable[i];
                         if (isActuallyBurnedPixel(doyFirstOfMonth, doyLastOfMonth, burnedPixel, isBurnable)) {
                             double burnedArea = scale(burnedPixel, data.areas[i]);
+                            if (burnedArea > 0) {
+                                System.out.println("1 " + burnedArea);
+                                System.out.println("2 " + data.areas[i]);
+                            }
                             baValue += burnedArea;
                             addBaInLandCover(baInLc, targetGridCellIndex, burnedArea, data.lcClasses[i]);
                         }
@@ -169,6 +173,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         coverageValue += (hasBeenObserved && isBurnable) ? data.areas[i] : 0.0;
                         areas[targetGridCellIndex] += data.areas[i];
                         validate(areas[targetGridCellIndex], targetGridCellIndex);
+                    }
+
+                    if (baValue > 0) {
+                        System.out.println("3 " + baValue);
                     }
 
                     ba[targetGridCellIndex] = baValue;
