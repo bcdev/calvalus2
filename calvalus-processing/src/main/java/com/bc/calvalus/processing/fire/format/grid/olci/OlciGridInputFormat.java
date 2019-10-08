@@ -16,6 +16,14 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -123,5 +131,82 @@ public class OlciGridInputFormat extends InputFormat {
             "h30v10", "h31v10", "h32v10", "h33v10", "h34v10", "h35v10", "h27v09", "h28v09", "h29v09", "h30v09", "h31v09",
             "h32v09", "h33v09", "h34v09", "h27v08", "h28v08", "h29v08", "h30v08", "h30v07"
     };
+
+    static String[] NORTHERN_TILES = new String[]{
+            "h00v00",
+            "h01v00",
+            "h02v00",
+            "h03v00",
+            "h04v00",
+            "h05v00",
+            "h06v00",
+            "h07v00",
+            "h08v00",
+            "h09v00",
+            "h10v00",
+            "h11v00",
+            "h12v00",
+            "h13v00",
+            "h14v00",
+            "h15v00",
+            "h16v00",
+            "h17v00",
+            "h18v00",
+            "h19v00",
+            "h20v00",
+            "h21v00",
+            "h22v00",
+            "h23v00",
+            "h24v00",
+            "h25v00",
+            "h26v00",
+            "h27v00",
+            "h28v00",
+            "h29v00",
+            "h30v00",
+            "h31v00",
+            "h32v00",
+            "h33v00",
+            "h34v00",
+            "h35v00"
+    };
+
+    public static void main(String[] args) throws FactoryException, TransformException, IOException {
+        createDummyTiles(args[0]);
+    }
+
+    public static void createDummyTiles(String targetDir) throws IOException, FactoryException, TransformException {
+
+        for (int year = 2017; year <= 2018; year++) {
+            for (int month = 1; month <= 12; month++) {
+                for (String tile : NORTHERN_TILES) {
+                    double easting = Integer.parseInt(tile.substring(1, 3)) * 10 - 180;
+
+                    String filenameC = String.format("OLCIMODIS%s_%s_%s_Classification.tif", year, month, tile);
+                    String filenameU = String.format("OLCIMODIS%s_%s_%s_Uncertainty.tif", year, month, tile);
+                    String filenameF = String.format("OLCIMODIS%s_%s_%s_FractionOfObservedArea.tif", year, month, tile);
+
+                    Product productC = new Product("dummy", "dummy", 3600, 3600);
+                    Band cBand = productC.addBand("band_1", ProductData.TYPE_INT16);
+                    cBand.setRasterData(new ProductData.Short(new short[3600 * 3600]));
+                    productC.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 3600, 3600, easting, 90, 1.0 / 360.0, 1.0 / 360.0, 0.0, 0.0));
+
+                    Product productU = new Product("dummy", "dummy", 3600, 3600);
+                    productU.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 3600, 3600, easting, 90, 1.0 / 360.0, 1.0 / 360.0, 0.0, 0.0));
+                    Band uBand = productU.addBand("band_1", ProductData.TYPE_UINT8);
+                    uBand.setRasterData(new ProductData.UByte(new byte[3600 * 3600]));
+
+                    Product productF = new Product("dummy", "dummy", 3600, 3600);
+                    productF.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 3600, 3600, easting, 90, 1.0 / 360.0, 1.0 / 360.0, 0.0, 0.0));
+                    Band fBand = productF.addBand("band_1", ProductData.TYPE_UINT8);
+                    fBand.setRasterData(new ProductData.UByte(new byte[3600 * 3600]));
+
+                    ProductIO.writeProduct(productC, targetDir + "\\" + filenameC, "GeoTIFF");
+                    ProductIO.writeProduct(productU, targetDir + "\\" + filenameU, "GeoTIFF");
+                    ProductIO.writeProduct(productF, targetDir + "\\" + filenameF, "GeoTIFF");
+                }
+            }
+        }
+    }
 
 }

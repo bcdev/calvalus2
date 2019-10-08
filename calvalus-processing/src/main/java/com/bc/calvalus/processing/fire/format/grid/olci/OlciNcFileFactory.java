@@ -73,7 +73,7 @@ public class OlciNcFileFactory extends NcFileFactory {
                 "attributes, within each cell of " +
                 "0.25x0.25 degrees in a regular grid covering the whole Earth in monthly composites. The " +
                 "attributes stored are sum of burned area, standard error, fraction of burnable area, " +
-                "fraction of observed area and the burned area for 18 land cover classes " +
+                "fraction of observed area, and the burned area for 18 land cover classes " +
                 "of C3S Land Cover.";
     }
 }

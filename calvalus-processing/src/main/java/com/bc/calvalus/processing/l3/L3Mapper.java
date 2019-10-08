@@ -113,7 +113,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                     uncertainty.setData(new ProductData.Short(new short[width * height]));
                 }
                 // fire-cci hack -- correcting for broken products along h18
-                if (product.getName().contains("h18v")) {
+                if (product.getName().contains("h18v") && !conf.get("calvalus.sensor").equals("OLCI")) {
                     Product temp = new Product(product.getName(), product.getProductType(), width, height);
                     ProductUtils.copyGeoCoding(product, temp);
                     CommonUtils.fixH18Band(product, temp, "classification");
