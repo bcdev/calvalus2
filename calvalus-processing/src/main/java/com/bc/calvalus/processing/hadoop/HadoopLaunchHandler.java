@@ -147,6 +147,7 @@ public class HadoopLaunchHandler {
                     hadoopProcessingService.getTimer().schedule(new SubmitTask(), 0);
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 synchronized (HadoopLaunchHandler.this) {
                     clusterState = ClusterState.UNKNOWN;
                     hadoopProcessingService.getTimer().schedule(new ClusterStopTask(), 0);
