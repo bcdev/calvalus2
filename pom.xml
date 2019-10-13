@@ -605,7 +605,7 @@
             <dependency>
                 <groupId>org.renjin</groupId>
                 <artifactId>renjin-core</artifactId>
-                <version>0.8.1977</version>
+                <version>0.9.0-BC</version>
             </dependency>
 
         </dependencies>

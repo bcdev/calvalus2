@@ -99,7 +99,8 @@ public class OlciStrategy implements SensorStrategy {
         String tiles = getTiles(pixelProductArea);
         String tilesSpec = "(" + tiles + ")";
 
-        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7.5/.*/%s-%02d/.*outputs-%s.*gz", year, new Integer(month), tilesSpec);
+        String inputRootDir = jobConfig.get("calvalus.input.root", "hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7.5");
+        String inputPathPattern = String.format(inputRootDir + "/.*/%s-%02d/.*outputs-%s.*gz", year, new Integer(month), tilesSpec);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, area);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
