@@ -206,9 +206,11 @@ public class CommonUtils {
 
             while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
-                    boolean created = new File(entry.getName()).mkdirs();
-                    if (!created) {
-                        throw new IOException(String.format("Unable to create directory '%s' during extraction of contents of archive: '", entry.getName()));
+                    if (!new File(entry.getName()).exists()) {
+                        boolean created = new File(entry.getName()).mkdirs();
+                        if (!created) {
+                            throw new IOException(String.format("Unable to create directory '%s' during extraction of contents of archive: '", entry.getName()));
+                        }
                     }
                 } else {
                     int count;

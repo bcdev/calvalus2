@@ -30,7 +30,7 @@ public class OlciPixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
     public String createBaseFilename(String year, String month, String version, String areaString) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0], version);
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-OLCI-AREA_%s-%s", year, month, areaString.split(";")[0], version);
     }
 
     @Override
