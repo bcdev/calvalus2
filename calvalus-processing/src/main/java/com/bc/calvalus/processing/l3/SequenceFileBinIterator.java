@@ -19,7 +19,7 @@ public final class SequenceFileBinIterator implements Iterator<L3TemporalBin> {
     private boolean lastItemValid;
     private IOException ioException;
 
-    SequenceFileBinIterator(SequenceFile.Reader reader) {
+    public SequenceFileBinIterator(SequenceFile.Reader reader) {
         this.reader = reader;
         mustRead = true;
         lastItemValid = true;

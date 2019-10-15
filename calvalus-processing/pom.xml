@@ -29,6 +29,11 @@
             <artifactId>slf4j-simple</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.esa.s3mpc</groupId>
+            <artifactId>calvalus-s3mpc</artifactId>
+        </dependency>
+
         <!--  Calvalus -->
 
         <dependency>

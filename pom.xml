@@ -455,6 +455,12 @@
                 <scope>test</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.esa.s3mpc</groupId>
+                <artifactId>calvalus-s3mpc</artifactId>
+                <version>1.0</version>
+            </dependency>
+
             <!--  Hadoop -->
 
             <dependency>
