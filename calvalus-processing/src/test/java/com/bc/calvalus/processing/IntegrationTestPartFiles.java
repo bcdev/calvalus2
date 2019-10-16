@@ -7,10 +7,13 @@ import org.apache.hadoop.io.SequenceFile;
 import org.esa.snap.binning.PlanetaryGrid;
 import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinSource;
+import org.esa.snap.binning.operator.formatter.Formatter;
 import org.esa.snap.binning.operator.formatter.FormatterConfig;
+import org.esa.snap.binning.operator.formatter.FormatterFactory;
 import org.esa.snap.binning.operator.formatter.IsinFormatter;
 import org.esa.snap.binning.support.IsinPlanetaryGrid;
 import org.esa.snap.binning.support.SEAGrid;
+import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,22 +33,29 @@ public class IntegrationTestPartFiles {
 
     @Test
     public void testReadISIN_part() throws Exception {
-        final Path seqFilePath = new Path("D:/Satellite/s3mpc/grid-test/ISIN_L3_2018-11-11_2018-11-11/part-r-00000");
+//        final Path seqFilePath = new Path("D:/Satellite/s3mpc/grid-test/ISIN_L3_2018-11-11_2018-11-11/part-r-00000");
+        final Path seqFilePath = new Path("/data/EOdata/S3MPC/grid-test/ISIN_L3_2018-11-11_2018-11-11/part-r-00000");
+
         final IsinPlanetaryGrid grid = new IsinPlanetaryGrid(21600);
-        writeSequenceFile(seqFilePath, grid);
+
+//        final IsinFormatter formatter = new IsinFormatter();
+        final Formatter formatter = FormatterFactory.get("default");
+        writeSequenceFile(seqFilePath, grid, formatter);
     }
 
     @Test
     public void testReadSEA_part() throws Exception {
-        final Path seqFilePath = new Path("D:/Satellite/s3mpc/grid-test/SeaWifs_L3_2018-11-11_2018-11-11/part-r-00000");
+//        final Path seqFilePath = new Path("D:/Satellite/s3mpc/grid-test/SeaWifs_L3_2018-11-11_2018-11-11/part-r-00000");
+        final Path seqFilePath = new Path("/data/EOdata/S3MPC/grid-test/SeaWifs_L3_2018-11-11_2018-11-11/part-r-00000");
+
         final SEAGrid grid = new SEAGrid(21600);
-        writeSequenceFile(seqFilePath, grid);
+
+        final Formatter defaultFormatter = FormatterFactory.get("default");
+        writeSequenceFile(seqFilePath, grid, defaultFormatter);
     }
 
-    private void writeSequenceFile(Path seqFilePath, PlanetaryGrid planetaryGrid) throws Exception {
+    private void writeSequenceFile(Path seqFilePath, PlanetaryGrid planetaryGrid, Formatter formatter) throws Exception {
         final SequenceFile.Reader.Option file = SequenceFile.Reader.file(seqFilePath);
-        final IsinFormatter formatter = new IsinFormatter();
-
 
         try (SequenceFile.Reader reader = new SequenceFile.Reader(conf, file)) {
             final SequenceFileBinIterator binIterator = new SequenceFileBinIterator(reader);
@@ -53,15 +63,18 @@ public class IntegrationTestPartFiles {
             final String[] featureNames = {"OGVI_mean", "OGVI_sigma", "OGVI_count", "OTCI_mean", "OTCI_sigma", "OTCI_count"};
             final FormatterConfig formatterConfig = new FormatterConfig();
             formatterConfig.setOutputType("Product");
-            formatterConfig.setOutputFormat("GeoTIFF");
+//            formatterConfig.setOutputFormat("GeoTIFF");
 //            formatterConfig.setOutputFormat("NetCDF4-BEAM");
-            formatterConfig.setOutputFile("D:/Satellite/s3mpc/grid-test");
-            final ProductData.UTC startDate = ProductData.UTC.create(new Date(1570200000000L), 0);
-            final ProductData.UTC endDate = ProductData.UTC.create(new Date(1570400000000L), 0);
+            formatterConfig.setOutputFormat("BEAM-DIMAP");
+//            formatterConfig.setOutputFile("D:/Satellite/s3mpc/grid-test");
+            formatterConfig.setOutputFile("/data/EOdata/S3MPC/grid-test/isin_netcdf");
+            final ProductData.UTC startDate = ProductData.UTC.create(new Date(1541894400000L), 0);
+            final ProductData.UTC endDate = ProductData.UTC.create(new Date(1541894400000L), 0);
 
-            formatter.format(planetaryGrid, binSource, featureNames, formatterConfig, null, startDate, endDate, null);
+            formatter.format(planetaryGrid, binSource, featureNames, formatterConfig, null, startDate, endDate, new MetadataElement[0]);
         }
     }
+
 
     private class TestBinSource implements TemporalBinSource {
 
