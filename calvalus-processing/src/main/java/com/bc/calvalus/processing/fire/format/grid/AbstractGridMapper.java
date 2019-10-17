@@ -91,7 +91,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     continue;
                 }
 
-                writeDebugProduct(context, data);
+//                writeDebugProduct(context, data);
 
                 if (this instanceof AvhrrGridMapper) {
                     double avhrrBurnedPercentage = Double.NaN;
