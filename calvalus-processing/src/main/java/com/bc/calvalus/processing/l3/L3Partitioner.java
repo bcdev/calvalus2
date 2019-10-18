@@ -71,8 +71,10 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
             Envelope envelope = roiGeometry.getEnvelopeInternal();
             double minY = envelope.getMinY();
             double maxY = envelope.getMaxY();
-            int maxRowIndex = planetaryGrid.getRowIndex(planetaryGrid.getBinIndex(minY, 0));
-            minRowIndex = planetaryGrid.getRowIndex(planetaryGrid.getBinIndex(maxY, 0));
+            double minX = envelope.getMinX();
+            double maxX = envelope.getMaxX();
+            int maxRowIndex = planetaryGrid.getRowIndex(planetaryGrid.getBinIndex(minY, minX));
+            minRowIndex = planetaryGrid.getRowIndex(planetaryGrid.getBinIndex(maxY, maxX));
             numRowsCovered = maxRowIndex - minRowIndex + 1;
         } else {
             numRowsCovered = planetaryGrid.getNumRows();
