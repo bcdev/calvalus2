@@ -446,7 +446,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public void updateStatuses(String username) throws IOException {
         JobClient jobClient = jobClientsMap.getJobClient(username);
         String rmHostname = jobClientsMap.getConfiguration().get("yarn.resourcemanager.hostname");
-        logger.info("rm host for status polling is " + rmHostname);
+        logger.fine("rm host for status polling is " + rmHostname);
         JobStatus[] jobStatuses;
         if (rmHostname != null && ! "0.0.0.0".equals(rmHostname)) {
             jobClient.getConf().set("yarn.resourcemanager.hostname", rmHostname);

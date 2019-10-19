@@ -47,7 +47,11 @@ public class CalvalusHadoopConnection {
     }
 
     public JobStatus getJobStatus(JobID id) throws IOException {
-        return jobClient.getJobStatus(id);
+        try {
+            return jobClient.getJobStatus(id);
+        } catch (NullPointerException _) {  // risky, shall handle case where request got lost
+            return null;
+        }
     }
 
     public JobStatus[] getAllJobs() throws IOException {
