@@ -65,7 +65,7 @@ public class L3MapperTest {
         product.getMetadataRoot().addElement(processingGraph);
 
         final String metadataXml = L3Mapper.extractProcessingGraphXml(product);
-        assertEquals(2259, metadataXml.length());
+        assertEquals(2304, metadataXml.length());
         assertTrue(metadataXml.contains("1.98"));
 
     }
