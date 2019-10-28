@@ -47,7 +47,11 @@ public class CalvalusHadoopConnection {
     }
 
     public JobStatus getJobStatus(JobID id) throws IOException {
-        return jobClient.getJobStatus(id);
+        try {
+            return jobClient.getJobStatus(id);
+        } catch (NullPointerException _) {  // risky, shall handle case where request got lost
+            return null;
+        }
     }
 
     public JobStatus[] getAllJobs() throws IOException {
@@ -158,13 +162,13 @@ public class CalvalusHadoopConnection {
         final String outputDir = jobConf.get("calvalus.output.dir");
         final Path dirPath = new Path(outputDir);
         remoteUser.doAs(new PrivilegedExceptionAction<Path>() {
-                public Path run() throws IOException, InterruptedException {
-                    FileSystem fileSystem = dirPath.getFileSystem(jobConf);
-                    if (fileSystem.exists(dirPath)) {
-                        LOG.info("clearing output dir " + outputDir);
-                        fileSystem.delete(dirPath, true);
-                    }
-                    return dirPath;
-                }});
+            public Path run() throws IOException, InterruptedException {
+                FileSystem fileSystem = dirPath.getFileSystem(jobConf);
+                if (fileSystem.exists(dirPath)) {
+                    LOG.info("clearing output dir " + outputDir);
+                    fileSystem.delete(dirPath, true);
+                }
+                return dirPath;
+            }});
     }
 }

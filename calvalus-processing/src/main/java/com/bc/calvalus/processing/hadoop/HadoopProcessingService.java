@@ -121,7 +121,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.shapeAttributeCache = new HashMap<>();
         this.logger = Logger.getLogger("com.bc.calvalus");
         if (jobClientsMap.getConfiguration().get("calvalus.openstack.startcmd") != null) {
-             hadoopLaunchHandler = new HadoopLaunchHandler(this, jobClientsMap.getConfiguration());
+            hadoopLaunchHandler = new HadoopLaunchHandler(this, jobClientsMap.getConfiguration());
         }
     }
 
@@ -219,7 +219,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 }
                 if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
                     String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
-                                                                 BUNDLE_DESCRIPTOR_XML_FILENAME);
+                            BUNDLE_DESCRIPTOR_XML_FILENAME);
                     FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                     List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                     for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
@@ -294,7 +294,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     if (processorDescriptors != null) {
                         for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
                             if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
-                                processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
+                                    processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
                                 descriptors.add(bd);
                             }
                         }
@@ -446,7 +446,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public void updateStatuses(String username) throws IOException {
         JobClient jobClient = jobClientsMap.getJobClient(username);
         String rmHostname = jobClientsMap.getConfiguration().get("yarn.resourcemanager.hostname");
-        logger.info("rm host for status polling is " + rmHostname);
+        logger.fine("rm host for status polling is " + rmHostname);
         JobStatus[] jobStatuses;
         if (rmHostname != null && ! "0.0.0.0".equals(rmHostname)) {
             jobClient.getConf().set("yarn.resourcemanager.hostname", rmHostname);
@@ -533,7 +533,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
         if (jobStatus.getRunState() == JobStatus.FAILED) {
             return new ProcessStatus(ProcessState.ERROR, oldProgress,
-                                     "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
+                    "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
         } else if (jobStatus.getRunState() == JobStatus.KILLED) {
             return new ProcessStatus(ProcessState.CANCELLED, oldProgress);
         } else if (jobStatus.getRunState() == JobStatus.PREP) {
@@ -618,7 +618,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public static boolean isArchive(Path archivePath) {
         String filename = archivePath.getName();
         return filename.endsWith(".tgz") || filename.endsWith(".tar.gz") ||
-               filename.endsWith(".tar") || filename.endsWith(".zip");
+                filename.endsWith(".tar") || filename.endsWith(".zip");
     }
 
     static String stripArchiveExtension(String archiveName) {

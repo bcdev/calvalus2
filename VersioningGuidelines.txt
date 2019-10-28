@@ -1,0 +1,51 @@
+Versioning guidelines for Calvalus development
+==============================================
+
+Calvalus branches and versions
+------------------------------
+
+ o Calvalus is developed in the master trunc with temporal development branches and short maintenance
+   branches as needed.
+ o Calvalus versions shall be done on the main trunc by tagging with the version, e.g. "2.18".
+ o Calvalus is developed in a SNAPSHOT version. N+1-SNAPSHOT is created immediately after N is released.
+ o Development branches shall be merged into the master and closed.
+ o SNAPSHOT versions shall be used for testing but shall be replaced by a tagged version for delivery.
+   At the same time, the number of versions per year shall be kept reasonable.
+ o For changes that break backwards compatiblity see below.
+
+Hadoop and SNAP dependencies
+----------------------------
+
+ o Calvalus depends on Hadoop and can be compiled against different Hadoop versions for different
+   environments (distinguished by profile). Hadoop interfaces are backward-compatible. A Hadoop fork
+   with versions ending -BC (3.2.1-BC) is used as dependency. It contains a few patches to Hadoop
+   (additional function, fixed error handling).
+ o Calvalus depends on SNAP. The Calvalus main trunc and maintenance branches shall be compiled against
+   the SNAP N.x maintenance branch or a branch N.calvalus derived from it with fixes proposed for
+   integration into N.x. Important fixes in SNAP master shall be picked/merged into the N.x branch.
+   With SNAP major releases a Calvalus version based on the SNAP N+1.x branch (or, for the initial
+   version, based on the SNAP N+1 release) is released.
+
+Backwards compatibility
+-----------------------
+
+ o Calvalus shall be developed with backward-compatibility in mind in order to allow module updates and
+   to avoid the necessity of maintenance branches. (Instead, the new version fixes the issue of a former
+   version). It shall be possible to upgrade a processor and processing system instance  to a newer
+   Calvalus version (and/or SNAP version without software changes.
+ o If incompatible changes are required then the change shall preferably happen with a SNAP major
+   release. This may then be module-incompatible with previous Calvalus and SNAP releases.
+ o Changes of Calvalus required for the N+1 version of SNAP if they are incompatible with the master are
+   maintained in a Calvalus branch for-snap-N+1 (for-snap-8). This branch shall be merged into
+   the master trunc with the Calvalus version corresponding to the N+1 SNAP release.
+
+Calvalus deployment
+-------------------
+
+ o A cluster contains several delivery versions of the Calvalus bundle (2.15, 2.16, 2.18) and the SNAP
+   bundle (7.0.0, 7.0.patch1, ..., better: 7.1, 7.2, numbering of bundles, not SNAP versions!).
+ o A cluster may contain a bundle with a SNAPSHOT version of the newest Calvalus (2.19-SNAPSHOT) and a
+   bundle SNAP (7.3-SNAPSHOT) of recent fixes in SNAP from the SNAP N.x branch or the N.calvalus branch.
+   SNAPSHOT bundles may be updated with some care regarding running jobs.
+ o In addition one Calvalus bundle and one SNAP bundle may exist temporally per developer. It is called
+   calvalus-<username> and snap-<username> and is maintained and updated freely by the respective user.
