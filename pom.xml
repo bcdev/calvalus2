@@ -15,9 +15,9 @@
         <calvalus.version>2.19-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>7.0.3</snap.version>
-        <s1tbx.version>7.0.1</s1tbx.version>
-        <s2tbx.version>7.0.0</s2tbx.version>
-        <s3tbx.version>7.0.0</s3tbx.version>
+        <s1tbx.version>7.0.3-SNAPSHOT</s1tbx.version>
+        <s2tbx.version>7.0.1-SNAPSHOT</s2tbx.version>
+        <s3tbx.version>7.0.1-SNAPSHOT</s3tbx.version>
         <seadas.reader.version>1.8</seadas.reader.version>
         <probav.reader.version>2.1.0</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
