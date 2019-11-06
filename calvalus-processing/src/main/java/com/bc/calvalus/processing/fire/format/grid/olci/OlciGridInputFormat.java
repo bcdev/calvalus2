@@ -86,7 +86,8 @@ public class OlciGridInputFormat extends InputFormat {
         String outputPath = path.toString(); // hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7/h00v00/2000-01/ba-outputs-h00v00-2000-01.tar.gz
         int tileIndex = outputPath.indexOf("ba-outputs-") + "ba-outputs-".length();
         String tile = outputPath.substring(tileIndex, tileIndex + 6);
-        String lcFilePath = String.format("hdfs://calvalus/calvalus/projects/c3s/aux/splitted-lc-data/v2.1.1/lc-%s.nc", tile);
+        String yearBefore = String.valueOf(Integer.parseInt(outputPath.substring(tileIndex+7, tileIndex+7+4))-1);
+        String lcFilePath = String.format("hdfs://calvalus/calvalus/projects/c3s/aux/splitted-lc-data/%s/lc-%s-%s.nc", yearBefore, yearBefore, tile);
         return fileSystem.getFileStatus(new Path(lcFilePath));
     }
 
