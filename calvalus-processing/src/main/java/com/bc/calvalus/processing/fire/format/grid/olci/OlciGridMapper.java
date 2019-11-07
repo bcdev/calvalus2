@@ -84,9 +84,9 @@ public class OlciGridMapper extends AbstractGridMapper {
     }
 
     static String getTile(String path) {
-        // sample: path.toString() = hdfs://calvalus/calvalus/.../lc-h31v10.nc
+        // sample: path.toString() = hdfs://calvalus/calvalus/.../lc-2016-h31v10.nc
         int startIndex = path.lastIndexOf("/");
-        return path.substring(startIndex + 4, startIndex + 10);
+        return path.substring(startIndex + 4+5, startIndex + 10+5);
     }
 
     @Override
