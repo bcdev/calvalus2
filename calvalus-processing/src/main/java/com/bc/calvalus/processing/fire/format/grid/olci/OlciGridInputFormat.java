@@ -28,6 +28,7 @@ import org.opengis.referencing.operation.TransformException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -202,7 +203,9 @@ public class OlciGridInputFormat extends InputFormat {
                     Product productF = new Product("dummy", "dummy", 3600, 3600);
                     productF.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 3600, 3600, easting, 90, 1.0 / 360.0, 1.0 / 360.0, 0.0, 0.0));
                     Band fBand = productF.addBand("band_1", ProductData.TYPE_UINT8);
-                    fBand.setRasterData(new ProductData.UByte(new byte[3600 * 3600]));
+                    byte[] foaValues = new byte[3600 * 3600];
+                    Arrays.fill(foaValues, (byte) 3);
+                    fBand.setRasterData(new ProductData.UByte(foaValues));
 
                     ProductIO.writeProduct(productC, targetDir + File.separator + filenameC, "GeoTIFF");
                     ProductIO.writeProduct(productU, targetDir + File.separator + filenameU, "GeoTIFF");
