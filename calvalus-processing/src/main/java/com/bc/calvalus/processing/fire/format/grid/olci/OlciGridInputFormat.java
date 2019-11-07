@@ -25,6 +25,7 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,9 +204,9 @@ public class OlciGridInputFormat extends InputFormat {
                     Band fBand = productF.addBand("band_1", ProductData.TYPE_UINT8);
                     fBand.setRasterData(new ProductData.UByte(new byte[3600 * 3600]));
 
-                    ProductIO.writeProduct(productC, targetDir + "\\" + filenameC, "GeoTIFF");
-                    ProductIO.writeProduct(productU, targetDir + "\\" + filenameU, "GeoTIFF");
-                    ProductIO.writeProduct(productF, targetDir + "\\" + filenameF, "GeoTIFF");
+                    ProductIO.writeProduct(productC, targetDir + File.separator + filenameC, "GeoTIFF");
+                    ProductIO.writeProduct(productU, targetDir + File.separator + filenameU, "GeoTIFF");
+                    ProductIO.writeProduct(productF, targetDir + File.separator + filenameF, "GeoTIFF");
                 }
             }
         }
