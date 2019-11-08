@@ -70,21 +70,21 @@ public class StatusHandler {
         return reportMap.containsKey(job);
     }
 
-    public void setRunning(String job, String finishingTime) {
+    public synchronized void setRunning(String job, String finishingTime) {
         String name = job + "\t" + finishingTime;
         failed.remove(name);
         running.add(name);
         writeStatus();
     }
 
-    public void setFailed(String job, String finishingTime) {
+    public synchronized void setFailed(String job, String finishingTime) {
         String name = job + "\t" + finishingTime;
         failed.add(name);
         running.remove(name);
         writeStatus();
     }
 
-    public void setHandled(String job, String finishingTime) {
+    public synchronized void setHandled(String job, String finishingTime) {
         try {
             reportWriter.append(job).append("\t").append(finishingTime).append("\n").flush();
         } catch (IOException e) {
