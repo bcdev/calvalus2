@@ -72,9 +72,13 @@ public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Te
         try {
             Product product = processorAdapter.getInputProduct();
             if (product != null) {
-                Polygon poylgon = computeProductGeometry(product);
-                if (poylgon != null) {
-                    String wkt = poylgon.toString();
+                Polygon polygon = computeProductGeometry(product);
+                if (polygon != null) {
+                    // hack to remove (empty) inner rings of Sentinel 2 detector footprints
+                    if (polygon.getNumInteriorRing() > 0) {
+                        polygon = new Polygon((LinearRing) polygon.getExteriorRing(), null, polygon.getFactory());
+                    }
+                    String wkt = polygon.toString();
                     pm.worked(50);
 
                     DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss");
