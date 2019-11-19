@@ -25,8 +25,10 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -86,7 +88,8 @@ public class OlciGridInputFormat extends InputFormat {
         String outputPath = path.toString(); // hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7/h00v00/2000-01/ba-outputs-h00v00-2000-01.tar.gz
         int tileIndex = outputPath.indexOf("ba-outputs-") + "ba-outputs-".length();
         String tile = outputPath.substring(tileIndex, tileIndex + 6);
-        String lcFilePath = String.format("hdfs://calvalus/calvalus/projects/c3s/aux/splitted-lc-data/v2.1.1/lc-%s.nc", tile);
+        String yearBefore = String.valueOf(Integer.parseInt(outputPath.substring(tileIndex+7, tileIndex+7+4))-1);
+        String lcFilePath = String.format("hdfs://calvalus/calvalus/projects/c3s/aux/splitted-lc-data/%s/lc-%s-%s.nc", yearBefore, yearBefore, tile);
         return fileSystem.getFileStatus(new Path(lcFilePath));
     }
 
@@ -200,11 +203,13 @@ public class OlciGridInputFormat extends InputFormat {
                     Product productF = new Product("dummy", "dummy", 3600, 3600);
                     productF.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 3600, 3600, easting, 90, 1.0 / 360.0, 1.0 / 360.0, 0.0, 0.0));
                     Band fBand = productF.addBand("band_1", ProductData.TYPE_UINT8);
-                    fBand.setRasterData(new ProductData.UByte(new byte[3600 * 3600]));
+                    byte[] foaValues = new byte[3600 * 3600];
+                    Arrays.fill(foaValues, (byte) 3);
+                    fBand.setRasterData(new ProductData.UByte(foaValues));
 
-                    ProductIO.writeProduct(productC, targetDir + "\\" + filenameC, "GeoTIFF");
-                    ProductIO.writeProduct(productU, targetDir + "\\" + filenameU, "GeoTIFF");
-                    ProductIO.writeProduct(productF, targetDir + "\\" + filenameF, "GeoTIFF");
+                    ProductIO.writeProduct(productC, targetDir + File.separator + filenameC, "GeoTIFF");
+                    ProductIO.writeProduct(productU, targetDir + File.separator + filenameU, "GeoTIFF");
+                    ProductIO.writeProduct(productF, targetDir + File.separator + filenameF, "GeoTIFF");
                 }
             }
         }

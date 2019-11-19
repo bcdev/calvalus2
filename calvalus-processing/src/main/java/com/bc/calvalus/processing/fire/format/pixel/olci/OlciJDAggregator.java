@@ -59,8 +59,10 @@ public class OlciJDAggregator extends AbstractAggregator {
     private void aggregate(float jd, float cl, WritableVector targetVector) {
         float previousJDValue = targetVector.get(0);
 
+        // the previous JD is valid if it is not negative and within the time bounds
         boolean validJdSet = previousJDValue >= 0 && previousJDValue >= minDoy && previousJDValue <= maxDoy;
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
+        // the new JD is preferred if it is earlier within the time bounds (or "more valid")
         boolean preferToPreviousValue = (!validJdSet || jd < previousJDValue && jd > 0) && jd >= 0 && (inTimeBounds || jd == 0);
 
         if (preferToPreviousValue) {
@@ -72,7 +74,8 @@ public class OlciJDAggregator extends AbstractAggregator {
             targetVector.set(0, UNBURNABLE);
             targetVector.set(1, 0);
         }
-        if (!validJdSet && jd == 0 && cl == 0) {
+        //if (!validJdSet && jd == 0 && cl == 0) {
+        if (jd >= 0 && cl == 0) {
             targetVector.set(1, 1);
         }
         // otherwise keep original values

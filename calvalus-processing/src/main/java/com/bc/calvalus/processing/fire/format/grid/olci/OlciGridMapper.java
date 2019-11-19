@@ -84,9 +84,9 @@ public class OlciGridMapper extends AbstractGridMapper {
     }
 
     static String getTile(String path) {
-        // sample: path.toString() = hdfs://calvalus/calvalus/.../lc-h31v10.nc
+        // sample: path.toString() = hdfs://calvalus/calvalus/.../lc-2016-h31v10.nc
         int startIndex = path.lastIndexOf("/");
-        return path.substring(startIndex + 4, startIndex + 10);
+        return path.substring(startIndex + 4+5, startIndex + 10+5);
     }
 
     @Override
@@ -120,7 +120,8 @@ public class OlciGridMapper extends AbstractGridMapper {
         // From the remaining pixels, reassign all values of 0 to 1
 
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
-                .map(d -> d == 0 ? 1.0 : d)
+// 2019-11-04 looks strange, the unburnable pixels are 0, and they shall be filtered, not shifted
+//                .map(d -> d == 0 ? 1.0 : d)
                 .filter(d -> d <= 100.0 && d >= 1.0)
                 .toArray();
 
@@ -132,10 +133,9 @@ public class OlciGridMapper extends AbstractGridMapper {
         }
 
         // pb_i = value of confidence level of pixel /100
-        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();
-
         // Var_c = sum (pb_i*(1-pb_i)
-        double var_c = Arrays.stream(pb)
+        double var_c = Arrays.stream(probabilityOfBurnMasked)
+                .map(d -> d / 100.0)
                 .map(pb_i -> (pb_i * (1.0 - pb_i)))
                 .sum();
 
