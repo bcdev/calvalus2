@@ -139,9 +139,9 @@ public class RasterStackWritable implements Writable {
         private static final Map<Character, Type> TYPE_ID_TO_TYPE_MAP = new HashMap<>();
 
         private final char id;
-        private final Class type;
+        private final Class<? extends Number> type;
 
-        Type(char id, Class type) {
+        Type(char id, Class<? extends Number> type) {
             this.id = id;
             this.type = type;
         }
@@ -150,7 +150,7 @@ public class RasterStackWritable implements Writable {
             return id;
         }
 
-        public Class getType() {
+        public Class<? extends Number> getType() {
             return type;
         }
 

@@ -16,7 +16,6 @@ public class FirePixelNcFactory {
     public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int width, int height) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename);
 
-//        ncFile.addUnlimitedDimension("time");
         ncFile.addDimension(null, "time", 1);
         ncFile.addDimension(null, "bounds", 2);
         ncFile.addDimension(null, "lat", height);

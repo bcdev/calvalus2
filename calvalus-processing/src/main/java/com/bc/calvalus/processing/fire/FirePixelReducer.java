@@ -14,8 +14,10 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.snap.binning.support.CrsGrid;
+import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
@@ -36,29 +38,50 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 
+import static com.bc.calvalus.processing.fire.LcRemapping.isInBurnableLcClass;
+import static com.bc.calvalus.processing.fire.LcRemapping.remap;
+
 public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable, NullWritable, NullWritable> {
 
+    public static final int DEFAULT_NUM_GLOBAL_ROWS = 64800;
     protected NetcdfFileWriter ncFile;
 
     protected String ncFilename;
     private CrsGrid crsGrid;
     private int numRowsGlobal;
+    private Product lcProduct;
     private Rectangle continentalRectangle;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         super.setup(context);
-        init(context.getConfiguration());
+        int lcYear = getLcYear(context);
+        Product lcProduct = ProductIO.readProduct(String.format("/mnt/auxiliary/auxiliary/c3s/lc/C3S-LC-L4-LCCS-Map-300m-P1Y-%s-v2.1.1.tif", lcYear));
+        try {
+            init(context.getConfiguration(), lcProduct);
+        } catch (FactoryException | TransformException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    void init(Configuration configuration) throws IOException {
-        numRowsGlobal = configuration.getInt("numRowsGlobal", 64800);
+    private static int getLcYear(Reducer<LongWritable, RasterStackWritable, NullWritable, NullWritable>.Context context) {
+        int producedYear = context.getConfiguration().getInt("calvalus.year", 2019);
+        return producedYear - 1;
+    }
+
+    void init(Configuration configuration, Product lcProduct) throws IOException, FactoryException, TransformException {
+        numRowsGlobal = configuration.getInt("numRowsGlobal", DEFAULT_NUM_GLOBAL_ROWS);
         crsGrid = new CrsGrid(numRowsGlobal, "EPSG:4326");
-        try {
-            prepareTargetProduct(configuration);
-        } catch (FactoryException | TransformException e) {
-            throw new IOException(e);
-        }
+        computeContinentalRectangle(configuration);
+        this.lcProduct = lcProduct;
+        prepareTargetProduct(configuration);
+    }
+
+    private void computeContinentalRectangle(Configuration configuration) throws FactoryException, TransformException {
+        Geometry continentalGeometry = GeometryUtils.createGeometry(configuration.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        Product dummyProduct = new Product("dummy", "dummy", numRowsGlobal * 2, numRowsGlobal);
+        dummyProduct.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, numRowsGlobal * 2, numRowsGlobal, -180, 90, 360.0 / (numRowsGlobal * 2), 180.0 / numRowsGlobal));
+        continentalRectangle = SubsetOp.computePixelRegion(dummyProduct, continentalGeometry, 0);
     }
 
     @Override
@@ -69,10 +92,25 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         CalvalusLogger.getLogger().info("Writing for key " + key);
 
         long binIndex = key.get();
+
+        byte[] lcData = new byte[rasterStackWritable.width * rasterStackWritable.height];
+        short[] lcDataShort = new short[rasterStackWritable.width * rasterStackWritable.height];
+        lcProduct.getBand("lccs_class").readRasterData(getX(binIndex), getY(binIndex), rasterStackWritable.width, rasterStackWritable.height, new ProductData.Byte(lcData));
+        short[] baData = (short[]) rasterStackWritable.data[0];
+        byte[] clData = (byte[]) rasterStackWritable.data[1];
+
+        for (int i = 0; i < baData.length; i++) {
+            lcDataShort[i] = (short) remap(lcData[i]);
+            if (!isInBurnableLcClass(lcDataShort[i])) {
+                baData[i] = -2;
+                clData[i] = 0;
+            }
+        }
+
         try {
-            writeShortChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "JD", (short[]) rasterStackWritable.data[0], rasterStackWritable.width, rasterStackWritable.height);
-            writeByteChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "CL", (byte[]) rasterStackWritable.data[1], rasterStackWritable.width, rasterStackWritable.height);
-//            writeByteChunk(getX(binIndex), getY(binIndex), ncFile, "LC", null, rasterStackWritable.width, rasterStackWritable.height);
+            writeShortChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "JD", baData, rasterStackWritable.width, rasterStackWritable.height);
+            writeByteChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "CL", clData, rasterStackWritable.width, rasterStackWritable.height);
+            writeByteChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "LC", lcData, rasterStackWritable.width, rasterStackWritable.height);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -82,7 +120,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     protected void cleanup(Reducer.Context context) throws IOException, InterruptedException {
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
 
-        ncFile.close();
+        closeNcFile();
 
         File fileLocation = new File("./" + ncFilename);
         Path path = new Path(outputDir + "/" + ncFilename);
@@ -90,6 +128,10 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         if (!fs.exists(path)) {
             FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
         }
+    }
+
+    void closeNcFile() throws IOException {
+        ncFile.close();
     }
 
     private void prepareTargetProduct(Configuration configuration) throws IOException, FactoryException, TransformException {
@@ -153,7 +195,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
 
     protected String getFilename(String year, String month, String version) {
         String paddedMonth = String.format("%02d", Integer.parseInt(month));
-        return String.format("%s%s01-C3S-L4_FIRE-BA-OLCI-fv%s.nc", year, paddedMonth, version);
+        return String.format("%s%s01-C3S-L4_FIRE-BA-OLCI-f%s.nc", year, paddedMonth, version);
     }
 
     private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
@@ -246,6 +288,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     /**
      * Returns the start y for the given tile, where <code>targetWidth * targetHeight</code> many values are written to
      * the target raster.
+     *
      * @param key The mapper key.
      * @return The start y.
      */
