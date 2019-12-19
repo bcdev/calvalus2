@@ -167,7 +167,7 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable = writeable.addVariable("status", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
-            final ArrayByte.D1 valids = new ArrayByte.D1(6);
+            final ArrayByte.D1 valids = new ArrayByte.D1(6, false);
             valids.set(0, (byte) 0);
             valids.set(1, (byte) 1);
             valids.set(2, (byte) 2);

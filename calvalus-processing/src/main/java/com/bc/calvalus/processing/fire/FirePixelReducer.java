@@ -44,6 +44,7 @@ import static com.bc.calvalus.processing.fire.LcRemapping.remap;
 public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable, NullWritable, NullWritable> {
 
     public static final int DEFAULT_NUM_GLOBAL_ROWS = 64800;
+    private static final short BA_FILL_VALUE = -32767;
     protected NetcdfFileWriter ncFile;
 
     protected String ncFilename;
@@ -56,7 +57,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     protected void setup(Context context) throws IOException, InterruptedException {
         super.setup(context);
         int lcYear = getLcYear(context);
-        Product lcProduct = ProductIO.readProduct(String.format("/mnt/auxiliary/auxiliary/c3s/lc/C3S-LC-L4-LCCS-Map-300m-P1Y-%s-v2.1.1.tif", lcYear));
+        Product lcProduct = ProductIO.readProduct(String.format("/mnt/auxiliary/auxiliary/c3s/lc/C3S-LC-L4-LCCS-Map-300m-P1Y-%s-v2.1.1.nc", lcYear));
         try {
             init(context.getConfiguration(), lcProduct);
         } catch (FactoryException | TransformException e) {
@@ -105,19 +106,24 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
                 baData[i] = -2;
                 clData[i] = 0;
             }
+            if (baData[i] == BA_FILL_VALUE) {
+                // we are over water
+                baData[i] = -2;
+                clData[i] = 0;
+            }
         }
 
         try {
             writeShortChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "JD", baData, rasterStackWritable.width, rasterStackWritable.height);
             writeByteChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "CL", clData, rasterStackWritable.width, rasterStackWritable.height);
-            writeByteChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "LC", lcData, rasterStackWritable.width, rasterStackWritable.height);
+            writeUByteChunk(getX(binIndex) - continentalRectangle.x, getY(binIndex) - continentalRectangle.y, ncFile, "LC", lcData, rasterStackWritable.width, rasterStackWritable.height);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
     }
 
     @Override
-    protected void cleanup(Reducer.Context context) throws IOException, InterruptedException {
+    protected void cleanup(Reducer.Context context) throws IOException {
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
 
         closeNcFile();
@@ -182,6 +188,14 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
 
         Variable variable = ncFile.findVariable(varName);
         Array values = Array.factory(DataType.BYTE, new int[]{1, height, width}, data);
+        ncFile.write(variable, new int[]{0, y, x}, values);
+    }
+
+    protected void writeUByteChunk(int x, int y, NetcdfFileWriter ncFile, String varName, byte[] data, int width, int height) throws IOException, InvalidRangeException {
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d into variable %s", x, y, width, height, varName));
+
+        Variable variable = ncFile.findVariable(varName);
+        Array values = Array.factory(DataType.UBYTE, new int[]{1, height, width}, data);
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
 

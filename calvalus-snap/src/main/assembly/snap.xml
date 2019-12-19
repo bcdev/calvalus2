@@ -21,6 +21,9 @@
 
     <dependencySets>
         <dependencySet>
+            <excludes>
+                <exclude>edu.ucar.netcdf</exclude>
+            </excludes>
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <includes>
                 <!--

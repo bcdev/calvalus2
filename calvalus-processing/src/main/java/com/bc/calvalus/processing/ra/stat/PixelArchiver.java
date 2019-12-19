@@ -18,9 +18,9 @@ package com.bc.calvalus.processing.ra.stat;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
-import org.esa.snap.dataio.netcdf.nc.N4FileWriteable;
 import org.esa.snap.dataio.netcdf.nc.NFileWriteable;
 import org.esa.snap.dataio.netcdf.nc.NVariable;
+import org.esa.snap.dataio.netcdf.nc.NWritableFactory;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
@@ -92,13 +92,13 @@ public class PixelArchiver {
             String varName = bandName + "_" + timeString;
             String dimName = "dim_" + timeString;
 
-            NFileWriteable nFileWriteable = N4FileWriteable.create(tmpFilename);
+            NFileWriteable nFileWriteable = NWritableFactory.create(tmpFilename, "netcdf4");
             nFileWriteable.addDimension(dimName, numSamples);
             NVariable nVariable = nFileWriteable.addVariable(varName, DataType.FLOAT, null, dimName);
             nVariable.addAttribute("product_name", productName);
             nVariable.addAttribute("num_obs", numObs);
             nFileWriteable.create();
-            nVariable.writeFully(Array.factory(bandSamples));
+            nVariable.writeFully(Array.factory(DataType.FLOAT, new int[]{bandSamples.length}, bandSamples));
             nFileWriteable.close();
             
             bandAccus[i].clear();
@@ -115,7 +115,7 @@ public class PixelArchiver {
             LOG.info("merging value files:");
             List<NcContent> tmpFiles = this.files.get(bandName);
             String finalFilename = "values-" + regionName + "-" + bandName + ".nc";
-            NFileWriteable nFileWriteable = N4FileWriteable.create(finalFilename);
+            NFileWriteable nFileWriteable = NWritableFactory.create(finalFilename, "netcdf4");
             for (NcContent tmpNcContent : tmpFiles) {
                 String varName = bandName + "_" + tmpNcContent.timeString;
                 String dimName = "dim_" + tmpNcContent.timeString;

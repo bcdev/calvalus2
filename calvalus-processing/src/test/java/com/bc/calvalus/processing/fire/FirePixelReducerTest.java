@@ -47,8 +47,8 @@ public class FirePixelReducerTest {
         configuration.set("calvalus.year", "2019");
         configuration.set("calvalus.month", "12");
         configuration.set("calvalus.regionGeometry", "POLYGON ((-26 25, 53 25, 53 -40, -26 -40, -26 25))");
-//        configuration.set("calvalus.output.dir", "file://c/ssd/c3s");
-//        reducer.init(configuration, readProduct("D:\\workspace\\c3s\\C3S-LC-L4-LCCS-Map-300m-P1Y-2018-v2.1.1.tif"));
+        configuration.set("calvalus.output.dir", "file://c/ssd/c3s");
+        reducer.init(configuration, readProduct("D:\\workspace\\c3s\\C3S-LC-L4-LCCS-Map-300m-P1Y-2018-v2.1.1.tif"));
         ArrayList<RasterStackWritable> data = new ArrayList<>();
         data.add(rasterStackWritable);
         reducer.reduce(new LongWritable(4665668400L + 1193), data, null);

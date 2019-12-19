@@ -16,7 +16,7 @@ public class FirePixelNcFactory {
     public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int width, int height) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename);
 
-        ncFile.addDimension(null, "time", 1);
+        ncFile.addUnlimitedDimension("time");
         ncFile.addDimension(null, "bounds", 2);
         ncFile.addDimension(null, "lat", height);
         ncFile.addDimension(null, "lon", width);
@@ -53,7 +53,7 @@ public class FirePixelNcFactory {
         confidenceLevelVar.addAttribute(new Attribute("units", "m2"));
         confidenceLevelVar.addAttribute(new Attribute("long_name", "standard error of the estimation of burned area"));
 
-        Variable landCoverVar = ncFile.addVariable(null, "LC", DataType.BYTE, "time lat lon");
+        Variable landCoverVar = ncFile.addVariable(null, "LC", DataType.UBYTE, "time lat lon");
         landCoverVar.addAttribute(new Attribute("units", "m2"));
         landCoverVar.addAttribute(new Attribute("long_name", "tbd"));
 

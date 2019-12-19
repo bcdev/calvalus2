@@ -16,12 +16,20 @@
 
 package com.bc.calvalus.processing;
 
+import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.vividsolutions.jts.geom.Geometry;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.awt.Rectangle;
+import java.io.IOException;
 
 import static com.bc.calvalus.processing.ProcessingRectangleCalculator.intersectionSafe;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Norman
@@ -39,4 +47,35 @@ public class ProcessingRectangleCalculatorTest {
         assertEquals(r3, intersectionSafe(r1, r2));
 
     }
+
+    @Ignore
+    @Test
+    public void getGeometryAsRectangle() throws IOException {
+        System.setProperty("snap.pixelGeoCoding.useTiling", "true");
+        System.setProperty("snap.useAlternatePixelGeoCoding", "true");
+
+        Product product = ProductIO.readProduct("C:\\ssd\\fire\\S3A_OL_1_EFR____20190101T144647_20190101T144947_20190102T215705_0179_039_367_2880_MAR_O_NT_002.tif_idepix.nc");
+        String geometryWkt = "POLYGON((-80 10, -70 10, -70 0, -80 0, -80 10))";
+        Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
+//        Rectangle rectangle = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry);
+        System.out.println(product.getSceneGeoCoding());
+//        System.out.println(rectangle);
+
+        System.setProperty("snap.pixelGeoCoding.useTiling", "true");
+        System.setProperty("snap.useAlternatePixelGeoCoding", "false");
+
+//        product = ProductIO.readProduct("C:\\ssd\\fire\\S3A_OL_1_EFR____20190101T144647_20190101T144947_20190102T215705_0179_039_367_2880_MAR_O_NT_002.tif_idepix.nc");
+//        rectangle = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry);
+//        System.out.println(product.getSceneGeoCoding());
+//        System.out.println(rectangle);
+
+        System.setProperty("snap.pixelGeoCoding.useTiling", "false");
+        System.setProperty("snap.useAlternatePixelGeoCoding", "true");
+
+        product = ProductIO.readProduct("C:\\ssd\\fire\\S3A_OL_1_EFR____20190101T144647_20190101T144947_20190102T215705_0179_039_367_2880_MAR_O_NT_002.tif_idepix.nc");
+        Rectangle rectangle = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry);
+        System.out.println(product.getSceneGeoCoding());
+        System.out.println(rectangle);
+    }
+
 }
