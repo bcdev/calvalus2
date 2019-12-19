@@ -106,10 +106,10 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
                 baData[i] = -2;
                 clData[i] = 0;
             }
-            if (baData[i] == BA_FILL_VALUE) {
-                // we are over water
-                baData[i] = -2;
-                clData[i] = 0;
+            // lc is 0 and cl is 1 if there is no burn
+            if (baData[i] <= 0) {
+                lcData[i] = 0;
+                clData[i] = 1;
             }
         }
 
