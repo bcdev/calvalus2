@@ -36,9 +36,9 @@ public class FirePixelInputFormat extends InputFormat {
 
         String tiles = getTiles(area);
         String tilesSpec = "(" + tiles + ")";
-        String inputPathPattern = String.format(inputRootDir + "/%s/%s-%s/.*outputs.*gz", tilesSpec, year, month);
 
-        System.out.println(inputPathPattern);
+        // looks slightly weird, but 0 splits are found if tilesSpec is put into directory instead of filename
+        String inputPathPattern = String.format(inputRootDir + "/.*/%s-%s/.*outputs-%s.*gz", year, month, tilesSpec);
 
         conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         return delegate.getSplits(context);
