@@ -147,8 +147,18 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
 
         final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
         final int numberOfBands = context.getCurrentKey().get() >>> 27;
-        final String sensor = numberOfBands == 13 + 1 ? "MERIS" : numberOfBands == 5 + 1 ? "AVHRR" : numberOfBands == 4 + 1 ? "PROBAV" : numberOfBands == 4 + 1 ? "VEGETATION" : numberOfBands == 11 + 1 ? "MSI" : "AGRI";
-        final String bandName = "MERIS".equals(sensor) ? MERIS_BANDS[bandNumber] : "AVHRR".equals(sensor) ? AVHRR_BANDS[bandNumber] : "VEGETATION".equals(sensor) ? PROBA_BANDS[bandNumber] : "PROBAV".equals(sensor) ? PROBA_BANDS[bandNumber] : "MSI".equals(sensor) ? MSI_BANDS[bandNumber] : AGRI_BANDS[bandNumber];
+        final String sensor =
+                "OLCI".equals(conf.get("sensor", "unknown")) ? "OLCI" :
+                        numberOfBands == 13 + 1 ? "MERIS" :
+                                numberOfBands == 5 + 1 ? "AVHRR" :
+                                        numberOfBands == 4 + 1 ? "PROBAV" :
+                                                numberOfBands == 4 + 1 ? "VEGETATION" :
+                                                        numberOfBands == 11 + 1 ? "MSI" : "AGRI";
+        final String bandName = "MERIS".equals(sensor) || "OLCI".equals(sensor) ? MERIS_BANDS[bandNumber] :
+                "AVHRR".equals(sensor) ? AVHRR_BANDS[bandNumber] :
+                        "VEGETATION".equals(sensor) ? PROBA_BANDS[bandNumber] :
+                                "PROBAV".equals(sensor) ? PROBA_BANDS[bandNumber] :
+                                        "MSI".equals(sensor) ? MSI_BANDS[bandNumber] : AGRI_BANDS[bandNumber];
 
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
@@ -162,8 +172,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         } catch (BindingException e) {
             throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
-        final int resolution = mosaicHeight == 972000 ? 20 : mosaicHeight == 64800 ? 300 : mosaicHeight == 64800 ? 300 : mosaicHeight == 16200 ? 1000 : mosaicHeight == 20160 ? 1000 : mosaicHeight == 60480 ? 333 : 19440000 / mosaicHeight;
-        final int numTileRows = "MSI".equals(sensor) || "AGRI".equals(sensor) ? 180*5 : 36;
+        final int resolution = mosaicHeight == 972000 ? 20 : mosaicHeight == 64800 ? 300 : mosaicHeight == 16200 ? 1000 : mosaicHeight == 20160 ? 1000 : mosaicHeight == 60480 ? 333 : 19440000 / mosaicHeight;
+        final int numTileRows = "MSI".equals(sensor) || "AGRI".equals(sensor) ? 180*5 : "OLCI".equals(sensor) ? 18*2 : 36;
         final int numTileColumns = 2 * numTileRows;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72*5 = 2700
 
@@ -183,13 +193,14 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             tileArea = tileAreaOf(Reprojector.computeRasterSubRegion(planetaryGrid, regionGeometry), tileSize);
             pixelArea = pixelAreaOf(tileArea, tileSize);
             LOG.info("tile area=" + tileArea);
-         }
+        }
 
         final String version = conf.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final double pixelRef = conf.getDouble("calvalus.lc.pixelref", "PROBAV".equals(sensor) ? 0.5 : 0.0);
         final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%dm-P%d%s-%s-%s%s-v%s",
                                                     sensor, resolution,
-                                                    "MSI".equals(sensor) || "AGRI".equals(sensor) ? noOfDays : noOfDays / 7, "MSI".equals(sensor) || "AGRI".equals(sensor) ? "D" : "W",
+                                                    "MSI".equals(sensor) || "AGRI".equals(sensor) ? noOfDays : noOfDays / 7,
+                                                    "MSI".equals(sensor) || "AGRI".equals(sensor) ? "D" : "W",
                                                     bandName,
                                                     regionName == null ? "" : regionName + "-",
                                                     COMPACT_DATE_FORMAT.format(start), version);

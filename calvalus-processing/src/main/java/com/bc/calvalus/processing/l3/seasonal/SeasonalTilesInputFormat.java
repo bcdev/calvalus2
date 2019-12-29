@@ -13,7 +13,9 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,8 +32,9 @@ import java.util.regex.Pattern;
 public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
 
     // ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20090108-v2.0.nc
+    // OLCI-L3-P1D-h21v06-20180729-1.7.3.nc
     static final Pattern SR_FILENAME_PATTERN =
-            Pattern.compile("ESACCI-LC-L3-SR-[^-]*-[^-]*-[^-]*-(h[0-9]*v[0-9]*)-........-[^-]*.nc");
+            Pattern.compile("(?:ESACCI-LC-L3-SR-[^-]*-[^-]*|OLCI-L3)-[^-]*-(h[0-9]*v[0-9]*)-........-[^-]*.nc");
 
     @Override
     protected void createSplits(ProductInventory productInventory,

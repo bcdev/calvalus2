@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -16,6 +17,9 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.gpf.common.BandMathsOp;
 import org.esa.snap.core.util.ImageUtils;
 
 import java.awt.Rectangle;
@@ -29,11 +33,15 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.bc.calvalus.processing.l3.seasonal.SeasonalCompositingReducer.MERIS_BANDS;
 
 /**
  * TODO add API doc
@@ -49,10 +57,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
     private static final DateFormat COMPACT_DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd");
     private static final DateFormat YEAR_FORMAT = DateUtils.createDateFormat("yyyy");
-    private static final String SR_FILENAME_FORMAT = "ESACCI-LC-L3-SR-%s-P%dD-h%02dv%02d-%s-%s.nc";
-    private static final String SR_FILENAME_FORMAT_MSI = "ESACCI-LC-L3-SR-%s-P%dD-h%03dv%03d-%s-%s.nc";
+    //                                                     ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
+    private static final String SR_FILENAME_FORMAT      = "ESACCI-LC-L3-SR-%s-P%dD-h%02dv%02d-%s-%s.nc";
+    private static final String SR_FILENAME_FORMAT_MSI  = "ESACCI-LC-L3-SR-%s-P%dD-h%03dv%03d-%s-%s.nc";
+    //                                                                OLCI-L3-P1D-h21v06-20180729-1.7.3.nc
+    private static final String SR_FILENAME_FORMAT_OLCI            = "%s-P%dD-h%02dv%02d-%s-%s.nc";
     private static final Pattern SR_FILENAME_PATTERN =
-            Pattern.compile("ESACCI-LC-L3-SR-([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
+            Pattern.compile("(?:ESACCI-LC-L3-SR-|)([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
 
     public static final int NUM_SRC_BANDS = 1 + 5 + 13 + 1;
     public static final int DEBUG_X = 4134 % 10800;
@@ -66,6 +77,18 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     public void run(Context context) throws IOException, InterruptedException {
         // determine path of some input, weeks
         // /calvalus/eodata/MERIS_SR_FR/v1.0/2010/2010-01-01/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
+        final Path someTilePath = ((FileSplit) context.getInputSplit()).getPath();
+        final Matcher matcher = SR_FILENAME_PATTERN.matcher(someTilePath.getName());
+        if (! matcher.matches()) {
+            throw new IllegalArgumentException("file name " + someTilePath.getName() + " does not match pattern " + SR_FILENAME_PATTERN.pattern());
+        }
+        final String sensorAndResolution = matcher.group(1);
+        final int tileColumn = Integer.parseInt(matcher.group(2), 10);
+        final int tileRow = Integer.parseInt(matcher.group(3), 10);
+        //final String version = matcher.group(4);
+        final boolean isMsi = sensorAndResolution.startsWith("MSI");
+        final boolean isOlci = sensorAndResolution.startsWith("OLCI");
+
         final Configuration conf = context.getConfiguration();
         final int mosaicHeight;
         final boolean withMaxNdvi;
@@ -79,22 +102,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
-        final int numTileRows = mosaicHeight < 972000 ? 36 : 180;
-        final int numMicroTiles = mosaicHeight < 972000 ? 1 : 5;
+        final int numTileRows = isMsi ? 180 : isOlci ? 18 : 36;
+        final int numMicroTiles = isMsi ? 5 : isOlci ? 2 : 1;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72 = 13500
         final int microTileSize = tileSize / numMicroTiles;
-        final Path someTilePath = ((FileSplit) context.getInputSplit()).getPath();
-        final Path srRootDir = mosaicHeight < 972000 ? someTilePath.getParent().getParent().getParent() : someTilePath.getParent().getParent();
-        final FileSystem fs = someTilePath.getFileSystem(conf);
 
-        final Matcher matcher = SR_FILENAME_PATTERN.matcher(someTilePath.getName());
-        if (! matcher.matches()) {
-            throw new IllegalArgumentException("file name " + someTilePath.getName() + " does not match pattern " + SR_FILENAME_PATTERN.pattern());
-        }
-        final String sensorAndResolution = matcher.group(1);
-        final int tileColumn = Integer.parseInt(matcher.group(2), 10);
-        final int tileRow = Integer.parseInt(matcher.group(3), 10);
-        final String version = matcher.group(4);
+        final Path srRootDir = isMsi ? someTilePath.getParent().getParent() : someTilePath.getParent().getParent().getParent();  // TODO check for other sensors
+        final FileSystem fs = someTilePath.getFileSystem(conf);
 
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
@@ -114,40 +128,52 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         int[] sourceBandIndex = new int[20];  // corresponding required band of the L3 product, as index to product
         int numTargetBands = 3;
         int numSourceBands = 6;
-        for (int j=0; j<3; ++j) {
-            targetBandIndex[j] = j;
-        }
-        for (int i=0; i<6; ++i) {
-            sourceBandIndex[i] = i;
-        }
-        for (int j = 3; j < sensorBands.length && numTargetBands < targetBands.length; ++j) {
-            if (sensorBands[j].equals(targetBands[numTargetBands])) {  // sequence is important
-                targetBandIndex[numTargetBands++] = j;
-                sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
+            for (int j = 0; j < 3; ++j) {
+                targetBandIndex[j] = j;
             }
-        }
-        final int b1BandIndex = sensorAndResolution.startsWith("MSI") ? 6 - 1 + 1 : 6 - 1 + 1;   // TODO only valid for S2 and PROBA
-        final int b3BandIndex = sensorAndResolution.startsWith("MSI") ? 6 - 1 + 2 : 6 - 1 + 4; // TODO only valid for S2 and PROBA
-        final int b11BandIndex = sensorAndResolution.startsWith("MSI") ? 6 - 1 + 9 : 6 - 1 + 3; // TODO only valid for S2 and PROBA
+            for (int i = 0; i < 6; ++i) {
+                sourceBandIndex[i] = i;
+            }
+            for (int j = 3; j < sensorBands.length && numTargetBands < targetBands.length; ++j) {
+                if (sensorBands[j].equals(targetBands[numTargetBands])) {  // sequence is important
+                    targetBandIndex[numTargetBands++] = j;
+                    sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
+                }
+            }
+        final int b1BandIndex = isMsi ? 6 - 1 + 1 : isOlci ? 6-1+2 : 6 - 1 + 1;   // TODO only valid for S2 and PROBA
+        final int b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : 6 - 1 + 4; // TODO only valid for S2 and PROBA
+        final int b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : 6 - 1 + 3; // TODO only valid for S2 and PROBA
         final int ndviBandIndex = numSourceBands - 1;
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
         final List<MultiLevelImage[]> bandImages = new ArrayList<>();
         final List<Product> products = new ArrayList<>();
-        final int daysPerWeek = mosaicHeight >= 972000 ? 10 : 7;
+        final int daysPerWeek = isMsi ? 10 : isOlci ? 1 : 7;
         // loop over weeks
         for (Date week = start; ! stop.before(week); week = nextWeek(week, startCalendar, stopCalendar, daysPerWeek)) {
 
             // determine and read input tile for the week
-            final String weekFileName = String.format(mosaicHeight >= 972000 ? SR_FILENAME_FORMAT_MSI : SR_FILENAME_FORMAT, sensorAndResolution, daysPerWeek, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), version);
-            final Path path = new Path(new Path(mosaicHeight >= 972000 ? srRootDir : new Path(srRootDir, YEAR_FORMAT.format(week)), DATE_FORMAT.format(week)), weekFileName);
-            if (!fs.exists(path)) {
+            final String weekFileName = String.format(isMsi  ? SR_FILENAME_FORMAT_MSI :
+                                                      isOlci ? SR_FILENAME_FORMAT_OLCI :
+                                                               SR_FILENAME_FORMAT,
+                                                      sensorAndResolution, daysPerWeek, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), /*version*/"*");
+            Path path = new Path(new Path(isMsi  ? srRootDir :
+                                          isOlci ? new Path(srRootDir, String.format("h%02dv%02d", tileColumn, tileRow)) :
+                                                   new Path(srRootDir, YEAR_FORMAT.format(week)),
+                                          DATE_FORMAT.format(week)),
+                                       weekFileName);
+            FileStatus[] fileStatuses = fs.globStatus(path);
+            if (fileStatuses == null || fileStatuses.length == 0) {
                 LOG.info("skipping non-existing period " + path);
                 continue;
             }
+            path = fileStatuses[0].getPath();
             LOG.info("aggregating period " + weekFileName);
 
-            final Product product = readProduct(conf, fs, path);
+            Product product = readProduct(conf, fs, path);
+            if (weekFileName.startsWith("OLCI")) {
+                product = sdrToSr(product);
+            }
             final MultiLevelImage[] bandImage = new MultiLevelImage[numSourceBands];
             for (int b = 0; b < numSourceBands; ++b) {
                 if (week == start)  {
@@ -455,6 +481,115 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
+    private Product sdrToSr(Product product) {
+        Map<String, Object> parameters = new HashMap<>();
+        BandMathsOp.BandDescriptor[] bandDescriptors = new BandMathsOp.BandDescriptor[20];
+
+        bandDescriptors[0] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[0].name = "current_pixel_state";
+        bandDescriptors[0].expression = "current_pixel_state";
+        bandDescriptors[0].type = ProductData.TYPESTRING_INT8;
+
+        bandDescriptors[1] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[1].name = "clear_land_count";
+        bandDescriptors[1].expression = "current_pixel_state == 1 ? num_obs : 0";
+        bandDescriptors[1].type = ProductData.TYPESTRING_INT16;
+
+        bandDescriptors[2] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[2].name = "clear_water_count";
+        bandDescriptors[2].expression = "current_pixel_state == 2 ? num_obs : 0";
+        bandDescriptors[2].type = ProductData.TYPESTRING_INT16;
+
+        bandDescriptors[3] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[3].name = "clear_snow_ice_count";
+        bandDescriptors[3].expression = "current_pixel_state == 3 ? num_obs : 0";
+        bandDescriptors[3].type = ProductData.TYPESTRING_INT16;
+
+        bandDescriptors[4] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[4].name = "cloud_count";
+        bandDescriptors[4].expression = "current_pixel_state == 4 ? num_obs : 0";
+        bandDescriptors[4].type = ProductData.TYPESTRING_INT16;
+
+        bandDescriptors[5] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[5].name = "cloud_shadow_count";
+        bandDescriptors[5].expression = "current_pixel_state >= 5 ? num_obs : 0";
+        bandDescriptors[5].type = ProductData.TYPESTRING_INT16;
+
+        bandDescriptors[6] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[6].name = "sr_1_mean";
+        bandDescriptors[6].expression = "sdr_1";
+        bandDescriptors[6].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[7] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[7].name = "sr_2_mean";
+        bandDescriptors[7].expression = "sdr_2";
+        bandDescriptors[7].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[8] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[8].name = "sr_3_mean";
+        bandDescriptors[8].expression = "sdr_3";
+        bandDescriptors[8].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[9] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[9].name = "sr_4_mean";
+        bandDescriptors[9].expression = "sdr_4";
+        bandDescriptors[9].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[10] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[10].name = "sr_5_mean";
+        bandDescriptors[10].expression = "sdr_5";
+        bandDescriptors[10].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[11] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[11].name = "sr_6_mean";
+        bandDescriptors[11].expression = "sdr_6";
+        bandDescriptors[11].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[12] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[12].name = "sr_7_mean";
+        bandDescriptors[12].expression = "sdr_7";
+        bandDescriptors[12].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[13] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[13].name = "sr_8_mean";
+        bandDescriptors[13].expression = "sdr_8";
+        bandDescriptors[13].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[14] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[14].name = "sr_9_mean";
+        bandDescriptors[14].expression = "sdr_9";
+        bandDescriptors[14].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[15] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[15].name = "sr_10_mean";
+        bandDescriptors[15].expression = "sdr_10";
+        bandDescriptors[15].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[16] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[16].name = "sr_12_mean";
+        bandDescriptors[16].expression = "sdr_12";
+        bandDescriptors[16].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[17] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[17].name = "sr_13_mean";
+        bandDescriptors[17].expression = "sdr_13";
+        bandDescriptors[17].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[18] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[18].name = "sr_14_mean";
+        bandDescriptors[18].expression = "sdr_14";
+        bandDescriptors[18].type = ProductData.TYPESTRING_FLOAT32;
+
+        bandDescriptors[19] = new BandMathsOp.BandDescriptor();
+        bandDescriptors[19].name = "vegetation_index_mean";
+        bandDescriptors[19].expression = "ndvi_max";
+        bandDescriptors[19].type = ProductData.TYPESTRING_FLOAT32;
+
+        parameters.put("targetBands", bandDescriptors);
+        product = GPF.createProduct("BandMaths", parameters, product);
+        return product;
+    }
+
     private boolean isAtPosition(int i, int microTileX, int microTileY, int microTileSize, int numMicroTiles, int x, int y) {
         return x == microTileX * microTileSize + (i % microTileSize) && y == microTileY * microTileSize + (i / microTileSize);
     }
@@ -474,6 +609,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         return
             "MERIS-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MERIS-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
+            "OLCI-L3".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
             "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2 * targetBandIndex : targetBandIndex + 5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
             "PROBAV-1000m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
@@ -506,7 +642,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         switch (sensorAndResolution) {
             case "MERIS-300m":
             case "MERIS-1000m":
-                return SeasonalCompositingReducer.MERIS_BANDS;
+            case "OLCI-L3":
+                return MERIS_BANDS;
             case "AVHRR-1000m":
                 return SeasonalCompositingReducer.AVHRR_BANDS;
             case "VEGETATION-1000m":
