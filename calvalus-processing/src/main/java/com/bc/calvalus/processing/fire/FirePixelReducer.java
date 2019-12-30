@@ -143,6 +143,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     private void prepareTargetProduct(Configuration configuration) throws IOException, FactoryException, TransformException {
         String year = configuration.get("calvalus.year");
         String month = configuration.get("calvalus.month");
+        String area = configuration.get("calvalus.area");
         String version = configuration.get("calvalus.version", "v5.1");
         Assert.notNull(year, "calvalus.year");
         Assert.notNull(month, "calvalus.month");
@@ -157,7 +158,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         dummyProduct.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, numRowsGlobal * 2, numRowsGlobal, -180, 90, 360.0 / (numRowsGlobal * 2), 180.0 / numRowsGlobal));
         continentalRectangle = SubsetOp.computePixelRegion(dummyProduct, continentalGeometry, 0);
 
-        ncFilename = getFilename(year, month, version);
+        ncFilename = getFilename(year, month, area, version);
         ncFile = new FirePixelNcFactory().createNcFile(ncFilename, version, timeCoverageStart, timeCoverageEnd, lastDayOfMonth, continentalRectangle.width, continentalRectangle.height);
 
         try {
@@ -207,9 +208,8 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
 //        ncFile.write(variable, new int[]{0, y, x}, values);
 //    }
 
-    protected String getFilename(String year, String month, String version) {
-        String paddedMonth = String.format("%02d", Integer.parseInt(month));
-        return String.format("%s%s01-C3S-L4_FIRE-BA-OLCI-f%s.nc", year, paddedMonth, version);
+    protected String getFilename(String year, String month, String region, String version) {
+        return String.format("%s%s01-C3S-L3S_FIRE-BA-OLCI-%s-f%02d.nc", year, Integer.parseInt(month), region, version);
     }
 
     private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
