@@ -53,6 +53,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
     public static final int STATUS_CLOUD_SHADOW = 5;
+    static int NUM_INDEXES = 8;
 
     private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
     private static final DateFormat COMPACT_DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd");
@@ -65,12 +66,11 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     private static final Pattern SR_FILENAME_PATTERN =
             Pattern.compile("(?:ESACCI-LC-L3-SR-|)([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
 
-    public static final int NUM_SRC_BANDS = 1 + 5 + 13 + 1;
-    public static final int DEBUG_X = 4134 % 10800;
-    public static final int DEBUG_Y = 5342 % 10800;
-    public static final int DEBUG_X2 = 4300 % 10800;
-    public static final int DEBUG_Y2 = 5342 % 10800;
-    public static final boolean DEBUG = true;
+    public static final int DEBUG_X = 6700 % (64800/18);
+    public static final int DEBUG_Y = 3700 % (64800/18);
+    public static final int DEBUG_X2 = 6700 % (64800/18);
+    public static final int DEBUG_Y2 = 5500 % (64800/18);
+    public static final boolean DEBUG = false;
     private static final float EPS = 1.0E-6f;
 
     @Override
@@ -198,9 +198,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         float[] ndviMean = null;
         float[] ndviSdev = null;
         if (withBestPixels) {
-            ndviSum = new float[7][microTileSize*microTileSize];
-            ndviSqrSum = new float[7][microTileSize*microTileSize];
-            ndviCount = new int[8][microTileSize*microTileSize];
+            ndviSum = new float[NUM_INDEXES][microTileSize*microTileSize];
+            ndviSqrSum = new float[NUM_INDEXES][microTileSize*microTileSize];
+            ndviCount = new int[NUM_INDEXES][microTileSize*microTileSize];
             ndxiMax = new float[3][microTileSize*microTileSize];
             ndviMean = new float[microTileSize*microTileSize];
             ndviSdev = new float[microTileSize*microTileSize];
@@ -214,7 +214,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 }
                 // count status and average ndvi (or ndwi) for each status separately
                 if (withBestPixels) {
-                    for (int j=0; j<7; ++j) {
+                    for (int j=0; j<NUM_INDEXES; ++j) {
                         Arrays.fill(ndviSum[j], 0.0f);
                         Arrays.fill(ndviSqrSum[j], 0.0f);
                         Arrays.fill(ndviCount[j], 0);
