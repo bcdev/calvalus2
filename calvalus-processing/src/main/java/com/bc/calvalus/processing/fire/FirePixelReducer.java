@@ -112,16 +112,22 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         // suppress LC information of pixels not burned
         for (int i = 0; i < baData.length; i++) {
             int remappedLcValue = LcRemapping.remap(lcData[i]);
+            // not burnable: force to -2, delete lc and cl
             if (!LcRemapping.isInBurnableLcClass(remappedLcValue)) {
                 baData[i] = -2;
+                lcData[i] = 0;
                 clData[i] = 0;
             }
-            // lc is 0 and cl is 1 if there is no burn
-            // TODO: Why do you set clData to 0 above if it is set to 1 here anyway?
-            if (baData[i] <= 0) {
+            // probably not observed (-1): delete lc, set cl to 1
+            else if (baData[i] < 0) {
                 lcData[i] = 0;
-                //clData[i] = 1;
+                clData[i] = 1;
             }
+            // not burned (0): delete lc
+            else if (baData[i] == 0) {
+                lcData[i] = 0;
+            }
+            // burned (>=1): keep lc and cl
         }
 
         try {
