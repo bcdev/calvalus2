@@ -21,15 +21,19 @@ import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -62,7 +66,7 @@ public class OlciGridMapper extends AbstractGridMapper {
 
         File outputTarFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
         File foaTarFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-        File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration());
+        File lcProductFile = (! (paths[2].getFileSystem(context.getConfiguration()) instanceof LocalFileSystem)) ? CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration()) : paths[2].getName().startsWith("file:") ? new File(paths[2].getName().substring(5)) : new File(paths[2].getName());
 
         File[] output = CommonUtils.untar(outputTarFile, "(.*Classification.*|.*Uncertainty.*)");
         File classificationFile = output[0];
@@ -72,7 +76,18 @@ public class OlciGridMapper extends AbstractGridMapper {
         Product baProduct = ProductIO.readProduct(classificationFile);
         Product foaProduct = ProductIO.readProduct(foa);
         Product uncertaintyProduct = ProductIO.readProduct(uncertaintyFile);
-        Product lcProduct = ProductIO.readProduct(lcProductFile);
+        Product lcGlobal = ProductIO.readProduct(lcProductFile);
+        // ba-outputs-h15v07-2019-08.tar.gz
+        String tile = outputTarFile.getName().substring("ba-outputs-".length(), "ba-outputs-h15v07".length());
+        int h = new Integer(tile.substring(1, 3));
+        int v = new Integer(tile.substring(4, 6));
+        int x0 = h * 3600;
+        int y0 = v * 3600;
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("bandNames", new String[]{"lccs_class"});
+        parameters.put("region", new Rectangle(x0, y0, 3600, 3600));
+        Product lcProduct = GPF.createProduct("Subset", parameters, lcGlobal);
+
 
         setDataSource(new OlciDataSource(baProduct, foaProduct, uncertaintyProduct, lcProduct));
 

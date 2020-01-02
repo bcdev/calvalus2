@@ -8,6 +8,7 @@ import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -69,7 +70,9 @@ public class OlciGridInputFormat extends InputFormat {
             filePaths.add(foaPath.getPath());
             fileLengths.add(foaPath.getLen());
 
-            FileStatus lcPath = getLcFileStatus(path, path.getFileSystem(conf));
+            String lcMapPath = conf.get("calvalus.aux.lcMapPath");
+            Path lcPath0 = new Path(lcMapPath);
+            FileStatus lcPath = getLcFileStatus(lcPath0, lcPath0.getFileSystem(conf));
             filePaths.add(lcPath.getPath());
             fileLengths.add(lcPath.getLen());
 
@@ -85,12 +88,14 @@ public class OlciGridInputFormat extends InputFormat {
     }
 
     private static FileStatus getLcFileStatus(Path path, FileSystem fileSystem) throws IOException {
-        String outputPath = path.toString(); // hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7/h00v00/2000-01/ba-outputs-h00v00-2000-01.tar.gz
-        int tileIndex = outputPath.indexOf("ba-outputs-") + "ba-outputs-".length();
-        String tile = outputPath.substring(tileIndex, tileIndex + 6);
-        String yearBefore = String.valueOf(Integer.parseInt(outputPath.substring(tileIndex+7, tileIndex+7+4))-1);
-        String lcFilePath = String.format("hdfs://calvalus/calvalus/projects/c3s/aux/splitted-lc-data/%s/lc-%s-%s.nc", yearBefore, yearBefore, tile);
-        return fileSystem.getFileStatus(new Path(lcFilePath));
+//        String outputPath = path.toString(); // hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7/h00v00/2000-01/ba-outputs-h00v00-2000-01.tar.gz
+//        int tileIndex = outputPath.indexOf("ba-outputs-") + "ba-outputs-".length();
+//        String tile = outputPath.substring(tileIndex, tileIndex + 6);
+//        String yearBefore = String.valueOf(Integer.parseInt(outputPath.substring(tileIndex+7, tileIndex+7+4))-1);
+//        String lcFilePath = String.format("hdfs://calvalus/calvalus/projects/c3s/aux/splitted-lc-data/%s/lc-%s-%s.nc", yearBefore, yearBefore, tile);
+//        String lcFilePath = String.format("/mnt/auxiliary/auxiliary/c3s/lc/...", yearBefore);
+//        return fileSystem.getFileStatus(new Path(lcFilePath));
+        return fileSystem.getFileStatus(path);
     }
 
     private FileStatus[] getOutputFileStatuses(HdfsFileSystemService hdfsInventoryService,
