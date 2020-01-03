@@ -90,7 +90,7 @@ public class ModisGridReducer extends AbstractGridReducer {
     protected void cleanup(Context context) throws IOException, InterruptedException {
         super.cleanup(context);
 
-        createQuicklook(context, new File("./" + ncFilename));
+        createQuicklook(context, new File("./" + outputFilename));
     }
 
     private static void createQuicklook(Context context, File fileLocation) throws IOException {

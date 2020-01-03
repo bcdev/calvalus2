@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.hadoop.RasterStackWritable;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -59,7 +60,7 @@ public class FirePixelMapper extends Mapper<NullWritable, NullWritable, LongWrit
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        int numRowsGlobal = conf.getInt("numRowsGlobal", 64800);
+        int numRowsGlobal = HadoopBinManager.getBinningConfig(conf).getNumRows();
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
 
         LOG.info(String.format("Input split: %s", fileSplit.toString()));

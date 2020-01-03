@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.hadoop.RasterStackWritable;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.utils.GeometryUtils;
@@ -9,12 +10,14 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.snap.binning.support.CrsGrid;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -34,13 +37,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.bc.calvalus.processing.fire.LcRemapping.isInBurnableLcClass;
-import static com.bc.calvalus.processing.fire.LcRemapping.remap;
 
 public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable, NullWritable, NullWritable> {
 
@@ -67,7 +68,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     void setupInternal(Configuration conf) throws IOException, FactoryException, TransformException, InvalidRangeException {
         // read parameters
         String dateRanges = conf.get("calvalus.input.dateRanges");
-        String lcMapPath = conf.get("calvalus.aux.lcMapPath");
+        String lcMap = conf.get("calvalus.aux.lcMapPath");
         String regionWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         String regionName = conf.get("calvalus.input.regionName");
         String version = conf.get("calvalus.output.version", "v5.1");
@@ -86,7 +87,15 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         LOG.info(String.format("FirePixelReducer setup %s %s %d %s",
                                timeCoverageStart, regionName, numRowsGlobal, continentalRectangle));
         // read LC Map
-        lcProduct = ProductIO.readProduct(lcMapPath);
+        Path lcMapPath = new Path(lcMap);
+        File lcProductFile =
+                        (! (lcMapPath.getFileSystem(conf) instanceof LocalFileSystem)) ?
+                                CalvalusProductIO.copyFileToLocal(lcMapPath, conf) :
+                                lcMapPath.toString().startsWith("file:") ?
+                                        new File(lcMapPath.toString().substring(5)) :
+                                        new File(lcMapPath.toString());
+        System.setProperty("snap.dataio.netcdf.metadataElementLimit", "0");
+        lcProduct = ProductIO.readProduct(lcProductFile);
         LOG.info(String.format("LC Map read from %s", lcMapPath));
         // write band info and metadata to output
         prepareTargetProduct(regionName, timeCoverageStart, timeCoverageEnd, year, month, version);
@@ -111,21 +120,34 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         // force unburnable pixels to -2
         // suppress LC information of pixels not burned
         for (int i = 0; i < baData.length; i++) {
-            int remappedLcValue = LcRemapping.remap(lcData[i]);
             // not burnable: force to -2, delete lc and cl
-            if (!LcRemapping.isInBurnableLcClass(remappedLcValue)) {
+            if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[i]))) {
                 baData[i] = -2;
-                lcData[i] = 0;
                 clData[i] = 0;
-            }
-            // probably not observed (-1): delete lc, set cl to 1
-            else if (baData[i] < 0) {
                 lcData[i] = 0;
-                clData[i] = 1;
             }
-            // not burned (0): delete lc
+            // should be covered by "not burnable"
+            else if (baData[i] == -32767) {
+                baData[i] = -2;
+                clData[i] = 0;
+                lcData[i] = 0;
+            }
+            // probably not observed (-1): delete lc, set cl to 0 (was: 1)
+            else if (baData[i] < 0) {
+                //clData[i] = 1;
+                clData[i] = 0;
+                lcData[i] = 0;
+            }
+            // not burned (0): delete lc, make cl consistent with observed
             else if (baData[i] == 0) {
                 lcData[i] = 0;
+                if (clData[i] == 0) {
+                    clData[i] = 1;
+                }
+            }
+            // make cl consistent with burned observed pixel
+            else if (clData[i] == 0) {
+                clData[i] = 1;
             }
             // burned (>=1): keep lc and cl
         }
@@ -152,9 +174,9 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         if (!fs.exists(path)) {
             FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-            LOG.info(String.format("output file %s copied to %s", outputFilename, outputDir));
+            LOG.info(String.format("output file %s archived in %s", outputFilename, outputDir));
         } else {
-            LOG.warning(String.format("output file %s not copied to %s, file exists", outputFilename, outputDir));
+            LOG.warning(String.format("output file %s not archived in %s, file exists", outputFilename, outputDir));
         }
     }
 
@@ -183,6 +205,10 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
 
         writeTime(outputFile, timeCoverageStart);
         writeTimeBnds(outputFile, timeCoverageStart, timeCoverageEnd);
+
+        prepareJdLayer("JD", (short)-2, outputFile);
+        prepareByteLayer("CL", (byte)0, outputFile);
+        prepareUByteLayer("LC", (byte)0, outputFile);
     }
 
     protected void writeShortChunk(int x, int y, NetcdfFileWriter ncFile, String varName, short[] data, int width, int height) throws IOException, InvalidRangeException {
@@ -208,6 +234,52 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         Array values = Array.factory(DataType.UBYTE, new int[]{1, height, width}, data);
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
+
+    private void prepareJdLayer(String varName, short fillValue, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Band lcBand = lcProduct.getBand("lccs_class");
+        short[] data = new short[1200*1200];
+        byte[] lcData = new byte[1200*1200];
+        for (int y=0; y<continentalRectangle.height; y+=1200) {
+            int h=Math.min(continentalRectangle.height-y, 1200);
+            for (int x=0; x<continentalRectangle.width; x+=1200) {
+                int w=Math.min(continentalRectangle.width-x, 1200);
+                Arrays.fill(data, fillValue);
+                // TODO: this only works as long as the resolution of BA and LC is the same. Fine for OLCI.
+                lcBand.readRasterData(continentalRectangle.x+x, continentalRectangle.y+y, w, h, new ProductData.Byte(lcData));
+                for (int i=0; i<h*w; ++i) {
+                    if (LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[i]))) {
+                        data[i] = -1;
+                    }
+                }
+                writeShortChunk(x, y, ncFile, varName, data, w, h);
+            }
+        }
+    }
+
+    private void prepareByteLayer(String varName, byte fillValue, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        byte[] data = new byte[1200*1200];
+        Arrays.fill(data, fillValue);
+        for (int y=0; y<continentalRectangle.height; y+=1200) {
+            int h=Math.min(continentalRectangle.height-y, 1200);
+            for (int x=0; x<continentalRectangle.width; x+=1200) {
+                int w=Math.min(continentalRectangle.width-x, 1200);
+                writeByteChunk(x, y, ncFile, varName, data, w, h);
+            }
+        }
+    }
+
+    private void prepareUByteLayer(String varName, byte fillValue, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        byte[] data = new byte[1200*1200];
+        Arrays.fill(data, fillValue);
+        for (int y=0; y<continentalRectangle.height; y+=1200) {
+            int h=Math.min(continentalRectangle.height-y, 1200);
+            for (int x=0; x<continentalRectangle.width; x+=1200) {
+                int w=Math.min(continentalRectangle.width-x, 1200);
+                writeUByteChunk(x, y, ncFile, varName, data, w, h);
+            }
+        }
+    }
+
 
 //    protected void writeUByteChunk(int x, int y, NetcdfFileWriter outputFile, String varName, byte[] data, int width, int height) throws IOException, InvalidRangeException {
 //        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d into variable %s", x, y, width, height, varName));

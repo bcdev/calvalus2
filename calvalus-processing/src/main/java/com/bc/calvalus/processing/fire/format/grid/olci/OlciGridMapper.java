@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.fire.format.grid.olci;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
@@ -24,7 +25,7 @@ import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
@@ -35,6 +36,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Runs the fire formatting grid mapper for OLCI.
@@ -53,32 +57,35 @@ public class OlciGridMapper extends AbstractGridMapper {
 
         System.setProperty("snap.dataio.netcdf.metadataElementLimit", "0");
 
-        int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
-        int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
+        FileSplit fileSplit = (FileSplit) context.getInputSplit();
+        Path compositesPath = new Path(fileSplit.getPath().getParent(), fileSplit.getPath().getName().replace("outputs", "composites"));
+        Path lcMapPath = new Path(context.getConfiguration().get("calvalus.aux.lcMapPath"));
 
-        CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
-        if (inputSplit.getPaths().length != 3) {
-            throw new IllegalStateException("3 input paths needed: classification, fraction of observed area, LandCover");
-        }
-        Path[] paths = inputSplit.getPaths();
-        LOG.info("paths=" + Arrays.toString(paths));
+        LOG.info("Input split             : " + fileSplit);
+        LOG.info("Corresponding composites: " + compositesPath);
+        LOG.info("Previous year's LC Map  : " + lcMapPath);
 
+        File outputTarFile = CalvalusProductIO.copyFileToLocal(fileSplit.getPath(), context.getConfiguration());
+        File foaTarFile = CalvalusProductIO.copyFileToLocal(compositesPath, context.getConfiguration());
+        File lcProductFile =
+                (! (lcMapPath.getFileSystem(context.getConfiguration()) instanceof LocalFileSystem)) ?
+                        CalvalusProductIO.copyFileToLocal(lcMapPath, context.getConfiguration()) :
+                        lcMapPath.toString().startsWith("file:") ?
+                                new File(lcMapPath.toString().substring(5)) :
+                                new File(lcMapPath.toString());
 
-        File outputTarFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-        File foaTarFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-        File lcProductFile = (! (paths[2].getFileSystem(context.getConfiguration()) instanceof LocalFileSystem)) ? CalvalusProductIO.copyFileToLocal(paths[2], context.getConfiguration()) : paths[2].getName().startsWith("file:") ? new File(paths[2].getName().substring(5)) : new File(paths[2].getName());
-
-        File[] output = CommonUtils.untar(outputTarFile, "(.*Classification.*|.*Uncertainty.*)");
-        File classificationFile = output[0];
-        File uncertaintyFile = output[1];
-        File foa = CommonUtils.untar(foaTarFile, ".*FractionOfObservedArea.*")[0];
+        File[] outputsFiles = CommonUtils.untar(outputTarFile, "(.*Classification.*|.*Uncertainty.*)");
+        File classificationFile = outputsFiles[0];
+        File uncertaintyFile = outputsFiles[1];
+        File foaFile = CommonUtils.untar(foaTarFile, ".*FractionOfObservedArea.*")[0];
 
         Product baProduct = ProductIO.readProduct(classificationFile);
-        Product foaProduct = ProductIO.readProduct(foa);
         Product uncertaintyProduct = ProductIO.readProduct(uncertaintyFile);
+        Product foaProduct = ProductIO.readProduct(foaFile);
         Product lcGlobal = ProductIO.readProduct(lcProductFile);
+
         // ba-outputs-h15v07-2019-08.tar.gz
-        String tile = outputTarFile.getName().substring("ba-outputs-".length(), "ba-outputs-h15v07".length());
+        String tile = fileSplit.getPath().getName().substring("ba-outputs-".length(), "ba-outputs-h15v07".length());
         int h = new Integer(tile.substring(1, 3));
         int v = new Integer(tile.substring(4, 6));
         int x0 = h * 3600;
@@ -88,20 +95,27 @@ public class OlciGridMapper extends AbstractGridMapper {
         parameters.put("region", new Rectangle(x0, y0, 3600, 3600));
         Product lcProduct = GPF.createProduct("Subset", parameters, lcGlobal);
 
+        LOG.info(String.format("LC Map subset for tile %s created", tile));
+
+        LOG.info(String.format("Classification product: %s", baProduct.getName()));
+        LOG.info(String.format("Uncertainty product   : %s", uncertaintyProduct.getName()));
+        LOG.info(String.format("Land cover product    : %s", lcProduct.getName()));
+
+        String dateRanges = context.getConfiguration().get("calvalus.input.dateRanges");
+        Matcher m = Pattern.compile(".*\\[.*(....-..-..).*:.*(....-..-..).*\\].*").matcher(dateRanges);
+        if (! m.matches()) {
+            throw new IllegalArgumentException(dateRanges + " is not a date range");
+        }
+        String timeCoverageStart = m.group(1);
+        int year = Integer.parseInt(timeCoverageStart.substring(0,4));
+        int month = Integer.parseInt(timeCoverageStart.substring(5,7));
 
         setDataSource(new OlciDataSource(baProduct, foaProduct, uncertaintyProduct, lcProduct));
-
         GridCells gridCells = computeGridCells(year, month, context);
-
         context.progress();
+        context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCells);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCells);
-    }
-
-    static String getTile(String path) {
-        // sample: path.toString() = hdfs://calvalus/calvalus/.../lc-2016-h31v10.nc
-        int startIndex = path.lastIndexOf("/");
-        return path.substring(startIndex + 4+5, startIndex + 10+5);
+        LOG.info(String.format("Grid cells for %d-%02d-%s streamed", year, month, tile));
     }
 
     @Override
