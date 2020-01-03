@@ -451,6 +451,37 @@ public class PatternBasedInputFormat extends InputFormat {
         };
     }
 
+    private RemoteIterator<LocatedFileStatus> mergedIterator(
+                List<RemoteIterator<LocatedFileStatus>> iterators) throws IOException {
+        return new RemoteIterator<LocatedFileStatus>() {
+            int current = 0;
+
+            LocatedFileStatus next = getNext();
+
+            @Override
+            public boolean hasNext() throws IOException {
+                return next != null;
+            }
+
+            @Override
+            public LocatedFileStatus next() throws IOException {
+                LocatedFileStatus current = next;
+                next = getNext();
+                return current;
+            }
+
+            private LocatedFileStatus getNext() throws IOException {
+                while (current < iterators.size()) {
+                    if (iterators.get(current).hasNext()) {
+                        return iterators.get(current).next();
+                    }
+                    ++current;
+                }
+                return null;
+            }
+        };
+    }
+
     private String stripExtension(String filename) {
         int index = filename.indexOf(".");
         if (index >= 0) {
@@ -545,7 +576,19 @@ public class PatternBasedInputFormat extends InputFormat {
                 return !existingPathes.contains(dbPath);
             };
         }
-        return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter, withDirs);
+        if (inputPatterns.size() <= 1) {
+            return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter, withDirs);
+        } else {
+            // It was a bad idea to search for the common prefix. This may comprise much too many paths to descend
+            List<RemoteIterator<LocatedFileStatus>> iters = new ArrayList<>();
+            List<String> inputPattern = new ArrayList<>(1);
+            for (String p : inputPatterns) {
+                inputPattern.clear();
+                inputPattern.add(p);
+                iters.add(fileSystemService.globFileStatusIterator(inputPattern, conf, extraFilter, withDirs));
+            }
+            return mergedIterator(iters);
+        }
     }
 
     protected List<String> getInputPatterns(String inputPathPatterns, Date minDate, Date maxDate, String regionName) {
