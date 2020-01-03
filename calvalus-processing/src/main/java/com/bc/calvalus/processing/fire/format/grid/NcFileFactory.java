@@ -105,8 +105,8 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_max", "180"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_vertical_min", "0"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_vertical_max", "0"));
-        ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart));
-        ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart.substring(0,4)+timeCoverageStart.substring(5,7)+timeCoverageStart.substring(8,10)+"T000000Z"));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd.substring(0,4)+timeCoverageEnd.substring(5,7)+timeCoverageEnd.substring(8,10)+"T235959Z"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", "P1M"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", "P1M"));
         ncFile.addGroupAttribute(null, new Attribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention"));
