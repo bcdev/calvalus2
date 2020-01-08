@@ -73,7 +73,7 @@
                 <include>org.esa.snap:snap-pconvert</include>
                 <include>org.esa.snap:snap-pgx-reader</include>
                 <include>org.esa.snap:snap-pixel-extraction</include>
-                <include>org.esa.snap:snap-python</include>
+                <!-- <include>org.esa.snap:snap-python</include> -->
                 <include>org.esa.snap:snap-raster</include>
                 <include>org.esa.snap:snap-rtp-codec</include>
                 <include>org.esa.snap:snap-smart-configurator</include>

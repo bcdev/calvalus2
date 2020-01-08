@@ -237,6 +237,21 @@
                         </goals>
                     </execution>
                     <execution>
+                        <id>snap-python</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/snap-python.xml</descriptor>
+                            </descriptors>
+                            <finalName>snap-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                         <id>snap-buildin-bundle</id>
                         <configuration>
                             <descriptors>
