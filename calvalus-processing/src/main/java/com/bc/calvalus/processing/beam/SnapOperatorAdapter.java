@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -132,7 +133,8 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             // transform request into parameter objects
             Map<String, Object> parameterMap;
             try {
-                parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
+                //parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
+                parameterMap = getOperatorParameterMap(source, null, operatorParameters);
                 for (int i=0; i<getInputParameters().length; i+=2) {
                     if ("output".equals(getInputParameters()[i])) {
                         // drop parameter, is used later in SubsetProcessorAdapter
@@ -157,7 +159,6 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }
-        Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
         ParameterBlockConverter parameterBlockConverter;
         if (inputProduct != null) {
             Map<String, Product> sourceProductMap = new HashMap<>();
@@ -167,7 +168,18 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         } else {
             parameterBlockConverter = new ParameterBlockConverter();
         }
-        return parameterBlockConverter.convertXmlToMap(level2Parameters, operatorClass);
+        if (operatorName != null) {
+            Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
+            return parameterBlockConverter.convertXmlToMap(level2Parameters, operatorClass);
+        } else {
+            DomElement dom = parameterBlockConverter.convertXmlToDomElement(level2Parameters);
+            Map<String, Object> parameterMap = new HashMap<String, Object>();
+            for (DomElement childElement : dom.getChildren()) {
+                //CalvalusLogger.getLogger().info("parameter " + childElement.getName() + " with value " + childElement.getValue() + " parsed");
+                parameterMap.put(childElement.getName(), childElement.getValue());
+            }
+            return parameterMap;
+        }
     }
 
     private static Class<? extends Operator> getOperatorClass(String operatorName) {
