@@ -21,7 +21,6 @@ com.bc.calvalus.production.hadoop.L2ProductionType$Spi
 com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
 com.bc.calvalus.production.hadoop.BootstrappingProductionType$Spi
 com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
-com.bc.calvalus.production.hadoop.FireMERISBAProductionType$Spi
 com.bc.calvalus.production.hadoop.FireFormattingProductionType$Spi
 com.bc.calvalus.production.hadoop.FireGridProductionType$Spi
 com.bc.calvalus.production.hadoop.MRProductionType$Spi
