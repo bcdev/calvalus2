@@ -218,8 +218,14 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
                 }
                 if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
-                    String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
-                            BUNDLE_DESCRIPTOR_XML_FILENAME);
+
+                    String bundleLocationPattern;
+                    if (bundleDirName.startsWith("/")) {
+                        bundleLocationPattern = String.format("%s/%s", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    } else {
+                        bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
+                                                              BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    }
                     FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                     List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                     for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
@@ -228,7 +234,12 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     descriptors.addAll(singleUserDescriptors);
                 }
                 if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
-                    String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    String bundleLocationPattern;
+                    if (bundleDirName.startsWith("/")) {
+                        bundleLocationPattern = String.format("%s/%s", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    } else {
+                        bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    }
                     FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                     List<BundleDescriptor> allUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                     String userPathPattern = String.format("/calvalus/home/%s/software", username);
@@ -247,7 +258,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                         descriptors.add(bundleDescriptor);
                     }
                 }
-                if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
+                if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM) && ! bundleDirName.startsWith("/")) {
                     String bundleLocationPattern = String.format("%s/%s/%s", softwareDir, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
                     FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                     List<BundleDescriptor> systemDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
