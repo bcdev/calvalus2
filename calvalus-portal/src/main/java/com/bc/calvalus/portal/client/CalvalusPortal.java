@@ -587,9 +587,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             calvalusConfig = new HashMap<>();
             List<String> queueList = new ArrayList<>();
             userName = config.getUser();
-            if (config.getConfig().containsKey("calvalus.hadoop.mapreduce.job.queuename")) {
-                queueList.add(config.getConfig().get("calvalus.hadoop.mapreduce.job.queuename"));
-            }
             for (String key : config.getConfig().keySet()) {
                 if (key.startsWith("calvalus.portal.")) {
                     calvalusConfig.put(key.substring("calvalus.portal.".length()),
@@ -603,7 +600,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     }
                 }
             }
-            if (queueList.size() > 0) {
+            if (queueList.isEmpty() && config.getConfig().containsKey("calvalus.hadoop.mapreduce.job.queuename")) {
+                queueList.add(config.getConfig().get("calvalus.hadoop.mapreduce.job.queuename"));
+            }
+            if (! queueList.isEmpty()) {
                 queues = queueList.toArray(new String[queueList.size()]);
             }
             maybeInitFrontend();
