@@ -57,7 +57,9 @@ public class GpfUtils {
 
         String tmpDir = System.getProperties().getProperty("java.io.tmpdir");
         Config.instance().preferences().put(SystemUtils.SNAP_CACHE_DIR_PROPERTY_NAME, tmpDir);
-    }
+        Config.instance().preferences().put("plugin.manager.check.interval", "NEVER");
+        Config.instance().preferences().put("snap.versionCheck.interval", "NEVER");
+     }
 
     private static void initSystemProperties(Configuration configuration) {
         for (Map.Entry<String, String> entry : configuration) {
