@@ -236,7 +236,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         for (int i = 0; i < microTileSize * microTileSize; ++i) {
                             final int state = (int) bandDataB[0][i];
                             final int index = index(state);
-                            if (index < 0) {
+                            if (index < 0 || containsNan(bandDataF, numTargetBands, i)) {
                                 continue;
                             }
                             ndviCount[index][i]++;
@@ -336,6 +336,15 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             }
                             if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
                                 LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " ignored, state=" + state);
+                            }
+                            continue;
+                        }
+                        if (containsNan(bandDataF, numTargetBands, i)) {
+                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " ignored, value NaN, state=" + state);
+                            }
+                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " ignored, value NaN, state=" + state);
                             }
                             continue;
                         }
@@ -479,6 +488,15 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         for (Product product : products) {
             product.dispose();
         }
+    }
+
+    private static boolean containsNan(float[][] bandDataF, int numTargetBands, int i) {
+        for (int b = 3; b < numTargetBands; ++b) {
+            if (Float.isNaN(bandDataF[b + 3][i])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Product sdrToSr(Product product) {
