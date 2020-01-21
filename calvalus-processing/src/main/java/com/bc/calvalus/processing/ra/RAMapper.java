@@ -56,6 +56,9 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
 
         final Configuration jobConfig = context.getConfiguration();
         final RAConfig raConfig = RAConfig.get(jobConfig);
+        if (raConfig == null || raConfig.getInternalRegionNames() == null) {
+            throw new IOException("inconsistent region definition, cannot access region names");
+        }
 
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         int numRegions = raConfig.getInternalRegionNames().length;

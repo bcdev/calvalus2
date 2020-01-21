@@ -161,7 +161,9 @@ public class RAConfigForm extends Composite {
         periodsCount.setEnabled(false);
         periodsListBox.setEnabled(false);
         
-        HTML description1 = new HTML("The supported file types are ESRI shapefiles inside a zip.");
+        HTML description1 = new HTML("The supported file types are ESRI shapefiles inside a zip. " +
+                                             "The zip file name must be identical to the shape file name, " +
+                                             "e.g. myregions.shp, myregions.prj, ... packed in myregions.zip without subdirectories.");
         
         managedFiles = new ManagedFiles(portalContext.getBackendService(),
                                         regionSourcesList,
