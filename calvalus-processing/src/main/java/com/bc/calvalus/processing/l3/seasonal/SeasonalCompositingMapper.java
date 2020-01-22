@@ -194,6 +194,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         float[][] ndviSum = null;
         float[][] ndviSqrSum = null;
         int[][] ndviCount = null;
+        int[][] statusCount = null;
         float[][] ndxiMax = null;
         float[] ndviMean = null;
         float[] ndviSdev = null;
@@ -201,6 +202,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             ndviSum = new float[NUM_INDEXES][microTileSize*microTileSize];
             ndviSqrSum = new float[NUM_INDEXES][microTileSize*microTileSize];
             ndviCount = new int[NUM_INDEXES][microTileSize*microTileSize];
+            statusCount = new int[NUM_INDEXES][microTileSize * microTileSize];
             ndxiMax = new float[3][microTileSize*microTileSize];
             ndviMean = new float[microTileSize*microTileSize];
             ndviSdev = new float[microTileSize*microTileSize];
@@ -218,6 +220,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         Arrays.fill(ndviSum[j], 0.0f);
                         Arrays.fill(ndviSqrSum[j], 0.0f);
                         Arrays.fill(ndviCount[j], 0);
+                        Arrays.fill(statusCount[j], 0);
                     }
                     Arrays.fill(ndxiMax[0], -1.0f);
                     Arrays.fill(ndxiMax[1], -1.0f);
@@ -236,7 +239,11 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         for (int i = 0; i < microTileSize * microTileSize; ++i) {
                             final int state = (int) bandDataB[0][i];
                             final int index = index(state);
-                            if (index < 0 || containsNan(bandDataF, numTargetBands, i)) {
+                            if (index < 0) {
+                                continue;
+                            }
+                            statusCount[index][i]++;
+                            if (containsNan(bandDataF, numTargetBands, i)) {
                                 continue;
                             }
                             ndviCount[index][i]++;
@@ -286,7 +293,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                     // we have counted the different stati over time, and summed up ndvi per status,
                     // ... determine majority/priority
                     for (int i = 0; i < microTileSize * microTileSize; ++i) {
-                        int state = majorityPriorityStatusOf(ndviCount, i);
+                        int state = majorityPriorityStatusOf(statusCount, i);
                         int index = index(state);
                         if (index < 0) {
                             if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
@@ -451,7 +458,11 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                     for (int i = 0; i < microTileSize * microTileSize; ++i) {
                         final float stateCount = accu[1][i];
                         for (int b = 3; b < numTargetBands; ++b) {
-                            accu[b][i] /= stateCount;
+                            if (stateCount > 0) {
+                                accu[b][i] /= stateCount;
+                            } else {
+                                accu[b][i] = Float.NaN;
+                            }
                             if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
                                 LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
                             }
