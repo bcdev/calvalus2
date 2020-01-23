@@ -36,7 +36,6 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,12 +70,15 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     public static final int DEBUG_X2 = 6700 % (64800/18);
     public static final int DEBUG_Y2 = 5500 % (64800/18);
     public static final boolean DEBUG = false;
+    
     private static final float EPS = 1.0E-6f;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        // determine path of some input, weeks
-        // /calvalus/eodata/MERIS_SR_FR/v1.0/2010/2010-01-01/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
+
+        CalvalusLogger.restoreCalvalusLogFormatter();
+
+        // parse input path /calvalus/eodata/MERIS_SR_FR/v1.0/2010/2010-01-01/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
         final Path someTilePath = ((FileSplit) context.getInputSplit()).getPath();
         final Matcher matcher = SR_FILENAME_PATTERN.matcher(someTilePath.getName());
         if (! matcher.matches()) {
@@ -85,11 +87,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         final String sensorAndResolution = matcher.group(1);
         final int tileColumn = Integer.parseInt(matcher.group(2), 10);
         final int tileRow = Integer.parseInt(matcher.group(3), 10);
-        //final String version = matcher.group(4);
         final boolean isMsi = sensorAndResolution.startsWith("MSI");
         final boolean isOlci = sensorAndResolution.startsWith("OLCI");
 
+        // read configuration
         final Configuration conf = context.getConfiguration();
+        final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
+        final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
         final int mosaicHeight;
         final boolean withMaxNdvi;
         final boolean withBestPixels;
@@ -102,16 +106,130 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
+
+        final FileSystem fs = someTilePath.getFileSystem(conf);
+        final Path srRootDir = isMsi ? someTilePath.getParent().getParent() : someTilePath.getParent().getParent().getParent();  // TODO check for other sensors
+
+        // sensor-dependent resolution parameters
         final int numTileRows = isMsi ? 180 : isOlci ? 18 : 36;
         final int numMicroTiles = isMsi ? 5 : isOlci ? 2 : 1;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72 = 13500
         final int microTileSize = tileSize / numMicroTiles;
+        final int daysPerWeek = isMsi ? 10 : isOlci ? 1 : 7;
 
-        final Path srRootDir = isMsi ? someTilePath.getParent().getParent() : someTilePath.getParent().getParent().getParent();  // TODO check for other sensors
-        final FileSystem fs = someTilePath.getFileSystem(conf);
+        // determine target bands and indexes
+        String[] sensorBands = sensorBandsOf(sensorAndResolution);
+        String[] targetBands = targetBandsOf(conf, sensorBands);
+        int[] targetBandIndex = new int[17];  // desired band for the seasonal composite, as index to sensorBands
+        int[] sourceBandIndex = new int[20];  // corresponding required band of the L3 product, as index to product
+        int numTargetBands = 3;
+        int numSourceBands = 6;
+        for (int j = 0; j < 3; ++j) {
+            targetBandIndex[j] = j;
+        }
+        for (int i = 0; i < 6; ++i) {
+            sourceBandIndex[i] = i;
+        }
+        for (int j = 3; j < sensorBands.length && numTargetBands < targetBands.length; ++j) {
+            if (sensorBands[j].equals(targetBands[numTargetBands])) {  // sequence is important
+                targetBandIndex[numTargetBands++] = j;
+                sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
+            }
+        }
+        final int b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : 6 - 1 + 4; // TODO only valid for S2 and PROBA
+        final int b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : 6 - 1 + 3; // TODO only valid for S2 and PROBA
+        final int ndviBandIndex = numSourceBands - 1;
 
-        final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
-        final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
+        // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
+        final List<MultiLevelImage[]> bandImages = new ArrayList<>();
+        final List<Product> products = new ArrayList<>();
+        findAndOpenInputProducts(sensorAndResolution, tileColumn, tileRow, start, stop, daysPerWeek,
+                                 srRootDir, conf, fs, isMsi, isOlci, numSourceBands, sourceBandIndex,
+                                 products, bandImages);
+
+        // pre-allocate arrays for band values per data type, for best pixels aggregation, and for transfer to reducer
+        final short[][] bandDataB = new short[numSourceBands][];
+        final short[][] bandDataS = new short[numSourceBands][];
+        final float[][] bandDataF = new float[numSourceBands][];
+        final float[] ndxiSum;
+        final float[] ndxiSqrSum;
+        final int[] ndxiCount;
+        final int[][] statusCount;
+        final float[] ndxiMean;
+        final float[] ndxiSDev;
+        if (withBestPixels) {
+            ndxiSum = new float[microTileSize*microTileSize];
+            ndxiSqrSum = new float[microTileSize*microTileSize];
+            ndxiCount = new int[microTileSize*microTileSize];
+            statusCount = new int[NUM_INDEXES][microTileSize*microTileSize];
+            ndxiMean = new float[microTileSize*microTileSize];
+            ndxiSDev = new float[microTileSize*microTileSize];
+        } else {
+            ndxiSum = null;
+            ndxiSqrSum = null;
+            ndxiCount = null;
+            statusCount = null;
+            ndxiMean = null;
+            ndxiSDev = null;
+        }
+        float[][] accu = new float[numTargetBands][microTileSize * microTileSize];
+
+        // micro tile loop
+        for (int microTileY = 0; microTileY < numMicroTiles; ++microTileY) {
+            for (int microTileX = 0; microTileX < numMicroTiles; ++microTileX) {
+                final Rectangle microTileArea = new Rectangle(microTileX * microTileSize, microTileY * microTileSize, microTileSize, microTileSize);
+                clearAccu(numTargetBands, accu);
+                if (withBestPixels) {
+                    clearNdxi(ndxiSum, ndxiSqrSum, ndxiCount, statusCount);
+                    determineMajorityStatus(bandImages, microTileArea, microTileSize, bandDataB, statusCount, accu);
+                    determineNdxiMean(bandImages, microTileArea, microTileSize,
+                                      bandDataB, bandDataF, b3BandIndex, b11BandIndex, ndviBandIndex,
+                                      ndxiSum, ndxiSqrSum, ndxiCount, ndxiMean, ndxiSDev,
+                                      accu);
+                    aggregateBestPixels(bandImages, numSourceBands, numTargetBands, b3BandIndex, b11BandIndex, ndviBandIndex,
+                                        microTileArea, microTileSize, bandDataB, bandDataS, bandDataF, ndxiMean, ndxiSDev, accu);
+                    divideByCount(microTileSize, numTargetBands, accu);
+                } else if (withMaxNdvi) {
+                    aggregateByMaxNdvi(bandImages, numSourceBands, numTargetBands, b3BandIndex, b11BandIndex, ndviBandIndex,
+                                       microTileArea, microTileSize, bandDataB, bandDataS, bandDataF, accu);
+                } else {
+                    aggregateByStatusRank(bandImages, numSourceBands, numTargetBands,
+                                          b3BandIndex, b11BandIndex, ndviBandIndex,
+                                          microTileArea, microTileSize, bandDataB, bandDataS, bandDataF,
+                                          accu);
+                    divideByCount(microTileSize, numTargetBands, accu);
+                }
+                // statistics for logging
+                final int[] counts = new int[16];
+                for (float state : accu[0]) {
+                    ++counts[rank(state)];
+                }
+                LOG.info((counts[14]+counts[10]+counts[9]+counts[8]) + " land, " + (counts[15]) + " water, " + counts[13] + " snow, " + counts[5] + " shadow, " + (counts[1]+counts[2]) + " cloud");
+                if (counts[14]+counts[10]+counts[9]+counts[8] == 0 && counts[15] == 0 && counts[13] == 0 && counts[5] == 0 && counts[1]+counts[2] == 0) {
+                    continue;
+                }
+                // stream results, one per band
+                for (int b = 0; b < numTargetBands; ++b) {
+                    // compose key from band and tile
+                    final int bandAndTile = ((sensorBands.length - 3) << 27) + (targetBandIndex[b] << 22) + ((tileRow * numMicroTiles + microTileY) << 11) + (tileColumn * numMicroTiles + microTileX);
+                    LOG.info("streaming band " + targetBandIndex[b] + " tile row " + (tileRow * numMicroTiles + microTileY) + " tile column " + (tileColumn * numMicroTiles + microTileX) + " key " + bandAndTile);
+                    // write tile
+                    final IntWritable key = new IntWritable(bandAndTile);
+                    final BandTileWritable value = new BandTileWritable(accu[b]);
+                    context.write(key, value);
+                }
+            }
+        }
+        for (Product product : products) {
+            product.dispose();
+        }
+    }
+
+    private void findAndOpenInputProducts(String sensorAndResolution, int tileColumn, int tileRow,
+                                          Date start, Date stop, int daysPerWeek,
+                                          Path srRootDir, Configuration conf, FileSystem fs,
+                                          boolean isMsi, boolean isOlci, int numSourceBands, int[] sourceBandIndex,
+                                          List<Product> products, List<MultiLevelImage[]> bandImages) throws IOException {
         final Calendar startCalendar = DateUtils.createCalendar();
         final Calendar stopCalendar = DateUtils.createCalendar();
         startCalendar.setTime(start);
@@ -121,34 +239,6 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             stopCalendar.add(Calendar.YEAR, 1);
         }
 
-        // determine target bands and indexes
-        String[] sensorBands = sensorBandsOf(sensorAndResolution);
-        String[] targetBands = targetBandsOf(conf, sensorBands);
-        int[] targetBandIndex = new int[17];  // desired band for the seasonal composite, as index to sensorBands
-        int[] sourceBandIndex = new int[20];  // corresponding required band of the L3 product, as index to product
-        int numTargetBands = 3;
-        int numSourceBands = 6;
-            for (int j = 0; j < 3; ++j) {
-                targetBandIndex[j] = j;
-            }
-            for (int i = 0; i < 6; ++i) {
-                sourceBandIndex[i] = i;
-            }
-            for (int j = 3; j < sensorBands.length && numTargetBands < targetBands.length; ++j) {
-                if (sensorBands[j].equals(targetBands[numTargetBands])) {  // sequence is important
-                    targetBandIndex[numTargetBands++] = j;
-                    sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
-                }
-            }
-        final int b1BandIndex = isMsi ? 6 - 1 + 1 : isOlci ? 6-1+2 : 6 - 1 + 1;   // TODO only valid for S2 and PROBA
-        final int b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : 6 - 1 + 4; // TODO only valid for S2 and PROBA
-        final int b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : 6 - 1 + 3; // TODO only valid for S2 and PROBA
-        final int ndviBandIndex = numSourceBands - 1;
-
-        // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
-        final List<MultiLevelImage[]> bandImages = new ArrayList<>();
-        final List<Product> products = new ArrayList<>();
-        final int daysPerWeek = isMsi ? 10 : isOlci ? 1 : 7;
         // loop over weeks
         for (Date week = start; ! stop.before(week); week = nextWeek(week, startCalendar, stopCalendar, daysPerWeek)) {
 
@@ -171,7 +261,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             LOG.info("aggregating period " + weekFileName);
 
             Product product = readProduct(conf, fs, path);
-            if (weekFileName.startsWith("OLCI")) {
+            if (isOlci) {
                 product = sdrToSr(product);
             }
             final MultiLevelImage[] bandImage = new MultiLevelImage[numSourceBands];
@@ -184,321 +274,262 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             bandImages.add(bandImage);
             products.add(product);
         }
+    }
 
-        float[][] accu = new float[numTargetBands][microTileSize * microTileSize];
-        final short[][] bandDataB = new short[numSourceBands][];
-        final short[][] bandDataS = new short[numSourceBands][];
-        final float[][] bandDataF = new float[numSourceBands][];
-
-        // prepare arrays for and in case of ndvi/mndvi for best pixels aggregation
-        float[][] ndviSum = null;
-        float[][] ndviSqrSum = null;
-        int[][] ndviCount = null;
-        int[][] statusCount = null;
-        float[][] ndxiMax = null;
-        float[] ndviMean = null;
-        float[] ndviSdev = null;
-        if (withBestPixels) {
-            ndviSum = new float[NUM_INDEXES][microTileSize*microTileSize];
-            ndviSqrSum = new float[NUM_INDEXES][microTileSize*microTileSize];
-            ndviCount = new int[NUM_INDEXES][microTileSize*microTileSize];
-            statusCount = new int[NUM_INDEXES][microTileSize * microTileSize];
-            ndxiMax = new float[3][microTileSize*microTileSize];
-            ndviMean = new float[microTileSize*microTileSize];
-            ndviSdev = new float[microTileSize*microTileSize];
-        }
-
-        for (int microTileY = 0; microTileY < numMicroTiles; ++microTileY) {
-            for (int microTileX = 0; microTileX < numMicroTiles; ++microTileX) {
-                final Rectangle microTileArea = new Rectangle(microTileX * microTileSize, microTileY * microTileSize, microTileSize, microTileSize);
-                for (int b = 0; b < numTargetBands; b++) {
-                    Arrays.fill(accu[b], 0.0f);
-                }
-                // count status and average ndvi (or ndwi) for each status separately
-                if (withBestPixels) {
-                    for (int j=0; j<NUM_INDEXES; ++j) {
-                        Arrays.fill(ndviSum[j], 0.0f);
-                        Arrays.fill(ndviSqrSum[j], 0.0f);
-                        Arrays.fill(ndviCount[j], 0);
-                        Arrays.fill(statusCount[j], 0);
-                    }
-                    Arrays.fill(ndxiMax[0], -1.0f);
-                    Arrays.fill(ndxiMax[1], -1.0f);
-                    Arrays.fill(ndxiMax[2], 1.0f);
-                    for (MultiLevelImage[] bandImage : bandImages) {
-                        for (int b = 0; b < numSourceBands; b++) {
-                            if (b == 0) {
-                                bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
-                            } else if (b < 6) {
-                                bandDataS[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
-                            } else {
-                                bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
-                            }
-                        }
-                        // pixel loop
-                        for (int i = 0; i < microTileSize * microTileSize; ++i) {
-                            final int state = (int) bandDataB[0][i];
-                            final int index = index(state);
-                            if (index < 0) {
-                                continue;
-                            }
-                            statusCount[index][i]++;
-                            if (containsNan(bandDataF, numTargetBands, i)) {
-                                continue;
-                            }
-                            ndviCount[index][i]++;
-                            switch (state) {
-                                case 1:
-                                case 15:
-                                case 12:
-                                case 11:
-                                case 5:
-                                    float ndvi = bandDataF[ndviBandIndex][i];
-                                    ndviSum[index][i] += ndvi;
-                                    ndviSqrSum[index][i] += ndvi * ndvi;
-                                    if (ndvi > ndxiMax[0][i]) {
-                                        ndxiMax[0][i] = ndvi;
-                                    }
-                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                        LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndvi=" + ndvi);
-                                    }
-                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                        LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndvi=" + ndvi);
-                                    }
-                                    break;
-                                case 2:
-                                case 3:  // TODO TBC whether to use water index for snow as well
-                                    float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
-                                    ndviSum[index][i] += ndwi;
-                                    ndviSqrSum[index][i] += ndwi * ndwi;
-                                    if (ndwi > ndxiMax[1][i]) {
-                                        ndxiMax[1][i] = ndwi;
-                                    }
-                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                        LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndwi=" + ndwi);
-                                    }
-                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                        LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndwi=" + ndwi);
-                                    }
-                                    break;
-                                case 4:
-                                case 14:
-                                    float b1Value = bandDataF[b1BandIndex][i];
-                                    if (b1Value < ndxiMax[2][i]) {
-                                        ndxiMax[2][i] = b1Value;
-                                    }
-                            }
-                        }
-                    }
-                    // we have counted the different stati over time, and summed up ndvi per status,
-                    // ... determine majority/priority
-                    for (int i = 0; i < microTileSize * microTileSize; ++i) {
-                        int state = majorityPriorityStatusOf(statusCount, i);
-                        int index = index(state);
-                        if (index < 0) {
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " ignored for ndvi, state=" + state + " index=" + index);
-                            }
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " ignored for ndvi, state=" + state + " index=" + index);
-                            }
-                            continue;
-                        }
-                        accu[0][i] = state;
-                        if (index < 7) {
-                            ndviMean[i] = ndviSum[index][i] / ndviCount[index][i];
-                            ndviSdev[i] = (float) Math.sqrt(ndviSqrSum[index][i] / ndviCount[index][i] - ndviMean[i] * ndviMean[i]);
-                        } else {  // cloud or temporal cloud
-                            ndviMean[i] = Float.NaN;
-                            ndviSdev[i] = Float.NaN;
-                        }
-                        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                            LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " majostate=" + state + " majoindex=" + index + " mean=" + ndviMean[i] + " sigma=" + ndviSdev[i]);
-                        }
-                        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                            LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " majostate=" + state + " majoindex=" + index + " mean=" + ndviMean[i] + " sigma=" + ndviSdev[i]);
-                        }
-                    }
-                    // we have determined the majority/priority status and ndvi mean and sigma for it
-                }
-                for (MultiLevelImage[] bandImage : bandImages) {
-                    for (int b = 0; b < numSourceBands; b++) {
-                        if (b == 0) {
-                            bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
-                        } else if (b < 6) {
-                            bandDataS[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
-                        } else {
-                            bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
-                        }
-                    }
-
-                    // pixel loop
-                    for (int i = 0; i < microTileSize * microTileSize; ++i) {
-
-                        // aggregate pixel-wise using aggregation rules
-                        final int state = (int) bandDataB[0][i];
-                        if (state <= 0) {
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " ignored, state=" + state);
-                            }
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " ignored, state=" + state);
-                            }
-                            continue;
-                        }
-                        if (containsNan(bandDataF, numTargetBands, i)) {
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " ignored, value NaN, state=" + state);
-                            }
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " ignored, value NaN, state=" + state);
-                            }
-                            continue;
-                        }
-                        if (withBestPixels) {
-                            accu[2][i] += count(bandDataS, i);
-                            if (state == accu[0][i]) {
-                                switch (state) {
-                                    case 1:
-                                    case 15:
-                                    case 12:
-                                    case 11:
-                                    case 5:
-                                        // if (bandDataF[ndviBandIndex][i] >= ndxiMax[0][i] - ndviSdev[i] - EPS) {
-                                        if (bandDataF[ndviBandIndex][i] >= ndviMean[i] - ndviSdev[i] - EPS && bandDataF[ndviBandIndex][i] <= ndviMean[i] + ndviSdev[i] + EPS) {
-                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
-                                            accu[1][i] += stateCount;
-                                            for (int b = 3; b < numTargetBands; ++b) {
-                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
-                                            }
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " count=" + stateCount + " ndvi=" + bandDataF[ndviBandIndex][i] + " high. aggregated");
-                                            }
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " count=" + stateCount + " ndvi=" + bandDataF[ndviBandIndex][i] + " high. aggregated");
-                                            }
-                                        } else {
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " ndvi=" + bandDataF[ndviBandIndex][i] + " low or high. skipped");
-                                            }
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " ndvi=" + bandDataF[ndviBandIndex][i] + " low or high. skipped");
-                                            }
-                                        }
-                                        break;
-                                    case 2:
-                                    case 3:  // TODO TBC whether to use water index for snow as well
-                                        float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
-                                        //if (ndwi >= ndxiMax[1][i] - ndviSdev[i] - EPS) {
-                                        if (ndwi >= ndviMean[i] - ndviSdev[i] - EPS && ndwi <= ndviMean[i] + ndviSdev[i] + EPS) {
-                                            final int stateCount = count(state, bandDataS, i);
-                                            accu[1][i] += stateCount;
-                                            for (int b = 3; b < numTargetBands; ++b) {
-                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
-                                            }
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " count=" + stateCount + " ndwi=" + ndwi + " high. aggregated");
-                                            }
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " count=" + stateCount + " ndwi=" + ndwi + " high. aggregated");
-                                            }
-                                        } else {
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " ndwi=" + ndwi + " low.or high skipped");
-                                            }
-                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " ndwi=" + ndwi + " low or high. skipped");
-                                            }
-                                        }
-                                        break;
-                                    case 4:
-                                    case 14:
-                                        final int stateCount = count(state, bandDataS, i);
-                                        accu[1][i] += stateCount;
-                                        break;
-                                }
-                            }
-                        } else if (state == accu[0][i]) {
-                            // same state as before, aggregate ...
-                            final int stateCount = count(state, bandDataS, i);
-                            accu[1][i] += stateCount;
-                            accu[2][i] += count(bandDataS, i);
-                            if (withMaxNdvi) {
-                                if (bandDataF[ndviBandIndex][i] > accu[numTargetBands - 1][i]) {
-                                    for (int b = 3; b < numTargetBands; ++b) {
-                                        accu[b][i] = bandDataF[b + 3][i];
-                                    }
-                                }
-                            } else {
-                                for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][i] += stateCount * bandDataF[b + 3][i];
-                                }
-                            }
-                        } else if (rank(state) > rank(accu[0][i])) {
-                            // better state, e.g. land instead of snow: restart counting ...
-                            final int stateCount = count(state, bandDataS, i);
-                            accu[0][i] = state;
-                            accu[1][i] = stateCount;
-                            accu[2][i] = count(bandDataS, i);
-                            if (withMaxNdvi) {
-                                for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][i] = bandDataF[b + 3][i];
-                                }
-                            } else {
-                                for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][i] = stateCount * bandDataF[b + 3][i];
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // finish aggregation, divide by stateCount
-                if (!withMaxNdvi) {
-                    for (int i = 0; i < microTileSize * microTileSize; ++i) {
-                        final float stateCount = accu[1][i];
-                        for (int b = 3; b < numTargetBands; ++b) {
-                            if (stateCount > 0) {
-                                accu[b][i] /= stateCount;
-                            } else {
-                                accu[b][i] = Float.NaN;
-                            }
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
-                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
-                            }
-                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
-                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
-                            }
-                        }
-                    }
-                }
-
-                // statistics for logging
-                final int[] counts = new int[16];
-                for (float state : accu[0]) {
-                    ++counts[rank(state)];
-                }
-                LOG.info((counts[14]+counts[10]+counts[9]+counts[8]) + " land, " + (counts[15]) + " water, " + counts[13] + " snow, " + counts[5] + " shadow, " + (counts[1]+counts[2]) + " cloud");
-                if (counts[14]+counts[10]+counts[9]+counts[8] == 0 && counts[15] == 0 && counts[13] == 0 && counts[5] == 0 && counts[1]+counts[2] == 0) {
-                    continue;
-                }
-
-                // stream results, one per band
-                for (int b = 0; b < numTargetBands; ++b) {
-                    // compose key from band and tile
-                    final int bandAndTile = ((sensorBands.length - 3) << 27) + (targetBandIndex[b] << 22) + ((tileRow * numMicroTiles + microTileY) << 11) + (tileColumn * numMicroTiles + microTileX);
-                    LOG.info("streaming band " + targetBandIndex[b] + " tile row " + (tileRow * numMicroTiles + microTileY) + " tile column " + (tileColumn * numMicroTiles + microTileX) + " key " + bandAndTile);
-                    // write tile
-                    final IntWritable key = new IntWritable(bandAndTile);
-                    final BandTileWritable value = new BandTileWritable(accu[b]);
-                    context.write(key, value);
+    private void determineMajorityStatus(List<MultiLevelImage[]> bandImages, Rectangle microTileArea, int microTileSize,
+                                         short[][] bandDataB, int[][] statusCount, float[][] accu) {
+        // product loop
+        for (MultiLevelImage[] bandImage : bandImages) {
+            readStatusBand(bandImage, microTileArea, bandDataB);
+            // pixel loop
+            for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                final int state = (int) bandDataB[0][i];
+                final int index = index(state);
+                if (index >= 0) {
+                    statusCount[index][i]++;
                 }
             }
         }
-
-        for (Product product : products) {
-            product.dispose();
+        // pixel loop
+        for (int i = 0; i < microTileSize * microTileSize; ++i) {
+            int state = majorityPriorityStatusOf(statusCount, i);
+            int index = index(state);
+            if (index >= 0) {
+                accu[0][i] = state;
+            }
         }
+    }
+
+    private void determineNdxiMean(List<MultiLevelImage[]> bandImages, Rectangle microTileArea, int microTileSize,
+                                   short[][] bandDataB, float[][] bandDataF,
+                                   int b3BandIndex, int b11BandIndex, int ndviBandIndex,
+                                   float[] ndxiSum, float[] ndxiSqrSum, int[] ndxiCount, float[] ndxiMean, float[] ndxiSDev,
+                                   float[][] accu) {
+        Arrays.fill(ndxiSum, 0.0f);
+        Arrays.fill(ndxiSqrSum, 0.0f);
+        Arrays.fill(ndxiCount, 0);
+        for (MultiLevelImage[] bandImage : bandImages) {
+            readStatusBand(bandImage, microTileArea, bandDataB);
+            readNdviNdwiBands(bandImage, b3BandIndex, b11BandIndex, ndviBandIndex, microTileArea, bandDataF);
+            // pixel loop
+            for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                final int state = (int) bandDataB[0][i];
+                final int index = index(state);
+                if (index >= 0 && ! Float.isNaN(bandDataF[b3BandIndex][i]) && ! Float.isNaN(bandDataF[b11BandIndex][i])) {
+                    switch (state) {
+                        case 1:
+                        case 15:
+                        case 12:
+                        case 11:
+                        case 5:
+                            if (accu[0][i] == state) {
+                                float ndvi = bandDataF[ndviBandIndex][i];
+                                ndxiSum[i] += ndvi;
+                                ndxiSqrSum[i] += ndvi * ndvi;
+                                ndxiCount[i]++;
+                            }
+                            break;
+                        case 2:
+                        case 3:  // TODO TBC whether to use water index for snow as well
+                            if (accu[0][i] == state) {
+                                float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
+                                ndxiSum[i] += ndwi;
+                                ndxiSqrSum[i] += ndwi * ndwi;
+                                ndxiCount[i]++;
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < microTileSize * microTileSize; ++i) {
+            int state = (int) accu[0][i];
+            int index = index(state);
+            if (index >= 0 && index < 7 && ndxiCount[i] > 0) {
+                ndxiMean[i] = ndxiSum[i] / ndxiCount[i];
+                ndxiSDev[i] = (float) Math.sqrt(ndxiSqrSum[i] / ndxiCount[i] - ndxiMean[i] * ndxiMean[i]);
+            } else {  // invalid or cloud or temporal cloud
+                ndxiMean[i] = Float.NaN;
+                ndxiSDev[i] = Float.NaN;
+            }
+        }
+    }
+
+    private void aggregateBestPixels(List<MultiLevelImage[]> bandImages, int numSourceBands, int numTargetBands,
+                                     int b3BandIndex, int b11BandIndex, int ndviBandIndex,
+                                     Rectangle microTileArea, int microTileSize,
+                                     short[][] bandDataB, short[][] bandDataS, float[][] bandDataF,
+                                     float[] ndviMean, float[] ndviSdev, float[][] accu) {
+        // product loop
+        for (MultiLevelImage[] bandImage : bandImages) {
+            readSourceBands(bandImage, microTileArea, numSourceBands, bandDataB, bandDataS, bandDataF);
+            // pixel loop
+            for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                final int state = (int) bandDataB[0][i];
+                if (state > 0) {
+                    accu[2][i] += count(bandDataS, i);
+                    if (state == accu[0][i] && ! containsNan(bandDataF, numTargetBands, i)) {
+                        switch (state) {
+                            case 1:
+                            case 15:
+                            case 12:
+                            case 11:
+                            case 5:
+                                if (bandDataF[ndviBandIndex][i] >= ndviMean[i] - ndviSdev[i] - EPS && bandDataF[ndviBandIndex][i] <= ndviMean[i] + ndviSdev[i] + EPS) {
+                                    final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                    accu[1][i] += stateCount;
+                                    for (int b = 3; b < numTargetBands; ++b) {
+                                        accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                    }
+                                }
+                                break;
+                            case 2:
+                            case 3:  // TODO TBC whether to use water index for snow as well
+                                float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
+                                if (ndwi >= ndviMean[i] - ndviSdev[i] - EPS && ndwi <= ndviMean[i] + ndviSdev[i] + EPS) {
+                                    final int stateCount = count(state, bandDataS, i);
+                                    accu[1][i] += stateCount;
+                                    for (int b = 3; b < numTargetBands; ++b) {
+                                        accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                    }
+                                }
+                                break;
+                            case 4:
+                            case 14:
+                                final int stateCount = count(state, bandDataS, i);
+                                accu[1][i] += stateCount;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void aggregateByMaxNdvi(List<MultiLevelImage[]> bandImages, int numSourceBands, int numTargetBands,
+                                    int b3BandIndex, int b11BandIndex, int ndviBandIndex,
+                                    Rectangle microTileArea, int microTileSize, short[][] bandDataB, short[][] bandDataS, float[][] bandDataF,
+                                    float[][] accu) {
+        for (MultiLevelImage[] bandImage : bandImages) {
+            readSourceBands(bandImage, microTileArea, numSourceBands, bandDataB, bandDataS, bandDataF);
+            // pixel loop
+            for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                // aggregate pixel-wise using aggregation rules
+                final int state = (int) bandDataB[0][i];
+                if (state > 0 && ! containsNan(bandDataF, numTargetBands, i)) {
+                    if (state == accu[0][i]) {
+                        // same state as before, aggregate ...
+                        final int stateCount = count(state, bandDataS, i);
+                        accu[1][i] += stateCount;
+                        accu[2][i] += count(bandDataS, i);
+                        if (bandDataF[ndviBandIndex][i] > accu[numTargetBands - 1][i]) {
+                            for (int b = 3; b < numTargetBands; ++b) {
+                                accu[b][i] = bandDataF[b + 3][i];
+                            }
+                        }
+                    } else if (rank(state) > rank(accu[0][i])) {
+                        // better state, e.g. land instead of snow: restart counting ...
+                        final int stateCount = count(state, bandDataS, i);
+                        accu[0][i] = state;
+                        accu[1][i] = stateCount;
+                        accu[2][i] = count(bandDataS, i);
+                        for (int b = 3; b < numTargetBands; ++b) {
+                            accu[b][i] = bandDataF[b + 3][i];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void aggregateByStatusRank(List<MultiLevelImage[]> bandImages, int numSourceBands, int numTargetBands,
+                                       int b3BandIndex, int b11BandIndex, int ndviBandIndex,
+                                       Rectangle microTileArea, int microTileSize, short[][] bandDataB, short[][] bandDataS, float[][] bandDataF,
+                                       float[][] accu) {
+        for (MultiLevelImage[] bandImage : bandImages) {
+            readSourceBands(bandImage, microTileArea, numSourceBands, bandDataB, bandDataS, bandDataF);
+            // pixel loop
+            for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                final int state = (int) bandDataB[0][i];
+                if (state > 0 && ! containsNan(bandDataF, numTargetBands, i)) {
+                    if (state == accu[0][i]) {
+                        // same state as before, aggregate ...
+                        final int stateCount = count(state, bandDataS, i);
+                        accu[1][i] += stateCount;
+                        accu[2][i] += count(bandDataS, i);
+                        for (int b = 3; b < numTargetBands; ++b) {
+                            accu[b][i] += stateCount * bandDataF[b + 3][i];
+                        }
+                    } else if (rank(state) > rank(accu[0][i])) {
+                        // better state, e.g. land instead of snow: restart counting ...
+                        final int stateCount = count(state, bandDataS, i);
+                        accu[0][i] = state;
+                        accu[1][i] = stateCount;
+                        accu[2][i] = count(bandDataS, i);
+                        for (int b = 3; b < numTargetBands; ++b) {
+                            accu[b][i] = stateCount * bandDataF[b + 3][i];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void divideByCount(int microTileSize, int numTargetBands, float[][] accu) {
+        for (int i = 0; i < microTileSize * microTileSize; ++i) {
+            final float stateCount = accu[1][i];
+            for (int b = 3; b < numTargetBands; ++b) {
+                if (stateCount > 0) {
+                    accu[b][i] /= stateCount;
+                } else {
+                    accu[b][i] = Float.NaN;
+                }
+            }
+        }
+    }
+
+
+    private void clearAccu(int numTargetBands, float[][] accu) {
+        for (int b = 0; b < numTargetBands; b++) {
+            Arrays.fill(accu[b], 0.0f);
+        }
+    }
+
+    private void clearNdxi(float[] ndxiSum, float[] ndxiSqrSum, int[] ndxiCount, int[][] statusCount) {
+        Arrays.fill(ndxiSum, 0.0f);
+        Arrays.fill(ndxiSqrSum, 0.0f);
+        Arrays.fill(ndxiCount, 0);
+        for (int j=0; j<NUM_INDEXES; ++j) {
+            Arrays.fill(statusCount[j], 0);
+        }
+    }
+
+    static Product readProduct(Configuration conf, FileSystem fs, Path path) throws IOException {
+        final File localFile = new File(path.getName());
+        FileUtil.copy(fs, path, localFile, false, conf);
+        return ProductIO.readProduct(localFile);
+    }
+
+    private void readSourceBands(MultiLevelImage[] bandImage, Rectangle microTileArea, int numSourceBands, short[][] bandDataB, short[][] bandDataS, float[][] bandDataF) {
+        for (int b = 0; b < numSourceBands; b++) {
+            if (b == 0) {
+                bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+            } else if (b < 6) {
+                bandDataS[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+            } else {
+                bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+            }
+        }
+    }
+
+    private void readStatusBand(MultiLevelImage[] bandImage, Rectangle microTileArea, short[][] bandDataB) {
+        bandDataB[0] = (short[]) ImageUtils.getPrimitiveArray(bandImage[0].getData(microTileArea).getDataBuffer());
+    }
+
+    private void readNdviNdwiBands(MultiLevelImage[] bandImage, int b3BandIndex, int b11BandIndex, int ndviBandIndex, Rectangle microTileArea, float[][] bandDataF) {
+        bandDataF[b3BandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b3BandIndex].getData(microTileArea).getDataBuffer());
+        bandDataF[b11BandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b11BandIndex].getData(microTileArea).getDataBuffer());
+        bandDataF[ndviBandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[ndviBandIndex].getData(microTileArea).getDataBuffer());
     }
 
     private static boolean containsNan(float[][] bandDataF, int numTargetBands, int i) {
@@ -619,10 +650,6 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         return product;
     }
 
-    private boolean isAtPosition(int i, int microTileX, int microTileY, int microTileSize, int numMicroTiles, int x, int y) {
-        return x == microTileX * microTileSize + (i % microTileSize) && y == microTileY * microTileSize + (i / microTileSize);
-    }
-
     private int majorityPriorityStatusOf(int[][] ndviCount, int i) {
         return (ndviCount[1][i] > 0 && ndviCount[1][i] >= ndviCount[0][i] && ndviCount[1][i] >= ndviCount[2][i]) ? 2 :
                (ndviCount[0][i] > 0 && ndviCount[0][i] >= ndviCount[2][i]) ? 1 :
@@ -690,12 +717,6 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
-    static Product readProduct(Configuration conf, FileSystem fs, Path path) throws IOException {
-        final File localFile = new File(path.getName());
-        FileUtil.copy(fs, path, localFile, false, conf);
-        return ProductIO.readProduct(localFile);
-    }
-
     static Date getDate(Configuration conf, String parameterName) {
         try {
             return DATE_FORMAT.parse(conf.get(parameterName));
@@ -714,13 +735,6 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             stop.add(Calendar.YEAR, 1);
             c.setTime(start.getTime());
         }
-        return c.getTime();
-    }
-
-    static Date shiftTo(Date week, int year) {
-        GregorianCalendar c = DateUtils.createCalendar();
-        c.setTime(week);
-        c.set(Calendar.YEAR, year);
         return c.getTime();
     }
 
