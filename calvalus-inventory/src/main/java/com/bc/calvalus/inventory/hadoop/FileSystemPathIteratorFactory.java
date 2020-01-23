@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.inventory.hadoop;
 
+import com.bc.calvalus.inventory.LazilyLocatedFileStatus;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,14 +46,16 @@ public class FileSystemPathIteratorFactory {
 
     private final FileSystem fs;
     private final FileStatusFilter filter;
+    private final boolean doLocate;
 
-    public FileSystemPathIteratorFactory(FileSystem fs, List<FileStatusFilter> filter) {
-        this(fs, filter.toArray(new FileStatusFilter[0]));
+    public FileSystemPathIteratorFactory(FileSystem fs, boolean doLocate, List<FileStatusFilter> filter) {
+        this(fs, doLocate, filter.toArray(new FileStatusFilter[0]));
     }
 
-    public FileSystemPathIteratorFactory(FileSystem fs, FileStatusFilter... filter) {
+    public FileSystemPathIteratorFactory(FileSystem fs, boolean doLocate, FileStatusFilter... filter) {
         this.fs = fs;
         this.filter = new CombinedFileStatusFilter(filter);
+        this.doLocate = doLocate;
     }
 
     private RemoteIterator<LocatedFileStatus> applyFilter(RemoteIterator<LocatedFileStatus> fileStatusIt) throws IOException {
@@ -131,6 +134,9 @@ public class FileSystemPathIteratorFactory {
                     throw new NoSuchElementException("No more entries in " + f);
                 }
                 FileStatus result = stats[i++];
+                if (! doLocate) {
+                    return new LazilyLocatedFileStatus(result);
+                }
                 // for files, use getBlockLocations(FileStatus, int, int) to avoid
                 // calling getFileStatus(Path) to load the FileStatus again
                 BlockLocation[] locs = null;

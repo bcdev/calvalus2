@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.InputPathResolver;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
 import com.bc.calvalus.inventory.hadoop.FileSystemPathIteratorFactory;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -180,6 +181,7 @@ public class PatternBasedInputFormat extends InputFormat {
                                                                   dateRange.getStopDate(), regionName);
                     RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
                                                                                      inputPatterns, conf, null, true);
+                    LOG.info("query for " + dateRange + " done");
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
@@ -451,7 +453,7 @@ public class PatternBasedInputFormat extends InputFormat {
         };
     }
 
-    private RemoteIterator<LocatedFileStatus> mergedIterator(
+    protected RemoteIterator<LocatedFileStatus> mergedIterator(
                 List<RemoteIterator<LocatedFileStatus>> iterators) throws IOException {
         return new RemoteIterator<LocatedFileStatus>() {
             int current = 0;
@@ -576,8 +578,8 @@ public class PatternBasedInputFormat extends InputFormat {
                 return !existingPathes.contains(dbPath);
             };
         }
-        if (inputPatterns.size() <= 1) {
-            return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter, withDirs);
+        if (inputPatterns.size() <= 1 || startsWithWildcard(inputPatterns)) {
+            return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter, withDirs, true);
         } else {
             // It was a bad idea to search for the common prefix. This may comprise much too many paths to descend
             List<RemoteIterator<LocatedFileStatus>> iters = new ArrayList<>();
@@ -585,10 +587,20 @@ public class PatternBasedInputFormat extends InputFormat {
             for (String p : inputPatterns) {
                 inputPattern.clear();
                 inputPattern.add(p);
-                iters.add(fileSystemService.globFileStatusIterator(inputPattern, conf, extraFilter, withDirs));
+                iters.add(fileSystemService.globFileStatusIterator(inputPattern, conf, extraFilter, withDirs, true));
             }
             return mergedIterator(iters);
         }
+    }
+
+    protected boolean startsWithWildcard(List<String> inputPatterns) {
+        int commonPrefixLength = AbstractFileSystemService.getCommonPathPrefix(inputPatterns).length();
+        for (String pattern : inputPatterns) {
+            if (pattern.length() < commonPrefixLength + 4 || ! "/.*/".equals(pattern.substring(commonPrefixLength, commonPrefixLength+4))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     protected List<String> getInputPatterns(String inputPathPatterns, Date minDate, Date maxDate, String regionName) {

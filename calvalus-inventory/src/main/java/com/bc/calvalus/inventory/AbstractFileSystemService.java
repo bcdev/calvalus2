@@ -150,7 +150,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         return collectFileStatuses(commonFS, qualifiedPath, pattern);
     }
 
-    public RemoteIterator<LocatedFileStatus> globFileStatusIterator(List<String> pathPatterns, Configuration conf, FileSystemPathIteratorFactory.FileStatusFilter extraFilter, boolean withDirs) throws IOException {
+    public RemoteIterator<LocatedFileStatus> globFileStatusIterator(List<String> pathPatterns, Configuration conf, FileSystemPathIteratorFactory.FileStatusFilter extraFilter, boolean withDirs, boolean doLocate) throws IOException {
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         int maxDepth = levelOf(pathPatterns) - levelOf(commonPathPrefix);
@@ -164,7 +164,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         if (extraFilter != null) {
             acceptFilter.add(extraFilter);
         }
-        return new FileSystemPathIteratorFactory(fs, acceptFilter).listFiles(rootPath, true, withDirs, maxDepth);
+        return new FileSystemPathIteratorFactory(fs, doLocate, acceptFilter).listFiles(rootPath, true, withDirs, maxDepth);
     }
 
     private int levelOf(List<String> pathPatterns) {
@@ -261,7 +261,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         }
     }
 
-    static String getCommonPathPrefix(List<String> strings) {
+    public static String getCommonPathPrefix(List<String> strings) {
         if (strings.size() == 0) {
             return "";
         }
