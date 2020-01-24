@@ -34,9 +34,8 @@ import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.esa.snap.binning.PlanetaryGrid;
 import org.esa.snap.binning.TemporalBinSource;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.binning.operator.formatter.Formatter;
-import org.esa.snap.binning.operator.formatter.FormatterConfig;
-import org.esa.snap.binning.operator.formatter.FormatterFactory;
+import org.esa.snap.binning.operator.Formatter;
+import org.esa.snap.binning.operator.FormatterConfig;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -64,7 +63,6 @@ public class L3Formatter {
     private final String[] featureNames;
     private final MetadataSerializer metadataSerializer;
     private final BinningConfig binningConfig;
-    private final Formatter formatter;
     private FormatterConfig formatterConfig;
 
 
@@ -86,10 +84,22 @@ public class L3Formatter {
         formatterConfig.setOutputFile(outputFile);
         formatterConfig.setOutputFormat(outputFormat);
 
-        final String formatterName = conf.get(JobConfigNames.CALVALUS_L3_FORMATTER_NAME);
-        formatter = FormatterFactory.get(formatterName);
-
         metadataSerializer = new MetadataSerializer();
+    }
+
+    private void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
+        Geometry regionGeometry = GeometryUtils.createGeometry(regionWKT);
+        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
+        final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
+        // TODO maybe replace region information in metadata if overwritten in formatting request
+        Formatter.format(planetaryGrid,
+                temporalBinSource,
+                featureNames,
+                formatterConfig,
+                regionGeometry,
+                startTime,
+                endTime,
+                processingGraphMetadata);
     }
 
     private static ProductData.UTC parseTime(String timeString) {
@@ -135,22 +145,6 @@ public class L3Formatter {
             productFormatter.cleanupTempDir();
             context.setStatus("");
         }
-    }
-
-    private void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
-        Geometry regionGeometry = GeometryUtils.createGeometry(regionWKT);
-        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
-        final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
-
-        // TODO maybe replace region information in metadata if overwritten in formatting request
-        formatter.format(planetaryGrid,
-                temporalBinSource,
-                featureNames,
-                formatterConfig,
-                regionGeometry,
-                startTime,
-                endTime,
-                processingGraphMetadata);
     }
 
     private static class ProductConverter implements Converter<Product> {
