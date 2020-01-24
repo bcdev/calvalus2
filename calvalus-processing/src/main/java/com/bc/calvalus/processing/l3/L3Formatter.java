@@ -113,7 +113,7 @@ public class L3Formatter {
     public static void write(TaskInputOutputContext context, TemporalBinSource temporalBinSource,
                              String dateStart, String dateStop,
                              String regionName, String regionWKT,
-                             String productName) throws IOException {
+                             String productName ) throws IOException {
 
         Configuration conf = context.getConfiguration();
         GpfUtils.init(conf);
@@ -127,9 +127,9 @@ public class L3Formatter {
             File productFile = productFormatter.createTemporaryProductFile();
 
             L3Formatter formatter = new L3Formatter(dateStart, dateStop,
-                    productFile.getAbsolutePath(),
-                    productFormatter.getOutputFormat(),
-                    conf);
+                                                    productFile.getAbsolutePath(),
+                                                    productFormatter.getOutputFormat(),
+                                                    conf);
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
             formatter.format(temporalBinSource, regionName, regionWKT);
@@ -156,24 +156,24 @@ public class L3Formatter {
         }
 
         @Override
-        public Class<? extends Product> getValueType() {
-            return Product.class;
-        }
+         public Class<? extends Product> getValueType() {
+             return Product.class;
+         }
 
-        @Override
-        public Product parse(String text) throws ConversionException {
-            Path path = new Path(text);
-            try {
-                return CalvalusProductIO.readProduct(path, conf, null);
-            } catch (IOException e) {
-                throw new ConversionException(e);
-            }
-        }
+         @Override
+         public Product parse(String text) throws ConversionException {
+             Path path = new Path(text);
+             try {
+                 return CalvalusProductIO.readProduct(path, conf, null);
+             } catch (IOException e) {
+                 throw new ConversionException(e);
+             }
+         }
 
-        @Override
-        public String format(Product value) {
-            throw new IllegalStateException();
-        }
-    }
+         @Override
+         public String format(Product value) {
+             throw new IllegalStateException();
+         }
+     }
 
 }
