@@ -112,24 +112,7 @@ public class AggregatorFirstTest {
     }
 
     public static BinContext createCtx() {
-        return new BinContext() {
-            private HashMap<String, Object> map = new HashMap<String, Object>();
-
-            @Override
-            public long getIndex() {
-                return 0;
-            }
-
-            @Override
-            public <T> T get(String name) {
-                return (T) map.get(name);
-            }
-
-            @Override
-            public void put(String name, Object value) {
-                map.put(name, value);
-            }
-        };
+        return new TestBinContext();
     }
 
     static class MyVariableContext implements VariableContext {
