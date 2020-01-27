@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.l3.seasonal;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.utils.GeometryUtils;
@@ -23,6 +24,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.runtime.Engine;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -145,6 +147,10 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             return;
         }
 
+        GpfUtils.init(context.getConfiguration());
+        Engine.start();  // required here!  we do not use a ProcessorAdapter
+        CalvalusLogger.restoreCalvalusLogFormatter();
+
         final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
         final int numberOfBands = context.getCurrentKey().get() >>> 27;
         final String sensor =
@@ -246,6 +252,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
 
         boolean moreTilesAvailable = true;
         final float[][] tiles = new float[numTileColumns][];
+        // loop over micro tile rows, e.g. up to 36 for OLCI
         for (int tileRow = (context.getCurrentKey().get() >>> 11) & 0x7FF; tileRow < numTileRows && moreTilesAvailable; ++tileRow) {
 
             //LOG.info("processing tile row " + tileRow);
@@ -253,7 +260,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             int count = 0;
             while (moreTilesAvailable && ((context.getCurrentKey().get() >>> 11) & 0x7FF) == tileRow) {
                 final int tileColumn = context.getCurrentKey().get() & 0x7FF;
-                LOG.info("looking at tile " + context.getCurrentKey().get() + " tile row " + tileRow + " column " + tileColumn);
+                //LOG.info("looking at tile " + context.getCurrentKey().get() + " tile row " + tileRow + " column " + tileColumn);
                 tiles[tileColumn] = copyOf(context.getValues().iterator().next().getTileData());
                 ++count;
                 if (! context.nextKey()) {
@@ -261,7 +268,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                     LOG.info("no more tiles in context.");
                 }
             }
-            LOG.info(count + " tiles in tile row " + tileRow);
+            LOG.info(count + " micro tiles in tile row " + tileRow);
 
             if (tileRow >= tileArea.y && tileRow < tileArea.y + tileArea.height) {
                 // write lines of tile row to output file

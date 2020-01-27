@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.l3.seasonal;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.glevel.MultiLevelImage;
@@ -22,6 +23,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.common.BandMathsOp;
 import org.esa.snap.core.util.ImageUtils;
+import org.esa.snap.runtime.Engine;
 
 import java.awt.Rectangle;
 import java.io.File;
@@ -90,6 +92,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
+        GpfUtils.init(context.getConfiguration());
+        Engine.start();  // required here!  we do not use a ProcessorAdapter
         CalvalusLogger.restoreCalvalusLogFormatter();
         // parse input path /calvalus/eodata/MERIS_SR_FR/v1.0/2010/2010-01-01/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
         final Path someTilePath = ((FileSplit) context.getInputSplit()).getPath();
@@ -182,6 +186,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         accu = new float[numTargetBands][microTileSize * microTileSize];
 
         // micro tile loop
+        LOG.info("processing " + (numMicroTiles*numMicroTiles) + " micro tiles ...");
         for (int microTileY = 0; microTileY < numMicroTiles; ++microTileY) {
             for (int microTileX = 0; microTileX < numMicroTiles; ++microTileX) {
                 long timestamp1 = System.currentTimeMillis();
@@ -227,7 +232,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 for (int b = 0; b < numTargetBands; ++b) {
                     // compose key from band and tile
                     final int bandAndTile = ((sensorBands.length - 3) << 27) + (targetBandIndex[b] << 22) + ((tileRow * numMicroTiles + microTileY) << 11) + (tileColumn * numMicroTiles + microTileX);
-                    LOG.info("streaming band " + targetBandIndex[b] + " tile row " + (tileRow * numMicroTiles + microTileY) + " tile column " + (tileColumn * numMicroTiles + microTileX) + " key " + bandAndTile);
+                    //LOG.info("streaming band " + targetBandIndex[b] + " tile row " + (tileRow * numMicroTiles + microTileY) + " tile column " + (tileColumn * numMicroTiles + microTileX) + " key " + bandAndTile);
                     // write tile
                     final IntWritable key = new IntWritable(bandAndTile);
                     final BandTileWritable value = new BandTileWritable(accu[b]);
