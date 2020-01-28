@@ -17,7 +17,7 @@
         <snap.version>7.0.4-SNAPSHOT</snap.version>
         <s1tbx.version>7.0.3-SNAPSHOT</s1tbx.version>
         <s2tbx.version>7.0.1-SNAPSHOT</s2tbx.version>
-        <s3tbx.version>7.0.3-SNAPSHOT</s3tbx.version>
+        <s3tbx.version>7.0.4-SNAPSHOT</s3tbx.version>
         <seadas.reader.version>1.8</seadas.reader.version>
         <probav.reader.version>2.1.0</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
