@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire;
 
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.annotations.OperatorMetadata;
@@ -11,6 +12,8 @@ import org.esa.snap.core.gpf.pointop.Sample;
 import org.esa.snap.core.gpf.pointop.SourceSampleConfigurer;
 import org.esa.snap.core.gpf.pointop.TargetSampleConfigurer;
 import org.esa.snap.core.gpf.pointop.WritableSample;
+
+import java.util.HashMap;
 
 @OperatorMetadata(alias = "SlstrRadToRefl",
         category = "Raster/Geometric",
@@ -24,6 +27,15 @@ public class SlstrRadToReflOp extends PixelOperator {
     Product sourceProduct;
 
     double[] solarIrradiances;
+
+    @Override
+    protected void prepareInputs() throws OperatorException {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("bandNames", new String[]{"S1_radiance_an", "S2_radiance_an", "S3_radiance_an", "S4_radiance_cn", "S5_radiance_cn", "S6_radiance_cn", "S1_radiance_ao", "S2_radiance_ao", "S3_radiance_ao", "S4_radiance_co", "S5_radiance_co", "S6_radiance_co"});
+        parameters.put("tiePointGridNames", new String[]{"solar_zenith_tn", "solar_zenith_to"});
+        parameters.put("copyMetadata", true);
+        sourceProduct = GPF.createProduct("Subset", parameters, sourceProduct);
+    }
 
     @Override
     protected void computePixel(int x, int y, Sample[] samples, WritableSample[] writableSamples) {
@@ -50,15 +62,15 @@ public class SlstrRadToReflOp extends PixelOperator {
         solarIrradiances = new double[12];
 
         for (int i = 1; i < 7; i++) {
-            solarIrradiances[i - 1] = sourceProduct.getMetadataRoot().getElement("S" + i).getElement("S" + i + "_solar_irradiance_an").getAttributeDouble("value");;
+            solarIrradiances[i - 1] = sourceProduct.getMetadataRoot().getElement("S" + i).getElement("S" + i + "_solar_irradiance_an").getAttributeDouble("value");
         }
 
         for (int i = 7; i < 10; i++) {
-            solarIrradiances[i - 1] = sourceProduct.getMetadataRoot().getElement("S" + (i - 6)).getElement("S" + (i - 6) + "_solar_irradiance_ao").getAttributeDouble("value");;
+            solarIrradiances[i - 1] = sourceProduct.getMetadataRoot().getElement("S" + (i - 6)).getElement("S" + (i - 6) + "_solar_irradiance_ao").getAttributeDouble("value");
         }
 
         for (int i = 10; i < 13; i++) {
-            solarIrradiances[i - 1] = sourceProduct.getMetadataRoot().getElement("S" + (i - 6)).getElement("S" + (i - 6) + "_solar_irradiance_co").getAttributeDouble("value");;
+            solarIrradiances[i - 1] = sourceProduct.getMetadataRoot().getElement("S" + (i - 6)).getElement("S" + (i - 6) + "_solar_irradiance_co").getAttributeDouble("value");
         }
 
         Product targetProduct = super.createTargetProduct();
