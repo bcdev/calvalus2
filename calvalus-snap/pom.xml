@@ -131,6 +131,7 @@
         <dependency><groupId>com.thoughtworks.xstream</groupId><artifactId>xstream</artifactId></dependency>
         <dependency><groupId>xerces</groupId><artifactId>xercesImpl</artifactId></dependency>
         <dependency><groupId>com.googlecode.json-simple</groupId><artifactId>json-simple</artifactId></dependency>
+        <dependency><groupId>org.jpy</groupId><artifactId>jpy</artifactId></dependency>
 
     </dependencies>
 

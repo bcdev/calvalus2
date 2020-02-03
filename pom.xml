@@ -17,9 +17,9 @@
         <snap.version>7.0.4-SNAPSHOT</snap.version>
         <s1tbx.version>7.0.3-SNAPSHOT</s1tbx.version>
         <s2tbx.version>7.0.1-SNAPSHOT</s2tbx.version>
-        <s3tbx.version>7.0.3-SNAPSHOT</s3tbx.version>
-        <seadas.reader.version>1.8</seadas.reader.version>
-        <probav.reader.version>2.1.0</probav.reader.version>
+        <s3tbx.version>7.0.4-SNAPSHOT</s3tbx.version>
+        <seadas.reader.version>1.9-SNAPSHOT</seadas.reader.version>
+        <probav.reader.version>2.2.0-SNAPSHOT</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>17.1</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
@@ -443,6 +443,12 @@
                 <groupId>org.hsqldb</groupId>
                 <artifactId>hsqldb</artifactId>
                 <version>2.3.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jpy</groupId>
+                <artifactId>jpy</artifactId>
+                <version>0.9.0</version>
             </dependency>
 
             <!--  Test -->
