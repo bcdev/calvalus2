@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.fire.format.grid.olci;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
@@ -36,7 +35,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,7 +56,8 @@ public class OlciGridMapper extends AbstractGridMapper {
         System.setProperty("snap.dataio.netcdf.metadataElementLimit", "0");
 
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
-        Path compositesPath = new Path(fileSplit.getPath().getParent(), fileSplit.getPath().getName().replace("outputs", "composites"));
+
+        Path compositesPath = getCompositesPath(context, fileSplit.getPath());
         Path lcMapPath = new Path(context.getConfiguration().get("calvalus.aux.lcMapPath"));
 
         LOG.info("Input split             : " + fileSplit);
@@ -116,6 +115,21 @@ public class OlciGridMapper extends AbstractGridMapper {
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCells);
 
         LOG.info(String.format("Grid cells for %d-%02d-%s streamed", year, month, tile));
+    }
+
+    private Path getCompositesPath(Context context, Path outputPath) throws IOException {
+        final String compositesFilename = outputPath.getName().replace("outputs", "composites");
+        // look for composites file in previous months' dir
+        final String compositesMonthDir = context.getConfiguration().get("calvalus.aux.compositesMonthDir");
+        if (compositesMonthDir != null) {
+            final String tileDirname = outputPath.getParent().getName();
+            Path compositesPath = new Path(new Path(new Path(compositesMonthDir), tileDirname), compositesFilename);
+            if (compositesPath.getFileSystem(context.getConfiguration()).exists(compositesPath)) {
+                return compositesPath;
+            }
+        }
+        // assume that composites file is in same directory
+        return new Path(outputPath.getParent(), compositesFilename);
     }
 
     @Override
