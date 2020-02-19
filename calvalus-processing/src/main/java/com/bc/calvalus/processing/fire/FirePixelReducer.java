@@ -314,7 +314,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     }
 
     private void writeLonBnds(NetcdfFileWriter ncFile, int continentalStartX, int continentalWidth) throws IOException, InvalidRangeException {
-        float halfPixelSize = (float) (360.0 / (numRowsGlobal * 2));
+        float halfPixelSize = (float) (360.0 / (numRowsGlobal * 2 * 2));
 
         Variable lonBnds = ncFile.findVariable("lon_bounds");
         double[] array = new double[continentalWidth * 2];
@@ -329,7 +329,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     }
 
     private void writeLatBnds(NetcdfFileWriter ncFile, int continentalStartY, int continentalHeight) throws IOException, InvalidRangeException {
-        float halfPixelSize = (float) (180.0 / numRowsGlobal);
+        float halfPixelSize = (float) (180.0 / numRowsGlobal / 2);
 
         Variable latBnds = ncFile.findVariable("lat_bounds");
         double[] array = new double[continentalHeight * 2];

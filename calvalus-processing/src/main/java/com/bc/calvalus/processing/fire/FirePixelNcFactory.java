@@ -1,5 +1,14 @@
 package com.bc.calvalus.processing.fire;
 
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.util.StringUtils;
+import org.esa.snap.dataio.netcdf.NetCDF4Chunking;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
@@ -7,13 +16,12 @@ import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
-
-import org.esa.snap.dataio.netcdf.NetCDF4Chunking;
 
 public class FirePixelNcFactory {
 
@@ -73,10 +81,36 @@ public class FirePixelNcFactory {
         timeVar.addAttribute(new Attribute("calendar", "standard"));
         ncFile.addVariable(null, "time_bounds", DataType.DOUBLE, "time bounds");
 
+        try {
+            GeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+                                                   xyBox.width, xyBox.height,
+                                                   -180.0 + xyBox.x * 180.0 / numRowsGlobal,
+                                                   90.0 - xyBox.y * 180.0 / numRowsGlobal,
+                                                   360.0 / (2*numRowsGlobal), 180.0 / numRowsGlobal,
+                                                   0.0, 0.0);
+
+            addWktAsVariable(ncFile, geoCoding);
+        } catch (FactoryException | TransformException e) {
+            throw new IOException(e);
+        }
+
         addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numRowsGlobal, xyBox);
         ncFile.create();
         return ncFile;
     }
+
+    private void addWktAsVariable(NetcdfFileWriter ncFile, GeoCoding geoCoding) throws IOException {
+        final CoordinateReferenceSystem crs = geoCoding.getMapCRS();
+        final double[] matrix = new double[6];
+        final MathTransform transform = geoCoding.getImageToMapTransform();
+        if (transform instanceof AffineTransform) {
+            ((AffineTransform) transform).getMatrix(matrix);
+        }
+        final Variable crsVariable = ncFile.addVariable("crs", DataType.INT, "");
+        crsVariable.addAttribute(new Attribute("wkt", crs.toWKT()));
+        crsVariable.addAttribute(new Attribute("i2m", StringUtils.arrayToCsv(matrix)));
+    }
+
 
     private void addGroupAttributes(String filename, String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int numRowsGlobal, Rectangle xyBox) {
         Instant now = Instant.now();

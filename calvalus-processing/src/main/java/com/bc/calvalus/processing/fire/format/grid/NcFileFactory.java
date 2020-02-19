@@ -1,10 +1,19 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.util.StringUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -67,10 +76,35 @@ public abstract class NcFileFactory {
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("comment", getBurnedAreaInVegClassComment()));
 
+        try {
+            GeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+                                                   1440, 720,
+                                                   -180,90,
+                                                   360.0 / 1440, 180.0 / 720,
+                                                   0.0, 0.0);
+
+            addWktAsVariable(ncFile, geoCoding);
+        } catch (FactoryException | TransformException e) {
+            throw new IOException(e);
+        }
+
         addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
         ncFile.create();
         return ncFile;
     }
+
+    private void addWktAsVariable(NetcdfFileWriter ncFile, GeoCoding geoCoding) throws IOException {
+        final CoordinateReferenceSystem crs = geoCoding.getMapCRS();
+        final double[] matrix = new double[6];
+        final MathTransform transform = geoCoding.getImageToMapTransform();
+        if (transform instanceof AffineTransform) {
+            ((AffineTransform) transform).getMatrix(matrix);
+        }
+        final Variable crsVariable = ncFile.addVariable("crs", DataType.INT, "");
+        crsVariable.addAttribute(new Attribute("wkt", crs.toWKT()));
+        crsVariable.addAttribute(new Attribute("i2m", StringUtils.arrayToCsv(matrix)));
+    }
+
 
     protected String getBurnedAreaInVegClassComment() {
         return "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/";
