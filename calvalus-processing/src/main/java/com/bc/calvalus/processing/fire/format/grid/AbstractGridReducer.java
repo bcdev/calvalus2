@@ -175,7 +175,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     protected abstract void writeVegetationClasses(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException;
 
     private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
-        Variable timeBnds = ncFile.findVariable("time_bnds");
+        Variable timeBnds = ncFile.findVariable("time_bounds");
         double firstDayAsJD = getFirstDayAsJD(year, month);
         int lengthOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth();
         float[] array = new float[]{
@@ -200,7 +200,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     }
 
     private static void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
-        Variable lonBnds = ncFile.findVariable("lon_bnds");
+        Variable lonBnds = ncFile.findVariable("lon_bounds");
         float[] array = new float[SCENE_RASTER_WIDTH * 2];
         array[0] = -180F;
         for (int x = 1; x < SCENE_RASTER_WIDTH * 2; x++) {
@@ -215,7 +215,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     }
 
     private static void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
-        Variable latBnds = ncFile.findVariable("lat_bnds");
+        Variable latBnds = ncFile.findVariable("lat_bounds");
         float[] array = new float[SCENE_RASTER_HEIGHT * 2];
         array[0] = 90F;
         for (int y = 1; y < SCENE_RASTER_HEIGHT * 2; y++) {

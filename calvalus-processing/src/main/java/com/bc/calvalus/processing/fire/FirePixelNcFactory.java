@@ -35,7 +35,7 @@ public class FirePixelNcFactory {
 
         Variable julianDateVar = ncFile.addVariable(null, "JD", DataType.SHORT, "time lat lon");
         julianDateVar.addAttribute(new Attribute("long_name", "Date of the first detection"));
-        julianDateVar.addAttribute(new Attribute("units", "Day of the year"));
+        julianDateVar.addAttribute(new Attribute("units", "days since " + timeCoverageStart.substring(0,4) + "-01-01"));
         julianDateVar.addAttribute(new Attribute("comment", "Possible values: 0  when the pixel is not burned; 1 to 366 day of the first detection when the pixel is burned; -1 when the pixel is not observed in the month; -2 when pixel is not burnable: water bodies, bare areas, urban areas and permanent snow and ice."));
         julianDateVar.addAttribute(new Attribute("_ChunkSizes", Array.factory(DataType.INT, new int[]{3}, new int[]{1,1200,1200})));
 
@@ -47,7 +47,7 @@ public class FirePixelNcFactory {
 
         Variable landCoverVar = ncFile.addVariable(null, "LC", DataType.UBYTE, "time lat lon");
         landCoverVar.addAttribute(new Attribute("long_name", "Land cover of burned pixels"));
-        landCoverVar.addAttribute(new Attribute("units", "Land cover code"));
+        //landCoverVar.addAttribute(new Attribute("units", "Land cover code"));
         landCoverVar.addAttribute(new Attribute("comment", "Land cover of the burned pixel, extracted from the C3S LandCover v2.1.1 . N is the number of the land cover category in the reference map. It is only valid when JD > 0. Pixel value is 0 to N under the following codes: 10 = Cropland, rainfed; 20 = Cropland, irrigated or post-flooding; 30 = Mosaic cropland (>50%) / natural vegetation (tree, shrub, herbaceous cover) (<50%); 40 = Mosaic natural vegetation (tree, shrub, herbaceous cover) (>50%) / cropland (<50%); 50 = Tree cover, broadleaved, evergreen, closed to open (>15%); 60 = Tree cover, broadleaved, deciduous, closed to open (>15%); 70 = Tree cover, needleleaved, evergreen, closed to open (>15%); 80 = Tree cover, needleleaved, deciduous, closed to open (>15%); 90 = Tree cover, mixed leaf type (broadleaved and needleleaved); 100 = Mosaic tree and shrub (>50%) / herbaceous cover (<50%); 110 = Mosaic herbaceous cover (>50%) / tree and shrub (<50%); 120 = Shrubland; 130 = Grassland; 140 = Lichens and mosses; 150 = Sparse vegetation (tree, shrub, herbaceous cover) (<15%); 160 = Tree cover, flooded, fresh or brackish water; 170 = Tree cover, flooded, saline water; 180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water."));
         landCoverVar.addAttribute(new Attribute("_ChunkSizes", Array.factory(DataType.INT, new int[]{3}, new int[]{1,1200,1200})));
 
@@ -57,8 +57,8 @@ public class FirePixelNcFactory {
         lonVar.addAttribute(new Attribute("units", "degree_east"));
         lonVar.addAttribute(new Attribute("axis", "X"));
         lonVar.addAttribute(new Attribute("bounds", "lon_bounds"));
-        lonVar.addAttribute(new Attribute("valid_min", "-180.0"));
-        lonVar.addAttribute(new Attribute("valid_max", "180.0"));
+        lonVar.addAttribute(new Attribute("valid_min", -180.0));
+        lonVar.addAttribute(new Attribute("valid_max", 180.0));
         ncFile.addVariable(null, "lon_bounds", DataType.DOUBLE, "lon bounds");
 
         Variable latVar = ncFile.addVariable(null, "lat", DataType.DOUBLE, "lat");
@@ -67,8 +67,8 @@ public class FirePixelNcFactory {
         latVar.addAttribute(new Attribute("axis", "Y"));
         latVar.addAttribute(new Attribute("units", "degree_north"));
         latVar.addAttribute(new Attribute("bounds", "lat_bounds"));
-        latVar.addAttribute(new Attribute("valid_min", "-90.0"));
-        latVar.addAttribute(new Attribute("valid_max", "90.0"));
+        latVar.addAttribute(new Attribute("valid_min", -90.0));
+        latVar.addAttribute(new Attribute("valid_max", 90.0));
         ncFile.addVariable(null, "lat_bounds", DataType.DOUBLE, "lat bounds");
 
         Variable timeVar = ncFile.addVariable(null, "time", DataType.DOUBLE, "time");

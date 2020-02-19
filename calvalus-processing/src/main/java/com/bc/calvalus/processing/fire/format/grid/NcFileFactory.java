@@ -28,7 +28,7 @@ public abstract class NcFileFactory {
         ncFile.addDimension(null, "vegetation_class", lcClassesCount);
         ncFile.addDimension(null, "lat", 720);
         ncFile.addDimension(null, "lon", 1440);
-        ncFile.addDimension(null, "nv", 2);
+        ncFile.addDimension(null, "bounds", 2);
         ncFile.addDimension(null, "strlen", 150);
         ncFile.addUnlimitedDimension("time");
 
@@ -36,21 +36,21 @@ public abstract class NcFileFactory {
         latVar.addAttribute(new Attribute("units", "degree_north"));
         latVar.addAttribute(new Attribute("standard_name", "latitude"));
         latVar.addAttribute(new Attribute("long_name", "latitude"));
-        latVar.addAttribute(new Attribute("bounds", "lat_bnds"));
-        ncFile.addVariable(null, "lat_bnds", DataType.FLOAT, "lat nv");
+        latVar.addAttribute(new Attribute("bounds", "lat_bounds"));
+        ncFile.addVariable(null, "lat_bounds", DataType.FLOAT, "lat bounds");
         Variable lonVar = ncFile.addVariable(null, "lon", DataType.FLOAT, "lon");
         lonVar.addAttribute(new Attribute("units", "degree_east"));
         lonVar.addAttribute(new Attribute("standard_name", "longitude"));
         lonVar.addAttribute(new Attribute("long_name", "longitude"));
-        lonVar.addAttribute(new Attribute("bounds", "lon_bnds"));
-        ncFile.addVariable(null, "lon_bnds", DataType.FLOAT, "lon nv");
+        lonVar.addAttribute(new Attribute("bounds", "lon_bounds"));
+        ncFile.addVariable(null, "lon_bounds", DataType.FLOAT, "lon bounds");
         Variable timeVar = ncFile.addVariable(null, "time", DataType.DOUBLE, "time");
         timeVar.addAttribute(new Attribute("units", "days since 1970-01-01 00:00:00"));
         timeVar.addAttribute(new Attribute("standard_name", "time"));
         timeVar.addAttribute(new Attribute("long_name", "time"));
-        timeVar.addAttribute(new Attribute("bounds", "time_bnds"));
+        timeVar.addAttribute(new Attribute("bounds", "time_bounds"));
         timeVar.addAttribute(new Attribute("calendar", "standard"));
-        ncFile.addVariable(null, "time_bnds", DataType.FLOAT, "time nv");
+        ncFile.addVariable(null, "time_bounds", DataType.FLOAT, "time bounds");
         Variable vegetationClassVar = ncFile.addVariable(null, "vegetation_class", DataType.INT, "vegetation_class");
         vegetationClassVar.addAttribute(new Attribute("units", "1"));
         vegetationClassVar.addAttribute(new Attribute("long_name", "vegetation class number"));
