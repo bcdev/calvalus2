@@ -192,7 +192,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
     }
 
     private void prepareTargetProduct(String regionName, String timeCoverageStart, String timeCoverageEnd, String year, String month, String version) throws IOException, InvalidRangeException {
-        outputFilename = String.format("%s%02d01-C3S-L3S_FIRE-BA-OLCI-%s-f%s.nc",
+        outputFilename = String.format("%s%02d01-C3S-L3S_FIRE-BA-OLCI-%s-fv%s.nc",
                                        year, Integer.parseInt(month), regionName, version);
         outputFile = new FirePixelNcFactory().
                 createNcFile(outputFilename, version, timeCoverageStart, timeCoverageEnd, numRowsGlobal, continentalRectangle);

@@ -26,7 +26,7 @@ import java.util.UUID;
 public class FirePixelNcFactory {
 
     public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numRowsGlobal, Rectangle xyBox) throws IOException {
-        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename, new NetCDF4Chunking());
+        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4, filename, new NetCDF4Chunking());
 
         ncFile.addUnlimitedDimension("time");
         ncFile.addDimension(null, "bounds", 2);
@@ -122,7 +122,7 @@ public class FirePixelNcFactory {
         ncFile.addGroupAttribute(null, new Attribute("references", "https://climate.copernicus.eu/"));
         ncFile.addGroupAttribute(null, new Attribute("tracking_id", uuid));
         ncFile.addGroupAttribute(null, new Attribute("conventions", "CF-1.7"));
-        ncFile.addGroupAttribute(null, new Attribute("product_version", version));
+        ncFile.addGroupAttribute(null, new Attribute("product_version", "v"+version));
         ncFile.addGroupAttribute(null, new Attribute("summary", "The pixel product is a raster dataset consisting of three layers that together describe the attributes of the BA product. It uses the following naming convention: ${Indicative Date}-C3S-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.nc. ${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four-digit year, MM is the two-digit month from 01 to 12 and DD is the two-digit day of the month from 01 to 31. For monthly products the date is set to 01. ${Indicative sensor} is OLCI. ${Additional Segregator} is the AREA_${TILE_CODE} being the tile code described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional . and another 1 or more digits). An example is: 20180101-C3S-L3S_FIRE-BA-OLCI-AREA_1-fv1.0.nc"));
         ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, C3S, GCOS"));
         ncFile.addGroupAttribute(null, new Attribute("id", filename.substring(0, filename.length()-3)));
@@ -137,10 +137,10 @@ public class FirePixelNcFactory {
         ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
         ncFile.addGroupAttribute(null, new Attribute("contact", "http://copernicus-support.ecmwf.int"));
         ncFile.addGroupAttribute(null, new Attribute("project", "EC C3S Fire Burned Area"));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", String.valueOf(90.0-180.0*(xyBox.y + xyBox.height)/numRowsGlobal)));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", String.valueOf(90.0-180.0*xyBox.y/numRowsGlobal)));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", String.valueOf(-180.0+180.0*xyBox.x/numRowsGlobal)));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_max", String.valueOf(-180.0+180.0*(xyBox.x + xyBox.width)/numRowsGlobal)));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", 90.0-180.0*(xyBox.y + xyBox.height)/numRowsGlobal));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", 90.0-180.0*xyBox.y/numRowsGlobal));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", -180.0+180.0*xyBox.x/numRowsGlobal));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_max", -180.0+180.0*(xyBox.x + xyBox.width)/numRowsGlobal));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart.substring(0,4)+timeCoverageStart.substring(5,7)+timeCoverageStart.substring(8,10)+"T000000Z"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd.substring(0,4)+timeCoverageEnd.substring(5,7)+timeCoverageEnd.substring(8,10)+"T235959Z"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", "P1M"));
