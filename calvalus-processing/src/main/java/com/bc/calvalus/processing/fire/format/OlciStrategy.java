@@ -85,8 +85,6 @@ public class OlciStrategy implements SensorStrategy {
 
         PixelProductArea pixelProductArea = getArea(area);
 
-        BinningConfig l3Config = getBinningConfig(Integer.parseInt(year), Integer.parseInt(month));
-        String l3ConfigXml = l3Config.toXml();
         GeometryFactory gf = new GeometryFactory();
         Geometry regionGeometry = new Polygon(new LinearRing(new PackedCoordinateSequence.Float(new double[]{
                 pixelProductArea.left - 180, 90 - pixelProductArea.top,
@@ -99,6 +97,8 @@ public class OlciStrategy implements SensorStrategy {
         String tiles = getTiles(pixelProductArea);
         String tilesSpec = "(" + tiles + ")";
 
+        BinningConfig l3Config = getBinningConfig(Integer.parseInt(year), Integer.parseInt(month));
+        String l3ConfigXml = l3Config.toXml();
         String inputRootDir = jobConfig.get("calvalus.input.root", "hdfs://calvalus/calvalus/projects/c3s/olci-ba-v1.7.5");
         String inputPathPattern = String.format(inputRootDir + "/.*/%s-%02d/.*outputs-%s.*gz", year, new Integer(month), tilesSpec);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);

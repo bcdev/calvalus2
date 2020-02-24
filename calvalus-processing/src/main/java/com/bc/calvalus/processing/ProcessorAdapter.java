@@ -33,9 +33,10 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.runtime.Engine;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
@@ -436,6 +437,15 @@ public abstract class ProcessorAdapter {
         } else {
             LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
             Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+
+            // fire-cci hack
+            if (conf.get("calvalus.sensor").equals("MODIS") && product.getName().contains("burned_")) {
+                LOG.info(String.format("Fixing geo-coding"));
+                String tile = product.getName().split("_")[3];
+                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus//calvalus/projects/fire/aux/geolookup-refs/" + tile + ".hdf"), conf);
+                Product geo = ProductIO.readProduct(tile + ".hdf");
+                ProductUtils.copyGeoCoding(geo, product);
+            }
 
             if (inputSplit instanceof FileSplit) {
                 FileSplit fileSplit = (FileSplit) inputSplit;

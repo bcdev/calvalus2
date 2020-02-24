@@ -18,8 +18,6 @@ import org.esa.snap.core.datamodel.PlainFeatureFactory;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.VectorDataNode;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.gpf.OperatorException;
-import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.util.FeatureUtils;
 import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.feature.FeatureCollection;
@@ -29,6 +27,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,7 +68,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     public SourceData readPixels(int x, int y) throws IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        LOG.info("x=" + x + ", y=" + y);
+        LOG.info(LocalTime.now().toString() + ": x=" + x + ", y=" + y);
         boolean isInBrokenLcZone = isInBrokenLcZone(x, y);
 
         double lon0 = getLeftLon(x, targetCell);
@@ -79,8 +78,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         for (int i = 0; i < products.length; i++) {
             Product sourceProduct = products[i];
-            Product jdSubset = getSubset(lon0, lat0, sourceProduct);
-            if (jdSubset != null) {
+
+            if (coversGridCell(lon0, lat0, sourceProduct)) {
                 productIndices.add(i);
             }
         }
@@ -179,6 +178,28 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return data;
     }
 
+    private static boolean coversGridCell(double lon0, double lat0, Product sourceProduct) {
+        SimpleFeatureType wktFeatureType = PlainFeatureFactory.createDefaultFeatureType(sourceProduct.getSceneGeoCoding().getGeoCRS());
+        ListFeatureCollection newCollection = new ListFeatureCollection(wktFeatureType);
+        SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder(wktFeatureType);
+        SimpleFeature wktFeature = featureBuilder.buildFeature("ID" + Long.toHexString(0L));
+        Geometry geometry;
+        try {
+            geometry = new WKTReader().read(getWktString(lon0, lat0));
+        } catch (ParseException e) {
+            throw new IllegalStateException(e);
+        }
+        wktFeature.setDefaultGeometry(geometry);
+        newCollection.add(wktFeature);
+
+        FeatureCollection<SimpleFeatureType, SimpleFeature> productFeatures = FeatureUtils.clipFeatureCollectionToProductBounds(
+                newCollection,
+                sourceProduct,
+                null,
+                ProgressMonitor.NULL);
+        return !productFeatures.isEmpty();
+    }
+
     private boolean isInBrokenLcZone(int x, int y) {
         int targetGridCellX = Integer.parseInt(targetCell.split(",")[0]) + x;
         int targetGridCellY = Integer.parseInt(targetCell.split(",")[1]) + y;
@@ -225,34 +246,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     static double getLeftLon(int x, String tile) {
         return -180 + Integer.parseInt(tile.split(",")[0]) / 4.0 + x * 0.25;
-    }
-
-    private Product getSubset(double lon0, double lat0, Product sourceProduct) {
-        SubsetOp subsetOp = new SubsetOp();
-        Geometry geometry;
-        String polygonString;
-        try {
-            polygonString = getWktString(lon0, lat0);
-            geometry = new WKTReader().read(polygonString);
-        } catch (ParseException e) {
-            throw new IllegalStateException(e);
-        }
-
-        subsetOp.setGeoRegion(geometry);
-        subsetOp.setSourceProduct(sourceProduct);
-        Product targetProduct = null;
-        try {
-            targetProduct = subsetOp.getTargetProduct();
-        } catch (OperatorException exception) {
-            if (exception.getMessage().contains("No intersection with source product boundary")) {
-                // ignore - not all products are contained in each grid cell
-                return null;
-            }
-        }
-        if (targetProduct == null || targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
-            return null;
-        }
-        return targetProduct;
     }
 
     private static String getWktString(double lon0, double lat0) {
