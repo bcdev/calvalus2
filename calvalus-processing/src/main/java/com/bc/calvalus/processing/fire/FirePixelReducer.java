@@ -334,8 +334,8 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         Variable latBnds = ncFile.findVariable("lat_bounds");
         double[] array = new double[continentalHeight * 2];
         for (int y = 0; y < continentalHeight; y++) {
-            array[2 * y] = planetaryGrid.getCenterLat(y + continentalStartY) - halfPixelSize;
-            array[2 * y + 1] = planetaryGrid.getCenterLat(y + continentalStartY) + halfPixelSize;
+            array[2 * y] = planetaryGrid.getCenterLat(y + continentalStartY) + halfPixelSize;
+            array[2 * y + 1] = planetaryGrid.getCenterLat(y + continentalStartY) - halfPixelSize;
         }
 
         Array values = Array.factory(DataType.DOUBLE, new int[]{continentalHeight, 2}, array);
