@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
@@ -27,9 +28,19 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.mapred.JobContext;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.security.Credentials;
 import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinSource;
@@ -44,6 +55,7 @@ import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.util.Iterator;
 import java.util.Map;
@@ -78,16 +90,22 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         try {
             int numReducers = conf.getInt(JobContext.NUM_REDUCES, 8);
             String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-            if (numReducers == 1 && format != null) {
+            if ((numReducers == 1 || binningConfig.getPlanetaryGrid() == "org.esa.snap.binning.support.IsinPlanetaryGrid") && format != null) {
                 // if only one reducer and output format parameter set, format directly
 
                 // handle metadata
-                // it is always the first key
+                // it is always the first key in some reducer
                 // TODO what happens if there is no metadata key or does this never happen ??? cell-l3-workflow !!
-                context.nextKey();
-                processingGraphMetadata = aggregateMetadata(context.getValues());
-                final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
-                conf.set(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
+                final boolean lookingAtNext = context.nextKey();
+                if (context.getCurrentKey().get() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
+                    CalvalusLogger.getLogger().info("metadata record seen");
+                    processingGraphMetadata = aggregateMetadata(context.getValues());
+                    final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
+                    conf.set(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
+                } else {
+                    CalvalusLogger.getLogger().info("no metadata record seen, resetting iterator");
+                    context = new WrappedContext(context, lookingAtNext);
+                }
 
                 final TemporalBinSource temporalBinSource = new ReduceTemporalBinSource(context);
 
@@ -287,4 +305,273 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
             }
         }
     }
+
+    class WrappedContext extends Context {
+        final Context delegate;
+        boolean lookingAtNext;
+        public WrappedContext(Context delegate, boolean lookingAtNext) {
+            this.delegate = delegate;
+            this.lookingAtNext = lookingAtNext;
+        }
+        @Override
+        public boolean nextKey() throws IOException, InterruptedException {
+            if (lookingAtNext) {
+                lookingAtNext = false;
+                return true;
+            }
+            return delegate.nextKey();
+        }
+
+        @Override
+        public Iterable<L3SpatialBin> getValues() throws IOException, InterruptedException {
+            return delegate.getValues();
+        }
+
+        @Override
+        public boolean nextKeyValue() throws IOException, InterruptedException {
+            return delegate.nextKeyValue();
+        }
+
+        @Override
+        public LongWritable getCurrentKey() throws IOException, InterruptedException {
+            return delegate.getCurrentKey();
+        }
+
+        @Override
+        public L3SpatialBin getCurrentValue() throws IOException, InterruptedException {
+            return delegate.getCurrentValue();
+        }
+
+        @Override
+        public void write(LongWritable key, L3TemporalBin value) throws IOException, InterruptedException {
+            delegate.write(key, value);
+
+        }
+
+        @Override
+        public OutputCommitter getOutputCommitter() {
+            return delegate.getOutputCommitter();
+        }
+
+        @Override
+        public TaskAttemptID getTaskAttemptID() {
+            return delegate.getTaskAttemptID();
+        }
+
+        @Override
+        public void setStatus(String msg) {
+            delegate.setStatus(msg);
+        }
+
+        @Override
+        public String getStatus() {
+            return delegate.getStatus();
+        }
+
+        @Override
+        public float getProgress() {
+            return delegate.getProgress();
+        }
+
+        @Override
+        public Counter getCounter(Enum<?> counterName) {
+            return delegate.getCounter(counterName);
+        }
+
+        @Override
+        public Counter getCounter(String groupName, String counterName) {
+            return delegate.getCounter(groupName, counterName);
+        }
+
+        @Override
+        public Configuration getConfiguration() {
+            return delegate.getConfiguration();
+        }
+
+        @Override
+        public Credentials getCredentials() {
+            return delegate.getCredentials();
+        }
+
+        @Override
+        public JobID getJobID() {
+            return delegate.getJobID();
+        }
+
+        @Override
+        public int getNumReduceTasks() {
+            return delegate.getNumReduceTasks();
+        }
+
+        @Override
+        public Path getWorkingDirectory() throws IOException {
+            return delegate.getWorkingDirectory();
+        }
+
+        @Override
+        public Class<?> getOutputKeyClass() {
+            return delegate.getOutputKeyClass();
+        }
+
+        @Override
+        public Class<?> getOutputValueClass() {
+            return delegate.getOutputValueClass();
+        }
+
+        @Override
+        public Class<?> getMapOutputKeyClass() {
+            return delegate.getMapOutputKeyClass();
+        }
+
+        @Override
+        public Class<?> getMapOutputValueClass() {
+            return delegate.getMapOutputValueClass();
+        }
+
+        @Override
+        public String getJobName() {
+            return delegate.getJobName();
+        }
+
+        @Override
+        public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
+            return null;
+        }
+
+        @Override
+        public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
+            return delegate.getMapperClass();
+        }
+
+        @Override
+        public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
+            return delegate.getCombinerClass();
+        }
+
+        @Override
+        public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
+            return delegate.getReducerClass();
+        }
+
+        @Override
+        public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
+            return delegate.getOutputFormatClass();
+        }
+
+        @Override
+        public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
+            return delegate.getPartitionerClass();
+        }
+
+        @Override
+        public RawComparator<?> getSortComparator() {
+            return delegate.getSortComparator();
+        }
+
+        @Override
+        public String getJar() {
+            return delegate.getJar();
+        }
+
+        @Override
+        public RawComparator<?> getCombinerKeyGroupingComparator() {
+            return delegate.getCombinerKeyGroupingComparator();
+        }
+
+        @Override
+        public RawComparator<?> getGroupingComparator() {
+            return delegate.getGroupingComparator();
+        }
+
+        @Override
+        public boolean getJobSetupCleanupNeeded() {
+            return delegate.getJobSetupCleanupNeeded();
+        }
+
+        @Override
+        public boolean getTaskCleanupNeeded() {
+            return delegate.getTaskCleanupNeeded();
+        }
+
+        @Override
+        public boolean getProfileEnabled() {
+            return delegate.getProfileEnabled();
+        }
+
+        @Override
+        public String getProfileParams() {
+            return delegate.getProfileParams();
+        }
+
+        @Override
+        public Configuration.IntegerRanges getProfileTaskRange(boolean isMap) {
+            return delegate.getProfileTaskRange(isMap);
+        }
+
+        @Override
+        public String getUser() {
+            return delegate.getUser();
+        }
+
+        @Override
+        public boolean getSymlink() {
+            return delegate.getSymlink();
+        }
+
+        @Override
+        public Path[] getArchiveClassPaths() {
+            return delegate.getArchiveClassPaths();
+        }
+
+        @Override
+        public URI[] getCacheArchives() throws IOException {
+            return delegate.getCacheArchives();
+        }
+
+        @Override
+        public URI[] getCacheFiles() throws IOException {
+            return delegate.getCacheFiles();
+        }
+
+        @Override
+        public Path[] getLocalCacheArchives() throws IOException {
+            return delegate.getLocalCacheArchives();
+        }
+
+        @Override
+        public Path[] getLocalCacheFiles() throws IOException {
+            return delegate.getLocalCacheFiles();
+        }
+
+        @Override
+        public Path[] getFileClassPaths() {
+            return delegate.getFileClassPaths();
+        }
+
+        @Override
+        public String[] getArchiveTimestamps() {
+            return delegate.getArchiveTimestamps();
+        }
+
+        @Override
+        public String[] getFileTimestamps() {
+            return delegate.getFileTimestamps();
+        }
+
+        @Override
+        public int getMaxMapAttempts() {
+            return delegate.getMaxMapAttempts();
+        }
+
+        @Override
+        public int getMaxReduceAttempts() {
+            return delegate.getMaxReduceAttempts();
+        }
+
+        @Override
+        public void progress() {
+            delegate.progress();
+        }
+    }
+
 }
