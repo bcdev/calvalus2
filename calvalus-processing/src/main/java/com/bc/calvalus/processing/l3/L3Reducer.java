@@ -90,7 +90,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         try {
             int numReducers = conf.getInt(JobContext.NUM_REDUCES, 8);
             String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-            if ((numReducers == 1 || binningConfig.getPlanetaryGrid() == "org.esa.snap.binning.support.IsinPlanetaryGrid") && format != null) {
+            if ((numReducers == 1 || "org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())) && format != null) {
                 // if only one reducer and output format parameter set, format directly
 
                 // handle metadata

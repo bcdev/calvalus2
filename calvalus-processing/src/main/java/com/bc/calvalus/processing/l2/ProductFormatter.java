@@ -54,7 +54,7 @@ public class ProductFormatter {
     private final String outputCompression;
     private File tmpDir;
 
-    public ProductFormatter(String productName, String outputFormat, String outputCompression) {
+    public ProductFormatter(String productName, String outputFormat, String desiredOutputCompression) {
         String outputExtension = "";
         if (outputFormat.equals("BEAM-DIMAP")) {
             outputExtension = ".dim";
@@ -68,12 +68,14 @@ public class ProductFormatter {
         } else if (outputFormat.equals("NetCDF")) {
             outputExtension = ".nc";
             outputFormat = "NetCDF-BEAM"; // use NetCDF with BEAM extensions
+            outputCompression = desiredOutputCompression;
         } else if (outputFormat.equals("NetCDF4")) {
             outputExtension = ".nc";
             outputCompression = ""; // no further compression required
             outputFormat = "NetCDF4-BEAM"; // use NetCDF with BEAM extensions
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
+            outputCompression = desiredOutputCompression;
         } else if (outputFormat.equals("BigGeoTiff") || outputFormat.equals("GeoTIFF-BigTIFF")) {
             outputExtension = ".tif";
             outputCompression = "";
@@ -81,6 +83,11 @@ public class ProductFormatter {
         } else if (outputFormat.equals("CSV")) {
             outputExtension = ".txt";
             outputCompression = "";
+        } else if (outputFormat.equals("dir")){
+            outputCompression = "dir";
+            outputFormat = "NetCDF4-BEAM";
+        } else {
+            outputCompression = desiredOutputCompression;
         }
         // test if writer for output format exists
         ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
@@ -107,7 +114,6 @@ public class ProductFormatter {
             outputFilename = productName + outputExtension;
         }
         this.outputFormat = outputFormat;
-        this.outputCompression = outputCompression;
         this.productFilename = productName + outputExtension;
     }
 
@@ -157,7 +163,7 @@ public class ProductFormatter {
             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
             copyAndClose(inputStream, gzipOutputStream, context);
         } else if ("dir".equals(outputCompression)) {
-            // currently unused, but might be useful in the future
+            // currently used only for NetCDF4-BEAM products with IsinPlanetaryGrid
             LOG.info("Copying content of tmpDir to HDFS.");
             File[] files = tmpDir.listFiles();
             if (files != null) {

@@ -122,7 +122,13 @@ public class L3Formatter {
         ConverterRegistry.getInstance().setConverter(Product.class, new ProductConverter(conf));
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
-        ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        ProductFormatter productFormatter;
+        if ("org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())){
+            productFormatter = new ProductFormatter(productName,  "dir",null);
+        } else {
+            productFormatter = new ProductFormatter(productName, format, compression);
+        }
         try {
             File productFile = productFormatter.createTemporaryProductFile();
 
@@ -136,7 +142,13 @@ public class L3Formatter {
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");
-            productFormatter.compressToHDFS(context, productFile);
+
+            if ("org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())) {
+                //For the case of IsinPlanetaryGrid the whole directory has to be copied.
+                productFormatter.compressToHDFS(context, productFile.getParentFile());
+            } else {
+                productFormatter.compressToHDFS(context, productFile);
+            }
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Formatting failed.", e);
