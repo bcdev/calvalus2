@@ -48,7 +48,8 @@ public class PlotDatasetCollector implements RecordProcessor {
     @Override
     public void processHeaderRecord(Object[] attributeNames, Object[] annotationNames) throws IOException {
         if (hasHeaderBeenSeen()) {
-            throw new IllegalStateException("Header record seen twice.");
+            //throw new IllegalStateException("Header record seen twice.");
+            return;  // TODO: preliminary reaction to changed table columns
         }
         this.groupAttributeIndex = findIndex(attributeNames, groupAttributeName);
         this.variablePairs = findVariablePairs(attributeNames, variableMappings);

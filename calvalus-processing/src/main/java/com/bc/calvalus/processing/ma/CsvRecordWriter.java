@@ -24,10 +24,10 @@ public class CsvRecordWriter implements RecordProcessor {
     static final String SUFFIX_N = "_n";
     private static final String CALVALUS_ID = "CALVALUS_ID";
 
-    private final Writer recordsAllWriter;
-    private final Writer recordsAggWriter;
-    private final Writer labeledAllRecordsWriter;
-    private final Writer labeledAggRecordsWriter;
+    private Writer recordsAllWriter;
+    private Writer recordsAggWriter;
+    private Writer labeledAllRecordsWriter;
+    private Writer labeledAggRecordsWriter;
 
     private final char separatorChar;
     private final DateFormat dateFormat;
@@ -123,13 +123,21 @@ public class CsvRecordWriter implements RecordProcessor {
 
     @Override
     public void finalizeRecordProcessing() throws IOException {
-        recordsAllWriter.close();
-        recordsAggWriter.close();
+        if (recordsAllWriter != null) {
+            recordsAllWriter.close();
+            recordsAllWriter = null;
+        }
+        if (recordsAggWriter != null) {
+            recordsAggWriter.close();
+            recordsAggWriter = null;
+        }
         if (labeledAllRecordsWriter != null) {
             labeledAllRecordsWriter.close();
+            labeledAllRecordsWriter = null;
         }
         if (labeledAggRecordsWriter != null) {
             labeledAggRecordsWriter.close();
+            labeledAggRecordsWriter = null;
         }
     }
 

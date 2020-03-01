@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
 /**
@@ -65,7 +66,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         LOG.warning("Collecting records...");
         Map<String, Integer> annotatedRecordCounts = processRecords(context, recordProcessors);
 
-        finalizeRecordProcessing(recordProcessors);
+        // moved to processRecords: finalizeRecordProcessing(recordProcessors);
 
         final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
         ReportGenerator.generateReport(new TaskOutputStreamFactory(context),
@@ -79,6 +80,9 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         int goodRecordCount = 0;
         int totalRecordCount = 0;
         int exclusionIndex = -1;
+        List<String> keyFilenameStack = new ArrayList<>();
+        List<RecordProcessor[]> recordProcessorStack = new ArrayList<>();
+        String previousHeader = null;
 
         while (context.nextKey()) {
             final Text key = context.getCurrentKey();
@@ -88,11 +92,27 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                 final RecordWritable record = iterator.next();
                 context.write(key, record);
 
-                if (key.equals(MAMapper.HEADER_KEY)) {
-                    List<Object> annotNames = Arrays.asList(record.getAnnotationValues());
-                    exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
-                    processHeaderRecord(record, recordProcessors);
+                if (key.toString().startsWith("#_")) {
+                    String thisHeader = Arrays.toString(record.getAttributeValues());
+                    if (! thisHeader.equals(previousHeader)) {
+                        final String keyFilename = key.toString().substring(2);
+                        if (previousHeader == null) {
+                            keyFilenameStack.add(0, keyFilename);
+                            recordProcessorStack.add(0, recordProcessors);
+                        } else {
+                            LOG.info("table structure changes starting with " + keyFilename);
+                            recordProcessors = createRecordProcessors(keyFilename, context, recordProcessors);
+                            keyFilenameStack.add(0, keyFilename);
+                            recordProcessorStack.add(0, recordProcessors);
+                        }
+                        previousHeader = thisHeader;
+                        List<Object> annotNames = Arrays.asList(record.getAnnotationValues());
+                        exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
+                        processHeaderRecord(record, recordProcessors);
+                    }
                 } else {
+                    final String keyFilename = key.toString().substring(key.toString().indexOf('_')+1);
+                    recordProcessors = getRecordProcessors(keyFilename, keyFilenameStack, recordProcessorStack);
                     processDataRecord(key.toString(), record, recordProcessors);
                     totalRecordCount++;
                     if (exclusionIndex >= 0) {
@@ -112,6 +132,10 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                 }
             }
         }
+        for (RecordProcessor[] processors : recordProcessorStack) {
+             finalizeRecordProcessing(processors);
+        }
+
         Map<String, Integer> annotatedRecordCounts = new LinkedHashMap<String, Integer>();
         annotatedRecordCounts.put("Total", totalRecordCount);
         ArrayList<String> keyList = new ArrayList<String>(exclusionRecordCounts.keySet());
@@ -121,6 +145,27 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         }
         annotatedRecordCounts.put("Good", goodRecordCount);
         return annotatedRecordCounts;
+    }
+
+    private RecordProcessor[] getRecordProcessors(String keyFilename,
+                                                  List<String> keyFilenameStack,
+                                                  List<RecordProcessor[]> recordProcessorStack) {
+        for (int i=0; i<keyFilenameStack.size(); ++i) {
+            if (keyFilename.compareTo(keyFilenameStack.get(i)) >= 0) {
+                return recordProcessorStack.get(i);
+            }
+        }
+        throw new NoSuchElementException("cannot find writers for " + keyFilename);
+    }
+
+    private RecordProcessor[] createRecordProcessors(String keyFilename, Context context, RecordProcessor[] recordProcessors) throws IOException, InterruptedException {
+        return new RecordProcessor[] {
+                new CsvRecordWriter(createWriter(context, "records-all.starting-with-" + keyFilename + ".txt"),
+                                    createWriter(context, "records-agg.starting-with-" + keyFilename + ".txt"),
+                                    createWriter(context, "annotated-records-all.starting-with-" + keyFilename + ".txt"),
+                                    createWriter(context, "annotated-records-agg.starting-with-" + keyFilename + ".txt")),
+                recordProcessors[1]
+        };
     }
 
     private void processHeaderRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {

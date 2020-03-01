@@ -201,8 +201,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 long recordWriteTime = (now() - t0);
                 LOG.info(String.format("found %s match-ups, took %s sec", numMatchUps, recordWriteTime / 1E3));
                 if (numMatchUps > 0) {
-                    // write header
-                    context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
+                    // write header for each product, it may change in the time series (e.g. for Landsat at 01.05.2017)
+                    context.write(new Text(String.format("#_%s", processedProduct.getName())),
+                                  new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
                 } else {
