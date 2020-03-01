@@ -137,7 +137,11 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 } else if ("file".equals(pathConfig.getPath().toUri().getScheme()) && new File(pathConfig.getPath().toUri()).getName().matches("S2._OPER_SSC_L2VALD_[0-9]{2}[A-Z]{3}____[0-9]{8}.(?:HDR|hdr)$")) {
                     localFile = new File(pathConfig.getPath().toUri());
                     snapFormatName = FORMAT_L2_SEN2AGRI;
-                } else if ("s3a".equals(pathConfig.getPath().toUri().getScheme()) || "swift".equals(pathConfig.getPath().toUri().getScheme())) {
+                } else if (("s3a".equals(pathConfig.getPath().toUri().getScheme())
+                        || "swift".equals(pathConfig.getPath().toUri().getScheme()))
+                        && ! pathConfig.getPath().getName().endsWith(".zip")
+                        && ! pathConfig.getPath().getName().endsWith(".tar.gz")
+                        && ! pathConfig.getPath().getName().endsWith(".tgz")) {
                     // download the folder
                     FileSystem fs = pathConfig.getPath().getFileSystem(configuration);
                     File dst = new File(pathConfig.getPath().getName());
@@ -145,7 +149,8 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     long t0 = System.currentTimeMillis();
                     FileUtil.copy(fs, pathConfig.getPath(), dst, false, configuration);
                     LOG.info("time for s3/swift input retrieval [ms]: " + (System.currentTimeMillis() - t0));
-                    // TODO: support L2A as well
+                    // TODO: restricted to S2 MSIL1C; support L2A as well, maybe support other Sentinel products and other products
+                    // should be done by a ProductIO
                     localFile = new File(dst, "MTD_MSIL1C.xml");
                     snapFormatName = "SENTINEL-2-MSI-MultiRes";
                 } else {

@@ -593,7 +593,13 @@ public class CalvalusDataInputs {
         } else {
             StringBuilder inputPathStringBuilder = new StringBuilder();
             for (String productSetPath : productSet.getPath().split(",")) {
-                inputPathStringBuilder.append("/calvalus/").append(productSetPath).append(",");
+                if (productSetPath.contains(":")) {
+                    // s3a://urbantep/calvalus/...
+                    inputPathStringBuilder.append(productSetPath).append(",");
+                } else {
+                    // eodata/...
+                    inputPathStringBuilder.append("/calvalus/").append(productSetPath).append(",");
+                }
             }
             String inputPathString = inputPathStringBuilder.substring(0, inputPathStringBuilder.length() - 1);
             inputMapFormatted.put("inputPath", inputPathString);
