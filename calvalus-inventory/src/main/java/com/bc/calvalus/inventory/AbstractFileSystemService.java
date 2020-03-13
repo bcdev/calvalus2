@@ -75,6 +75,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         Configuration conf = jobClientsMap.getConfiguration();
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        System.out.println(commonPathPrefix);
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
         List<FileStatus> fileStatuses = new ArrayList<>(1000);
