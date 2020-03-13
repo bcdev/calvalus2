@@ -94,7 +94,6 @@ public class S2BaInputFormat extends InputFormat {
 
     private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         String referencePath = referenceFileStatus.getPath().toString();
-        System.out.println("referencePath = " + referencePath);
         String periodInputPathPattern = getPeriodInputPathPattern(referencePath);
 
         InputPathResolver inputPathResolver = new InputPathResolver();
@@ -149,14 +148,9 @@ public class S2BaInputFormat extends InputFormat {
     }
 
     static String getPeriodInputPathPattern(String s2PrePath) {
-        // /calvalus/home/thomas/S2_L2A/2019/01/01/S2B_MSIL2A_20190101T091359_N0211_R050_T33PWK_20190101T120819.zip
-        int filenameIndex;
-        filenameIndex = s2PrePath.indexOf("S2A_MSIL2A");
-        if (filenameIndex == -1) {
-            filenameIndex = s2PrePath.indexOf("S2B_MSIL2A");
-        }
-        String basePath = s2PrePath.substring(0, filenameIndex); // /calvalus/home/thomas/S2_L2A/2019/01/01
-        basePath = new File(basePath).getParentFile().getParentFile().getParent(); ///calvalus/home/thomas/S2_L2A
+        // hdfs://calvalus/calvalus/home/thomas/S2_L2A/2019/01/01/S2B_MSIL2A_20190101T091359_N0211_R050_T33PWK_20190101T120819.zip
+        int filenameIndex = s2PrePath.indexOf("S2_L2A");
+        String basePath = s2PrePath.substring(0, filenameIndex); // hdfs://calvalus/calvalus/home/thomas/S2_L2A
         String filename = s2PrePath.split("/")[s2PrePath.split("/").length - 1];
         String tile = filename.split("_")[5];
         return String.format("%s/.*/.*/.*/.*%s.*.zip", basePath, tile);
