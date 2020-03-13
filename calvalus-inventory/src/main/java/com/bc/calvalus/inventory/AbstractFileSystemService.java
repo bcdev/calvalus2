@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,7 +74,11 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     @Override
     public FileStatus[] globFiles(String username, List<String> pathPatterns) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
+        for (String pathPattern : pathPatterns) {
+            System.out.println("pathPattern = " + pathPattern);
+        }
         Pattern pattern = createPattern(pathPatterns, conf);
+        System.out.println(pattern.pattern());
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         System.out.println(commonPathPrefix);
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
