@@ -94,14 +94,12 @@ public class S2BaInputFormat extends InputFormat {
 
     private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         String referencePath = referenceFileStatus.getPath().toString();
+        System.out.println("referencePath = " + referencePath);
         String periodInputPathPattern = getPeriodInputPathPattern(referencePath);
 
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(periodInputPathPattern);
         FileStatus[] periodStatuses = hdfsInventoryService.globFiles("cvop", inputPatterns);
-        for (String inputPattern : inputPatterns) {
-            System.out.println("inputPattern = " + inputPattern);
-        }
         sort(periodStatuses);
 
         List<FileStatus> filteredList = new ArrayList<>();
