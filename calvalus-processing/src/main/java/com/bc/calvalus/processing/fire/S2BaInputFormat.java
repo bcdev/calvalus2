@@ -161,7 +161,7 @@ public class S2BaInputFormat extends InputFormat {
         basePath = new File(basePath).getParentFile().getParentFile().getParent(); ///calvalus/home/thomas/S2_L2A
         String filename = s2PrePath.split("/")[s2PrePath.split("/").length - 1];
         String tile = filename.split("_")[5];
-        return String.format("%s/.*/.*/.*/.*%s.*.tif$", basePath, tile);
+        return String.format("%s/.*/.*/.*/.*%s.*.zip", basePath, tile);
     }
 
     @SuppressWarnings("WeakerAccess")
