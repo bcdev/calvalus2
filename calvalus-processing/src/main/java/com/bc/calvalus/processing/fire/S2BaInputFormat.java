@@ -99,6 +99,9 @@ public class S2BaInputFormat extends InputFormat {
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(periodInputPathPattern);
         FileStatus[] periodStatuses = hdfsInventoryService.globFiles("cvop", inputPatterns);
+        for (String inputPattern : inputPatterns) {
+            System.out.println("inputPattern = " + inputPattern);
+        }
         sort(periodStatuses);
 
         List<FileStatus> filteredList = new ArrayList<>();
