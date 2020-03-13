@@ -14,6 +14,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -147,10 +148,17 @@ public class S2BaInputFormat extends InputFormat {
     }
 
     static String getPeriodInputPathPattern(String s2PrePath) {
-        int yearIndex = s2PrePath.indexOf("s2-pre/") + "s2-pre/".length();
-        String tile = s2PrePath.split("_")[5];
-        String basePath = s2PrePath.substring(0, yearIndex);
-        return String.format("%s.*/.*/.*/.*%s.tif$", basePath, tile);
+        // /calvalus/home/thomas/S2_L2A/2019/01/01/S2B_MSIL2A_20190101T091359_N0211_R050_T33PWK_20190101T120819.zip
+        int filenameIndex;
+        filenameIndex = s2PrePath.indexOf("S2A_MSIL2A");
+        if (filenameIndex == -1) {
+            filenameIndex = s2PrePath.indexOf("S2B_MSIL2A");
+        }
+        String basePath = s2PrePath.substring(0, filenameIndex); // /calvalus/home/thomas/S2_L2A/2019/01/01
+        basePath = new File(basePath).getParentFile().getParentFile().getParent(); ///calvalus/home/thomas/S2_L2A
+        String filename = s2PrePath.split("/")[s2PrePath.split("/").length - 1];
+        String tile = filename.split("_")[5];
+        return String.format("%s/.*/.*/.*/.*%s.*.tif$", basePath, tile);
     }
 
     @SuppressWarnings("WeakerAccess")
