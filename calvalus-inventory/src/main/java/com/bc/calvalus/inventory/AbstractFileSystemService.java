@@ -74,13 +74,8 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     @Override
     public FileStatus[] globFiles(String username, List<String> pathPatterns) throws IOException {
         Configuration conf = jobClientsMap.getConfiguration();
-        for (String pathPattern : pathPatterns) {
-            System.out.println("pathPattern = " + pathPattern);
-        }
         Pattern pattern = createPattern(pathPatterns, conf);
-        System.out.println(pattern.pattern());
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
-        System.out.println(commonPathPrefix);
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
         List<FileStatus> fileStatuses = new ArrayList<>(1000);
