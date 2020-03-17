@@ -38,8 +38,8 @@ import java.util.logging.Logger;
 /**
  * Reads the records emitted by the MAMapper.
  * It is expected that each true 'record' key will only have one unique value.
- * Only 'header' keys ("#") will have multiple values containing all the same the attribute names.
- * This is why the reducer only writes the first value.
+ * Only 'header' keys ("#") will have multiple values containing (in most cases) all the same the attribute names.
+ * This is why the reducer only writes the first value and checks whether the other headers are equal.
  *
  * @author Norman Fomferra
  */
@@ -66,7 +66,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         LOG.warning("Collecting records...");
         Map<String, Integer> annotatedRecordCounts = processRecords(context, recordProcessors);
 
-        // moved to processRecords: finalizeRecordProcessing(recordProcessors);
+        finalizeRecordProcessing(recordProcessors);
 
         final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
         ReportGenerator.generateReport(new TaskOutputStreamFactory(context),
@@ -80,9 +80,9 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         int goodRecordCount = 0;
         int totalRecordCount = 0;
         int exclusionIndex = -1;
-        List<String> keyFilenameStack = new ArrayList<>();
-        List<RecordProcessor[]> recordProcessorStack = new ArrayList<>();
-        String previousHeader = null;
+        String defaultHeader = null;
+        Map<String, RecordProcessor[]> headerMap = new HashMap<>();
+        Map<String, RecordProcessor[]> filenameMap = new HashMap<>();
 
         while (context.nextKey()) {
             final Text key = context.getCurrentKey();
@@ -90,30 +90,36 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
             if (iterator.hasNext()) {
 
                 final RecordWritable record = iterator.next();
-                context.write(key, record);
+                context.write(key, record);  // where is this written to?
 
                 if (key.toString().startsWith("#_")) {
                     String thisHeader = Arrays.toString(record.getAttributeValues());
-                    if (! thisHeader.equals(previousHeader)) {
-                        final String keyFilename = key.toString().substring(2);
-                        if (previousHeader == null) {
-                            keyFilenameStack.add(0, keyFilename);
-                            recordProcessorStack.add(0, recordProcessors);
-                        } else {
-                            LOG.info("table structure changes starting with " + keyFilename);
-                            recordProcessors = createRecordProcessors(keyFilename, context, recordProcessors);
-                            keyFilenameStack.add(0, keyFilename);
-                            recordProcessorStack.add(0, recordProcessors);
-                        }
-                        previousHeader = thisHeader;
+                    if (thisHeader.equals(defaultHeader)) {
+                        // nothing to do
+                    } else if (defaultHeader == null) {
+                        defaultHeader = thisHeader;
                         List<Object> annotNames = Arrays.asList(record.getAnnotationValues());
                         exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
                         processHeaderRecord(record, recordProcessors);
+                    } else {
+                        final String keyFilename = key.toString().substring(2);
+                        RecordProcessor[] processors = headerMap.get(thisHeader);
+                        if (processors == null) {
+                            processors = createRecordProcessors(keyFilename, context, recordProcessors);
+                            headerMap.put(thisHeader, processors);
+                            List<Object> annotNames = Arrays.asList(record.getAnnotationValues());
+                            exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
+                            processHeaderRecord(record, processors);
+                        }
+                        filenameMap.put(keyFilename, processors);
                     }
                 } else {
                     final String keyFilename = key.toString().substring(key.toString().indexOf('_')+1);
-                    recordProcessors = getRecordProcessors(keyFilename, keyFilenameStack, recordProcessorStack);
-                    processDataRecord(key.toString(), record, recordProcessors);
+                    RecordProcessor[] processors = filenameMap.get(keyFilename);
+                    if (processors == null) {
+                        processors = recordProcessors;
+                    }
+                    processDataRecord(key.toString(), record, processors);
                     totalRecordCount++;
                     if (exclusionIndex >= 0) {
                         String reason = (String) record.getAnnotationValues()[exclusionIndex];
@@ -132,7 +138,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                 }
             }
         }
-        for (RecordProcessor[] processors : recordProcessorStack) {
+        for (RecordProcessor[] processors : headerMap.values()) {
              finalizeRecordProcessing(processors);
         }
 
@@ -145,17 +151,6 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         }
         annotatedRecordCounts.put("Good", goodRecordCount);
         return annotatedRecordCounts;
-    }
-
-    private RecordProcessor[] getRecordProcessors(String keyFilename,
-                                                  List<String> keyFilenameStack,
-                                                  List<RecordProcessor[]> recordProcessorStack) {
-        for (int i=0; i<keyFilenameStack.size(); ++i) {
-            if (keyFilename.compareTo(keyFilenameStack.get(i)) >= 0) {
-                return recordProcessorStack.get(i);
-            }
-        }
-        throw new NoSuchElementException("cannot find writers for " + keyFilename);
     }
 
     private RecordProcessor[] createRecordProcessors(String keyFilename, Context context, RecordProcessor[] recordProcessors) throws IOException, InterruptedException {
