@@ -397,6 +397,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             case 14:
                                 final int stateCount = count(state, bandDataS, i);
                                 accu[1][i] += stateCount;
+                                for (int b = 3; b < numTargetBands; ++b) {
+                                    accu[b][i] = stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
+                                }
                                 break;
                         }
                     }
