@@ -6,7 +6,8 @@ import com.bc.calvalus.processing.fire.format.SensorStrategy;
 public class GlobalPixelProductAreaProvider implements SensorStrategy.PixelProductAreaProvider {
 
     enum GlobalPixelProductArea {
-        NORTH_AMERICA(0, 7, 154, 71, "1", "North America"),
+        NORTH_AMERICA(0, 7, 130, 71, "1", "North America"),
+//        NORTH_AMERICA(0, 7, 154, 71, "1", "North America"),
         SOUTH_AMERICA(75, 71, 146, 147, "2", "South America"),
         EUROPE(154, 7, 233, 65, "3", "Europe"),
         ASIA(233, 7, 360, 90, "4", "Asia"),
