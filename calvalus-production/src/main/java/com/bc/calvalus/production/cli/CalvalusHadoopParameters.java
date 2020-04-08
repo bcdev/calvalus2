@@ -3,8 +3,8 @@ package com.bc.calvalus.production.cli;
 import com.bc.calvalus.processing.ra.RAConfig;
 import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.ceres.binding.BindingException;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.operation.union.CascadedPolygonUnion;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;

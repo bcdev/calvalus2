@@ -20,7 +20,7 @@ import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.CompositingType;

@@ -5,6 +5,7 @@ import org.apache.commons.io.output.NullWriter;
 import org.esa.snap.core.dataio.EncodeQualification;
 import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductWriter;
+import org.esa.snap.core.dataio.ProductWriterListener;
 import org.esa.snap.core.dataio.ProductWriterPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
@@ -203,6 +204,21 @@ public class StreamingProductWriterTest {
 
                     @Override
                     public void setFormatName(String formatName) {
+
+                    }
+
+                    @Override
+                    public void prepareWriting(ProgressMonitor pm) {
+
+                    }
+
+                    @Override
+                    public void addProductWriterListener(ProductWriterListener productWriterListener) {
+
+                    }
+
+                    @Override
+                    public void removeProductWriterListener(ProductWriterListener productWriterListener) {
 
                     }
                 };

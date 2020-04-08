@@ -6,10 +6,10 @@ import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.io.WKTReader;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.io.WKTReader;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
@@ -512,7 +512,7 @@ public class ProductionRequest implements XmlConvertible {
         final WKTReader wktReader = new WKTReader();
         try {
             return wktReader.read(text);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
+        } catch (org.locationtech.jts.io.ParseException e) {
             throw new ProductionException(
                         "Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
         }

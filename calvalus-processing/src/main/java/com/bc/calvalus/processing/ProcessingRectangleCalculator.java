@@ -3,7 +3,7 @@ package com.bc.calvalus.processing;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.utils.GeometryUtils;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;

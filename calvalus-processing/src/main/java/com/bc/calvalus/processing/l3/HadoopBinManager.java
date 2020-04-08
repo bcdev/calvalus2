@@ -2,7 +2,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.BinManager;

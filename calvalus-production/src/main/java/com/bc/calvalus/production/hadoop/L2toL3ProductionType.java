@@ -35,7 +35,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertySet;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.operator.BinningConfig;
