@@ -113,6 +113,7 @@ public abstract class ProcessorAdapter {
             System.setProperty("snap.userdir", cwd);
             System.setProperty("snap.home", cwd);
             System.setProperty("snap.pythonModuleDir", cwd);
+            System.setProperty("java.io.tmpdir", cwd);
             LOG.info("Set 'snap.userdir', 'snap.home', 'snap.pythonModuleDir' to CWD: " + cwd);
             if (conf.get("snap.gpf.allowAuxdataDownload") == null) {
                 System.setProperty("snap.gpf.allowAuxdataDownload", "false");
