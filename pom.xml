@@ -14,10 +14,10 @@
         <hadoop.version>3.2.1-BC</hadoop.version>
         <calvalus.version>2.19-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>7.0.4-SNAPSHOT</snap.version>
-        <s1tbx.version>7.0.3-SNAPSHOT</s1tbx.version>
-        <s2tbx.version>7.0.1-SNAPSHOT</s2tbx.version>
-        <s3tbx.version>7.0.4-SNAPSHOT</s3tbx.version>
+        <snap.version>7.0.4cv-SNAPSHOT</snap.version>
+        <s1tbx.version>7.0.3cv-SNAPSHOT</s1tbx.version>
+        <s2tbx.version>7.0.1cv-SNAPSHOT</s2tbx.version>
+        <s3tbx.version>7.0.4cv-SNAPSHOT</s3tbx.version>
         <seadas.reader.version>1.9-SNAPSHOT</seadas.reader.version>
         <probav.reader.version>2.2.0-SNAPSHOT</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
