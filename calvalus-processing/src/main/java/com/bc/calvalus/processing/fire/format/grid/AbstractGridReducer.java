@@ -57,6 +57,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         float[] errors = currentGridCells.errors;
         List<double[]> baInLc = currentGridCells.baInLc;
         float[] coverage = currentGridCells.coverage;
+        float[] patchNumber = currentGridCells.patchNumber;
 
         float[] burnedAreaFloat = new float[burnedArea.length];
         for (int i = 0; i < burnedArea.length; i++) {
@@ -69,9 +70,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "burned_area", burnedAreaFloat);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "standard_error", errors);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "fraction_of_observed_area", coverage);
-            float[] data = new float[burnedAreaFloat.length];
-            Arrays.fill(data, 0);
-            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "number_of_patches", data);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "number_of_patches", patchNumber);
 
             for (int i = 0; i < baInLc.size(); i++) {
                 double[] baInClass = baInLc.get(i);
