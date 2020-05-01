@@ -95,9 +95,12 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
 
                 // handle metadata
                 // it is always the first key in some reducer
+                // unless we had not inputs at all
                 // TODO what happens if there is no metadata key or does this never happen ??? cell-l3-workflow !!
                 final boolean lookingAtNext = context.nextKey();
-                if (context.getCurrentKey().get() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
+                if (! lookingAtNext) {
+                    return;
+                } else if (context.getCurrentKey().get() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
                     CalvalusLogger.getLogger().info("metadata record seen");
                     processingGraphMetadata = aggregateMetadata(context.getValues());
                     final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
