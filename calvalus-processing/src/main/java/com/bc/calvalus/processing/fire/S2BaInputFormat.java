@@ -30,10 +30,20 @@ public class S2BaInputFormat extends InputFormat {
     private static final int MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT = 4;
     private static final int MAX_PRE_IMAGES_COUNT_MULTI_ORBIT = 8;
 
+    private String outputDir;
+    private String sensor;
+    private JobContext jobContext;
+
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
-        Configuration conf = jobContext.getConfiguration();
+        this.jobContext = jobContext;
+        Configuration conf = this.jobContext.getConfiguration();
         String inputPathPatterns = conf.get("calvalus.input.pathPatterns");
         String tile = conf.get("calvalus.tile");
+        outputDir = conf.get("calvalus.output.dir");
+        sensor = conf.get("calvalus.sensor");
+        if (!sensor.equals("S2A") && !sensor.equals("S2B")) {
+            throw new IllegalArgumentException("Wrong value for sensor: '" + sensor + "', must be one of 'S2A', 'S2B'");
+        }
 
         Set<InputSplit> splits = new HashSet<>(1000);
 
@@ -65,7 +75,7 @@ public class S2BaInputFormat extends InputFormat {
             // if there already exists a file, like BA-T37NCF-20160514T075819.nc: continue
             Date referenceDate = getDate(referenceFileStatus);
             String postDate = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(referenceDate);
-            String path = "hdfs://calvalus/calvalus/projects/fire/s2-ba/" + tile + "/BA-" + tile + "-" + postDate + ".nc";
+            String path = "hdfs://calvalus/" + outputDir + "/" + tile + "/" + sensor + "-BA-" + tile + "-" + postDate + ".nc";
             Logger.getLogger("com.bc.calvalus").info("Checking if BA output file '" + path + "' already exists...");
             if (hdfsInventoryService.pathExists(path, "cvop")) {
                 Logger.getLogger("com.bc.calvalus").info("already exists, moving to next reference date.");
@@ -93,11 +103,11 @@ public class S2BaInputFormat extends InputFormat {
 
     private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         String referencePath = referenceFileStatus.getPath().toString();
-        String periodInputPathPattern = getPeriodInputPathPattern(referencePath);
+        String tilePathPattern = getTilePathPattern(referencePath);
 
         InputPathResolver inputPathResolver = new InputPathResolver();
-        List<String> inputPatterns = inputPathResolver.resolve(periodInputPathPattern);
-        FileStatus[] periodStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
+        List<String> inputPatterns = inputPathResolver.resolve(tilePathPattern);
+        FileStatus[] periodStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), inputPatterns);
         sort(periodStatuses);
 
         List<FileStatus> filteredList = new ArrayList<>();
@@ -146,11 +156,12 @@ public class S2BaInputFormat extends InputFormat {
         }
     }
 
-    static String getPeriodInputPathPattern(String s2PrePath) {
-        int yearIndex = s2PrePath.indexOf("s2-pre/") + "s2-pre/".length();
-        String tile = s2PrePath.split("_")[5];
-        String basePath = s2PrePath.substring(0, yearIndex);
-        return String.format("%s.*/.*/.*/.*%s.tif$", basePath, tile);
+    static String getTilePathPattern(String s2PrePath) {
+        int startIndex = s2PrePath.indexOf("S2A_MSIL2A") - "/YYYY/MM/DD".length();
+        String tile = s2PrePath.split("/")[s2PrePath.split("/").length - 1].split("_")[5];
+        String basePath = s2PrePath.substring(0, startIndex);
+        String tilePathPattern = String.format("%s.*/.*/.*/.*%s.*.zip", basePath, tile);
+        return tilePathPattern;
     }
 
     @SuppressWarnings("WeakerAccess")

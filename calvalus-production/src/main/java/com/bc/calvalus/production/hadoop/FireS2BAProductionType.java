@@ -124,7 +124,7 @@ public class FireS2BAProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for fire-cci MERIS BA.");
+        throw new NotImplementedException("Staging currently not implemented.");
     }
 
     private static class S2BaPeriodWorkflowItem extends HadoopWorkflowItem {

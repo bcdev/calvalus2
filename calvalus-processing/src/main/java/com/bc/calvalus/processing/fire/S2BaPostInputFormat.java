@@ -31,7 +31,8 @@ public class S2BaPostInputFormat extends InputFormat {
         Configuration conf = jobContext.getConfiguration();
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
         String tile = jobContext.getConfiguration().get("calvalus.tile");
-        String inputPathPattern = outputDir + "/" + tile + "/intermediate.*" + tile + ".*.nc";
+        String sensor = jobContext.getConfiguration().get("calvalus.sensor");
+        String inputPathPattern = String.format("%s/%s/intermediate-%s-%s.*.nc", outputDir, tile, sensor, tile);
 
         List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);
@@ -40,7 +41,8 @@ public class S2BaPostInputFormat extends InputFormat {
         HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
-        FileStatus[] fileStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
+        System.out.println("inputPatterns = " + inputPatterns);
+        FileStatus[] fileStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), inputPatterns);
         createSplits(fileStatuses, intermediateResultSplits);
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d intermediate split(s).", intermediateResultSplits.size()));
 
@@ -55,7 +57,7 @@ public class S2BaPostInputFormat extends InputFormat {
             }
             alreadyHandledDates.add(currentPostDateString);
 
-            String currentPathPattern = outputDir + "/" + tile + "/intermediate.*" + tile + ".*" + currentPostDateString + ".nc";
+            String currentPathPattern = String.format("%s/%s/intermediate-%s-%s.*%s.nc", outputDir, tile, sensor, tile, currentPostDateString);
             List<String> currentPattern = inputPathResolver.resolve(currentPathPattern);
             FileStatus[] matchingStatuses = hdfsInventoryService.globFileStatuses(currentPattern, conf);
             List<Path> filePaths = new ArrayList<>();
@@ -71,7 +73,7 @@ public class S2BaPostInputFormat extends InputFormat {
         return splits;
     }
 
-    private void createSplits(FileStatus[] fileStatuses, List<CombineFileSplit> splits) throws IOException {
+    private void createSplits(FileStatus[] fileStatuses, List<CombineFileSplit> splits) {
         for (FileStatus fileStatus : fileStatuses) {
             Path path = fileStatus.getPath();
             List<Path> filePaths = new ArrayList<>();
@@ -83,7 +85,7 @@ public class S2BaPostInputFormat extends InputFormat {
         }
     }
 
-    public RecordReader createRecordReader(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
+    public RecordReader createRecordReader(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) {
         return delegate.createRecordReader(inputSplit, taskAttemptContext);
     }
 }

@@ -50,7 +50,7 @@ public class MAMapperTest {
 
         executeMatchup(collectedMatchUps, 3, false, true);
 
-        assertEquals(6, collectedMatchUps.size());
+        assertEquals(7, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
@@ -66,7 +66,7 @@ public class MAMapperTest {
 
         executeMatchup(collectedMatchUps, 3, false, false);
 
-        assertEquals(7, collectedMatchUps.size());
+        assertEquals(8, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
@@ -87,7 +87,7 @@ public class MAMapperTest {
 //        for (RecordWritable collectedMatchUp : collectedMatchUps) {
 //            System.out.println("collectedMatchUp = " + collectedMatchUp);
 //        }
-        assertEquals(6, collectedMatchUps.size());
+        assertEquals(7, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING);
@@ -106,7 +106,7 @@ public class MAMapperTest {
 //        for (RecordWritable collectedMatchUp : collectedMatchUps) {
 //            System.out.println("collectedMatchUp = " + collectedMatchUp);
 //        }
-        assertEquals(7, collectedMatchUps.size());
+        assertEquals(8, collectedMatchUps.size());
         assertSame(Integer.class, collectedMatchUps.get(0).getAttributeValues()[2].getClass()); // scalar
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
@@ -123,7 +123,7 @@ public class MAMapperTest {
 
         executeMatchup(collectedMatchUps, 5, false, true);
 
-        assertEquals(6, collectedMatchUps.size());
+        assertEquals(7, collectedMatchUps.size());
         assertEquals(25, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
