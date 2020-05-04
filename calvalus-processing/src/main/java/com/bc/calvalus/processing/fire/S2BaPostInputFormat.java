@@ -30,7 +30,7 @@ public class S2BaPostInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
-        String tile = jobContext.getConfiguration().get("calvalus.tile");
+        String tile = "T" + jobContext.getConfiguration().get("calvalus.tile");
         String sensor = jobContext.getConfiguration().get("calvalus.sensor");
         String inputPathPattern = String.format("%s/%s/intermediate-%s-%s.*.nc", outputDir, tile, sensor, tile);
 
