@@ -157,7 +157,15 @@ public class S2BaInputFormat extends InputFormat {
     }
 
     static String getTilePathPattern(String s2PrePath) {
-        int startIndex = s2PrePath.indexOf("S2A_MSIL2A") - "/YYYY/MM/DD".length();
+        int startIndex;
+        if (s2PrePath.indexOf("S2A_MSIL2A") == -1) {
+            startIndex = s2PrePath.indexOf("S2B_MSIL2A") - "/YYYY/MM/DD".length();
+        } else {
+            startIndex = s2PrePath.indexOf("S2A_MSIL2A") - "/YYYY/MM/DD".length();
+        }
+        if (startIndex == -1) {
+            throw new IllegalArgumentException("Invalid path for S2 L2 product: " + s2PrePath);
+        }
         String tile = s2PrePath.split("/")[s2PrePath.split("/").length - 1].split("_")[5];
         String basePath = s2PrePath.substring(0, startIndex);
         String tilePathPattern = String.format("%s.*/.*/.*/.*%s.*.zip", basePath, tile);
