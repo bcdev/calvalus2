@@ -100,7 +100,14 @@
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId></dependency>
         <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId></dependency>
-        <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId></dependency>
+        <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>ceres-core</artifactId>
+                    <groupId>org.esa.snap</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId></dependency>
