@@ -365,7 +365,7 @@ public class S2BaInputFormat extends InputFormat {
         String catalogueParam = conf.get("calvalus.input.geoInventory");
         final Map<String, String> searchParameters = parseSearchParameters(catalogueParam);
         Date endDate = getDate(referencePath);
-        Instant startInstant = endDate.toInstant().minus(3, ChronoUnit.MONTHS);
+        Instant startInstant = endDate.toInstant().minus(100, ChronoUnit.DAYS);
         String startDate = startInstant.toString().split("T")[0];
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String dateRangesString = String.format("[%s:%s]", startDate, sdf.format(endDate));
