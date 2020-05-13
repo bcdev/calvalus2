@@ -32,6 +32,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -73,10 +75,9 @@ public class S2BaInputFormat extends InputFormat {
                 - create splits with f and latest 4 or 8 (depending on orbit) previous files
          */
 
-        logger.info("Asking catalogue");
         String[] productArchivePaths = getProductArchivePaths(catalogueParam, conf);
         for (String productArchivePath : productArchivePaths) {
-            System.out.println(productArchivePath);
+//            System.out.println(productArchivePath);
         }
         createSplits(productArchivePaths, tile, splits, conf);
         logger.info(String.format("Created %d split(s).", splits.size()));
@@ -99,6 +100,18 @@ public class S2BaInputFormat extends InputFormat {
 
     private String[] getProductArchivePaths(String catalogueParam, Configuration conf) throws IOException {
         final Map<String, String> searchParameters = parseSearchParameters(catalogueParam);
+
+        List<String> paths = new ArrayList<>(1000);
+        long t0 = System.currentTimeMillis();
+        int numQueries = inquireCatalogue(conf, searchParameters, paths, conf.get("calvalus.input.dateRanges"));
+        logger.info(String.format("%d paths found.", paths.size()));
+        logger.info("catalogue query " + numQueries + " cycles done in [ms]: " + (System.currentTimeMillis() - t0));
+
+        return paths.toArray(new String[0]);
+    }
+
+    private int inquireCatalogue(Configuration conf, Map<String, String> searchParameters, List<String> paths, String dateRangesString) throws IOException {
+        int numQueries = 0;
         final String provider = searchParameters.get("catalogue");
         final String searchUrlTemplate = conf.get("calvalus." + provider + ".searchurl");
         final String searchXPath = conf.get("calvalus." + provider + ".searchxpath");
@@ -106,19 +119,13 @@ public class S2BaInputFormat extends InputFormat {
         final Pattern pathPattern = conf.get("calvalus." + provider + ".pathpattern") != null
                 ? Pattern.compile(conf.get("calvalus." + provider + ".pathpattern")) : null;
         final String pathReplacement = conf.get("calvalus." + provider + ".pathreplacement");
-        String dateRangesString = conf.get("calvalus.input.dateRanges");
         final List<DateRange> dateRanges = createDateRangeList(dateRangesString);
-
         final HttpClient httpClient = new HttpClient();
         final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         docFactory.setNamespaceAware(true);
         docFactory.setValidating(false);
         final XPathFactory xPathfactory = XPathFactory.newInstance();
-        List<String> splits = new ArrayList<>(1000);
-        int numQueries = 0;
-        long t0 = System.currentTimeMillis();
 
-        // date ranges loop
         for (DateRange dateRange : dateRanges) {
             searchParameters.put("start", DateUtils.formatDate(dateRange.getStartDate()));
             searchParameters.put("stop", DateUtils.formatDate(dateRange.getStopDate()));
@@ -152,10 +159,10 @@ public class S2BaInputFormat extends InputFormat {
                         for (int i = 0; i < pathNodes.getLength(); ++i) {
                             String productArchivePath = pathNodes.item(i).getTextContent();
                             if (pathPattern != null && pathReplacement != null) {
-                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+//                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
                             }
                             logger.info(productArchivePath);
-                            splits.add(productArchivePath);
+                            paths.add(productArchivePath);
                             count++;
                         }
                         if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
@@ -169,10 +176,7 @@ public class S2BaInputFormat extends InputFormat {
                 }
             }
         }
-        logger.info(String.format("%d splits created.", splits.size()));
-        logger.info("catalogue query " + numQueries + " cycles done in [ms]: " + (System.currentTimeMillis() - t0));
-
-        return splits.toArray(new String[0]);
+        return numQueries;
     }
 
     private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement) {
@@ -252,7 +256,7 @@ public class S2BaInputFormat extends InputFormat {
         for (String referencePath : productArchivePaths) {
             // if there already exists a file, like BA-T37NCF-20160514T075819.nc: continue
             Date referenceDate = getDate(referencePath);
-            String path = "s3://calvalus/" + outputDir + "/" + tile + "/" + sensor + "-BA-" + tile + "-" + new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(referenceDate) + ".nc";
+//            String path = "s3://calvalus/" + outputDir + "/" + tile + "/" + sensor + "-BA-" + tile + "-" + new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(referenceDate) + ".nc";
 //            logger.info("Checking if BA output file '" + path + "' already exists...");
 //            if (hdfsInventoryService.pathExists(path, "cvop")) {
 //                logger.info("already exists, moving to next reference date.");
@@ -262,11 +266,11 @@ public class S2BaInputFormat extends InputFormat {
             // new ProductSplit(new Path(productArchivePath), -1, null)
 
 //            logger.info("does not already exist, create splits accordingly.");
-//            String[] periodPaths = getPeriodPaths(referencePath, conf);
-//            for (String periodPath : periodPaths) {
-//                splits.add(createSplit(referencePath, periodPath));
-//                logger.info(String.format("Created split with postStatus %s and preStatus %s.", referenceDate, getDate(periodPath)));
-//            }
+            String[] periodPaths = getPeriodPaths(referencePath, conf);
+            for (String periodPath : periodPaths) {
+                splits.add(createSplit(referencePath, periodPath));
+                logger.info(String.format("Created split with postStatus %s and preStatus %s.", referenceDate, getDate(periodPath)));
+            }
         }
     }
 
@@ -319,6 +323,18 @@ public class S2BaInputFormat extends InputFormat {
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
     }
 
+    private static CombineFileSplit createSplit(String postFile, String preFile) {
+        List<Path> filePaths = new ArrayList<>();
+        List<Long> fileLengths = new ArrayList<>();
+        // new Path(productArchivePath), -1
+        filePaths.add(new Path(postFile));
+        fileLengths.add(-1L);
+        filePaths.add(new Path(preFile));
+        fileLengths.add(-1L);
+        return new ComparableCombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+                fileLengths.stream().mapToLong(Long::longValue).toArray());
+    }
+
     private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         String referencePath = referenceFileStatus.getPath().toString();
         String tilePathPattern = getTilePathPattern(referencePath);
@@ -342,26 +358,51 @@ public class S2BaInputFormat extends InputFormat {
         return result;
     }
 
-    private String[] getPeriodPaths(String referencePath) throws IOException {
-        String tilePathPattern = getTilePathPattern(referencePath);
+    private String[] getPeriodPaths(String referencePath, Configuration conf) throws IOException {
 
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        List<String> inputPatterns = inputPathResolver.resolve(tilePathPattern);
-//        FileStatus[] periodStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), inputPatterns);
-//        sort(periodStatuses);
+        // get all products of same tile of previous 3 months
+        List<String> allPeriodPaths = new ArrayList<>(1000);
+        String catalogueParam = conf.get("calvalus.input.geoInventory");
+        final Map<String, String> searchParameters = parseSearchParameters(catalogueParam);
+        Date endDate = getDate(referencePath);
+        Instant startInstant = endDate.toInstant().minus(3, ChronoUnit.MONTHS);
+        String startDate = startInstant.toString().split("T")[0];
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String dateRangesString = String.format("[%s:%s]", startDate, sdf.format(endDate));
 
-        List<FileStatus> filteredList = new ArrayList<>();
-//        for (FileStatus periodStatus : periodStatuses) {
-//            if (getDate(periodStatus).getTime() < getDate(referenceFileStatus).getTime()) {
-//                filteredList.add(periodStatus);
-//            }
-//        }
+        inquireCatalogue(conf, searchParameters, allPeriodPaths, dateRangesString);
+        String[] periodPaths = allPeriodPaths.toArray(new String[0]);
+        sort(periodPaths);
 
-        int maxPreImagesCount = getMaxPreImagesCount(filteredList);
+        List<String> filteredList = new ArrayList<>();
+        for (String periodStatus : periodPaths) {
+            if (getDate(periodStatus).getTime() < endDate.getTime()) {
+                filteredList.add(periodStatus);
+            }
+        }
+
+        int maxPreImagesCount = getMaxPreImagesCountFromPaths(filteredList);
         int resultCount = Math.min(maxPreImagesCount, filteredList.size());
         String[] result = new String[resultCount];
-        System.arraycopy(filteredList.toArray(new FileStatus[0]), 0, result, 0, resultCount);
+        System.arraycopy(filteredList.toArray(new String[0]), 0, result, 0, resultCount);
         return result;
+    }
+
+    static int getMaxPreImagesCountFromPaths(List<String> filteredList) {
+        Logger.getLogger("com.bc.calvalus").info("Computing max pre images count...");
+        String orbit = null;
+        for (String path : filteredList) {
+            if (orbit == null) {
+                orbit = path.substring(34, 39);
+            } else {
+                if (!orbit.equals(path.substring(34, 39))) {
+                    Logger.getLogger("com.bc.calvalus").info("...other file found with different orbit, so it is 8.");
+                    return MAX_PRE_IMAGES_COUNT_MULTI_ORBIT;
+                }
+            }
+        }
+        Logger.getLogger("com.bc.calvalus").info("...no file found with different orbit, so it is 4.");
+        return MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT;
     }
 
     static int getMaxPreImagesCount(List<FileStatus> filteredList) {
@@ -379,6 +420,10 @@ public class S2BaInputFormat extends InputFormat {
         }
         Logger.getLogger("com.bc.calvalus").info("...no file found with different orbit, so it is 4.");
         return MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT;
+    }
+
+    private static void sort(String[] allPeriodPaths) {
+        Arrays.sort(allPeriodPaths, (fs1, fs2) -> getDate(fs1).getTime() > getDate(fs2).getTime() ? -1 : 1);
     }
 
     private static void sort(FileStatus[] periodStatuses) {
