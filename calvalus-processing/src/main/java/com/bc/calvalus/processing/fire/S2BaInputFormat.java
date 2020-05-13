@@ -50,6 +50,7 @@ public class S2BaInputFormat extends InputFormat {
     private JobContext jobContext;
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
+        logger.info("Starting to get splits");
         this.jobContext = jobContext;
         Configuration conf = this.jobContext.getConfiguration();
         String catalogueParam = conf.get("calvalus.input.geoInventory");
@@ -72,6 +73,7 @@ public class S2BaInputFormat extends InputFormat {
                 - create splits with f and latest 4 or 8 (depending on orbit) previous files
          */
 
+        logger.info("Asking catalogue");
         String[] productArchivePaths = getProductArchivePaths(catalogueParam, conf);
         for (String productArchivePath : productArchivePaths) {
             System.out.println(productArchivePath);
