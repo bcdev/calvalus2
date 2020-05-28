@@ -159,7 +159,7 @@ public class S2BaInputFormat extends InputFormat {
                         for (int i = 0; i < pathNodes.getLength(); ++i) {
                             String productArchivePath = pathNodes.item(i).getTextContent();
                             if (pathPattern != null && pathReplacement != null) {
-//                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
                             }
                             logger.info(productArchivePath);
                             paths.add(productArchivePath);
