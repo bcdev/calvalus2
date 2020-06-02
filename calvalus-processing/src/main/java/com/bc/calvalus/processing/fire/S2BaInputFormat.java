@@ -247,7 +247,7 @@ public class S2BaInputFormat extends InputFormat {
         return getMethod.getResponseBodyAsStream();
     }
 
-    private void createSplits(String[] productArchivePaths, String tile, Set<InputSplit> splits, Configuration conf) throws IOException {
+    private void createSplits(String[] productArchivePaths, String tile, Set<InputSplit> splits, Configuration conf) throws IOException, InterruptedException {
         /*
         for each file status r:
             take r and (up to) latest 4 or 8 matching files d, c, b, a (getPeriodStatuses)
@@ -361,7 +361,7 @@ public class S2BaInputFormat extends InputFormat {
         return result;
     }
 
-    private String[] getPeriodPaths(String referencePath, Configuration conf) throws IOException {
+    private String[] getPeriodPaths(String referencePath, Configuration conf) throws IOException, InterruptedException {
 
         // get all products of same tile of previous 3 months
         List<String> allPeriodPaths = new ArrayList<>(1000);
@@ -374,6 +374,7 @@ public class S2BaInputFormat extends InputFormat {
         String dateRangesString = String.format("[%s:%s]", startDate, sdf.format(endDate));
 
         inquireCatalogue(conf, searchParameters, allPeriodPaths, dateRangesString);
+        Thread.sleep(2000);
         String[] periodPaths = allPeriodPaths.toArray(new String[0]);
         sort(periodPaths);
 
