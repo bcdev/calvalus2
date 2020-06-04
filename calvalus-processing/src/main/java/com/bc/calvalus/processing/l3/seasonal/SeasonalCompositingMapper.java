@@ -560,27 +560,27 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
         bandDescriptors[1] = new BandMathsOp.BandDescriptor();
         bandDescriptors[1].name = "clear_land_count";
-        bandDescriptors[1].expression = "current_pixel_state == 1 ? num_obs : 0";
+        bandDescriptors[1].expression = "current_pixel_state == 1 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[1].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[2] = new BandMathsOp.BandDescriptor();
         bandDescriptors[2].name = "clear_water_count";
-        bandDescriptors[2].expression = "current_pixel_state == 2 ? num_obs : 0";
+        bandDescriptors[2].expression = "current_pixel_state == 2 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[2].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[3] = new BandMathsOp.BandDescriptor();
         bandDescriptors[3].name = "clear_snow_ice_count";
-        bandDescriptors[3].expression = "current_pixel_state == 3 ? num_obs : 0";
+        bandDescriptors[3].expression = "current_pixel_state == 3 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[3].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[4] = new BandMathsOp.BandDescriptor();
         bandDescriptors[4].name = "cloud_count";
-        bandDescriptors[4].expression = "current_pixel_state == 4 ? num_obs : 0";
+        bandDescriptors[4].expression = "current_pixel_state == 4 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[4].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[5] = new BandMathsOp.BandDescriptor();
         bandDescriptors[5].name = "cloud_shadow_count";
-        bandDescriptors[5].expression = "current_pixel_state >= 5 ? num_obs : 0";
+        bandDescriptors[5].expression = "current_pixel_state >= 5 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[5].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[6] = new BandMathsOp.BandDescriptor();
