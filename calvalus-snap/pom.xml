@@ -182,6 +182,26 @@
                             <goal>unpack</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>libs3</id>
+                        <configuration>
+                            <unpack>
+                                <artifact>org.esa.snap:snap-netcdf:jar</artifact>
+                                <resources>
+                                    <resource>
+                                        <path>lib/amd64</path>
+                                        <include>lib*.so*</include>
+                                    </resource>
+                                </resources>
+                                <targetDirectory>target/snap-bundle</targetDirectory>
+                            </unpack>
+                            <verbose>true</verbose>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <dependencies>
                     <dependency>
@@ -193,6 +213,11 @@
                         <groupId>org.esa.s2tbx</groupId>
                         <artifactId>lib-openjpeg</artifactId>
                         <version>${s2tbx.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.esa.snap</groupId>
+                        <artifactId>snap-netcdf</artifactId>
+                        <version>${snap.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>ncsa.hdf</groupId>
