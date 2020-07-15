@@ -29,10 +29,17 @@ public class S2BaPostInputFormat extends InputFormat {
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
+        String inputDir = jobContext.getConfiguration().get("calvalus.input.dir");
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
-        String tile = "T" + jobContext.getConfiguration().get("calvalus.tile");
+        String tile = jobContext.getConfiguration().get("calvalus.tile");
+        if (!tile.startsWith("T")) {
+            tile = "T" + tile;
+        }
+        if (tile.startsWith("TT")) {
+            tile = tile.replace("TT", "T");
+        }
         String sensor = jobContext.getConfiguration().get("calvalus.sensor");
-        String inputPathPattern = String.format("%s/%s/intermediate-%s-%s.*.nc", outputDir, tile, sensor, tile);
+        String inputPathPattern = String.format("%s/%s/intermediate-%s-%s.*.nc", inputDir, tile, sensor, tile);
 
         List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);

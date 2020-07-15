@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.InputPathResolver;
@@ -10,12 +9,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.InputFormat;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.util.StringUtils;
 import org.w3c.dom.Document;
@@ -56,7 +50,6 @@ public class S2BaInputFormat extends InputFormat {
         this.jobContext = jobContext;
         Configuration conf = this.jobContext.getConfiguration();
         String catalogueParam = conf.get("calvalus.input.geoInventory");
-        String tile = conf.get("calvalus.tile");
         outputDir = conf.get("calvalus.output.dir");
         sensor = conf.get("calvalus.sensor");
         if (!sensor.equals("S2A") && !sensor.equals("S2B")) {
@@ -64,7 +57,6 @@ public class S2BaInputFormat extends InputFormat {
         }
 
         Set<InputSplit> splits = new HashSet<>(1000);
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
 
         /*
 
@@ -76,10 +68,7 @@ public class S2BaInputFormat extends InputFormat {
          */
 
         String[] productArchivePaths = getProductArchivePaths(catalogueParam, conf);
-        for (String productArchivePath : productArchivePaths) {
-//            System.out.println(productArchivePath);
-        }
-        createSplits(productArchivePaths, tile, splits, conf);
+        createSplits(productArchivePaths, splits, conf);
         logger.info(String.format("Created %d split(s).", splits.size()));
         return Arrays.asList(splits.toArray(new InputSplit[0]));
 
@@ -202,6 +191,7 @@ public class S2BaInputFormat extends InputFormat {
 
     private String urlEncode(String searchUrl) {
         return searchUrl.
+                replaceAll("%", "%25").
                 replaceAll(" ", "%20").
                 replaceAll("\"", "%22").
                 replaceAll("\\(", "%28").
@@ -247,7 +237,7 @@ public class S2BaInputFormat extends InputFormat {
         return getMethod.getResponseBodyAsStream();
     }
 
-    private void createSplits(String[] productArchivePaths, String tile, Set<InputSplit> splits, Configuration conf) throws IOException, InterruptedException {
+    private void createSplits(String[] productArchivePaths, Set<InputSplit> splits, Configuration conf) throws IOException, InterruptedException {
         /*
         for each file status r:
             take r and (up to) latest 4 or 8 matching files d, c, b, a (getPeriodStatuses)
