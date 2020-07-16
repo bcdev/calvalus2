@@ -69,7 +69,7 @@ public class S2BaPostInputFormat extends InputFormat {
 
             String currentPathPattern = String.format("%s/%s/intermediate-%s-%s.*%s.nc", outputDir, tile, sensor, tile, currentPostDateString);
             List<String> currentPattern = inputPathResolver.resolve(currentPathPattern);
-            FileStatus[] matchingStatuses = hdfsInventoryService.globFileStatuses(currentPattern, conf);
+            FileStatus[] matchingStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), currentPattern);
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
             for (FileStatus matchingStatus : matchingStatuses) {
