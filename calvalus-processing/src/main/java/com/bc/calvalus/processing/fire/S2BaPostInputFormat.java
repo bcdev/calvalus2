@@ -18,6 +18,7 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -51,10 +52,7 @@ public class S2BaPostInputFormat extends InputFormat {
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         System.out.println("inputPatterns = " + inputPatterns);
-        final FileSystem fileSystem = S3AFileSystem.get(conf);
         FileStatus[] fileStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), inputPatterns);
-        createSplits(fileStatuses, intermediateResultSplits);
-        fileStatuses = fileSystem.globStatus(new Path(inputPathPattern));
         createSplits(fileStatuses, intermediateResultSplits);
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d intermediate split(s).", intermediateResultSplits.size()));
 
@@ -82,6 +80,12 @@ public class S2BaPostInputFormat extends InputFormat {
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
         }
 
+        for (InputSplit split : splits) {
+            System.out.println(Arrays.toString(split.getLocations()));
+            System.out.println(split.getLength());
+            System.out.println("##########");
+        }
+
         return splits;
     }
 
@@ -92,7 +96,6 @@ public class S2BaPostInputFormat extends InputFormat {
             List<Long> fileLengths = new ArrayList<>();
             filePaths.add(path);
             fileLengths.add(fileStatus.getLen());
-            System.out.println(path);
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
         }
