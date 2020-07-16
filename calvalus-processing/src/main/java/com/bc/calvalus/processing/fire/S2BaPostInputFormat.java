@@ -5,7 +5,9 @@ import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.s3a.S3AFileSystem;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -49,7 +51,10 @@ public class S2BaPostInputFormat extends InputFormat {
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         System.out.println("inputPatterns = " + inputPatterns);
+        final FileSystem fileSystem = S3AFileSystem.get(conf);
         FileStatus[] fileStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), inputPatterns);
+        createSplits(fileStatuses, intermediateResultSplits);
+        fileStatuses = fileSystem.globStatus(new Path(inputPathPattern));
         createSplits(fileStatuses, intermediateResultSplits);
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d intermediate split(s).", intermediateResultSplits.size()));
 
@@ -87,6 +92,7 @@ public class S2BaPostInputFormat extends InputFormat {
             List<Long> fileLengths = new ArrayList<>();
             filePaths.add(path);
             fileLengths.add(fileStatus.getLen());
+            System.out.println(path);
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
         }
