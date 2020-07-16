@@ -73,17 +73,13 @@ public class S2BaPostInputFormat extends InputFormat {
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
             for (FileStatus matchingStatus : matchingStatuses) {
+                System.out.println(matchingStatus.getPath());
+                System.out.println(matchingStatus.getLen());
                 filePaths.add(matchingStatus.getPath());
                 fileLengths.add(matchingStatus.getLen());
             }
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
-        }
-
-        for (InputSplit split : splits) {
-            System.out.println(Arrays.toString(split.getLocations()));
-            System.out.println(split.getLength());
-            System.out.println("##########");
         }
 
         return splits;
