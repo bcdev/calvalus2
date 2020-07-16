@@ -61,13 +61,16 @@ public class S2BaPostInputFormat extends InputFormat {
         for (InputSplit referenceResultSplit : intermediateResultSplits) {
             CombineFileSplit split = (CombineFileSplit) referenceResultSplit;
             String referenceName = split.getPath(0).getName();
+            System.out.println(referenceName);
             String currentPostDateString = referenceName.substring(referenceName.lastIndexOf('-') + 1, referenceName.length() - 3);
+            System.out.println(currentPostDateString);
             if (alreadyHandledDates.contains(currentPostDateString)) {
                 continue;
             }
             alreadyHandledDates.add(currentPostDateString);
 
             String currentPathPattern = String.format("%s/%s/intermediate-%s-%s.*%s.nc", outputDir, tile, sensor, tile, currentPostDateString);
+            System.out.println(currentPathPattern);
             List<String> currentPattern = inputPathResolver.resolve(currentPathPattern);
             FileStatus[] matchingStatuses = hdfsInventoryService.globFiles(jobContext.getUser(), currentPattern);
             List<Path> filePaths = new ArrayList<>();
