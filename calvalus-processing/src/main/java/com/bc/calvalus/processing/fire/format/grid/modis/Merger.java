@@ -5,9 +5,17 @@ import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.geotiff.GeoTiffProductReaderPlugIn;
+import org.geotools.xml.xsi.XSISimpleTypes;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Merger {
 
@@ -41,5 +49,31 @@ public class Merger {
 
         ProductIO.writeProduct(result, output, "NetCDF4-CF");
     }
+
+    /*
+            for (String month : new String[]{"10", "11", "12"}) {
+            Set<String> tiles = new HashSet<>();
+            Files.list(Paths.get("C:\\ssd\\fire\\modis\\fix\\" + month)).forEach(p -> tiles.add(p.toString().split("_")[2]));
+            for (String tile : tiles) {
+                final Object[] tilePaths = Files.list(Paths.get("C:\\ssd\\fire\\modis\\fix\\" + month)).filter(p -> p.toString().contains(tile)).toArray();
+                String classificationProductPath = null;
+                String uncertaintyProductPath = null;
+                String numObsProductPath = null;
+                for (Object tilePath : tilePaths) {
+                    if (tilePath.toString().contains("Classification")) {
+                        classificationProductPath = tilePath.toString();
+                    } else if (tilePath.toString().contains("Observed")) {
+                        numObsProductPath = tilePath.toString();
+                    } else if (tilePath.toString().contains("Uncertainty")) {
+                        uncertaintyProductPath = tilePath.toString();
+                    } else {
+                        throw new IllegalStateException("Invalid file " + tilePath);
+                    }
+                }
+                System.out.println("Running for " + tile + ", " + month);
+                run("c:\\ssd\\fire\\modis\\fix\\burned_" + tile + "_2019_" + month + ".nc", classificationProductPath, uncertaintyProductPath, numObsProductPath);
+            }
+        }
+     */
 
 }

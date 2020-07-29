@@ -216,6 +216,33 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     public abstract String createBaseFilename(String year, String month, String version, String areaString);
 
+    public static void main(String[] args) throws IOException {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
+
+        System.out.println("Fixing wrong CL value.");
+        final Product product = ProductIO.readProduct("C:\\ssd\\fire\\modis\\fix\\20191101-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-fv5.1-CL.tif");
+        product.getBand("CL").readRasterDataFully(ProgressMonitor.NULL);
+        final ProductData data = product.getBand("CL").getData();
+        System.out.println(data.getTypeString());
+
+        final Product result = new Product(product.getName(), product.getProductType(), product.getSceneRasterWidth(), product.getSceneRasterHeight());
+        ProductUtils.copyGeoCoding(product, result);
+        final Band cl1 = result.addBand("CL", ProductData.TYPE_INT8);
+        data.setElemIntAt(5038 * result.getSceneRasterWidth() + 17664, 1);
+        cl1.setData(data);
+
+        System.out.println("Starting to write.");
+        final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        String localFilename = "C:\\ssd\\fire\\modis\\fix\\extra\\" + product.getName() + ".tif";
+        geotiffWriter.writeProductNodes(result, localFilename);
+
+        geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
+    }
+
     static final String MODIS_TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +
