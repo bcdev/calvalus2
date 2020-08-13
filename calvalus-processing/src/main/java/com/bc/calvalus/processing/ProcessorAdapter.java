@@ -119,6 +119,12 @@ public abstract class ProcessorAdapter {
                 System.setProperty("snap.gpf.allowAuxdataDownload", "false");
             }
         }
+        // we need the auxdata tree before the engine is started
+        try {
+            shallowCopyPatches(new File(".").getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("processor adapter initialisation failed", e);
+        }
         GpfUtils.init(conf);
         Engine.start();
         CalvalusLogger.restoreCalvalusLogFormatter();
@@ -138,10 +144,11 @@ public abstract class ProcessorAdapter {
 
     /**
      * Prepares the processing.
-     * The default implementation does nothing except creating a shallow copy tree with symlinks to files of patch packages.
+     * The default implementation does nothing.
+     * The creation of a shallow copy tree with symlinks to files of patch packages has been moved to before engine start.
      */
     public void prepareProcessing() throws IOException {
-        shallowCopyPatches(new File(".").getAbsolutePath());
+        //shallowCopyPatches(new File(".").getAbsolutePath());
     }
 
     protected static void shallowCopyPatches(String wd) throws IOException {
