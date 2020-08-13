@@ -306,6 +306,10 @@ public class PatternBasedInputFormat extends InputFormat {
                                 splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
                                 ++count;
                             }
+                            if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                                LOG.info(String.format("query response truncated to request size limit %d", requestSizeLimit));
+                                break;
+                            }
                             if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
                                 break;
                             }
@@ -324,6 +328,13 @@ public class PatternBasedInputFormat extends InputFormat {
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
                             ++count;
+                            if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                                break;
+                            }
+                        }
+                        if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                            LOG.info(String.format("query response truncated to request size limit %d", requestSizeLimit));
+                            break;
                         }
                         if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
                             break;
