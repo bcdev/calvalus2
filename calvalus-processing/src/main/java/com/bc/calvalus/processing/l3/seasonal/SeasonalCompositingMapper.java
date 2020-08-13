@@ -658,15 +658,16 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         return product;
     }
 
-    private int majorityPriorityStatusOf(int[][] ndviCount, int i) {
-        return (ndviCount[1][i] > 0 && ndviCount[1][i] >= ndviCount[0][i] && ndviCount[1][i] >= ndviCount[2][i]) ? 2 :
-               (ndviCount[0][i] > 0 && ndviCount[0][i] >= ndviCount[2][i]) ? 1 :
-               ndviCount[2][i] > 0 ? 3 :
-               ndviCount[3][i] > 0 ? 15 :
-               ndviCount[4][i] > 0 ? 12 :
-               ndviCount[5][i] > 0 ? 11 :
-               ndviCount[6][i] > 0 ? 5 :
-               ndviCount[7][i] > 0 ? 4 : 0;
+    private int majorityPriorityStatusOf(int[][] statusCount, int i) {
+        return (statusCount[1][i] > 0 && statusCount[1][i] >= statusCount[0][i] && statusCount[1][i] >= statusCount[2][i]) ? 2 :  // more water than land or snow
+               (statusCount[0][i] > 0 && statusCount[0][i] >= statusCount[2][i]) ? 1 :  // more land than snow
+               statusCount[2][i] > 0 ? 3 :   // some snow
+               statusCount[3][i] > 0 ? 15 :  // dark
+               statusCount[4][i] > 0 ? 12 :  // bright
+               statusCount[5][i] > 0 ? 11 :  // haze
+               statusCount[6][i] > 0 ? 5 :   // shadow
+               statusCount[7][i] > 0 ? 4 :   // cloud
+                       0;                    // invalid
     }
 
     static int sourceBandIndexOf(String sensorAndResolution, int targetBandIndex) {
