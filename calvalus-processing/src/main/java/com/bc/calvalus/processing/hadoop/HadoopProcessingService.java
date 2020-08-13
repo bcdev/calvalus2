@@ -708,7 +708,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             FileSystem fs = jobClientsMapSingleton.getFileSystem(userName, conf, path);
             System.out.println("HadoopProcessingService.openUrlAsStream user " + userName + " path " + url + " fileSystem " + fs);
             inputStream = fs.open(path);
-        } else if (url.startsWith("hdfs:")) {
+        } else if (url.startsWith("hdfs:") || url.startsWith("s3a")) {
             final Path path = new Path(url);
             inputStream = path.getFileSystem(conf).open(path);
         } else {
