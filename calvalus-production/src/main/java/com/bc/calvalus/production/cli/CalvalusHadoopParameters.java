@@ -226,6 +226,13 @@ public class CalvalusHadoopParameters extends Configuration {
         }
     }
 
+    /**
+     * Function for use in production type translation rules.
+     */
+    public String tableInputFormat(String table) {
+        return "com.bc.calvalus.processing.hadoop.TableInputFormat";
+    }
+
     private RAConfig getRaConfig(String raParameters, List<Geometry> geometries) throws BindingException, IOException {
         RAConfig raConfig = RAConfig.fromXml(raParameters);
         RARegions.RegionIterator regionsIterator = null;
