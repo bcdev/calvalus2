@@ -71,8 +71,9 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     && ! filename.endsWith(".zip")) {
                 return DecodeQualification.UNABLE;
             }
-            if (filename.matches("^S2.*_MSIL1C.*") ||
-                    filename.matches("^S2.*_...L2A.*")) {
+            if ((filename.matches("^S2.*_MSIL1C.*") ||
+                    filename.matches("^S2.*_...L2A.*"))
+                    && ! filename.endsWith(".nc") && ! filename.endsWith(".tif") && ! filename.endsWith(".dim")) {
                 return DecodeQualification.INTENDED;
             }
         }
