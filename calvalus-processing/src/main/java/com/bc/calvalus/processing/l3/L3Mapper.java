@@ -63,7 +63,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-
+        final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
 
         DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
@@ -101,14 +101,14 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
-                    //
-                    final String metaXml = extractProcessingGraphXml(product);
-                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
 
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
                 }
-
+                if (numObs > 0 || generateEmptyAggregate) {
+                    final String metaXml = extractProcessingGraphXml(product);
+                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
+                }
 
             } else {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
