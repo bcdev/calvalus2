@@ -57,7 +57,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
-                final String inputFileName = processorAdapter.getInputPath().getName();
+                final String inputFileName = processorAdapter.getInputPaths()[0].getName();
                 final String productName = FileUtils.getFilenameWithoutExtension(inputFileName);
                 final Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
                 for (Quicklooks.QLConfig config : configs) {

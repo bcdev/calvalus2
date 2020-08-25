@@ -103,7 +103,7 @@ public class CalvalusHadoopRequestConverter {
                 ++count;
             }
         }
-        LOG.info("reading production type definition from " + "etc/" + productionType + "-cht-type.json with "
+        LOG.info("read production type definition from " + "etc/" + productionType + "-cht-type.json with "
                          + count + " parameters and " + (productionTypeDef.size() - count) + " rules");
 
         // add parameters of request, maybe translate and apply function

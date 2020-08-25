@@ -96,7 +96,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 LOG.info("Product not used");
             }
             LOG.info(MessageFormat.format("{0} stops processing of {1} ({2} tiles produced)",
-                                          context.getTaskAttemptID(), processorAdapter.getInputPath(), numTilesProcessed));
+                                          context.getTaskAttemptID(), processorAdapter.getInputPaths(), numTilesProcessed));
         } finally {
             pm.done();
             processorAdapter.dispose();

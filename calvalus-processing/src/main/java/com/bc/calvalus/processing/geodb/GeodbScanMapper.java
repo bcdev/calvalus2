@@ -92,7 +92,7 @@ public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Te
                     if (endUTC != null) {
                         endTime = dateFormat.format(endUTC.getAsDate());
                     }
-                    String dbPath = getDBPath(processorAdapter.getInputPath(), context.getConfiguration());
+                    String dbPath = getDBPath(processorAdapter.getInputPaths()[0], context.getConfiguration());
 
                     String result = startTime + "\t" + endTime + "\t" + wkt;
                     context.write(new Text(dbPath), new Text(result));
