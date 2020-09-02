@@ -42,9 +42,11 @@ import org.esa.snap.binning.SpatialBinConsumer;
 import org.esa.snap.binning.SpatialBinner;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.SpatialProductBinner;
+import org.esa.snap.binning.support.ObservationImpl;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
 import ucar.ma2.Index;
@@ -93,9 +95,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     };
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     private static long THIRTY_YEARS;
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        COMPACT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         try {
             THIRTY_YEARS = ISO_DATE_FORMAT.parse("2000-01-01T00:00:00.000Z").getTime();
         } catch (ParseException e) {
@@ -107,7 +111,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     public void run(Context context) throws IOException, InterruptedException {
 
         Configuration conf = context.getConfiguration();
-        String targetFormat = conf.get("targetFormat", "l2monthly");  // one of l2monthly, l3daily, l3cycle, l3monthly
+        String targetFormat = conf.get("calvalus.targetFormat", "l2monthly");  // one of l2monthly, l3daily, l3cycle, l3monthly
 
         final Path inputPath = ((FileSplit) context.getInputSplit()).getPath();
         final File[] inputFiles = CalvalusProductIO.uncompressArchiveToCWD(inputPath, conf);
@@ -119,10 +123,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         for (FRP_VARIABLES v : FRP_VARIABLES.values()) {
             frpArrays[v.ordinal()] = frpNetcdf.findVariable(v.name()).read();
         }
+        Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
         int numFires = frpNetcdf.findDimension("fires").getLength();
 
         int count = 0;
-        Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
+
         if ("l2monthly".equals(targetFormat)) {
             System.out.print("Time\tLatitude\tLongitude\tRow\tColumn\tFRP_MIR\tFRP_SWIR\tAREA\tday_flag\tf1_flag\tPlatform\tConfidence\n");
             for (int i=0; i<numFires; ++i) {
@@ -199,112 +204,84 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         for (GEODETIC_VARIABLES v : GEODETIC_VARIABLES.values()) {
             geodeticArrays[v.ordinal()] = geodeticNetcdf.findVariable(v.name()).read();
         }
-        int columns = geodeticNetcdf.findDimension("columns").getLength();
-        int rows = geodeticNetcdf.findDimension("rows").getLength();
+        final int columns = geodeticNetcdf.findDimension("columns").getLength();
+        final int rows = geodeticNetcdf.findDimension("rows").getLength();
 
-
-        double aFloat = frpArrays[FRP_VARIABLES.FRP_MWIR.ordinal()].getDouble(99);
-
-/*
-        double F1_Fire_pixel_radiance(fires) ;
-        double FRP_MWIR(fires) ;
-        double FRP_SWIR(fires) ;
-        double FRP_uncertainty_MWIR(fires) ;
-        double FRP_uncertainty_SWIR(fires) ;
-        double Glint_angle(fires) ;
-        double IFOV_area(fires) ;
-        double Radiance_window(fires) ;
-        double S7_Fire_pixel_radiance(fires) ;
-        double TCWV(fires) ;
-        ubyte classification(fires) ;
-        double confidence(fires) ;
-        short i(fires) ;
-        int j(fires) ;
-        double latitude(fires) ;
-        double longitude(fires) ;
-        short n_SWIR_fire(fires) ;
-        short n_cloud(fires) ;
-        short n_water(fires) ;
-        short n_window(fires) ;
-        int64 time(fires) ;
-        double transmittance_MWIR(fires) ;
-        double transmittance_SWIR(fires) ;
-        ubyte used_channel(fires) ;
-*/
-/*
-            final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
-            final DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
-            final BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
-            final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
-            final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
-*/
-        Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
-        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
-
-        DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
-
-        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
+        final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        final DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
+        final BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
-        final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
-        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
-        final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
-        pm.beginTask("Level 3", progressForProcessing + progressForBinning);
-        try {
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
-            if (product != null) {
-                HashMap<Product, List<Band>> addedBands = new HashMap<>();
-                long numObs;
-                try {
-                    numObs = SpatialProductBinner.processProduct(product,
-                            spatialBinner,
-                            addedBands,
-                            SubProgressMonitor.create(pm, progressForBinning));
-                } catch (IllegalArgumentException e) {
-                    boolean isSmallProduct = product.getSceneRasterHeight() <= 2 || product.getSceneRasterWidth() <= 2;
-                    boolean cannotConstructGeoCoding = isSmallProduct && e.getMessage().equals("The specified region, if not null, must intersect with the image`s bounds.");
-                    if (cannotConstructGeoCoding) {
-                        // ignore this product, but don't fail the process
-                        numObs = 0;
-                    } else {
-                        // something else is wrong that must be handled elsewhere.
-                        throw e;
-                    }
-                }
-                if (numObs > 0L) {
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
 
-                } else {
-                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
-                }
-                if (numObs > 0 || generateEmptyAggregate) {
-                    final String metaXml = extractProcessingGraphXml(product);
-                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
-                }
-
-            } else {
-                context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
-                LOG.info("Product not used");
+        if ("l3daily".equals(targetFormat)) {
+            // determine mjd from file name
+            final double mjd;
+            try {
+                mjd = ProductData.UTC.parse(inputPath.getName().substring(16, 31), COMPACT_DATE_FORMAT).getMJD();
+            } catch (ParseException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-        } finally {
-            pm.done();
-            processorAdapter.dispose();
+            // create lut of fires by row and column
+            HashMap<Integer, Integer> fireIndex = new HashMap<>();
+            for (int i=0; i<numFires; ++i) {
+                int row = frpArrays[FRP_VARIABLES.j.ordinal()].getInt(i);
+                int col = frpArrays[FRP_VARIABLES.i.ordinal()].getShort(i);
+                fireIndex.put(row * columns + col, i);
+            }
+            // create observation variable sequence
+            int[] variableIndex = new int[] {
+                    binningContext.getVariableContext().getVariableIndex("s3a_day_pixel"),
+                    binningContext.getVariableContext().getVariableIndex("s3a_day_cloud"),
+                    binningContext.getVariableContext().getVariableIndex("s3a_day_water"),
+                    binningContext.getVariableContext().getVariableIndex("s3a_day_fire"),
+                    binningContext.getVariableContext().getVariableIndex("s3a_day_frp")
+            };
+            // pixel loop
+            for (int row=0; row<rows; ++row) {
+                ObservationImpl[] observations = new ObservationImpl[columns];
+                for (int col=0; col<columns; ++col) {
+                    // construct observation
+                    double lat = geodeticArrays[GEODETIC_VARIABLES.latitude_in.ordinal()].getInt(index.set(row, col)) * 1e-6;
+                    double lon = geodeticArrays[GEODETIC_VARIABLES.longitude_in.ordinal()].getInt(index.set(row, col)) * 1e-6;
+                    int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index.set(row, col));
+                    Integer fire = fireIndex.get(row * columns + col);
+                    float frpMwir = Float.NaN;
+                    if (fire != null) {
+                        double area = frpArrays[FRP_VARIABLES.IFOV_area.ordinal()].getDouble(fire);
+                        if (area > 0.0) {
+                            frpMwir = (float) frpArrays[FRP_VARIABLES.FRP_MWIR.ordinal()].getDouble(fire);
+                            if (frpMwir <= 0.0) {
+                                frpMwir = Float.NaN;
+                            } else {
+                                ++count;
+                            }
+                        }
+                    }
+                    //long binIndex = binningContext.getPlanetaryGrid().getBinIndex(lat, lon);
+                    // aggregate contributions based on flags
+                    float[] values = new float[5];
+                    values[variableIndex[0]] = 1;
+                    values[variableIndex[1]] = (flags & 32) != 0 ? 1 : 0;  // frp_cloud
+                    values[variableIndex[2]] = (flags & 6) != 0 ? 1 : 0;  // l1b_water | frp_water
+                    values[variableIndex[3]] = ! Float.isNaN(frpMwir) ? 1 : 0;
+                    values[variableIndex[4]] = frpMwir;
+                    observations[col] = new ObservationImpl(lat, lon, mjd, values);
+                }
+                spatialBinner.processObservationSlice(observations);
+            }
+            spatialBinner.complete();
+            LOG.info(count + "/" + numFires + " records and " +
+                             spatialBinEmitter.numObsTotal + "/" + spatialBinEmitter.numBinsTotal +
+                             " obs/bins streamed of " + inputPath.getName());
+            final Exception[] exceptions = spatialBinner.getExceptions();
+            for (Exception exception : exceptions) {
+                String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
+                LOG.log(Level.SEVERE, m, exception);
+            }
+            return;
         }
-
-        final Exception[] exceptions = spatialBinner.getExceptions();
-        for (Exception exception : exceptions) {
-            String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
-            LOG.log(Level.SEVERE, m, exception);
-        }
-        LOG.info(MessageFormat.format("Finishes processing of {0}  ({1} observations seen, {2} bins produced)",
-                                      processorAdapter.getInputPath(),
-                                      spatialBinEmitter.numObsTotal,
-                                      spatialBinEmitter.numBinsTotal));
     }
 
     private File findByName(String name, File[] files) {
@@ -322,14 +299,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             throw new IOException("Failed to open file " + inputFile.getPath());
         }
         return netcdfFile;
-    }
-
-
-    static String extractProcessingGraphXml(Product product) {
-        final MetadataElement metadataRoot = product.getMetadataRoot();
-        final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
-        final MetadataSerializer metadataSerializer = new MetadataSerializer();
-        return metadataSerializer.toXml(processingGraph);
     }
 
     private static class SpatialBinEmitter implements SpatialBinConsumer {

@@ -58,7 +58,7 @@ public class FrpReducer extends L3Reducer {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        if ("l2monthly".equals(context.getConfiguration().get("targetFormat", "l2monthly"))) {
+        if ("l2monthly".equals(context.getConfiguration().get("calvalus.targetFormat", "l2monthly"))) {
             try (BufferedWriter out = new BufferedWriter(new FileWriter(new File("somename")))) {
                 out.write("Time\tLatitude\tLongitude\tRow\tColumn\tFRP_MIR\tFRP_SWIR\tAREA\tday_flag\tf1_flag\tPlatform\tConfidence\n");
                 while (context.nextKey()) {
