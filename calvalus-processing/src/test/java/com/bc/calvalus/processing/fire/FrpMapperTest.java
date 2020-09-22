@@ -1,0 +1,85 @@
+package com.bc.calvalus.processing.fire;
+
+import org.apache.hadoop.fs.Path;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.VariableContext;
+import org.junit.Test;
+import ucar.ma2.Array;
+import ucar.ma2.DataType;
+
+import java.util.HashMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+
+
+public class FrpMapperTest {
+
+    @Test
+    public void testCopyDateString() {
+        final Path path = new Path("S3A_SL_1_RBT____20190911T001906_20190911T002206_20190912T040638_0179_049_116_2880_LN2_O_NT_003.zip");
+
+        final String dateString = FrpMapper.copyDateString(path);
+        assertEquals("20190911T001906", dateString);
+    }
+
+    @Test
+    public void testCreateFiresLUT() {
+        final int[] shape = {3};
+        final Array j = Array.factory(DataType.INT, shape, new int[]{123, 136, 324});
+        final Array i = Array.factory(DataType.SHORT, shape, new short[]{67, 78, 104});
+        final Array[] frpArrays = new Array[FrpMapper.FRP_VARIABLES.values().length];
+        frpArrays[FrpMapper.FRP_VARIABLES.j.ordinal()] = j;
+        frpArrays[FrpMapper.FRP_VARIABLES.i.ordinal()] = i;
+        final int numFires = 3;
+
+        final HashMap<Integer, Integer> firesLUT = FrpMapper.createFiresLUT(frpArrays, numFires, 500);
+        assertEquals(3, firesLUT.size());
+        assertEquals(0, (int) firesLUT.get(123 * 500 + 67));
+        assertEquals(1, (int) firesLUT.get(136 * 500 + 78));
+        assertEquals(2, (int) firesLUT.get(324 * 500 + 104));
+    }
+
+    @Test
+    public void testCreateVariableIndex() {
+        final BinningContext binningContext = mock(BinningContext.class);
+        final VariableContext variableContext = mock(VariableContext.class);
+        when(variableContext.getVariableIndex("s3a_day_pixel")).thenReturn(0);
+        when(variableContext.getVariableIndex("s3a_day_cloud")).thenReturn(1);
+        when(variableContext.getVariableIndex("s3a_day_water")).thenReturn(2);
+        when(variableContext.getVariableIndex("s3a_day_fire")).thenReturn(3);
+        when(variableContext.getVariableIndex("s3a_day_frp")).thenReturn(4);
+        when(variableContext.getVariableIndex("s3a_night_pixel")).thenReturn(5);
+        when(variableContext.getVariableIndex("s3a_night_cloud")).thenReturn(6);
+        when(variableContext.getVariableIndex("s3a_night_water")).thenReturn(7);
+        when(variableContext.getVariableIndex("s3a_night_fire")).thenReturn(8);
+        when(variableContext.getVariableIndex("s3a_night_frp")).thenReturn(9);
+        when(variableContext.getVariableIndex("s3b_day_pixel")).thenReturn(10);
+        when(variableContext.getVariableIndex("s3b_day_cloud")).thenReturn(11);
+        when(variableContext.getVariableIndex("s3b_day_water")).thenReturn(12);
+        when(variableContext.getVariableIndex("s3b_day_fire")).thenReturn(13);
+        when(variableContext.getVariableIndex("s3b_day_frp")).thenReturn(14);
+        when(variableContext.getVariableIndex("s3b_night_pixel")).thenReturn(15);
+        when(variableContext.getVariableIndex("s3b_night_cloud")).thenReturn(16);
+        when(variableContext.getVariableIndex("s3b_night_water")).thenReturn(17);
+        when(variableContext.getVariableIndex("s3b_night_fire")).thenReturn(18);
+        when(variableContext.getVariableIndex("s3b_night_frp")).thenReturn(19);
+
+        when(binningContext.getVariableContext()).thenReturn(variableContext);
+
+        final int[] variableIndex = FrpMapper.createVariableIndex(binningContext);
+        assertEquals(20, variableIndex.length);
+        assertEquals(5, variableIndex[5]);
+        assertEquals(13, variableIndex[13]);
+
+        verify(binningContext, times(1)).getVariableContext();
+        verify(variableContext, times(20)).getVariableIndex(anyString());
+        verifyNoMoreInteractions(binningContext, variableContext);
+    }
+
+    @Test
+    public void testGetSensorOffset() {
+        assertEquals(0, FrpMapper.getSensorOffset(1));
+        assertEquals(10, FrpMapper.getSensorOffset(2));
+    }
+}
