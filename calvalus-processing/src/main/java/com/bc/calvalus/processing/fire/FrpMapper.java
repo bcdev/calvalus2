@@ -53,7 +53,7 @@ import java.util.logging.Logger;
 /**
  * Reads an FRP product and produces (binIndex, spatialBin) pairs.
  *
- * @author boe
+ * @author boe, tb
  */
 public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, L3SpatialBin> {
 
@@ -61,7 +61,36 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
 
+    private static final int S3A_OFFSET = 0;   // offset into variables array for s3a data
     private static final int S3B_OFFSET = 10;   // offset into variables array for s3b data
+
+    private static final int L1B_WATER = 2;
+    private static final int FRP_WATER = 4;
+    private static final int FRP_CLOUD = 32;
+    private static final int DAY = 64;
+
+    private static String[] VARIABLE_NAMES = {
+            "s3a_day_pixel",
+            "s3a_day_cloud",
+            "s3a_day_water",
+            "s3a_day_fire",
+            "s3a_day_frp",
+            "s3a_night_pixel",
+            "s3a_night_cloud",
+            "s3a_night_water",
+            "s3a_night_fire",
+            "s3a_night_frp",
+            "s3b_day_pixel",
+            "s3b_day_cloud",
+            "s3b_day_water",
+            "s3b_day_fire",
+            "s3b_day_frp",
+            "s3b_night_pixel",
+            "s3b_night_cloud",
+            "s3b_night_water",
+            "s3b_night_fire",
+            "s3b_night_frp"
+    };
 
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -73,8 +102,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final int rowIndex = FRP_VARIABLES.j.ordinal();
         final int colIndex = FRP_VARIABLES.i.ordinal();
         for (int i = 0; i < numFires; ++i) {
-            int row = frpArrays[rowIndex].getInt(i);
-            int col = frpArrays[colIndex].getShort(i);
+            final int row = frpArrays[rowIndex].getInt(i);
+            final int col = frpArrays[colIndex].getShort(i);
             fireIndex.put(row * columns + col, i);
         }
         return fireIndex;
@@ -97,6 +126,45 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         return inputPath.getName().substring(16, 31);
     }
 
+    static int getPlatformNumber(Path inputPath) {
+        final String fileName = inputPath.getName();
+        if (fileName.startsWith("S3A")) {
+            return 1;
+        } else if (fileName.startsWith("S3B")) {
+            return 2;
+        }
+
+        throw new IllegalArgumentException("Unknown Sentinel platform");
+    }
+
+    static int getSensorOffset(int platformNumber) {
+        if (platformNumber == 1) {
+            return S3A_OFFSET;
+        } else if (platformNumber == 2) {
+            return S3B_OFFSET;
+        }
+
+        throw new IllegalArgumentException("Unknown Sentinel platform");
+    }
+
+    static int[] createVariableIndex(BinningContext binningContext) {
+        final VariableContext variableContext = binningContext.getVariableContext();
+        final int variableCount = variableContext.getVariableCount();
+        if (variableCount != VARIABLE_NAMES.length) {
+            throw new IllegalArgumentException("Number of configured variables does not match required.");
+        }
+
+        final int[] indices = new int[20];
+        for (int i = 0; i < variableCount; i++) {
+            indices[i] = variableContext.getVariableIndex(VARIABLE_NAMES[i]);
+            if (indices[i] < 0) {
+                throw new IllegalArgumentException("Variable missing in configuration: " + VARIABLE_NAMES[i]);
+            }
+        }
+
+        return indices;
+    }
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
@@ -104,7 +172,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
         final Path inputPath = ((FileSplit) context.getInputSplit()).getPath();
         final File[] inputFiles = CalvalusProductIO.uncompressArchiveToCWD(inputPath, conf);
-        final int platformNumber = inputPath.getName().startsWith("S3A") ? 1 : inputPath.getName().startsWith("S3B") ? 2 : 0;
+        final int platformNumber = getPlatformNumber(inputPath);
 
         final File frpFile = findByName("FRP_in.nc", inputFiles);
         final NetcdfFile frpNetcdf = openNetcdfFile(frpFile);
@@ -149,20 +217,28 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             // pixel loop
             int count = 0;
             int variableOffset = getSensorOffset(platformNumber);
-            Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
+            final int latIndex = GEODETIC_VARIABLES.latitude_in.ordinal();
+            final int lonIndex = GEODETIC_VARIABLES.longitude_in.ordinal();
+            final int areaIndex = FRP_VARIABLES.IFOV_area.ordinal();
+            final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
+            final Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
+
             for (int row = 0; row < rows; ++row) {
-                ObservationImpl[] observations = new ObservationImpl[columns];
+                final ObservationImpl[] observations = new ObservationImpl[columns];
                 for (int col = 0; col < columns; ++col) {
+                    index.set(row, col);
+
                     // construct observation
-                    double lat = geodeticArrays[GEODETIC_VARIABLES.latitude_in.ordinal()].getInt(index.set(row, col)) * 1e-6;
-                    double lon = geodeticArrays[GEODETIC_VARIABLES.longitude_in.ordinal()].getInt(index.set(row, col)) * 1e-6;
-                    int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index.set(row, col));
+                    final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
+                    final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
+                    int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+
                     Integer fire = fireIndex.get(row * columns + col);
                     float frpMwir = Float.NaN;
                     if (fire != null) {
-                        double area = frpArrays[FRP_VARIABLES.IFOV_area.ordinal()].getDouble(fire);
+                        final double area = frpArrays[areaIndex].getDouble(fire);
                         if (area > 0.0) {
-                            frpMwir = (float) frpArrays[FRP_VARIABLES.FRP_MWIR.ordinal()].getDouble(fire);
+                            frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
                             if (frpMwir <= 0.0) {
                                 frpMwir = Float.NaN;
                             } else {
@@ -170,14 +246,15 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                             }
                         }
                     }
-                    //long binIndex = binningContext.getPlanetaryGrid().getBinIndex(lat, lon);
-                    // aggregate contributions based on flags
-                    float[] values = new float[5];
-                    values[variableIndex[0]] = 1;
-                    values[variableIndex[1]] = (flags & 32) != 0 ? 1 : 0;  // frp_cloud
-                    values[variableIndex[2]] = (flags & 6) != 0 ? 1 : 0;  // l1b_water | frp_water
-                    values[variableIndex[3]] = !Float.isNaN(frpMwir) ? 1 : 0;
-                    values[variableIndex[4]] = frpMwir;
+
+                    int writeOffset = variableOffset + ((flags & DAY) != 0 ? 0 : 5);
+                    // aggregate contributions based on flags and platform
+                    float[] values = new float[20];
+                    values[variableIndex[writeOffset]] = 1;
+                    values[variableIndex[writeOffset + 1]] = (flags & FRP_CLOUD) != 0 ? 1 : 0;  // frp_cloud
+                    values[variableIndex[writeOffset + 2]] = (flags & (L1B_WATER | FRP_WATER)) != 0 ? 1 : 0;  // l1b_water | frp_water
+                    values[variableIndex[writeOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;
+                    values[variableIndex[writeOffset + 4]] = frpMwir;
                     observations[col] = new ObservationImpl(lat, lon, mjd, values);
                 }
                 spatialBinner.processObservationSlice(observations);
@@ -192,42 +269,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 LOG.log(Level.SEVERE, m, exception);
             }
         }
-    }
-
-    static int getSensorOffset(int platformNumber) {
-        if (platformNumber == 1) {
-            return 0;
-        } else if (platformNumber == 2) {
-            return 10;
-        }
-
-        throw new IllegalArgumentException("Unknown Sentinel platform");
-    }
-
-    static int[] createVariableIndex(BinningContext binningContext) {
-        final VariableContext variableContext = binningContext.getVariableContext();
-        return new int[]{
-                variableContext.getVariableIndex("s3a_day_pixel"),
-                variableContext.getVariableIndex("s3a_day_cloud"),
-                variableContext.getVariableIndex("s3a_day_water"),
-                variableContext.getVariableIndex("s3a_day_fire"),
-                variableContext.getVariableIndex("s3a_day_frp"),
-                variableContext.getVariableIndex("s3a_night_pixel"),
-                variableContext.getVariableIndex("s3a_night_cloud"),
-                variableContext.getVariableIndex("s3a_night_water"),
-                variableContext.getVariableIndex("s3a_night_fire"),
-                variableContext.getVariableIndex("s3a_night_frp"),
-                variableContext.getVariableIndex("s3b_day_pixel"),
-                variableContext.getVariableIndex("s3b_day_cloud"),
-                variableContext.getVariableIndex("s3b_day_water"),
-                variableContext.getVariableIndex("s3b_day_fire"),
-                variableContext.getVariableIndex("s3b_day_frp"),
-                variableContext.getVariableIndex("s3b_night_pixel"),
-                variableContext.getVariableIndex("s3b_night_cloud"),
-                variableContext.getVariableIndex("s3b_night_water"),
-                variableContext.getVariableIndex("s3b_night_fire"),
-                variableContext.getVariableIndex("s3b_night_frp")
-        };
     }
 
     private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, int numFires) throws IOException, InterruptedException {
@@ -295,7 +336,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             featureValues[FRP_VARIABLES.FRP_MWIR.ordinal()] = (float) frpMwir;
             featureValues[FRP_VARIABLES.FRP_SWIR.ordinal()] = (float) frpSwir;
             featureValues[FRP_VARIABLES.IFOV_area.ordinal()] = (float) area;
-            featureValues[FRP_VARIABLES.flags.ordinal()] = (float) ((flags & 64) != 0 ? 1 : 0);
+            featureValues[FRP_VARIABLES.flags.ordinal()] = (float) ((flags & DAY) != 0 ? 1 : 0);
             featureValues[FRP_VARIABLES.used_channel.ordinal()] = (float) used_channel;
             featureValues[FRP_VARIABLES.confidence.ordinal()] = (float) confidence;
             context.write(new LongWritable(time), bin);
