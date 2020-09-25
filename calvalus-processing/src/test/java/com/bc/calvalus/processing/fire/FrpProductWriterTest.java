@@ -1,0 +1,102 @@
+package com.bc.calvalus.processing.fire;
+
+import org.esa.snap.core.datamodel.Product;
+import org.junit.Test;
+import ucar.nc2.NetcdfFileWriter;
+
+import java.io.File;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
+
+public class FrpProductWriterTest {
+
+    @Test
+    public void testGetOutputPath() {
+        final String expected = "/the/output/path/a_file.nc";
+
+        String outputPath = FrpL3ProductWriter.getOutputPath(expected);
+        assertEquals(expected, outputPath);
+
+        final File expectedFile = new File(expected);
+        outputPath = FrpL3ProductWriter.getOutputPath(expectedFile);
+        assertEquals(expectedFile.getAbsolutePath(), outputPath);
+    }
+
+    @Test
+    public void testGetOutputPath_invalid_class() {
+        try {
+            FrpL3ProductWriter.getOutputPath(new Double(34));
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
+    @Test
+    public void testAddDimensions() {
+        final NetcdfFileWriter fileWriter = mock(NetcdfFileWriter.class);
+        final Product product = new Product("what", "ever", 5, 7);
+
+        FrpL3ProductWriter.addDimensions(fileWriter, product);
+
+        verify(fileWriter, times(1)).addDimension("time", 1);
+        verify(fileWriter, times(1)).addDimension("lon", 5);
+        verify(fileWriter, times(1)).addDimension("lat", 7);
+        verifyNoMoreInteractions(fileWriter);
+    }
+
+    @Test
+    public void testAddGlobalMetadata() {
+        final NetcdfFileWriter fileWriter = mock(NetcdfFileWriter.class);
+        final Product product = new Product("C3S-FRP-L3-Map-0.25deg-P1D-2020-09-16-v1.0.nc", "whatever", 5, 7);
+
+        FrpL3ProductWriter.addGlobalMetadata(fileWriter, product);
+
+        verify(fileWriter, times(1)).addGlobalAttribute("title", "ECMWF C3S Gridded OLCI Fire Radiative Power product");
+        verify(fileWriter, times(1)).addGlobalAttribute("institution", "King's College London, Brockmann Consult GmbH");
+        verify(fileWriter, times(1)).addGlobalAttribute("source", "ESA Sentinel-3 A+B SLSTR FRP");
+        verify(fileWriter, times(1)).addGlobalAttribute(eq("history"), anyString());
+        verify(fileWriter, times(1)).addGlobalAttribute("references", "See https://climate.copernicus.eu/");
+        verify(fileWriter, times(1)).addGlobalAttribute(eq("tracking_id"), anyString());
+        verify(fileWriter, times(1)).addGlobalAttribute("Conventions", "CF-1.7");
+        verify(fileWriter, times(1)).addGlobalAttribute("summary", "TODO!");
+        verify(fileWriter, times(1)).addGlobalAttribute("keywords", "Fire Radiative Power, Climate Change, ESA, C3S, GCOS");
+        verify(fileWriter, times(1)).addGlobalAttribute("id", "C3S-FRP-L3-Map-0.25deg-P1D-2020-09-16-v1.0.nc");
+        verify(fileWriter, times(1)).addGlobalAttribute("naming_authority", "org.esa-cci");
+        verify(fileWriter, times(1)).addGlobalAttribute("keywords_vocabulary", "NASA Global Change Master Directory (GCMD) Science keywords");
+        verify(fileWriter, times(1)).addGlobalAttribute("cdm_data_type", "Grid");
+        verify(fileWriter, times(1)).addGlobalAttribute("comment", "These data were produced as part of the Copernicus Climate Change Service programme.");
+        verify(fileWriter, times(1)).addGlobalAttribute(eq("date_created"), anyString());
+        verify(fileWriter, times(1)).addGlobalAttribute("creator_name", "Brockmann Consult GmbH");
+        verify(fileWriter, times(1)).addGlobalAttribute("creator_url", "https://www.brockmann-consult.de");
+        verify(fileWriter, times(1)).addGlobalAttribute("creator_email", "martin.boettcher@brockmann-consult.de");
+        verify(fileWriter, times(1)).addGlobalAttribute("contact", "http://copernicus-support.ecmwf.int");
+        verify(fileWriter, times(1)).addGlobalAttribute("project", "EC C3S Fire Radiative Power");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lat_min", "-90");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lat_max", "90");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lon_min", "-180");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lon_max", "180");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_vertical_min", "0");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_vertical_max", "0");
+        // @todo 1 tb/tb implement 2020-09-25
+//        time_coverage_start = 20190701T000000Z
+//        time_coverage_end = 20190731T235959Z
+//        time_coverage_duration = P1M
+//        time_coverage_resolution = P1M
+        verify(fileWriter, times(1)).addGlobalAttribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention");
+        // @todo 1 tb/tb implement 2020-09-25
+//        license = EC C3S FIRE BURNED AREA Data Policy
+        verify(fileWriter, times(1)).addGlobalAttribute("platform", "Sentinel-3");
+        verify(fileWriter, times(1)).addGlobalAttribute("sensor", "SLSTR");
+        // @todo 1 tb/tb implement 2020-09-25
+//        spatial_resolution = 0.25 degrees
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lon_units", "degrees_east");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lat_units", "degrees_north");
+        // @todo 1 tb/tb implement 2020-09-25
+//        geospatial_lon_resolution = 0.25
+//        geospatial_lat_resolution = 0.25
+
+        verifyNoMoreInteractions(fileWriter);
+    }
+}
