@@ -78,7 +78,7 @@ import java.util.regex.Pattern;
 public class PatternBasedInputFormat extends InputFormat {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
-    private static final int DEFAULT_SEARCH_CHUNK_SIZE = 20;
+    private static final int DEFAULT_SEARCH_CHUNK_SIZE = 100;
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
 
