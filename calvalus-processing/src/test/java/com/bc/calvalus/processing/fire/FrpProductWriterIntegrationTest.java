@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire;
 
 import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +38,26 @@ public class FrpProductWriterIntegrationTest {
     @Test
     public void testWriteProductNodes() throws IOException {
         final Product product = new Product("frp-test", "test-type", 8, 4);
+        product.addBand("s3a_day_pixel", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_day_cloud", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_day_water", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_day_fire", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_day_frp", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_night_pixel", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_night_cloud", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_night_water", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_night_fire", ProductData.TYPE_FLOAT32);
+        product.addBand("s3a_night_frp", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_day_pixel", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_day_cloud", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_day_water", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_day_fire", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_day_frp", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_night_pixel", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_night_cloud", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_night_water", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_night_fire", ProductData.TYPE_FLOAT32);
+        product.addBand("s3b_night_frp", ProductData.TYPE_FLOAT32);
 
         final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
 
@@ -51,7 +72,6 @@ public class FrpProductWriterIntegrationTest {
         try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
             ensureDimensions(netcdfFile);
             ensureGlobalAttributes(netcdfFile);
-
             ensureAxesAndBoundsVariables(netcdfFile);
         }
     }

@@ -127,4 +127,140 @@ public class FrpProductWriterTest {
 
         verifyNoMoreInteractions(fileWriter);
     }
+
+    @Test
+    public void testGetVariableTemplate() {
+        final FrpL3ProductWriter writer = (FrpL3ProductWriter) new FrpL3ProductWriterPlugIn().createWriterInstance();
+
+        FrpL3ProductWriter.VariableTemplate template = writer.getTemplate("s3a_day_pixel");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A daytime pixels", template.longName);
+
+        template = writer.getTemplate("s3a_day_cloud");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A daytime cloudy pixels", template.longName);
+
+        template = writer.getTemplate("s3a_day_water");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A daytime water pixels", template.longName);
+
+        template = writer.getTemplate("s3a_day_fire");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A daytime active fire pixels", template.longName);
+
+        template = writer.getTemplate("s3a_day_frp");
+        assertEquals(DataType.FLOAT, template.dataType);
+        assertEquals(Float.NaN, template.fillValue);
+        assertEquals("MW", template.units);
+        assertEquals("Mean Fire Radiative Power measured by S3A during daytime", template.longName);
+
+        template = writer.getTemplate("s3a_night_pixel");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A nighttime pixels", template.longName);
+
+        template = writer.getTemplate("s3a_night_cloud");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A nighttime cloudy pixels", template.longName);
+
+        template = writer.getTemplate("s3a_night_water");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A nighttime water pixels", template.longName);
+
+        template = writer.getTemplate("s3a_night_fire");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3A nighttime active fire pixels", template.longName);
+
+        template = writer.getTemplate("s3a_night_frp");
+        assertEquals(DataType.FLOAT, template.dataType);
+        assertEquals(Float.NaN, template.fillValue);
+        assertEquals("MW", template.units);
+        assertEquals("Mean Fire Radiative Power measured by S3A during nighttime", template.longName);
+
+        template = writer.getTemplate("s3b_day_pixel");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B daytime pixels", template.longName);
+
+        template = writer.getTemplate("s3b_day_cloud");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B daytime cloudy pixels", template.longName);
+
+        template = writer.getTemplate("s3b_day_water");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B daytime water pixels", template.longName);
+
+        template = writer.getTemplate("s3b_day_fire");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B daytime active fire pixels", template.longName);
+
+        template = writer.getTemplate("s3b_day_frp");
+        assertEquals(DataType.FLOAT, template.dataType);
+        assertEquals(Float.NaN, template.fillValue);
+        assertEquals("MW", template.units);
+        assertEquals("Mean Fire Radiative Power measured by S3B during daytime", template.longName);
+
+        template = writer.getTemplate("s3b_night_pixel");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B nighttime pixels", template.longName);
+
+        template = writer.getTemplate("s3b_night_cloud");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B nighttime cloudy pixels", template.longName);
+
+        template = writer.getTemplate("s3b_night_water");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B nighttime water pixels", template.longName);
+
+        template = writer.getTemplate("s3b_night_fire");
+        assertEquals(DataType.UINT, template.dataType);
+        assertEquals(-1, template.fillValue);
+        assertEquals("1", template.units);
+        assertEquals("Total number of S3B nighttime active fire pixels", template.longName);
+
+        template = writer.getTemplate("s3b_night_frp");
+        assertEquals(DataType.FLOAT, template.dataType);
+        assertEquals(Float.NaN, template.fillValue);
+        assertEquals("MW", template.units);
+        assertEquals("Mean Fire Radiative Power measured by S3B during nighttime", template.longName);
+    }
+
+    @Test
+    public void testGetVariableTemplate_invalidName() {
+        final FrpL3ProductWriter writer = (FrpL3ProductWriter) new FrpL3ProductWriterPlugIn().createWriterInstance();
+
+        try {
+            writer.getTemplate("Heffalump");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException expected) {
+        }
+    }
 }
