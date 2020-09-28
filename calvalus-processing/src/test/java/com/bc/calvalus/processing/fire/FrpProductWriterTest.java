@@ -2,7 +2,9 @@ package com.bc.calvalus.processing.fire;
 
 import org.esa.snap.core.datamodel.Product;
 import org.junit.Test;
+import ucar.ma2.DataType;
 import ucar.nc2.NetcdfFileWriter;
+import ucar.nc2.Variable;
 
 import java.io.File;
 
@@ -27,7 +29,7 @@ public class FrpProductWriterTest {
     @Test
     public void testGetOutputPath_invalid_class() {
         try {
-            FrpL3ProductWriter.getOutputPath(new Double(34));
+            FrpL3ProductWriter.getOutputPath(34.0);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
         }
@@ -43,6 +45,7 @@ public class FrpProductWriterTest {
         verify(fileWriter, times(1)).addDimension("time", 1);
         verify(fileWriter, times(1)).addDimension("lon", 5);
         verify(fileWriter, times(1)).addDimension("lat", 7);
+        verify(fileWriter, times(1)).addDimension("bounds", 2);
         verifyNoMoreInteractions(fileWriter);
     }
 
@@ -96,6 +99,31 @@ public class FrpProductWriterTest {
         // @todo 1 tb/tb implement 2020-09-25
 //        geospatial_lon_resolution = 0.25
 //        geospatial_lat_resolution = 0.25
+
+        verifyNoMoreInteractions(fileWriter);
+    }
+
+    @Test
+    public void testAddAxesAndBoundsVariables() {
+        final NetcdfFileWriter fileWriter = mock(NetcdfFileWriter.class);
+        final Variable lonVariable = mock(Variable.class);
+        when(fileWriter.addVariable("lon", DataType.FLOAT, "lon")).thenReturn(lonVariable);
+        final Variable latVariable = mock(Variable.class);
+        when(fileWriter.addVariable("lat", DataType.FLOAT, "lat")).thenReturn(latVariable);
+        final Variable timeVariable = mock(Variable.class);
+        when(fileWriter.addVariable("time", DataType.DOUBLE, "time")).thenReturn(timeVariable);
+
+        FrpL3ProductWriter.addAxesAndBoundsVariables(fileWriter);
+
+        verify(fileWriter, times(1)).addVariable("lon", DataType.FLOAT, "lon");
+        verify(lonVariable, times(4)).addAttribute(anyObject());
+        verify(fileWriter, times(1)).addVariable("lat", DataType.FLOAT, "lat");
+        verify(latVariable, times(4)).addAttribute(anyObject());
+        verify(fileWriter, times(1)).addVariable("time", DataType.DOUBLE, "time");
+        verify(timeVariable, times(5)).addAttribute(anyObject());
+        verify(fileWriter, times(1)).addVariable("lon_bounds", DataType.FLOAT, "lon bounds");
+        verify(fileWriter, times(1)).addVariable("lat_bounds", DataType.FLOAT, "lat bounds");
+        verify(fileWriter, times(1)).addVariable("time_bounds", DataType.FLOAT, "time bounds");
 
         verifyNoMoreInteractions(fileWriter);
     }

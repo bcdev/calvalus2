@@ -8,7 +8,10 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.ProductNode;
+import ucar.ma2.DataType;
+import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
+import ucar.nc2.Variable;
 import ucar.nc2.write.Nc4Chunking;
 import ucar.nc2.write.Nc4ChunkingDefault;
 
@@ -44,6 +47,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addDimension("time", 1);
         fileWriter.addDimension("lon", product.getSceneRasterWidth());
         fileWriter.addDimension("lat", product.getSceneRasterHeight());
+        fileWriter.addDimension("bounds", 2);
     }
 
     static void addGlobalMetadata(NetcdfFileWriter fileWriter, Product product) {
@@ -83,6 +87,32 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addGlobalAttribute("geospatial_lat_units", "degrees_north");
     }
 
+    static void addAxesAndBoundsVariables(NetcdfFileWriter fileWriter) {
+        Variable variable = fileWriter.addVariable("lon", DataType.FLOAT, "lon");
+        variable.addAttribute(new Attribute("units", "degrees_east"));
+        variable.addAttribute(new Attribute("standard_name", "longitude"));
+        variable.addAttribute(new Attribute("long_name", "longitude"));
+        variable.addAttribute(new Attribute("bounds", "lon_bounds"));
+
+        variable = fileWriter.addVariable("lat", DataType.FLOAT, "lat");
+        variable.addAttribute(new Attribute("units", "degrees_north"));
+        variable.addAttribute(new Attribute("standard_name", "latitude"));
+        variable.addAttribute(new Attribute("long_name", "latitude"));
+        variable.addAttribute(new Attribute("bounds", "lat_bounds"));
+
+        // @todo 2 tb/** is this standard? Double seems to be a too large datatype 2020-09-28
+        variable = fileWriter.addVariable("time", DataType.DOUBLE, "time");
+        variable.addAttribute(new Attribute("units", "days since 1970-01-01 00:00:00"));
+        variable.addAttribute(new Attribute("standard_name", "time"));
+        variable.addAttribute(new Attribute("long_name", "time"));
+        variable.addAttribute(new Attribute("bounds", "time_bounds"));
+        variable.addAttribute(new Attribute("calendar", "standard"));
+
+        fileWriter.addVariable("lon_bounds", DataType.FLOAT, "lon bounds");
+        fileWriter.addVariable("lat_bounds", DataType.FLOAT, "lat bounds");
+        fileWriter.addVariable("time_bounds", DataType.FLOAT, "time bounds");
+    }
+
     @Override
     public void writeBandRasterData(Band sourceBand, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData sourceBuffer, ProgressMonitor pm) throws IOException {
 
@@ -97,8 +127,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         final Product sourceProduct = getSourceProduct();
         addDimensions(fileWriter, sourceProduct);
-        // add global metadata
-        // add bounds variables
+        addGlobalMetadata(fileWriter, sourceProduct);
+        addAxesAndBoundsVariables(fileWriter);
         // add variables from product
         // add weighted FRP variables
 
