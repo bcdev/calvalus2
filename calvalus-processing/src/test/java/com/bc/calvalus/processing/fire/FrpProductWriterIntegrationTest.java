@@ -6,7 +6,9 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ucar.ma2.Array;
 import ucar.ma2.DataType;
+import ucar.ma2.Index;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
@@ -143,7 +145,7 @@ public class FrpProductWriterIntegrationTest {
         return product;
     }
 
-    private void ensureAxesAndBoundsVariables(NetcdfFile netcdfFile) {
+    private void ensureAxesAndBoundsVariables(NetcdfFile netcdfFile) throws IOException {
         final Variable lon = netcdfFile.findVariable("lon");
         assertEquals(8, lon.getShape(0));
 
@@ -153,12 +155,23 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("units", attribute.getShortName());
         assertEquals("degrees_east", attribute.getStringValue());
 
+        final Array lonData = lon.read();
+        assertEquals(-157.5, lonData.getFloat(0), 1e-8);
+        assertEquals(-112.5, lonData.getFloat(1), 1e-8);
+
         final Variable lon_bounds = netcdfFile.findVariable("lon_bounds");
         assertEquals(8, lon_bounds.getShape(0));
         assertEquals(2, lon_bounds.getShape(1));
 
         attributes = lon_bounds.getAttributes();
         assertEquals(0, attributes.size());
+
+        final Array lonBoundsArray = lon_bounds.read();
+        final Index index = lonBoundsArray.getIndex();
+        index.set(2, 0);
+        assertEquals(-90.0, lonBoundsArray.getFloat(index), 1e-8);
+        index.set(2, 1);
+        assertEquals(-45.0, lonBoundsArray.getFloat(index), 1e-8);
 
         final Variable lat = netcdfFile.findVariable("lat");
         assertEquals(4, lat.getShape(0));
@@ -168,6 +181,10 @@ public class FrpProductWriterIntegrationTest {
         attribute = attributes.get(1);
         assertEquals("standard_name", attribute.getShortName());
         assertEquals("latitude", attribute.getStringValue());
+
+        final Array latData = lat.read();
+        assertEquals(22.5, latData.getFloat(2), 1e-8);
+        assertEquals(67.5, latData.getFloat(3), 1e-8);
 
         final Variable lat_bounds = netcdfFile.findVariable("lat_bounds");
         assertEquals(4, lat_bounds.getShape(0));

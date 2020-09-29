@@ -8,7 +8,9 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.ProductNode;
+import ucar.ma2.Array;
 import ucar.ma2.DataType;
+import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
@@ -166,8 +168,55 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         fileWriter.create();
 
+        writeAxesAndBoundsVariables(sourceProduct);
+
         // write time, lon, lat bounds
         // write time lon, lat axis variables
+    }
+
+    private void writeAxesAndBoundsVariables(Product sourceProduct) throws IOException {
+        final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
+        final double lonStep = 360.0 / sceneRasterWidth;
+        final double lonOffset = lonStep * 0.5;
+        final float[] longitudes = new float[sceneRasterWidth];
+        final float[] lonBounds = new float[2 * sceneRasterWidth];
+        for (int i = 0; i < sceneRasterWidth; i++) {
+            longitudes[i] = (float) (i * lonStep + lonOffset - 180.0);
+            lonBounds[2 * i] = (float) (longitudes[i] - lonOffset);
+            lonBounds[2 * i + 1] = (float) (longitudes[i] + lonOffset);
+        }
+
+        final Array lonArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterWidth}, longitudes);
+        final Array lonBoundsArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterWidth, 2}, lonBounds);
+        final Variable lonVariable = fileWriter.findVariable("lon");
+        final Variable lonBoundsVariable = fileWriter.findVariable("lon_bounds");
+        try {
+            fileWriter.write(lonVariable, lonArray);
+            fileWriter.write(lonBoundsVariable, lonBoundsArray);
+        } catch (InvalidRangeException e) {
+            throw new IOException(e.getMessage());
+        }
+
+        final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
+        final double latStep = 180.0 / sceneRasterHeight;
+        final double latOffset = latStep * 0.5;
+        final float[] latitudes = new float[sceneRasterHeight];
+        final float[] latBounds = new float[2 * sceneRasterHeight];
+        for (int i = 0; i < sceneRasterHeight; i++) {
+            latitudes[i] = (float) (i * latStep + latOffset - 90.0);
+            latBounds[2 * i] = (float) (latitudes[i] - latOffset);
+            latBounds[2 * i + 1] = (float) (latitudes[i] + latOffset);
+        }
+        final Array latArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterHeight}, latitudes);
+        final Array latBoundsArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterHeight, 2}, latBounds);
+        final Variable latVariable = fileWriter.findVariable("lat");
+        final Variable latBoundsVariable = fileWriter.findVariable("lat_bounds");
+        try {
+            fileWriter.write(latVariable, latArray);
+            fileWriter.write(latBoundsVariable, latBoundsArray);
+        } catch (InvalidRangeException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     private void addWeightedFRPVariables() {
@@ -194,11 +243,11 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private void addProductVariables(Product sourceProduct) {
         final Band[] bands = sourceProduct.getBands();
-        for (final Band band: bands) {
+        for (final Band band : bands) {
             final String bandName = band.getName();
             final VariableTemplate template = getTemplate(bandName);
             final Variable variable = fileWriter.addVariable(bandName, template.dataType, DIM_STRING);
-            variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue,  template.dataType.isUnsigned()));
+            variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue, template.dataType.isUnsigned()));
             variable.addAttribute(new Attribute(CF.UNITS, template.units));
             variable.addAttribute(new Attribute(CF.LONG_NAME, template.longName));
         }
@@ -251,7 +300,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     VariableTemplate getTemplate(String variableName) {
         final VariableTemplate variableTemplate = variableTemplates.get(variableName);
-        if(variableTemplate == null) {
+        if (variableTemplate == null) {
             throw new IllegalArgumentException("Unsupported variable:" + variableName);
         }
         return variableTemplate;
