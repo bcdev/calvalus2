@@ -25,10 +25,12 @@ import java.util.UUID;
 
 public class FrpL3ProductWriter extends AbstractProductWriter {
 
+    private static final String DIM_STRING = "time lat lon";
+
     private Map<String, VariableTemplate> variableTemplates;
     private NetcdfFileWriter fileWriter;
 
-    public FrpL3ProductWriter(ProductWriterPlugIn writerPlugIn) {
+    FrpL3ProductWriter(ProductWriterPlugIn writerPlugIn) {
         super(writerPlugIn);
 
         fileWriter = null;
@@ -95,21 +97,21 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     static void addAxesAndBoundsVariables(NetcdfFileWriter fileWriter) {
         Variable variable = fileWriter.addVariable("lon", DataType.FLOAT, "lon");
         variable.addAttribute(new Attribute(CF.UNITS, "degrees_east"));
-        variable.addAttribute(new Attribute("standard_name", "longitude"));
-        variable.addAttribute(new Attribute("long_name", "longitude"));
+        variable.addAttribute(new Attribute(CF.STANDARD_NAME, "longitude"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "longitude"));
         variable.addAttribute(new Attribute("bounds", "lon_bounds"));
 
         variable = fileWriter.addVariable("lat", DataType.FLOAT, "lat");
         variable.addAttribute(new Attribute(CF.UNITS, "degrees_north"));
-        variable.addAttribute(new Attribute("standard_name", "latitude"));
-        variable.addAttribute(new Attribute("long_name", "latitude"));
+        variable.addAttribute(new Attribute(CF.STANDARD_NAME, "latitude"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "latitude"));
         variable.addAttribute(new Attribute("bounds", "lat_bounds"));
 
         // @todo 2 tb/** is this standard? Double seems to be a too large datatype 2020-09-28
         variable = fileWriter.addVariable("time", DataType.DOUBLE, "time");
         variable.addAttribute(new Attribute(CF.UNITS, "days since 1970-01-01 00:00:00"));
-        variable.addAttribute(new Attribute("standard_name", "time"));
-        variable.addAttribute(new Attribute("long_name", "time"));
+        variable.addAttribute(new Attribute(CF.STANDARD_NAME, "time"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "time"));
         variable.addAttribute(new Attribute("bounds", "time_bounds"));
         variable.addAttribute(new Attribute("calendar", "standard"));
 
@@ -120,25 +122,25 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private void createVariableTemplates() {
         variableTemplates = new HashMap<>();
-        variableTemplates.put("s3a_day_pixel", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A daytime pixels"));
-        variableTemplates.put("s3a_day_cloud", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A daytime cloudy pixels"));
-        variableTemplates.put("s3a_day_water", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A daytime water pixels"));
-        variableTemplates.put("s3a_day_fire", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A daytime active fire pixels"));
+        variableTemplates.put("s3a_day_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime pixels"));
+        variableTemplates.put("s3a_day_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime cloudy pixels"));
+        variableTemplates.put("s3a_day_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime water pixels"));
+        variableTemplates.put("s3a_day_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime active fire pixels"));
         variableTemplates.put("s3a_day_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during daytime"));
-        variableTemplates.put("s3a_night_pixel", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A nighttime pixels"));
-        variableTemplates.put("s3a_night_cloud", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A nighttime cloudy pixels"));
-        variableTemplates.put("s3a_night_water", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A nighttime water pixels"));
-        variableTemplates.put("s3a_night_fire", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3A nighttime active fire pixels"));
+        variableTemplates.put("s3a_night_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime pixels"));
+        variableTemplates.put("s3a_night_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime cloudy pixels"));
+        variableTemplates.put("s3a_night_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime water pixels"));
+        variableTemplates.put("s3a_night_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime active fire pixels"));
         variableTemplates.put("s3a_night_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime"));
-        variableTemplates.put("s3b_day_pixel", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B daytime pixels"));
-        variableTemplates.put("s3b_day_cloud", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B daytime cloudy pixels"));
-        variableTemplates.put("s3b_day_water", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B daytime water pixels"));
-        variableTemplates.put("s3b_day_fire", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B daytime active fire pixels"));
+        variableTemplates.put("s3b_day_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime pixels"));
+        variableTemplates.put("s3b_day_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime cloudy pixels"));
+        variableTemplates.put("s3b_day_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime water pixels"));
+        variableTemplates.put("s3b_day_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime active fire pixels"));
         variableTemplates.put("s3b_day_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during daytime"));
-        variableTemplates.put("s3b_night_pixel", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B nighttime pixels"));
-        variableTemplates.put("s3b_night_cloud", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B nighttime cloudy pixels"));
-        variableTemplates.put("s3b_night_water", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B nighttime water pixels"));
-        variableTemplates.put("s3b_night_fire", new VariableTemplate(DataType.UINT, -1, "1", "Total number of S3B nighttime active fire pixels"));
+        variableTemplates.put("s3b_night_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
+        variableTemplates.put("s3b_night_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime cloudy pixels"));
+        variableTemplates.put("s3b_night_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
+        variableTemplates.put("s3b_night_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
         variableTemplates.put("s3b_night_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
     }
 
@@ -159,22 +161,47 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         addGlobalMetadata(fileWriter, sourceProduct);
         addAxesAndBoundsVariables(fileWriter);
 
-        final Band[] bands = sourceProduct.getBands();
-        for (final Band band: bands) {
-            final String bandName = band.getName();
-            final VariableTemplate template = getTemplate(bandName);
-            final Variable variable = fileWriter.addVariable(bandName, template.dataType, "time lat lon");
-            variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue));
-            variable.addAttribute(new Attribute(CF.UNITS, template.units));
-            variable.addAttribute(new Attribute(CF.LONG_NAME, template.longName));
-        }
-        // add variables from product
-        // add weighted FRP variables
+        addProductVariables(sourceProduct);
+        addWeightedFRPVariables();
 
         fileWriter.create();
 
         // write time, lon, lat bounds
         // write time lon, lat axis variables
+    }
+
+    private void addWeightedFRPVariables() {
+        Variable variable = fileWriter.addVariable("s3a_day_frp_weighted", DataType.FLOAT, DIM_STRING);
+        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
+        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage"));
+
+        variable = fileWriter.addVariable("s3a_night_frp_weighted", DataType.FLOAT, DIM_STRING);
+        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
+        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage"));
+
+        variable = fileWriter.addVariable("s3b_day_frp_weighted", DataType.FLOAT, DIM_STRING);
+        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
+        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage"));
+
+        variable = fileWriter.addVariable("s3b_night_frp_weighted", DataType.FLOAT, DIM_STRING);
+        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
+        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
+        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage"));
+    }
+
+    private void addProductVariables(Product sourceProduct) {
+        final Band[] bands = sourceProduct.getBands();
+        for (final Band band: bands) {
+            final String bandName = band.getName();
+            final VariableTemplate template = getTemplate(bandName);
+            final Variable variable = fileWriter.addVariable(bandName, template.dataType, DIM_STRING);
+            variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue,  template.dataType.isUnsigned()));
+            variable.addAttribute(new Attribute(CF.UNITS, template.units));
+            variable.addAttribute(new Attribute(CF.LONG_NAME, template.longName));
+        }
     }
 
     @Override

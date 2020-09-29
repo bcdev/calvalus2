@@ -6,6 +6,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
@@ -37,6 +38,87 @@ public class FrpProductWriterIntegrationTest {
 
     @Test
     public void testWriteProductNodes() throws IOException {
+        final Product product = createTestProduct();
+
+        final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
+
+        try {
+            productWriter.writeProductNodes(product, targetFile);
+        } finally {
+            product.dispose();
+            productWriter.flush();
+            productWriter.close();
+        }
+
+        try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
+            ensureDimensions(netcdfFile);
+            ensureGlobalAttributes(netcdfFile);
+            ensureAxesAndBoundsVariables(netcdfFile);
+
+            ensureVariables(netcdfFile);
+            ensureWeightedFRPVariables(netcdfFile);
+        }
+    }
+
+    private void ensureWeightedFRPVariables(NetcdfFile netcdfFile) {
+        Variable variable = netcdfFile.findVariable("s3a_day_frp_weighted");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
+
+        variable = netcdfFile.findVariable("s3a_night_frp_weighted");
+        int[] shape = variable.getShape();
+        assertEquals(3, shape.length);
+        assertEquals(1, shape[0]);
+        assertEquals(4, shape[1]);
+        assertEquals(8, shape[2]);
+        assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+
+        variable = netcdfFile.findVariable("s3b_day_frp_weighted");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", variable.findAttribute(CF.LONG_NAME).getStringValue());
+
+        variable = netcdfFile.findVariable("s3b_night_frp_weighted");
+        shape = variable.getShape();
+        assertEquals(3, shape.length);
+        assertEquals(1, shape[0]);
+        assertEquals(4, shape[1]);
+        assertEquals(8, shape[2]);
+        assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
+    }
+
+    private void ensureVariables(NetcdfFile netcdfFile) {
+        Variable variable = netcdfFile.findVariable("s3a_day_pixel");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        int[] shape = variable.getShape();
+        assertEquals(3, shape.length);
+        assertEquals(1, shape[0]);
+        assertEquals(4, shape[1]);
+        assertEquals(8, shape[2]);
+        // @todo 1 tb/tb check numerical values 2020-09-29
+
+        variable = netcdfFile.findVariable("s3a_night_fire");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
+        // @todo 1 tb/tb check numerical values 2020-09-29
+
+        variable = netcdfFile.findVariable("s3b_day_frp");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("Mean Fire Radiative Power measured by S3B during daytime", variable.findAttribute(CF.LONG_NAME).getStringValue());
+        shape = variable.getShape();
+        assertEquals(3, shape.length);
+        assertEquals(1, shape[0]);
+        assertEquals(4, shape[1]);
+        assertEquals(8, shape[2]);
+        // @todo 1 tb/tb check numerical values 2020-09-29
+
+        variable = netcdfFile.findVariable("s3b_night_water");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        // @todo 1 tb/tb check numerical values 2020-09-29
+    }
+
+    private Product createTestProduct() {
         final Product product = new Product("frp-test", "test-type", 8, 4);
         product.addBand("s3a_day_pixel", ProductData.TYPE_FLOAT32);
         product.addBand("s3a_day_cloud", ProductData.TYPE_FLOAT32);
@@ -58,22 +140,7 @@ public class FrpProductWriterIntegrationTest {
         product.addBand("s3b_night_water", ProductData.TYPE_FLOAT32);
         product.addBand("s3b_night_fire", ProductData.TYPE_FLOAT32);
         product.addBand("s3b_night_frp", ProductData.TYPE_FLOAT32);
-
-        final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
-
-        try {
-            productWriter.writeProductNodes(product, targetFile);
-        } finally {
-            product.dispose();
-            productWriter.flush();
-            productWriter.close();
-        }
-
-        try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
-            ensureDimensions(netcdfFile);
-            ensureGlobalAttributes(netcdfFile);
-            ensureAxesAndBoundsVariables(netcdfFile);
-        }
+        return product;
     }
 
     private void ensureAxesAndBoundsVariables(NetcdfFile netcdfFile) {
