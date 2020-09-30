@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.dataio.ProductWriter;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
@@ -47,10 +49,15 @@ public class FrpProductWriterIntegrationTest {
 
         try {
             productWriter.writeProductNodes(product, targetFile);
+
+            final Band[] bands = product.getBands();
+            for (final Band band : bands) {
+                productWriter.writeBandRasterData(band, 0, 0, 8, 4, band.getRasterData(), ProgressMonitor.NULL);
+            }
         } finally {
-            product.dispose();
             productWriter.flush();
             productWriter.close();
+            product.dispose();
         }
 
         try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
@@ -123,30 +130,77 @@ public class FrpProductWriterIntegrationTest {
 
     private Product createTestProduct() throws ParseException {
         final Product product = new Product("frp-test", "test-type", 8, 4);
-        product.addBand("s3a_day_pixel", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_day_cloud", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_day_water", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_day_fire", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_day_frp", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_night_pixel", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_night_cloud", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_night_water", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_night_fire", ProductData.TYPE_FLOAT32);
-        product.addBand("s3a_night_frp", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_day_pixel", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_day_cloud", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_day_water", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_day_fire", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_day_frp", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_night_pixel", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_night_cloud", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_night_water", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_night_fire", ProductData.TYPE_FLOAT32);
-        product.addBand("s3b_night_frp", ProductData.TYPE_FLOAT32);
+        final Band s3a_day_pixel = product.addBand("s3a_day_pixel", ProductData.TYPE_FLOAT32);
+        s3a_day_pixel.setData(createDataBuffer(0));
+
+        final Band s3a_day_cloud = product.addBand("s3a_day_cloud", ProductData.TYPE_FLOAT32);
+        s3a_day_cloud.setData(createDataBuffer(1));
+
+        final Band s3a_day_water = product.addBand("s3a_day_water", ProductData.TYPE_FLOAT32);
+        s3a_day_water.setData(createDataBuffer(2));
+
+        final Band s3a_day_fire = product.addBand("s3a_day_fire", ProductData.TYPE_FLOAT32);
+        s3a_day_fire.setData(createDataBuffer(3));
+
+        final Band s3a_day_frp = product.addBand("s3a_day_frp", ProductData.TYPE_FLOAT32);
+        s3a_day_frp.setData(createDataBuffer(4));
+
+        final Band s3a_night_pixel = product.addBand("s3a_night_pixel", ProductData.TYPE_FLOAT32);
+        s3a_night_pixel.setData(createDataBuffer(5));
+
+        final Band s3a_night_cloud = product.addBand("s3a_night_cloud", ProductData.TYPE_FLOAT32);
+        s3a_night_cloud.setData(createDataBuffer(6));
+
+        final Band s3a_night_water = product.addBand("s3a_night_water", ProductData.TYPE_FLOAT32);
+        s3a_night_water.setData(createDataBuffer(7));
+
+        final Band s3a_night_fire = product.addBand("s3a_night_fire", ProductData.TYPE_FLOAT32);
+        s3a_night_fire.setData(createDataBuffer(8));
+
+        final Band s3a_night_frp = product.addBand("s3a_night_frp", ProductData.TYPE_FLOAT32);
+        s3a_night_frp.setData(createDataBuffer(9));
+
+        final Band s3b_day_pixel = product.addBand("s3b_day_pixel", ProductData.TYPE_FLOAT32);
+        s3b_day_pixel.setData(createDataBuffer(10));
+
+        final Band s3b_day_cloud = product.addBand("s3b_day_cloud", ProductData.TYPE_FLOAT32);
+        s3b_day_cloud.setData(createDataBuffer(11));
+
+        final Band s3b_day_water = product.addBand("s3b_day_water", ProductData.TYPE_FLOAT32);
+        s3b_day_water.setData(createDataBuffer(12));
+
+        final Band s3b_day_fire = product.addBand("s3b_day_fire", ProductData.TYPE_FLOAT32);
+        s3b_day_fire.setData(createDataBuffer(13));
+
+        final Band s3b_day_frp = product.addBand("s3b_day_frp", ProductData.TYPE_FLOAT32);
+        s3b_day_frp.setData(createDataBuffer(14));
+
+        final Band s3b_night_pixel = product.addBand("s3b_night_pixel", ProductData.TYPE_FLOAT32);
+        s3b_night_pixel.setData(createDataBuffer(15));
+
+        final Band s3b_night_cloud = product.addBand("s3b_night_cloud", ProductData.TYPE_FLOAT32);
+        s3b_night_cloud.setData(createDataBuffer(16));
+
+        final Band s3b_night_water = product.addBand("s3b_night_water", ProductData.TYPE_FLOAT32);
+        s3b_night_water.setData(createDataBuffer(17));
+
+        final Band s3b_night_fire = product.addBand("s3b_night_fire", ProductData.TYPE_FLOAT32);
+        s3b_night_fire.setData(createDataBuffer(18));
+
+        final Band s3b_night_frp = product.addBand("s3b_night_frp", ProductData.TYPE_FLOAT32);
+        s3b_night_frp.setData(createDataBuffer(19));
 
         product.setStartTime(ProductData.UTC.parse("22-MAR-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("22-MAR-2020 23:59:59"));
         return product;
+    }
+
+    private ProductData createDataBuffer(int offset) {
+        final float[] data = new float[32];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = i + offset;
+        }
+        return ProductData.createInstance(ProductData.TYPE_FLOAT32, data);
     }
 
     private void ensureAxesAndBoundsVariables(NetcdfFile netcdfFile) throws IOException {

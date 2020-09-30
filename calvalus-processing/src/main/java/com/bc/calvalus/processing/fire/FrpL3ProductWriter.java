@@ -10,6 +10,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.ProductNode;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
+import ucar.ma2.Index;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
@@ -32,6 +33,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
 
     private Map<String, VariableTemplate> variableTemplates;
+    private Map<String, Array> variableData;
     private List<String> bandsToIgnore;
     private NetcdfFileWriter fileWriter;
 
@@ -42,6 +44,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         createVariableTemplates();
         createBandNamesToIgnore();
+        variableData = new HashMap<>();
     }
 
     static String getOutputPath(Object output) {
@@ -157,9 +160,24 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     }
 
     @Override
-    public void writeBandRasterData(Band sourceBand, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData sourceBuffer, ProgressMonitor pm) throws IOException {
+    public void writeBandRasterData(Band sourceBand, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData sourceBuffer, ProgressMonitor pm) {
+        final String name = sourceBand.getName();
+        if (bandsToIgnore.contains(name)) {
+            return;
+        }
 
+        final Array variableData = this.variableData.get(name);
+        final Index index = variableData.getIndex();
+        int i = 0;
+        for (int y = sourceOffsetY; y < sourceOffsetY + sourceHeight; y++) {
+            for (int x = sourceOffsetX; x < sourceOffsetX + sourceWidth; x++) {
+                index.set(0, y, x);
+                variableData.setFloat(index, sourceBuffer.getElemFloatAt(i));
+                ++i;
+            }
+        }
     }
+
 
     @Override
     protected void writeProductNodesImpl() throws IOException {
@@ -247,29 +265,43 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     }
 
     private void addWeightedFRPVariables() {
+        final Product sourceProduct = getSourceProduct();
+        final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
+        final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
+
         Variable variable = fileWriter.addVariable("s3a_day_frp_weighted", DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, "MW"));
         variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage"));
+        Array dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
+        variableData.put("s3a_day_frp_weighted", dataArray);
 
         variable = fileWriter.addVariable("s3a_night_frp_weighted", DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, "MW"));
         variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage"));
+        dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
+        variableData.put("s3a_night_frp_weighted", dataArray);
 
         variable = fileWriter.addVariable("s3b_day_frp_weighted", DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, "MW"));
         variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage"));
+        dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
+        variableData.put("s3b_day_frp_weighted", dataArray);
 
         variable = fileWriter.addVariable("s3b_night_frp_weighted", DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, "MW"));
         variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage"));
+        dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
+        variableData.put("s3b_night_frp_weighted", dataArray);
     }
 
     private void addProductVariables(Product sourceProduct) {
         final Band[] bands = sourceProduct.getBands();
+        final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
+        final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
         for (final Band band : bands) {
             final String bandName = band.getName();
             if (bandsToIgnore.contains(bandName)) {
@@ -281,19 +313,67 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue, template.dataType.isUnsigned()));
             variable.addAttribute(new Attribute(CF.UNITS, template.units));
             variable.addAttribute(new Attribute(CF.LONG_NAME, template.longName));
+
+            final Array dataArray = Array.factory(template.dataType, new int[]{1, sceneRasterHeight, sceneRasterWidth});
+            variableData.put(bandName, dataArray);
         }
     }
 
     @Override
     public void flush() throws IOException {
         if (fileWriter != null) {
+            writevariableData();
             fileWriter.flush();
+        }
+    }
+
+    private void writevariableData() throws IOException {
+        try {
+            calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
+            calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
+            calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
+            calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
+
+            final Set<Map.Entry<String, Array>> entries = variableData.entrySet();
+            for (final Map.Entry<String, Array> entry : entries) {
+                final Variable variable = fileWriter.findVariable(entry.getKey());
+
+                fileWriter.write(variable, entry.getValue());
+            }
+        } catch (InvalidRangeException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
+    private void calculateWeightedFRP(String weightedFrpName, String frpName, String pxName, String waterName, String cloudName) {
+        final Array weightedFRPArray = variableData.get(weightedFrpName);
+        final Array frpArray = variableData.get(frpName);
+        final Array pixelArray = variableData.get(pxName);
+        final Array waterArray = variableData.get(waterName);
+        final Array cloudArray = variableData.get(cloudName);
+
+        for (int i = 0; i < frpArray.getSize(); i++) {
+            float weightedFrp = Float.NaN;
+
+            final float nPx = pixelArray.getFloat(i);
+            final float nWater = waterArray.getFloat(i);
+            final float nCloud = cloudArray.getFloat(i);
+            final float frp = frpArray.getFloat(i);
+
+            final float num = nPx - nWater;
+            final float denom = num - nCloud;
+            if (denom != 0.f) {
+                weightedFrp = frp * num/denom;
+            }
+
+            weightedFRPArray.setFloat(i, weightedFrp);
         }
     }
 
     @Override
     public void close() throws IOException {
         if (fileWriter != null) {
+            fileWriter.flush();
             fileWriter.close();
             fileWriter = null;
         }
