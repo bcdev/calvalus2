@@ -131,32 +131,36 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private void createVariableTemplates() {
         variableTemplates = new HashMap<>();
-        variableTemplates.put("s3a_day_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime pixels"));
-        variableTemplates.put("s3a_day_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime cloudy pixels"));
-        variableTemplates.put("s3a_day_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime water pixels"));
-        variableTemplates.put("s3a_day_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime active fire pixels"));
-        variableTemplates.put("s3a_day_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during daytime"));
-        variableTemplates.put("s3a_night_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime pixels"));
-        variableTemplates.put("s3a_night_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime cloudy pixels"));
-        variableTemplates.put("s3a_night_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime water pixels"));
-        variableTemplates.put("s3a_night_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime active fire pixels"));
-        variableTemplates.put("s3a_night_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime"));
-        variableTemplates.put("s3b_day_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime pixels"));
-        variableTemplates.put("s3b_day_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime cloudy pixels"));
-        variableTemplates.put("s3b_day_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime water pixels"));
-        variableTemplates.put("s3b_day_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime active fire pixels"));
-        variableTemplates.put("s3b_day_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during daytime"));
-        variableTemplates.put("s3b_night_pixel", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
-        variableTemplates.put("s3b_night_cloud", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime cloudy pixels"));
-        variableTemplates.put("s3b_night_water", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
-        variableTemplates.put("s3b_night_fire", new VariableTemplate(DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
-        variableTemplates.put("s3b_night_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
+        variableTemplates.put("s3a_day_pixel_sum", new VariableTemplate("s3a_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime pixels"));
+        variableTemplates.put("s3a_day_cloud_sum", new VariableTemplate("s3a_day_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime cloudy pixels"));
+        variableTemplates.put("s3a_day_water_sum", new VariableTemplate("s3a_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime water pixels"));
+        variableTemplates.put("s3a_day_fire_sum", new VariableTemplate("s3a_day_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime active fire pixels"));
+        variableTemplates.put("s3a_day_frp_mean", new VariableTemplate("s3a_day_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during daytime"));
+        variableTemplates.put("s3a_night_pixel_sum", new VariableTemplate("s3a_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime pixels"));
+        variableTemplates.put("s3a_night_cloud_sum", new VariableTemplate("s3a_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime cloudy pixels"));
+        variableTemplates.put("s3a_night_water_sum", new VariableTemplate("s3a_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime water pixels"));
+        variableTemplates.put("s3a_night_fire_sum", new VariableTemplate("s3a_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime active fire pixels"));
+        variableTemplates.put("s3a_night_frp_mean", new VariableTemplate("s3a_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime"));
+        variableTemplates.put("s3b_day_pixel_sum", new VariableTemplate("s3b_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime pixels"));
+        variableTemplates.put("s3b_day_cloud_sum", new VariableTemplate("s3b_day_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime cloudy pixels"));
+        variableTemplates.put("s3b_day_water_sum", new VariableTemplate("s3b_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime water pixels"));
+        variableTemplates.put("s3b_day_fire_sum", new VariableTemplate("s3b_day_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime active fire pixels"));
+        variableTemplates.put("s3b_day_frp_mean", new VariableTemplate("s3b_day_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during daytime"));
+        variableTemplates.put("s3b_night_pixel_sum", new VariableTemplate("s3b_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
+        variableTemplates.put("s3b_night_cloud_sum", new VariableTemplate("s3b_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime cloudy pixels"));
+        variableTemplates.put("s3b_night_water_sum", new VariableTemplate("s3b_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
+        variableTemplates.put("s3b_night_fire_sum", new VariableTemplate("s3b_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
+        variableTemplates.put("s3b_night_frp_mean", new VariableTemplate("s3b_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
     }
 
     private void createBandNamesToIgnore() {
         bandsToIgnore = new ArrayList<>();
         bandsToIgnore.add("num_obs");
         bandsToIgnore.add("num_passes");
+        bandsToIgnore.add("s3a_day_frp_sigma");
+        bandsToIgnore.add("s3a_night_frp_sigma");
+        bandsToIgnore.add("s3b_day_frp_sigma");
+        bandsToIgnore.add("s3b_night_frp_sigma");
     }
 
     @Override
@@ -166,18 +170,18 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             return;
         }
 
-        final Array variableData = this.variableData.get(name);
-        final Index index = variableData.getIndex();
+        final VariableTemplate variableTemplate = variableTemplates.get(name);
+        final Array variableArray = variableData.get(variableTemplate.name);
+        final Index index = variableArray.getIndex();
         int i = 0;
         for (int y = sourceOffsetY; y < sourceOffsetY + sourceHeight; y++) {
             for (int x = sourceOffsetX; x < sourceOffsetX + sourceWidth; x++) {
                 index.set(0, y, x);
-                variableData.setFloat(index, sourceBuffer.getElemFloatAt(i));
+                variableArray.setFloat(index, sourceBuffer.getElemFloatAt(i));
                 ++i;
             }
         }
     }
-
 
     @Override
     protected void writeProductNodesImpl() throws IOException {
@@ -309,13 +313,13 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             }
 
             final VariableTemplate template = getTemplate(bandName);
-            final Variable variable = fileWriter.addVariable(bandName, template.dataType, DIM_STRING);
+            final Variable variable = fileWriter.addVariable(template.name, template.dataType, DIM_STRING);
             variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue, template.dataType.isUnsigned()));
             variable.addAttribute(new Attribute(CF.UNITS, template.units));
             variable.addAttribute(new Attribute(CF.LONG_NAME, template.longName));
 
             final Array dataArray = Array.factory(template.dataType, new int[]{1, sceneRasterHeight, sceneRasterWidth});
-            variableData.put(bandName, dataArray);
+            variableData.put(template.name, dataArray);
         }
     }
 
@@ -419,11 +423,13 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     static class VariableTemplate {
         final DataType dataType;
+        final String name;
         final Number fillValue;
         final String units;
         final String longName;
 
-        VariableTemplate(DataType dataType, Number fillValue, String units, String longName) {
+        VariableTemplate(String name, DataType dataType, Number fillValue, String units, String longName) {
+            this.name = name;
             this.dataType = dataType;
             this.fillValue = fillValue;
             this.units = units;

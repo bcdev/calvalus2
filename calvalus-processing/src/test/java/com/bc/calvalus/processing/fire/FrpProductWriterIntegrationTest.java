@@ -130,64 +130,64 @@ public class FrpProductWriterIntegrationTest {
 
     private Product createTestProduct() throws ParseException {
         final Product product = new Product("frp-test", "test-type", 8, 4);
-        final Band s3a_day_pixel = product.addBand("s3a_day_pixel", ProductData.TYPE_FLOAT32);
+        final Band s3a_day_pixel = product.addBand("s3a_day_pixel_sum", ProductData.TYPE_FLOAT32);
         s3a_day_pixel.setData(createDataBuffer(0));
 
-        final Band s3a_day_cloud = product.addBand("s3a_day_cloud", ProductData.TYPE_FLOAT32);
+        final Band s3a_day_cloud = product.addBand("s3a_day_cloud_sum", ProductData.TYPE_FLOAT32);
         s3a_day_cloud.setData(createDataBuffer(1));
 
-        final Band s3a_day_water = product.addBand("s3a_day_water", ProductData.TYPE_FLOAT32);
+        final Band s3a_day_water = product.addBand("s3a_day_water_sum", ProductData.TYPE_FLOAT32);
         s3a_day_water.setData(createDataBuffer(2));
 
-        final Band s3a_day_fire = product.addBand("s3a_day_fire", ProductData.TYPE_FLOAT32);
+        final Band s3a_day_fire = product.addBand("s3a_day_fire_sum", ProductData.TYPE_FLOAT32);
         s3a_day_fire.setData(createDataBuffer(3));
 
-        final Band s3a_day_frp = product.addBand("s3a_day_frp", ProductData.TYPE_FLOAT32);
+        final Band s3a_day_frp = product.addBand("s3a_day_frp_mean", ProductData.TYPE_FLOAT32);
         s3a_day_frp.setData(createDataBuffer(4));
 
-        final Band s3a_night_pixel = product.addBand("s3a_night_pixel", ProductData.TYPE_FLOAT32);
+        final Band s3a_night_pixel = product.addBand("s3a_night_pixel_sum", ProductData.TYPE_FLOAT32);
         s3a_night_pixel.setData(createDataBuffer(5));
 
-        final Band s3a_night_cloud = product.addBand("s3a_night_cloud", ProductData.TYPE_FLOAT32);
+        final Band s3a_night_cloud = product.addBand("s3a_night_cloud_sum", ProductData.TYPE_FLOAT32);
         s3a_night_cloud.setData(createDataBuffer(6));
 
-        final Band s3a_night_water = product.addBand("s3a_night_water", ProductData.TYPE_FLOAT32);
+        final Band s3a_night_water = product.addBand("s3a_night_water_sum", ProductData.TYPE_FLOAT32);
         s3a_night_water.setData(createDataBuffer(7));
 
-        final Band s3a_night_fire = product.addBand("s3a_night_fire", ProductData.TYPE_FLOAT32);
+        final Band s3a_night_fire = product.addBand("s3a_night_fire_sum", ProductData.TYPE_FLOAT32);
         s3a_night_fire.setData(createDataBuffer(8));
 
-        final Band s3a_night_frp = product.addBand("s3a_night_frp", ProductData.TYPE_FLOAT32);
+        final Band s3a_night_frp = product.addBand("s3a_night_frp_mean", ProductData.TYPE_FLOAT32);
         s3a_night_frp.setData(createDataBuffer(9));
 
-        final Band s3b_day_pixel = product.addBand("s3b_day_pixel", ProductData.TYPE_FLOAT32);
+        final Band s3b_day_pixel = product.addBand("s3b_day_pixel_sum", ProductData.TYPE_FLOAT32);
         s3b_day_pixel.setData(createDataBuffer(10));
 
-        final Band s3b_day_cloud = product.addBand("s3b_day_cloud", ProductData.TYPE_FLOAT32);
+        final Band s3b_day_cloud = product.addBand("s3b_day_cloud_sum", ProductData.TYPE_FLOAT32);
         s3b_day_cloud.setData(createDataBuffer(11));
 
-        final Band s3b_day_water = product.addBand("s3b_day_water", ProductData.TYPE_FLOAT32);
+        final Band s3b_day_water = product.addBand("s3b_day_water_sum", ProductData.TYPE_FLOAT32);
         s3b_day_water.setData(createDataBuffer(12));
 
-        final Band s3b_day_fire = product.addBand("s3b_day_fire", ProductData.TYPE_FLOAT32);
+        final Band s3b_day_fire = product.addBand("s3b_day_fire_sum", ProductData.TYPE_FLOAT32);
         s3b_day_fire.setData(createDataBuffer(13));
 
-        final Band s3b_day_frp = product.addBand("s3b_day_frp", ProductData.TYPE_FLOAT32);
+        final Band s3b_day_frp = product.addBand("s3b_day_frp_mean", ProductData.TYPE_FLOAT32);
         s3b_day_frp.setData(createDataBuffer(14));
 
-        final Band s3b_night_pixel = product.addBand("s3b_night_pixel", ProductData.TYPE_FLOAT32);
+        final Band s3b_night_pixel = product.addBand("s3b_night_pixel_sum", ProductData.TYPE_FLOAT32);
         s3b_night_pixel.setData(createDataBuffer(15));
 
-        final Band s3b_night_cloud = product.addBand("s3b_night_cloud", ProductData.TYPE_FLOAT32);
+        final Band s3b_night_cloud = product.addBand("s3b_night_cloud_sum", ProductData.TYPE_FLOAT32);
         s3b_night_cloud.setData(createDataBuffer(16));
 
-        final Band s3b_night_water = product.addBand("s3b_night_water", ProductData.TYPE_FLOAT32);
+        final Band s3b_night_water = product.addBand("s3b_night_water_sum", ProductData.TYPE_FLOAT32);
         s3b_night_water.setData(createDataBuffer(17));
 
-        final Band s3b_night_fire = product.addBand("s3b_night_fire", ProductData.TYPE_FLOAT32);
+        final Band s3b_night_fire = product.addBand("s3b_night_fire_sum", ProductData.TYPE_FLOAT32);
         s3b_night_fire.setData(createDataBuffer(18));
 
-        final Band s3b_night_frp = product.addBand("s3b_night_frp", ProductData.TYPE_FLOAT32);
+        final Band s3b_night_frp = product.addBand("s3b_night_frp_mean", ProductData.TYPE_FLOAT32);
         s3b_night_frp.setData(createDataBuffer(19));
 
         product.setStartTime(ProductData.UTC.parse("22-MAR-2020 00:00:00"));
