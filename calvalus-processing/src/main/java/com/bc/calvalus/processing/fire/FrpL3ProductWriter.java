@@ -20,16 +20,19 @@ import ucar.nc2.write.Nc4ChunkingDefault;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.Year;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private static final String DIM_STRING = "time lat lon";
 
+
     private Map<String, VariableTemplate> variableTemplates;
+    private List<String> bandsToIgnore;
     private NetcdfFileWriter fileWriter;
 
     FrpL3ProductWriter(ProductWriterPlugIn writerPlugIn) {
@@ -38,6 +41,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter = null;
 
         createVariableTemplates();
+        createBandNamesToIgnore();
     }
 
     static String getOutputPath(Object output) {
@@ -119,7 +123,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         fileWriter.addVariable("lon_bounds", DataType.FLOAT, "lon bounds");
         fileWriter.addVariable("lat_bounds", DataType.FLOAT, "lat bounds");
-        fileWriter.addVariable("time_bounds", DataType.FLOAT, "time bounds");
+        fileWriter.addVariable("time_bounds", DataType.DOUBLE, "time bounds");
     }
 
     private void createVariableTemplates() {
@@ -146,6 +150,12 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3b_night_frp", new VariableTemplate(DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
     }
 
+    private void createBandNamesToIgnore() {
+        bandsToIgnore = new ArrayList<>();
+        bandsToIgnore.add("num_obs");
+        bandsToIgnore.add("num_passes");
+    }
+
     @Override
     public void writeBandRasterData(Band sourceBand, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData sourceBuffer, ProgressMonitor pm) throws IOException {
 
@@ -169,12 +179,10 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.create();
 
         writeAxesAndBoundsVariables(sourceProduct);
-
-        // write time, lon, lat bounds
-        // write time lon, lat axis variables
     }
 
     private void writeAxesAndBoundsVariables(Product sourceProduct) throws IOException {
+        // @todo 3 tb/tb refactor and simplify, add tests 2020-09-30
         final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
         final double lonStep = 360.0 / sceneRasterWidth;
         final double lonOffset = lonStep * 0.5;
@@ -217,6 +225,25 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         } catch (InvalidRangeException e) {
             throw new IOException(e.getMessage());
         }
+
+        final Date startDate = sourceProduct.getStartTime().getAsDate();
+        final Date endDate = sourceProduct.getEndTime().getAsDate();
+        final LocalDate start = startDate.toInstant().atZone(ZoneId.of("UTC")).toLocalDate();
+        final LocalDate end = endDate.toInstant().atZone(ZoneId.of("UTC")).toLocalDate();
+        final LocalDate epoch = Year.of(1970).atMonth(1).atDay(1);
+        final long startDays = ChronoUnit.DAYS.between(epoch, start);
+        final long endDays = ChronoUnit.DAYS.between(epoch, end);
+
+        final Array timeArray = Array.factory(DataType.DOUBLE, new int[]{1}, new double[]{startDays});
+        final Array timeBoundsArray = Array.factory(DataType.DOUBLE, new int[]{1, 2}, new double[]{startDays, endDays});
+        final Variable timeVariable = fileWriter.findVariable("time");
+        final Variable timeBoundsVariable = fileWriter.findVariable("time_bounds");
+        try {
+            fileWriter.write(timeVariable, timeArray);
+            fileWriter.write(timeBoundsVariable, timeBoundsArray);
+        } catch (InvalidRangeException e) {
+            throw new IOException(e.getMessage());
+        }
     }
 
     private void addWeightedFRPVariables() {
@@ -245,6 +272,10 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final Band[] bands = sourceProduct.getBands();
         for (final Band band : bands) {
             final String bandName = band.getName();
+            if (bandsToIgnore.contains(bandName)) {
+                continue;
+            }
+
             final VariableTemplate template = getTemplate(bandName);
             final Variable variable = fileWriter.addVariable(bandName, template.dataType, DIM_STRING);
             variable.addAttribute(new Attribute(CF.FILL_VALUE, template.fillValue, template.dataType.isUnsigned()));

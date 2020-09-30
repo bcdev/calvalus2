@@ -16,6 +16,7 @@ import ucar.nc2.Variable;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -39,7 +40,7 @@ public class FrpProductWriterIntegrationTest {
     }
 
     @Test
-    public void testWriteProductNodes() throws IOException {
+    public void testWriteProductNodes() throws IOException, ParseException {
         final Product product = createTestProduct();
 
         final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
@@ -120,7 +121,7 @@ public class FrpProductWriterIntegrationTest {
         // @todo 1 tb/tb check numerical values 2020-09-29
     }
 
-    private Product createTestProduct() {
+    private Product createTestProduct() throws ParseException {
         final Product product = new Product("frp-test", "test-type", 8, 4);
         product.addBand("s3a_day_pixel", ProductData.TYPE_FLOAT32);
         product.addBand("s3a_day_cloud", ProductData.TYPE_FLOAT32);
@@ -142,6 +143,9 @@ public class FrpProductWriterIntegrationTest {
         product.addBand("s3b_night_water", ProductData.TYPE_FLOAT32);
         product.addBand("s3b_night_fire", ProductData.TYPE_FLOAT32);
         product.addBand("s3b_night_frp", ProductData.TYPE_FLOAT32);
+
+        product.setStartTime(ProductData.UTC.parse("22-MAR-2020 00:00:00"));
+        product.setEndTime(ProductData.UTC.parse("22-MAR-2020 23:59:59"));
         return product;
     }
 
@@ -151,7 +155,7 @@ public class FrpProductWriterIntegrationTest {
 
         List<Attribute> attributes = lon.getAttributes();
         assertEquals(4, attributes.size());
-        Attribute attribute = attributes.get(0);
+        Attribute attribute = lon.findAttribute("units");
         assertEquals("units", attribute.getShortName());
         assertEquals("degrees_east", attribute.getStringValue());
 
@@ -178,7 +182,7 @@ public class FrpProductWriterIntegrationTest {
 
         attributes = lat.getAttributes();
         assertEquals(4, attributes.size());
-        attribute = attributes.get(1);
+        attribute = lat.findAttribute("standard_name");
         assertEquals("standard_name", attribute.getShortName());
         assertEquals("latitude", attribute.getStringValue());
 
@@ -198,9 +202,11 @@ public class FrpProductWriterIntegrationTest {
 
         attributes = time.getAttributes();
         assertEquals(5, attributes.size());
-        attribute = attributes.get(2);
+        attribute = time.findAttribute("long_name");
         assertEquals("long_name", attribute.getShortName());
         assertEquals("time", attribute.getStringValue());
+        final Array timeData = time.read();
+        assertEquals(18343.0, timeData.getDouble(0), 1e-8);
 
         final Variable time_bounds = netcdfFile.findVariable("time_bounds");
         assertEquals(1, time_bounds.getShape(0));
@@ -208,6 +214,9 @@ public class FrpProductWriterIntegrationTest {
 
         attributes = time_bounds.getAttributes();
         assertEquals(0, attributes.size());
+        final Array timeBoundsData = time_bounds.read();
+        assertEquals(18343.0, timeBoundsData.getDouble(0), 1e-8);
+        assertEquals(18343.0, timeBoundsData.getDouble(1), 1e-8);
     }
 
     private void ensureGlobalAttributes(NetcdfFile netcdfFile) {

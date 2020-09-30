@@ -123,7 +123,7 @@ public class FrpProductWriterTest {
         verify(timeVariable, times(5)).addAttribute(anyObject());
         verify(fileWriter, times(1)).addVariable("lon_bounds", DataType.FLOAT, "lon bounds");
         verify(fileWriter, times(1)).addVariable("lat_bounds", DataType.FLOAT, "lat bounds");
-        verify(fileWriter, times(1)).addVariable("time_bounds", DataType.FLOAT, "time bounds");
+        verify(fileWriter, times(1)).addVariable("time_bounds", DataType.DOUBLE, "time bounds");
 
         verifyNoMoreInteractions(fileWriter);
     }
