@@ -377,7 +377,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     @Override
     public void close() throws IOException {
         if (fileWriter != null) {
-            fileWriter.flush();
+            flush();
             fileWriter.close();
             fileWriter = null;
         }
