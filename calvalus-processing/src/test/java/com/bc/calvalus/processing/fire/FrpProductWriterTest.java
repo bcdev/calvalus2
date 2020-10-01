@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire;
 
 import org.esa.snap.core.datamodel.Product;
 import org.junit.Test;
+import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
@@ -207,6 +208,32 @@ public class FrpProductWriterTest {
 
         try {
             writer.getTemplate("Heffalump");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException expected) {
+        }
+    }
+
+    @Test
+    public void testWriteFillValue() {
+        final Array uintArray = Array.factory(DataType.UINT, new int[]{1, 3, 4});
+        Array filledArray = FrpL3ProductWriter.writeFillValue(uintArray);
+        for(int i = 0; i < uintArray.getSize(); i++) {
+            assertEquals(CF.FILL_UINT, filledArray.getInt(i));
+        }
+
+        final Array floatArray = Array.factory(DataType.FLOAT, new int[]{1, 4, 5});
+        filledArray = FrpL3ProductWriter.writeFillValue(floatArray);
+        for(int i = 0; i < uintArray.getSize(); i++) {
+            assertEquals(Float.NaN, filledArray.getFloat(i), 1e-8);
+        }
+    }
+
+    @Test
+    public void testWriteFillValue_unsupportedType() {
+        final Array byteArray = Array.factory(DataType.BYTE, new int[]{1, 2, 2});
+
+        try {
+            FrpL3ProductWriter.writeFillValue(byteArray);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
         }

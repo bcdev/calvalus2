@@ -128,6 +128,22 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addVariable("time_bounds", DataType.DOUBLE, "time bounds");
     }
 
+    static Array writeFillValue(Array array) {
+        final DataType dataType = array.getDataType();
+        if (dataType == DataType.UINT) {
+            for (int i = 0; i < array.getSize(); i++) {
+                array.setInt(i, CF.FILL_UINT);
+            }
+        } else if (dataType == DataType.FLOAT) {
+            for (int i = 0; i < array.getSize(); i++) {
+                array.setFloat(i, Float.NaN);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupporteed data type: " + dataType);
+        }
+        return array;
+    }
+
     private void createVariableTemplates() {
         variableTemplates = new HashMap<>();
         variableTemplates.put("s3a_day_pixel_sum", new VariableTemplate("s3a_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime pixels"));
@@ -278,8 +294,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, "MW"));
         variable.addAttribute(new Attribute(CF.LONG_NAME, longName));
-        Array dataArray = Array.factory(DataType.FLOAT, dimensions);
-        variableData.put(name, dataArray);
+        final Array dataArray = Array.factory(DataType.FLOAT, dimensions);
+        variableData.put(name, writeFillValue(dataArray));
     }
 
     private void addProductVariables(Product sourceProduct) {
@@ -299,7 +315,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             variable.addAttribute(new Attribute(CF.LONG_NAME, template.longName));
 
             final Array dataArray = Array.factory(template.dataType, new int[]{1, sceneRasterHeight, sceneRasterWidth});
-            variableData.put(template.name, dataArray);
+            variableData.put(template.name, writeFillValue(dataArray));
         }
     }
 
@@ -338,16 +354,22 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         for (int i = 0; i < frpArray.getSize(); i++) {
             float weightedFrp = Float.NaN;
-
-            final float nPx = pixelArray.getFloat(i);
-            final float nWater = waterArray.getFloat(i);
-            final float nCloud = cloudArray.getFloat(i);
             final float frp = frpArray.getFloat(i);
 
-            final float num = nPx - nWater;
-            final float denom = num - nCloud;
-            if (denom != 0.f) {
-                weightedFrp = frp * num / denom;
+            if (!Float.isNaN(frp)) {
+                final int nPx = pixelArray.getInt(i);
+                final int nWater = waterArray.getInt(i);
+                final int nCloud = cloudArray.getInt(i);
+
+                final int num = nPx - nWater;
+                if (num == 0) {
+                    weightedFrp = 0.f;
+                } else {
+                    final int denom = num - nCloud;
+                    if (denom != 0) {
+                        weightedFrp = frp * (float) num / (float) denom;
+                    }
+                }
             }
 
             weightedFRPArray.setFloat(i, weightedFrp);
