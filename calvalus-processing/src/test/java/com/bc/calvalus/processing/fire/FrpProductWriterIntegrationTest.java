@@ -96,7 +96,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
     }
 
-    private void ensureVariables(NetcdfFile netcdfFile) {
+    private void ensureVariables(NetcdfFile netcdfFile) throws IOException {
         Variable variable = netcdfFile.findVariable("s3a_day_pixel");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
@@ -105,12 +105,18 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(1, shape[0]);
         assertEquals(4, shape[1]);
         assertEquals(8, shape[2]);
-        // @todo 1 tb/tb check numerical values 2020-09-29
+        Array data = variable.read();
+        Index index = data.getIndex();
+        assertEquals(10, data.getInt(index.set(0, 1, 2)));
+        assertEquals(19, data.getInt(index.set(0, 2, 3)));
 
         variable = netcdfFile.findVariable("s3a_night_fire");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
-        // @todo 1 tb/tb check numerical values 2020-09-29
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(36, data.getInt(index.set(0, 3, 4)));
+        assertEquals(13, data.getInt(index.set(0, 0, 5)));
 
         variable = netcdfFile.findVariable("s3b_day_frp");
         assertEquals(DataType.FLOAT, variable.getDataType());
@@ -120,12 +126,18 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(1, shape[0]);
         assertEquals(4, shape[1]);
         assertEquals(8, shape[2]);
-        // @todo 1 tb/tb check numerical values 2020-09-29
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(28.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
+        assertEquals(37.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
 
         variable = netcdfFile.findVariable("s3b_night_water");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
-        // @todo 1 tb/tb check numerical values 2020-09-29
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(41, data.getInt(index.set(0, 3, 0)));
+        assertEquals(18, data.getInt(index.set(0, 0, 1)));
     }
 
     private Product createTestProduct() throws ParseException {

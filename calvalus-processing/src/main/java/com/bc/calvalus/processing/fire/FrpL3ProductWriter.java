@@ -214,17 +214,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             lonBounds[2 * i] = (float) (longitudes[i] - lonOffset);
             lonBounds[2 * i + 1] = (float) (longitudes[i] + lonOffset);
         }
-
-        final Array lonArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterWidth}, longitudes);
-        final Array lonBoundsArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterWidth, 2}, lonBounds);
-        final Variable lonVariable = fileWriter.findVariable("lon");
-        final Variable lonBoundsVariable = fileWriter.findVariable("lon_bounds");
-        try {
-            fileWriter.write(lonVariable, lonArray);
-            fileWriter.write(lonBoundsVariable, lonBoundsArray);
-        } catch (InvalidRangeException e) {
-            throw new IOException(e.getMessage());
-        }
+        writeAxisAndBounds(sceneRasterWidth, longitudes, lonBounds, "lon", "lon_bounds");
 
         final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
         final double latStep = 180.0 / sceneRasterHeight;
@@ -236,16 +226,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             latBounds[2 * i] = (float) (latitudes[i] + latOffset);
             latBounds[2 * i + 1] = (float) (latitudes[i] - latOffset);
         }
-        final Array latArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterHeight}, latitudes);
-        final Array latBoundsArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterHeight, 2}, latBounds);
-        final Variable latVariable = fileWriter.findVariable("lat");
-        final Variable latBoundsVariable = fileWriter.findVariable("lat_bounds");
-        try {
-            fileWriter.write(latVariable, latArray);
-            fileWriter.write(latBoundsVariable, latBoundsArray);
-        } catch (InvalidRangeException e) {
-            throw new IOException(e.getMessage());
-        }
+        writeAxisAndBounds(sceneRasterHeight, latitudes, latBounds, "lat", "lat_bounds");
 
         final Date startDate = sourceProduct.getStartTime().getAsDate();
         final Date endDate = sourceProduct.getEndTime().getAsDate();
@@ -267,38 +248,38 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         }
     }
 
+    private void writeAxisAndBounds(int size, float[] longitudes, float[] lonBounds, String variableName, String boundsVariableName) throws IOException {
+        final Array lonArray = Array.factory(DataType.FLOAT, new int[]{size}, longitudes);
+        final Array lonBoundsArray = Array.factory(DataType.FLOAT, new int[]{size, 2}, lonBounds);
+        final Variable lonVariable = fileWriter.findVariable(variableName);
+        final Variable lonBoundsVariable = fileWriter.findVariable(boundsVariableName);
+        try {
+            fileWriter.write(lonVariable, lonArray);
+            fileWriter.write(lonBoundsVariable, lonBoundsArray);
+        } catch (InvalidRangeException e) {
+            throw new IOException(e.getMessage());
+        }
+    }
+
     private void addWeightedFRPVariables() {
         final Product sourceProduct = getSourceProduct();
         final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
         final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
 
-        Variable variable = fileWriter.addVariable("s3a_day_frp_weighted", DataType.FLOAT, DIM_STRING);
-        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
-        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
-        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage"));
-        Array dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
-        variableData.put("s3a_day_frp_weighted", dataArray);
+        final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
+        addWeightedFRPVariable(dimensions, "s3a_day_frp_weighted", "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage");
+        addWeightedFRPVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage");
+        addWeightedFRPVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage");
+        addWeightedFRPVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage");
+    }
 
-        variable = fileWriter.addVariable("s3a_night_frp_weighted", DataType.FLOAT, DIM_STRING);
+    private void addWeightedFRPVariable(int[] dimensions, String name, String longName) {
+        final Variable variable = fileWriter.addVariable(name, DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, "MW"));
-        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage"));
-        dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
-        variableData.put("s3a_night_frp_weighted", dataArray);
-
-        variable = fileWriter.addVariable("s3b_day_frp_weighted", DataType.FLOAT, DIM_STRING);
-        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
-        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
-        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage"));
-        dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
-        variableData.put("s3b_day_frp_weighted", dataArray);
-
-        variable = fileWriter.addVariable("s3b_night_frp_weighted", DataType.FLOAT, DIM_STRING);
-        variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
-        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
-        variable.addAttribute(new Attribute(CF.LONG_NAME, "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage"));
-        dataArray = Array.factory(DataType.FLOAT, new int[]{1, sceneRasterHeight, sceneRasterWidth});
-        variableData.put("s3b_night_frp_weighted", dataArray);
+        variable.addAttribute(new Attribute(CF.LONG_NAME, longName));
+        Array dataArray = Array.factory(DataType.FLOAT, dimensions);
+        variableData.put(name, dataArray);
     }
 
     private void addProductVariables(Product sourceProduct) {
@@ -325,18 +306,18 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     @Override
     public void flush() throws IOException {
         if (fileWriter != null) {
-            writevariableData();
+            writeVariableData();
             fileWriter.flush();
         }
     }
 
-    private void writevariableData() throws IOException {
-        try {
-            calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
-            calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
-            calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
-            calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
+    private void writeVariableData() throws IOException {
+        calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
+        calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
+        calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
+        calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
 
+        try {
             final Set<Map.Entry<String, Array>> entries = variableData.entrySet();
             for (final Map.Entry<String, Array> entry : entries) {
                 final Variable variable = fileWriter.findVariable(entry.getKey());
