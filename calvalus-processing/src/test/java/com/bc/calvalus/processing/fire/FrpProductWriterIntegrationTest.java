@@ -225,7 +225,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(0, attributes.size());
 
         final Array lonBoundsArray = lon_bounds.read();
-        final Index index = lonBoundsArray.getIndex();
+        Index index = lonBoundsArray.getIndex();
         index.set(2, 0);
         assertEquals(-90.0, lonBoundsArray.getFloat(index), 1e-8);
         index.set(2, 1);
@@ -241,12 +241,19 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("latitude", attribute.getStringValue());
 
         final Array latData = lat.read();
-        assertEquals(22.5, latData.getFloat(2), 1e-8);
-        assertEquals(67.5, latData.getFloat(3), 1e-8);
+        assertEquals(-22.5, latData.getFloat(2), 1e-8);
+        assertEquals(-67.5, latData.getFloat(3), 1e-8);
 
         final Variable lat_bounds = netcdfFile.findVariable("lat_bounds");
         assertEquals(4, lat_bounds.getShape(0));
         assertEquals(2, lat_bounds.getShape(1));
+
+        final Array latBoundsArray = lat_bounds.read();
+        index = latBoundsArray.getIndex();
+        index.set(1, 0);
+        assertEquals(45.0, latBoundsArray.getFloat(index), 1e-8);
+        index.set(1, 1);
+        assertEquals(0.0, latBoundsArray.getFloat(index), 1e-8);
 
         attributes = lat_bounds.getAttributes();
         assertEquals(0, attributes.size());

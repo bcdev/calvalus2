@@ -205,7 +205,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
 
-        if ("l3daily".equals(targetFormat)) {
+        if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
             final double mjd = extractMJDFromFilename(inputPath);
 
             // create lut of fires by row and column

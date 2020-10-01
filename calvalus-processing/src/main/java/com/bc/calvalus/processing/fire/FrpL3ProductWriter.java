@@ -31,7 +31,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private static final String DIM_STRING = "time lat lon";
 
-
     private Map<String, VariableTemplate> variableTemplates;
     private Map<String, Array> variableData;
     private List<String> bandsToIgnore;
@@ -233,9 +232,9 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final float[] latitudes = new float[sceneRasterHeight];
         final float[] latBounds = new float[2 * sceneRasterHeight];
         for (int i = 0; i < sceneRasterHeight; i++) {
-            latitudes[i] = (float) (i * latStep + latOffset - 90.0);
-            latBounds[2 * i] = (float) (latitudes[i] - latOffset);
-            latBounds[2 * i + 1] = (float) (latitudes[i] + latOffset);
+            latitudes[i] = 90.f - (float) (i * latStep + latOffset);
+            latBounds[2 * i] = (float) (latitudes[i] + latOffset);
+            latBounds[2 * i + 1] = (float) (latitudes[i] - latOffset);
         }
         final Array latArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterHeight}, latitudes);
         final Array latBoundsArray = Array.factory(DataType.FLOAT, new int[]{sceneRasterHeight, 2}, latBounds);
@@ -367,7 +366,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             final float num = nPx - nWater;
             final float denom = num - nCloud;
             if (denom != 0.f) {
-                weightedFrp = frp * num/denom;
+                weightedFrp = frp * num / denom;
             }
 
             weightedFRPArray.setFloat(i, weightedFrp);
