@@ -69,7 +69,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     private static final int FRP_CLOUD = 32;
     private static final int DAY = 64;
 
-    private static String[] VARIABLE_NAMES = {
+    static String[] VARIABLE_NAMES = {
             "s3a_day_pixel",
             "s3a_day_cloud",
             "s3a_day_water",
@@ -90,6 +90,17 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "s3b_night_water",
             "s3b_night_fire",
             "s3b_night_frp"
+    };
+
+    static String[] VARIABLE_NAMES_MONTHLY = {
+            "fire_land_pixel",
+            "fire_land_weighted_pixel",
+            "frp_mir_land_mean",
+            "fire_water_pixel",
+            "box_pixel",
+            "box_water",
+            "box_land_cloud",
+            "box_land_cloud_fraction",
     };
 
     static {
@@ -147,18 +158,18 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         throw new IllegalArgumentException("Unknown Sentinel platform");
     }
 
-    static int[] createVariableIndex(BinningContext binningContext) {
+    static int[] createVariableIndex(BinningContext binningContext, String[] variableNames) {
         final VariableContext variableContext = binningContext.getVariableContext();
         final int variableCount = variableContext.getVariableCount();
-        if (variableCount != VARIABLE_NAMES.length) {
+        if (variableCount != variableNames.length) {
             throw new IllegalArgumentException("Number of configured variables does not match required.");
         }
 
-        final int[] indices = new int[20];
+        final int[] indices = new int[variableNames.length];
         for (int i = 0; i < variableCount; i++) {
-            indices[i] = variableContext.getVariableIndex(VARIABLE_NAMES[i]);
+            indices[i] = variableContext.getVariableIndex(variableNames[i]);
             if (indices[i] < 0) {
-                throw new IllegalArgumentException("Variable missing in configuration: " + VARIABLE_NAMES[i]);
+                throw new IllegalArgumentException("Variable missing in configuration: " + variableNames[i]);
             }
         }
 
@@ -212,7 +223,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final HashMap<Integer, Integer> fireIndex = createFiresLUT(frpArrays, numFires, columns);
 
             // create observation variable sequence
-            int[] variableIndex = createVariableIndex(binningContext);
+            int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
 
             // pixel loop
             int count = 0;
@@ -267,6 +278,13 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             for (Exception exception : exceptions) {
                 String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
                 LOG.log(Level.SEVERE, m, exception);
+            }
+        } else if("l3monthly".equals(targetFormat)) {
+            for (int row = 0; row < rows; ++row) {
+                final ObservationImpl[] observations = new ObservationImpl[columns];
+                for (int col = 0; col < columns; ++col) {
+
+                }
             }
         }
     }

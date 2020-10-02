@@ -9,6 +9,8 @@ import ucar.ma2.DataType;
 
 import java.util.HashMap;
 
+import static com.bc.calvalus.processing.fire.FrpMapper.VARIABLE_NAMES;
+import static com.bc.calvalus.processing.fire.FrpMapper.VARIABLE_NAMES_MONTHLY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
@@ -69,13 +71,40 @@ public class FrpMapperTest {
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
-        final int[] variableIndex = FrpMapper.createVariableIndex(binningContext);
+        final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES);
         assertEquals(20, variableIndex.length);
         assertEquals(5, variableIndex[5]);
         assertEquals(13, variableIndex[13]);
 
         verify(binningContext, times(1)).getVariableContext();
         verify(variableContext, times(20)).getVariableIndex(anyString());
+        verify(variableContext, times(1)).getVariableCount();
+        verifyNoMoreInteractions(binningContext, variableContext);
+    }
+
+    @Test
+    public void testCreateVariableIndex_monthly() {
+        final BinningContext binningContext = mock(BinningContext.class);
+        final VariableContext variableContext = mock(VariableContext.class);
+        when(variableContext.getVariableIndex("fire_land_pixel")).thenReturn(7);
+        when(variableContext.getVariableIndex("fire_land_weighted_pixel")).thenReturn(6);
+        when(variableContext.getVariableIndex("frp_mir_land_mean")).thenReturn(5);
+        when(variableContext.getVariableIndex("fire_water_pixel")).thenReturn(4);
+        when(variableContext.getVariableIndex("box_pixel")).thenReturn(3);
+        when(variableContext.getVariableIndex("box_water")).thenReturn(2);
+        when(variableContext.getVariableIndex("box_land_cloud")).thenReturn(1);
+        when(variableContext.getVariableIndex("box_land_cloud_fraction")).thenReturn(0);
+        when(variableContext.getVariableCount()).thenReturn(8);
+
+        when(binningContext.getVariableContext()).thenReturn(variableContext);
+
+        final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
+        assertEquals(8, variableIndex.length);
+        assertEquals(6, variableIndex[1]);
+        assertEquals(1, variableIndex[6]);
+
+        verify(binningContext, times(1)).getVariableContext();
+        verify(variableContext, times(8)).getVariableIndex(anyString());
         verify(variableContext, times(1)).getVariableCount();
         verifyNoMoreInteractions(binningContext, variableContext);
     }
@@ -88,12 +117,13 @@ public class FrpMapperTest {
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
         try {
-            FrpMapper.createVariableIndex(binningContext);
+            FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
         }
     }
 
+    @Test
     public void testCreateVariableIndex_variables_missing() {
         final BinningContext binningContext = mock(BinningContext.class);
         final VariableContext variableContext = mock(VariableContext.class);
@@ -122,7 +152,7 @@ public class FrpMapperTest {
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
         try {
-            FrpMapper.createVariableIndex(binningContext);
+            FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES);
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
         }
