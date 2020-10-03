@@ -1,0 +1,462 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css"/>
+
+    <g:FlowPanel styleName="{style.quicklookPanel}">
+
+        <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+            <g:InlineLabel styleName="{style.panelTitleText}">Quicklook</g:InlineLabel>
+        </g:HTMLPanel>
+
+        <g:HorizontalPanel styleName="{style.quicklookRadioPanel}">
+            <g:RadioButton ui:field="quicklookNone"
+                           name="quicklookSelection"
+                           text="No quicklook"
+                           styleName="{style.quicklookRadioButton}"
+            />
+            <g:RadioButton ui:field="quicklookSingleBand"
+                           name="quicklookSelection"
+                           text="Single-band (colour table)"
+                           styleName="{style.quicklookRadioButton}"
+            />
+            <g:RadioButton ui:field="quicklookMultiBand"
+                           name="quicklookSelection"
+                           text="Multiple-band (RGB/RGBA)"
+                           styleName="{style.quicklookRadioButton}"
+            />
+        </g:HorizontalPanel>
+
+        <g:HTMLPanel ui:field="singleBandPanel" styleName="{style.quicklookParametersPanel}">
+            <table cellspacing="2" width="100%" border="0px">
+                <!-- Band name (with list box support, if populated) -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr id="bandNameListBoxRow">
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Band name:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:ListBox ui:field="bandNameListBox" multipleSelect="false" visibleItemCount="1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label ui:field='bandNameRowLabel'></g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='bandName' width="30em" styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="100%">
+                            The name of a band which will be used for the image.
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Colour table -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Colour table:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:ListBox ui:field='colorPalette' multipleSelect="false" visibleItemCount="1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="100%">
+                            The colour table which will be applied to the chosen band.
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+
+        <g:HTMLPanel ui:field="multiBandPanel" styleName="{style.quicklookParametersPanel}">
+            <table cellspacing="2" width="100%" border="0px">
+                <!-- Red, Greem, Blue, and Alpha band expressions -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Red band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsRedBand' width="100%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Green band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsGreenBand' width="100%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Blue band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsBlueBand' width="100%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Alpha band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsAlphaBand' width="100%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="100%">
+                            Add a list of 3 or 4 band names from which an RGB or RGBA colourised image will be
+                            generated (A=alpha channel).
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Minimum and Maximum samples -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Minimum samples:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field="rgbaMinSamples" width="50%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Maximum samples:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field="rgbaMaxSamples" width="50%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="50%">
+                            Add a list of 3 or 4 values that set minimal and maximal values for the displayed samples.
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+
+        <g:HTMLPanel ui:field="moreOptionsPanel" styleName="{style.quicklookParametersPanel}">
+            <table cellspacing="2" width="100%" border="0px">
+                <!-- Image type -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Image type:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:ListBox ui:field="imageType" multipleSelect="false" visibleItemCount="1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The type of the generated image.
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Background Colour -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Background Colour:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='backgroundColor' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The background colour of the generated image.
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Background Colour -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Overlay URL:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='overlayURL' styleName="{style.textBox}" width="100%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                            A URL to a file containing a image that will be rendered above the image from the product.
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Mask overlays -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Mask overlays:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='maskOverlays' width="30em" styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                            Defines which product mask should be drawn on top of
+                            the actual band or RGB image. The product must contain
+                            the specified masks.
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Sub sampling - X and Y -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Sub sampling (X):</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:IntegerBox ui:field='subSamplingX' visibleLength="6"
+                                      styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Sub sampling (Y):</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:IntegerBox ui:field='subSamplingY' visibleLength="6"
+                                      styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                            Sub sampling can be used to reduce the size of the resulting image.
+                            The default size of the image is identical to the size of the product.
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- Legend -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Legend</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:CheckBox ui:field="legendEnabled"
+                                    checked="false"
+                                    addStyleNames="{style.checkBox} {style.noteLabel}"
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                            When set, an image legend will be drawn into the bottom-right corner of the image.
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+
+        </g:HTMLPanel>
+
+        <g:HTMLPanel ui:field="geoServerPanel" styleName="{style.quicklookParametersPanel}">
+            <table cellspacing="2" width="100%" border="0px">
+                <!-- GeoServer REST URL -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer REST URL:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerRestUrl' width="30em" styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The URL to GeoServer's REST API (e.g. http://myhost/geoserver/rest/
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer username -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer username:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerUsername' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The username for GeoServer authentication
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer password -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer password:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerPassword' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The password for GeoServer authentication
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Workspace -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer workspace:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerWorkspace' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer workspace's name
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Store -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer store:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerStore' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer store's name
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Layer -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer layer:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerLayer' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer layer's name
+                        </g:HTML>
+                    </td>
+                </tr>
+                <!-- GeoServer Style -->
+                <tr>
+                    <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>GeoServer style:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='geoServerStyle' styleName="{style.textBox}" width="50%"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                            The GeoServer style name
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+
+        </g:HTMLPanel>
+
+        <g:HTML>
+            <br/>
+        </g:HTML>
+
+    </g:FlowPanel>
+
+</ui:UiBinder>

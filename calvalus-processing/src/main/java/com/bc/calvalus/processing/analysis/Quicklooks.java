@@ -76,6 +76,21 @@ public class Quicklooks {
         @Parameter
         private String shapefileURL;
 
+        @Parameter
+        private String geoServerRestUrl;
+        @Parameter
+        private String geoServerUsername;
+        @Parameter
+        private String geoServerPassword;
+        @Parameter
+        private String geoServerWorkspace;
+        @Parameter
+        private String geoServerStore;
+        @Parameter
+        private String geoServerLayer;
+        @Parameter
+        private String geoServerStyle;
+
         public String getImageType() {
             return imageType;
         }
@@ -155,5 +170,34 @@ public class Quicklooks {
         public void setOverlayURL(String overlayURL) {
             this.overlayURL = overlayURL;
         }
+
+        public String getGeoServerRestUrl() {
+            return geoServerRestUrl;
+        }
+
+        public String getGeoServerUsername() {
+            return geoServerUsername;
+        }
+
+        public String getGeoServerPassword() {
+            return geoServerPassword;
+        }
+
+        public String getGeoServerWorkspace() {
+            return geoServerWorkspace;
+        }
+
+        public String getGeoServerStore() {
+            return geoServerStore;
+        }
+
+        public String getGeoServerLayer() {
+            return geoServerLayer;
+        }
+
+        public String getGeoServerStyle() {
+            return geoServerStyle;
+        }
+
     }
 }

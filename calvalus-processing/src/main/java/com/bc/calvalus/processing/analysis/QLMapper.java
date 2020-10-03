@@ -24,17 +24,34 @@ import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.io.FileUtils;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
+//import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
+import org.geotools.gce.geotiff.GeoTiffFormat;
+import org.geotools.gce.geotiff.GeoTiffWriteParams;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.coverage.grid.GridCoverageWriter;
+import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.parameter.ParameterValueGroup;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.Logger;
@@ -61,18 +78,25 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 final String productName = FileUtils.getFilenameWithoutExtension(inputFileName);
                 final Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
                 for (Quicklooks.QLConfig config : configs) {
-                    final String imageFileName;
+                    final String imageBaseName;
                     if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
                             && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
                         if (configs.length == 1) {
-                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
+                            imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
                         } else {
-                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
+                            imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
                         }
                     } else {
-                        imageFileName = productName + "_" + config.getBandName();
+                        imageBaseName = productName + "_" + config.getBandName();
                     }
-                    createQuicklook(product, imageFileName, context, config);
+                    createQuicklook(product, imageBaseName, context, config);
+                    if( config.getGeoServerRestUrl() != null ) {
+                        // upload geoTiff to GeoServer
+                        GeoServer geoserver = new GeoServer(context, product, config);
+                        String imageFilename = QLMapper.getImageFileName(imageBaseName, config);
+                        InputStream inputStream = QLMapper.createInputStream(context, imageFilename);
+                        geoserver.uploadImage(inputStream, imageBaseName);
+                    }
                 }
             }
         } finally {
@@ -81,17 +105,60 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
+    public static void createQuicklook(Product product, String imageBaseName, Mapper.Context context,
                                        Quicklooks.QLConfig config) throws IOException, InterruptedException {
 //        try {
+            String imageFileName = getImageFileName(imageBaseName, config);
             RenderedImage quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
-                OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
-                OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
-                try {
-                    ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);
-                } finally {
-                    outputStream.close();
+                if( isGeoTiff(config)) {
+                    OutputStream outputStream = createOutputStream(context, imageFileName);
+                    LOGGER.info("outputStream: " + outputStream.toString());
+                    OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
+
+                    final int width = product.getSceneRasterWidth();
+                    final int height = product.getSceneRasterHeight();
+                    final GeoCoding geoCoding = product.getSceneGeoCoding();
+                    final PixelPos posA = new org.esa.snap.core.datamodel.PixelPos(0, 0);
+                    final GeoPos geoPosA = geoCoding.getGeoPos(posA, null);
+                    final PixelPos posB = new org.esa.snap.core.datamodel.PixelPos(width, height);
+                    final GeoPos geoPosB = geoCoding.getGeoPos(posB, null);
+
+                    final GeoTiffFormat format = new GeoTiffFormat();
+                    final GeoTiffWriteParams wp = new GeoTiffWriteParams();
+                    //wp.setCompressionMode(GeoTiffWriteParams.MODE_EXPLICIT);
+                    //wp.setCompressionType("LZW");
+                    //wp.setCompressionQuality(1.0F);
+                    //wp.setTilingMode(GeoToolsWriteParams.MODE_EXPLICIT);
+                    //wp.setTiling(256, 256);
+                    final ParameterValueGroup params = format.getWriteParameters();
+                    params.parameter(AbstractGridFormat.GEOTOOLS_WRITE_PARAMS.getName().toString()).setValue(wp);
+
+                    try {
+                        ReferencedEnvelope envelope =
+                                new ReferencedEnvelope(
+                                        geoPosA.getLon(), geoPosB.getLon(),
+                                        geoPosA.getLat(), geoPosB.getLat(),
+                                        DefaultGeographicCRS.WGS84
+                                );
+                        GridCoverageFactory factory = new GridCoverageFactory();
+                        GridCoverage2D gridCoverage2D = factory.create(imageFileName, quicklookImage, envelope);
+                        GridCoverageWriter writer = format.getWriter(new BufferedOutputStream(pmOutputStream));
+                        writer.write(gridCoverage2D, params.values().toArray(new GeneralParameterValue[1]));
+                        writer.dispose();
+                    } finally {
+                        outputStream.close();
+                    }
+                }
+                else {
+                    OutputStream outputStream = createOutputStream(context, imageFileName);
+                    LOGGER.info("outputStream: " + outputStream.toString());
+                    OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
+                    try {
+                        ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);
+                    } finally {
+                        outputStream.close();
+                    }
                 }
             }
 //        } catch (Exception e) {
@@ -100,12 +167,37 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 //        }
     }
 
+
+    public static String getImageFileName(String imageBaseName, Quicklooks.QLConfig qlConfig) {
+        if( isGeoTiff(qlConfig)) {
+            return imageBaseName + ".tiff";
+        }
+        else {
+            return imageBaseName + "." + qlConfig.getImageType();
+        }
+    }
+
+    public static Path getWorkOutputFilePath(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        return new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+    }
+
+    private static boolean isGeoTiff(Quicklooks.QLConfig qlConfig) {
+        return "geotiff".equalsIgnoreCase(qlConfig.getImageType());
+    }
+
     private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
-        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+        Path path = getWorkOutputFilePath(context, fileName);
+        LOGGER.info("createOutputStream: path = " + path);
         final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
         return new BufferedOutputStream(fsDataOutputStream);
     }
 
+    public static InputStream createInputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        Path path = getWorkOutputFilePath(context, fileName);
+        LOGGER.info("createInputStream: path = " + path);
+        final FSDataInputStream fsDataInputStream = path.getFileSystem(context.getConfiguration()).open(path);
+        return new BufferedInputStream(fsDataInputStream);
+    }
 
     private static class BytesCountingOutputStream extends OutputStream {
 

@@ -118,6 +118,40 @@
     font-size: 14px;
 }
 
+/**************************
+* Quicklook Panel styling *
+***************************/
+.quicklookPanel {
+    margin: 0px 15px 50px 15px;
+    width: 62em;
+}
+
+.quicklookRadioPanel {
+    padding: 5px 0px 5px 0px;
+}
+
+.quicklookRadioButton {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    padding-right: 10px;
+}
+
+.quicklookParametersPanel {
+    display: flex;
+}
+
+.quicklookInputLabelCell {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+    width: 185px;
+}
+
+.quicklookInputCell {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+}
+
 /**********************
 * Input files styling *
 ***********************/

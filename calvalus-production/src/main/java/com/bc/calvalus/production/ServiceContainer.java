@@ -31,7 +31,7 @@ public class ServiceContainer {
 
     public ServiceContainer(ProductionService productionService, 
                             FileSystemService fileSystemService, 
-                            InventoryService inventoryService, 
+                            InventoryService inventoryService,
                             Configuration hadoopConfiguration) {
         this.productionService = productionService;
         this.fileSystemService = fileSystemService;
