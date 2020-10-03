@@ -3,7 +3,9 @@ package com.bc.calvalus.processing;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.TopologyException;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;
@@ -80,7 +82,11 @@ public abstract class ProcessingRectangleCalculator {
             try {
                 if (product.getSceneGeoCoding() != null) {
                     LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
-                    return SubsetOp.computePixelRegion(product, regionGeometry, 1);
+                    try {
+                        return SubsetOp.computePixelRegion(product, regionGeometry, 1);
+                    } catch (TopologyException e2) {
+                        return SubsetOp.computePixelRegion(product, new ConvexHull(regionGeometry).getConvexHull(), 1);
+                    }
                 } else {
                     return EosRectangleCalculator.computePixelRegion(product, regionGeometry, 1);
                 }
