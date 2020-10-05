@@ -192,6 +192,12 @@ public class FrpProductWriterTest {
 
         template = writer.getTemplate("s3b_night_frp_mean");
         assertTemplate(DataType.FLOAT, "s3b_night_frp", Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime", template);
+
+        template = writer.getTemplate("fire_land_pixel_sum");
+        assertTemplate(DataType.UINT, "fire_land_pixel", -1, "1", "Total number of land-based detected active fire pixels in the grid cell", template);
+
+        template = writer.getTemplate("frp_mir_land_mean");
+        assertTemplate(DataType.FLOAT, "frp_mir_land_mean", Float.NaN, "MW", "Mean Fire Radiative Power derived from the MIR radiance", template);
     }
 
     private void assertTemplate(DataType dataType, String name, Number fillValue, String units, String longName, FrpL3ProductWriter.VariableTemplate template) {

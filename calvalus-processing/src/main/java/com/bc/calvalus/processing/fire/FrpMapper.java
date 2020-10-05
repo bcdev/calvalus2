@@ -208,6 +208,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         }
         final int columns = geodeticNetcdf.findDimension("columns").getLength();
         final int rows = geodeticNetcdf.findDimension("rows").getLength();
+        final int latIndex = GEODETIC_VARIABLES.latitude_in.ordinal();
+        final int lonIndex = GEODETIC_VARIABLES.longitude_in.ordinal();
 
         final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
@@ -215,6 +217,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
+        final Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
 
         if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
             final double mjd = extractMJDFromFilename(inputPath);
@@ -228,11 +231,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             // pixel loop
             int count = 0;
             int variableOffset = getSensorOffset(platformNumber);
-            final int latIndex = GEODETIC_VARIABLES.latitude_in.ordinal();
-            final int lonIndex = GEODETIC_VARIABLES.longitude_in.ordinal();
             final int areaIndex = FRP_VARIABLES.IFOV_area.ordinal();
             final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
-            final Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
 
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
@@ -283,7 +283,10 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
                 for (int col = 0; col < columns; ++col) {
-
+                    // construct observation
+                    final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
+                    final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
+                    int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
                 }
             }
         }

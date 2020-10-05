@@ -139,7 +139,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
                 array.setFloat(i, Float.NaN);
             }
         } else {
-            throw new IllegalArgumentException("Unsupporteed data type: " + dataType);
+            throw new IllegalArgumentException("Unsupported data type: " + dataType);
         }
         return array;
     }
@@ -166,6 +166,9 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3b_night_water_sum", new VariableTemplate("s3b_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
         variableTemplates.put("s3b_night_fire_sum", new VariableTemplate("s3b_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
         variableTemplates.put("s3b_night_frp_mean", new VariableTemplate("s3b_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
+        // l3 monthly variables
+        variableTemplates.put("fire_land_pixel_sum", new VariableTemplate("fire_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of land-based detected active fire pixels in the grid cell"));
+        variableTemplates.put("frp_mir_land_mean", new VariableTemplate("frp_mir_land_mean", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power derived from the MIR radiance"));
     }
 
     private void createBandNamesToIgnore() {
@@ -283,16 +286,17 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
 
         final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
-        addWeightedFRPVariable(dimensions, "s3a_day_frp_weighted", "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage");
-        addWeightedFRPVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage");
-        addWeightedFRPVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage");
-        addWeightedFRPVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage");
+        addWeightedFRPVariable(dimensions, "s3a_day_frp_weighted", "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage", "MW");
+        addWeightedFRPVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage", "MW");
+        addWeightedFRPVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", "MW");
+        addWeightedFRPVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "MW");
+        addWeightedFRPVariable(dimensions, "fire_land_weighted_pixel", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "1");
     }
 
-    private void addWeightedFRPVariable(int[] dimensions, String name, String longName) {
+    private void addWeightedFRPVariable(int[] dimensions, String name, String longName, String units) {
         final Variable variable = fileWriter.addVariable(name, DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
-        variable.addAttribute(new Attribute(CF.UNITS, "MW"));
+        variable.addAttribute(new Attribute(CF.UNITS, units));
         variable.addAttribute(new Attribute(CF.LONG_NAME, longName));
         final Array dataArray = Array.factory(DataType.FLOAT, dimensions);
         variableData.put(name, writeFillValue(dataArray));
@@ -418,7 +422,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     VariableTemplate getTemplate(String variableName) {
         final VariableTemplate variableTemplate = variableTemplates.get(variableName);
         if (variableTemplate == null) {
-            throw new IllegalArgumentException("Unsupported variable:" + variableName);
+            throw new IllegalArgumentException("Unsupported variable: " + variableName);
         }
         return variableTemplate;
     }
