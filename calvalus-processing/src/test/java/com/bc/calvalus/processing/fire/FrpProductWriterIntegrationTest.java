@@ -42,8 +42,8 @@ public class FrpProductWriterIntegrationTest {
     }
 
     @Test
-    public void testWriteProductNodes() throws IOException, ParseException {
-        final Product product = createTestProduct();
+    public void testWriteProductNodes_daily_cycle() throws IOException, ParseException {
+        final Product product = createTestProduct_daily_cycle();
 
         final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
 
@@ -62,11 +62,40 @@ public class FrpProductWriterIntegrationTest {
 
         try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
             ensureDimensions(netcdfFile);
-            ensureGlobalAttributes(netcdfFile);
+            ensureGlobalAttributes_daily(netcdfFile);
             ensureAxesAndBoundsVariables(netcdfFile);
 
             ensureVariables(netcdfFile);
             ensureWeightedFRPVariables(netcdfFile);
+        }
+    }
+
+    @Test
+    public void testWriteProductNodes_monthly() throws IOException, ParseException {
+        final Product product = createTestProduct_monthly();
+
+        final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
+
+        try {
+            productWriter.writeProductNodes(product, targetFile);
+
+            final Band[] bands = product.getBands();
+            for (final Band band : bands) {
+                productWriter.writeBandRasterData(band, 0, 0, 8, 4, band.getRasterData(), ProgressMonitor.NULL);
+            }
+        } finally {
+            productWriter.flush();
+            productWriter.close();
+            product.dispose();
+        }
+
+        try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
+            ensureDimensions(netcdfFile);
+            ensureGlobalAttributes_monthly(netcdfFile);
+//            ensureAxesAndBoundsVariables(netcdfFile);
+//
+//            ensureVariables(netcdfFile);
+//            ensureWeightedFRPVariables(netcdfFile);
         }
     }
 
@@ -140,7 +169,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(18, data.getInt(index.set(0, 0, 1)));
     }
 
-    private Product createTestProduct() throws ParseException {
+    private Product createTestProduct_daily_cycle() throws ParseException {
         final Product product = new Product("frp-test", "test-type", 8, 4);
         final Band s3a_day_pixel = product.addBand("s3a_day_pixel_sum", ProductData.TYPE_FLOAT32);
         s3a_day_pixel.setData(createDataBuffer(0));
@@ -204,6 +233,14 @@ public class FrpProductWriterIntegrationTest {
 
         product.setStartTime(ProductData.UTC.parse("22-MAR-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("22-MAR-2020 23:59:59"));
+        return product;
+    }
+
+    private Product createTestProduct_monthly() throws ParseException {
+        final Product product = new Product("frp-monthly", "test-type", 8, 4);
+        product.setStartTime(ProductData.UTC.parse("01-APR-2020 00:00:00"));
+        product.setEndTime(ProductData.UTC.parse("30-APR-2020 23:59:59"));
+
         return product;
     }
 
@@ -292,9 +329,9 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(18343.0, timeBoundsData.getDouble(1), 1e-8);
     }
 
-    private void ensureGlobalAttributes(NetcdfFile netcdfFile) {
+    private void ensureGlobalAttributes_daily(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(31, globalAttributes.size());
+        assertEquals(35, globalAttributes.size());
         Attribute attribute = globalAttributes.get(0);
         assertEquals("title", attribute.getShortName());
         assertEquals("ECMWF C3S Gridded OLCI Fire Radiative Power product", attribute.getStringValue());
@@ -307,9 +344,29 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("geospatial_vertical_min", attribute.getShortName());
         assertEquals("0", attribute.getStringValue());
 
-        attribute = globalAttributes.get(30);
-        assertEquals("geospatial_lat_units", attribute.getShortName());
-        assertEquals("degrees_north", attribute.getStringValue());
+        attribute = globalAttributes.get(31);
+        assertEquals("platform", attribute.getShortName());
+        assertEquals("Sentinel-3", attribute.getStringValue());
+    }
+
+    private void ensureGlobalAttributes_monthly(NetcdfFile netcdfFile) {
+        final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
+        assertEquals(35, globalAttributes.size());
+        Attribute attribute = globalAttributes.get(1);
+        assertEquals("institution", attribute.getShortName());
+        assertEquals("King's College London, Brockmann Consult GmbH", attribute.getStringValue());
+
+        attribute = globalAttributes.get(13);
+        assertEquals("comment", attribute.getShortName());
+        assertEquals("These data were produced as part of the Copernicus Climate Change Service programme.", attribute.getStringValue());
+
+        attribute = globalAttributes.get(25);
+        assertEquals("geospatial_vertical_max", attribute.getShortName());
+        assertEquals("0", attribute.getStringValue());
+
+        attribute = globalAttributes.get(32);
+        assertEquals("sensor", attribute.getShortName());
+        assertEquals("SLSTR", attribute.getStringValue());
     }
 
     private void ensureDimensions(NetcdfFile netcdfFile) {

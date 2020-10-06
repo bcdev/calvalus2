@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire;
 
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
@@ -8,6 +9,7 @@ import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
 import java.io.File;
+import java.text.ParseException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -51,11 +53,13 @@ public class FrpProductWriterTest {
     }
 
     @Test
-    public void testAddGlobalMetadata() {
+    public void testAddGlobalMetadata() throws ParseException {
         final NetcdfFileWriter fileWriter = mock(NetcdfFileWriter.class);
         final Product product = new Product("C3S-FRP-L3-Map-0.25deg-P1D-2020-09-16-v1.0.nc", "whatever", 5, 7);
+        product.setStartTime(ProductData.UTC.parse("24-APR-2020 00:00:00"));
+        product.setEndTime(ProductData.UTC.parse("24-APR-2020 23:59:59"));
 
-        FrpL3ProductWriter.addGlobalMetadata(fileWriter, product);
+        FrpL3ProductWriter.addGlobalMetadata(fileWriter, product, FrpL3ProductWriter.ProductType.CYCLE);
 
         verify(fileWriter, times(1)).addGlobalAttribute("title", "ECMWF C3S Gridded OLCI Fire Radiative Power product");
         verify(fileWriter, times(1)).addGlobalAttribute("institution", "King's College London, Brockmann Consult GmbH");
@@ -83,11 +87,10 @@ public class FrpProductWriterTest {
         verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lon_max", "180");
         verify(fileWriter, times(1)).addGlobalAttribute("geospatial_vertical_min", "0");
         verify(fileWriter, times(1)).addGlobalAttribute("geospatial_vertical_max", "0");
-        // @todo 1 tb/tb implement 2020-09-25
-//        time_coverage_start = 20190701T000000Z
-//        time_coverage_end = 20190731T235959Z
-//        time_coverage_duration = P1M
-//        time_coverage_resolution = P1M
+        verify(fileWriter, times(1)).addGlobalAttribute("time_coverage_start", "20200424T000000Z");
+        verify(fileWriter, times(1)).addGlobalAttribute("time_coverage_end", "20200424T235959Z");
+        verify(fileWriter, times(1)).addGlobalAttribute("time_coverage_duration", "P27D");
+        verify(fileWriter, times(1)).addGlobalAttribute("time_coverage_resolution", "P27D");
         verify(fileWriter, times(1)).addGlobalAttribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention");
         // @todo 1 tb/tb implement 2020-09-25
 //        license = EC C3S FIRE BURNED AREA Data Policy
@@ -258,5 +261,40 @@ public class FrpProductWriterTest {
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
         }
+    }
+
+    @Test
+    public void testGetProductType() throws ParseException {
+        final Product product = new Product("what", "ever", 2, 3);
+
+        assertEquals(FrpL3ProductWriter.ProductType.UNKNOWN, FrpL3ProductWriter.getProductType(product));
+
+        // one date missing
+        product.setStartTime(ProductData.UTC.parse("01-JUN-2020 00:00:00"));
+        product.setEndTime(null);
+        assertEquals(FrpL3ProductWriter.ProductType.UNKNOWN, FrpL3ProductWriter.getProductType(product));
+
+        product.setStartTime(null);
+        product.setEndTime(ProductData.UTC.parse("30-JUN-2020 00:00:00"));
+        assertEquals(FrpL3ProductWriter.ProductType.UNKNOWN, FrpL3ProductWriter.getProductType(product));
+
+        product.setStartTime(ProductData.UTC.parse("01-JUN-2020 00:00:00"));
+        product.setEndTime(ProductData.UTC.parse("01-JUN-2020 23:59:59"));
+        assertEquals(FrpL3ProductWriter.ProductType.DAILY, FrpL3ProductWriter.getProductType(product));
+
+        product.setStartTime(ProductData.UTC.parse("01-JUN-2020 00:00:00"));
+        product.setEndTime(ProductData.UTC.parse("27-JUN-2020 23:59:59"));
+        assertEquals(FrpL3ProductWriter.ProductType.CYCLE, FrpL3ProductWriter.getProductType(product));
+
+        product.setStartTime(ProductData.UTC.parse("01-JUN-2020 00:00:00"));
+        product.setEndTime(ProductData.UTC.parse("30-JUN-2020 23:59:59"));
+        assertEquals(FrpL3ProductWriter.ProductType.MONTHLY, FrpL3ProductWriter.getProductType(product));
+    }
+
+    @Test
+    public void testGetCoverageString() {
+        assertEquals("P1D", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.DAILY));
+        assertEquals("P27D", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.CYCLE));
+        assertEquals("P1M", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.MONTHLY));
     }
 }

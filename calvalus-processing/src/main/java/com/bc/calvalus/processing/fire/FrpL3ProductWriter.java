@@ -35,11 +35,13 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     private Map<String, Array> variableData;
     private List<String> bandsToIgnore;
     private NetcdfFileWriter fileWriter;
+    private ProductType type;
 
     FrpL3ProductWriter(ProductWriterPlugIn writerPlugIn) {
         super(writerPlugIn);
 
         fileWriter = null;
+        type = ProductType.UNKNOWN;
 
         createVariableTemplates();
         createBandNamesToIgnore();
@@ -65,7 +67,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addDimension("bounds", 2);
     }
 
-    static void addGlobalMetadata(NetcdfFileWriter fileWriter, Product product) {
+    static void addGlobalMetadata(NetcdfFileWriter fileWriter, Product product, ProductType type) {
         final SimpleDateFormat COMPACT_ISO_FORMAT = DateUtils.createDateFormat("yyyyMMdd'T'HHmmss'Z'");
         final String dateStringNow = COMPACT_ISO_FORMAT.format(new Date());
 
@@ -95,6 +97,18 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addGlobalAttribute("geospatial_lon_max", "180");
         fileWriter.addGlobalAttribute("geospatial_vertical_min", "0");
         fileWriter.addGlobalAttribute("geospatial_vertical_max", "0");
+        final ProductData.UTC startTime = product.getStartTime();
+        if (startTime != null) {
+            fileWriter.addGlobalAttribute("time_coverage_start", COMPACT_ISO_FORMAT.format(startTime.getAsDate()));
+        }
+        final ProductData.UTC endTime = product.getEndTime();
+        if (endTime != null) {
+            fileWriter.addGlobalAttribute("time_coverage_end", COMPACT_ISO_FORMAT.format(endTime.getAsDate()));
+        }
+        final String coverageString = getCoverageString(type);
+        fileWriter.addGlobalAttribute("time_coverage_duration", coverageString);
+        fileWriter.addGlobalAttribute("time_coverage_resolution", coverageString);
+
         fileWriter.addGlobalAttribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention");
         fileWriter.addGlobalAttribute("platform", "Sentinel-3");
         fileWriter.addGlobalAttribute("sensor", "SLSTR");
@@ -142,6 +156,36 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             throw new IllegalArgumentException("Unsupported data type: " + dataType);
         }
         return array;
+    }
+
+    static ProductType getProductType(Product product) {
+        final ProductData.UTC startTime = product.getStartTime();
+        final ProductData.UTC endTime = product.getEndTime();
+        if (startTime != null && endTime != null) {
+            final Date startDate = startTime.getAsDate();
+            final Date endDate = endTime.getAsDate();
+
+            final long between = ChronoUnit.DAYS.between(startDate.toInstant(), endDate.toInstant());
+            if (between >= 0 && between <= 1) {
+                return ProductType.DAILY;
+            } else if (between >= 26 && between <= 27) {
+                return ProductType.CYCLE;
+            } else if (between >= 27) {
+                return ProductType.MONTHLY;
+            }
+        }
+        return ProductType.UNKNOWN;
+    }
+
+    static String getCoverageString(ProductType productType) {
+        if (productType == ProductType.DAILY) {
+            return "P1D";
+        } else if (productType == ProductType.CYCLE) {
+            return "P27D";
+        } else if (productType == ProductType.MONTHLY) {
+            return "P1M";
+        }
+        return "UNKNOWN";
     }
 
     private void createVariableTemplates() {
@@ -217,8 +261,9 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4, filePath, chunking);
 
         final Product sourceProduct = getSourceProduct();
+        type = getProductType(sourceProduct);
         addDimensions(fileWriter, sourceProduct);
-        addGlobalMetadata(fileWriter, sourceProduct);
+        addGlobalMetadata(fileWriter, sourceProduct, type);
         addAxesAndBoundsVariables(fileWriter);
 
         addProductVariables(sourceProduct);
@@ -340,10 +385,12 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     }
 
     private void writeVariableData() throws IOException {
-        calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
-        calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
-        calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
-        calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
+        if (type == ProductType.DAILY || type == ProductType.CYCLE) {
+            calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
+            calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
+            calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
+            calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
+        }
 
         try {
             final Set<Map.Entry<String, Array>> entries = variableData.entrySet();
@@ -395,6 +442,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             fileWriter.close();
             fileWriter = null;
         }
+        type = ProductType.UNKNOWN;
     }
 
     @Override
@@ -433,6 +481,13 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             throw new IllegalArgumentException("Unsupported variable: " + variableName);
         }
         return variableTemplate;
+    }
+
+    static enum ProductType {
+        UNKNOWN,
+        DAILY,
+        CYCLE,
+        MONTHLY
     }
 
     static class VariableTemplate {
