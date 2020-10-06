@@ -146,6 +146,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private void createVariableTemplates() {
         variableTemplates = new HashMap<>();
+        // l3daily and l3cycle variables
         variableTemplates.put("s3a_day_pixel_sum", new VariableTemplate("s3a_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime pixels"));
         variableTemplates.put("s3a_day_cloud_sum", new VariableTemplate("s3a_day_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime cloudy pixels"));
         variableTemplates.put("s3a_day_water_sum", new VariableTemplate("s3a_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime water pixels"));
@@ -169,6 +170,11 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         // l3 monthly variables
         variableTemplates.put("fire_land_pixel_sum", new VariableTemplate("fire_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of land-based detected active fire pixels in the grid cell"));
         variableTemplates.put("frp_mir_land_mean", new VariableTemplate("frp_mir_land_mean", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power derived from the MIR radiance"));
+        variableTemplates.put("fire_water_pixel_sum", new VariableTemplate("fire_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of water-based detected active fire pixels in the grid cell"));
+        variableTemplates.put("slstr_pixel_sum", new VariableTemplate("slstr_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
+        variableTemplates.put("slstr_water_pixel_sum", new VariableTemplate("slstr_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations over water in the grid cell"));
+        variableTemplates.put("slstr_cloud_over_land_pixel_sum", new VariableTemplate("slstr_cloud_over_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations with cloud over land in the grid cell"));
+        variableTemplates.put("cloud_over_land_mean", new VariableTemplate("cloud_over_land_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of the non-water pixels in the grid cell"));
     }
 
     private void createBandNamesToIgnore() {
@@ -179,6 +185,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         bandsToIgnore.add("s3a_night_frp_sigma");
         bandsToIgnore.add("s3b_day_frp_sigma");
         bandsToIgnore.add("s3b_night_frp_sigma");
+        bandsToIgnore.add("frp_mir_land_sigma");
+        bandsToIgnore.add("cloud_over_land_sigma");
     }
 
     @Override
