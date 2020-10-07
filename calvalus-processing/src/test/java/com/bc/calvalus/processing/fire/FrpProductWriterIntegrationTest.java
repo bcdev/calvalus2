@@ -63,9 +63,9 @@ public class FrpProductWriterIntegrationTest {
         try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
             ensureDimensions(netcdfFile);
             ensureGlobalAttributes_daily(netcdfFile);
-            ensureAxesAndBoundsVariables(netcdfFile);
+            ensureAxesAndBoundsVariables_daily(netcdfFile);
 
-            ensureVariables(netcdfFile);
+            ensureVariables_daily(netcdfFile);
             ensureWeightedFRPVariables(netcdfFile);
         }
     }
@@ -92,9 +92,9 @@ public class FrpProductWriterIntegrationTest {
         try (NetcdfFile netcdfFile = NetcdfFile.open(targetFile.getAbsolutePath())) {
             ensureDimensions(netcdfFile);
             ensureGlobalAttributes_monthly(netcdfFile);
-//            ensureAxesAndBoundsVariables(netcdfFile);
-//
-//            ensureVariables(netcdfFile);
+            ensureAxesAndBoundsVariables_monthly(netcdfFile);
+
+            ensureVariables_monthly(netcdfFile);
 //            ensureWeightedFRPVariables(netcdfFile);
         }
     }
@@ -125,7 +125,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
     }
 
-    private void ensureVariables(NetcdfFile netcdfFile) throws IOException {
+    private void ensureVariables_daily(NetcdfFile netcdfFile) throws IOException {
         Variable variable = netcdfFile.findVariable("s3a_day_pixel");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
@@ -167,6 +167,45 @@ public class FrpProductWriterIntegrationTest {
         index = data.getIndex();
         assertEquals(41, data.getInt(index.set(0, 3, 0)));
         assertEquals(18, data.getInt(index.set(0, 0, 1)));
+    }
+
+    private void ensureVariables_monthly(NetcdfFile netcdfFile) throws IOException {
+        Variable variable = netcdfFile.findVariable("fire_land_pixel");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        int[] shape = variable.getShape();
+        assertEquals(3, shape.length);
+        assertEquals(1, shape[0]);
+        assertEquals(4, shape[1]);
+        assertEquals(8, shape[2]);
+        Array data = variable.read();
+        Index index = data.getIndex();
+        assertEquals(11, data.getInt(index.set(0, 1, 2)));
+        assertEquals(20, data.getInt(index.set(0, 2, 3)));
+
+        variable = netcdfFile.findVariable("fire_water_pixel");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(31, data.getInt(index.set(0, 3, 4)));
+        assertEquals(8, data.getInt(index.set(0, 0, 5)));
+
+        variable = netcdfFile.findVariable("slstr_water_pixel");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(19.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
+        assertEquals(28.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
+
+        variable = netcdfFile.findVariable("cloud_over_land_fraction");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(31.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
+        assertEquals(8.f, data.getFloat(index.set(0, 0, 1)), 1e-8);
     }
 
     private Product createTestProduct_daily_cycle() throws ParseException {
@@ -238,6 +277,28 @@ public class FrpProductWriterIntegrationTest {
 
     private Product createTestProduct_monthly() throws ParseException {
         final Product product = new Product("frp-monthly", "test-type", 8, 4);
+
+        final Band fire_land_pixel = product.addBand("fire_land_pixel_sum", ProductData.TYPE_FLOAT32);
+        fire_land_pixel.setData(createDataBuffer(1));
+
+        final Band frp_mir_land = product.addBand("frp_mir_land_mean", ProductData.TYPE_FLOAT32);
+        frp_mir_land.setData(createDataBuffer(2));
+
+        final Band fire_water_pixel = product.addBand("fire_water_pixel_sum", ProductData.TYPE_FLOAT32);
+        fire_water_pixel.setData(createDataBuffer(3));
+
+        final Band slstr_pixel = product.addBand("slstr_pixel_sum", ProductData.TYPE_FLOAT32);
+        slstr_pixel.setData(createDataBuffer(4));
+
+        final Band slstr_water_pixel = product.addBand("slstr_water_pixel_sum", ProductData.TYPE_FLOAT32);
+        slstr_water_pixel.setData(createDataBuffer(5));
+
+        final Band slstr_cloud_over_land_pixel = product.addBand("slstr_cloud_over_land_pixel_sum", ProductData.TYPE_FLOAT32);
+        slstr_cloud_over_land_pixel.setData(createDataBuffer(6));
+
+        final Band cloud_over_land = product.addBand("cloud_over_land_mean", ProductData.TYPE_FLOAT32);
+        cloud_over_land.setData(createDataBuffer(7));
+
         product.setStartTime(ProductData.UTC.parse("01-APR-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("30-APR-2020 23:59:59"));
 
@@ -252,7 +313,15 @@ public class FrpProductWriterIntegrationTest {
         return ProductData.createInstance(ProductData.TYPE_FLOAT32, data);
     }
 
-    private void ensureAxesAndBoundsVariables(NetcdfFile netcdfFile) throws IOException {
+    private void ensureAxesAndBoundsVariables_daily(NetcdfFile netcdfFile) throws IOException {
+        ensureAxesAndBoundsVariables(netcdfFile, 18343.0, 18343.0);
+    }
+
+    private void ensureAxesAndBoundsVariables_monthly(NetcdfFile netcdfFile) throws IOException {
+        ensureAxesAndBoundsVariables(netcdfFile, 18353.0, 18382.0);
+    }
+
+    private void ensureAxesAndBoundsVariables(NetcdfFile netcdfFile, double timeDimensionValue, double timeDimUpper) throws IOException {
         final Variable lon = netcdfFile.findVariable("lon");
         assertEquals(8, lon.getShape(0));
 
@@ -316,7 +385,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("long_name", attribute.getShortName());
         assertEquals("time", attribute.getStringValue());
         final Array timeData = time.read();
-        assertEquals(18343.0, timeData.getDouble(0), 1e-8);
+        assertEquals(timeDimensionValue, timeData.getDouble(0), 1e-8);
 
         final Variable time_bounds = netcdfFile.findVariable("time_bounds");
         assertEquals(1, time_bounds.getShape(0));
@@ -325,13 +394,13 @@ public class FrpProductWriterIntegrationTest {
         attributes = time_bounds.getAttributes();
         assertEquals(0, attributes.size());
         final Array timeBoundsData = time_bounds.read();
-        assertEquals(18343.0, timeBoundsData.getDouble(0), 1e-8);
-        assertEquals(18343.0, timeBoundsData.getDouble(1), 1e-8);
+        assertEquals(timeDimensionValue, timeBoundsData.getDouble(0), 1e-8);
+        assertEquals(timeDimUpper, timeBoundsData.getDouble(1), 1e-8);
     }
 
     private void ensureGlobalAttributes_daily(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(38, globalAttributes.size());
+        assertEquals(39, globalAttributes.size());
         Attribute attribute = globalAttributes.get(0);
         assertEquals("title", attribute.getShortName());
         assertEquals("ECMWF C3S Gridded OLCI Fire Radiative Power product", attribute.getStringValue());
@@ -340,22 +409,26 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("cdm_data_type", attribute.getShortName());
         assertEquals("Grid", attribute.getStringValue());
 
+        attribute = globalAttributes.get(19);
+        assertEquals("project", attribute.getShortName());
+        assertEquals("EC C3S Fire Radiative Power", attribute.getStringValue());
+
         attribute = globalAttributes.get(24);
         assertEquals("geospatial_vertical_min", attribute.getShortName());
         assertEquals("0", attribute.getStringValue());
 
         attribute = globalAttributes.get(31);
-        assertEquals("platform", attribute.getShortName());
-        assertEquals("Sentinel-3", attribute.getStringValue());
+        assertEquals("license", attribute.getShortName());
+        assertEquals("EC C3S FRP Data Policy", attribute.getStringValue());
 
         attribute = globalAttributes.get(35);
-        assertEquals("geospatial_lat_units", attribute.getShortName());
-        assertEquals("degrees_north", attribute.getStringValue());
+        assertEquals("geospatial_lon_units", attribute.getShortName());
+        assertEquals("degrees_east", attribute.getStringValue());
     }
 
     private void ensureGlobalAttributes_monthly(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(38, globalAttributes.size());
+        assertEquals(39, globalAttributes.size());
         Attribute attribute = globalAttributes.get(1);
         assertEquals("institution", attribute.getShortName());
         assertEquals("King's College London, Brockmann Consult GmbH", attribute.getStringValue());
@@ -369,12 +442,12 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("0", attribute.getStringValue());
 
         attribute = globalAttributes.get(32);
-        assertEquals("sensor", attribute.getShortName());
-        assertEquals("SLSTR", attribute.getStringValue());
+        assertEquals("platform", attribute.getShortName());
+        assertEquals("Sentinel-3", attribute.getStringValue());
 
         attribute = globalAttributes.get(36);
-        assertEquals("geospatial_lon_resolution", attribute.getShortName());
-        assertEquals("0.25", attribute.getStringValue());
+        assertEquals("geospatial_lat_units", attribute.getShortName());
+        assertEquals("degrees_north", attribute.getStringValue());
     }
 
     private void ensureDimensions(NetcdfFile netcdfFile) {

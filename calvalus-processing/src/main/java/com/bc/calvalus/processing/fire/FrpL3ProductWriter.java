@@ -110,6 +110,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addGlobalAttribute("time_coverage_resolution", coverageString);
 
         fileWriter.addGlobalAttribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention");
+        fileWriter.addGlobalAttribute("license", "EC C3S FRP Data Policy");
         fileWriter.addGlobalAttribute("platform", "Sentinel-3");
         fileWriter.addGlobalAttribute("sensor", "SLSTR");
         fileWriter.addGlobalAttribute("spatial_resolution", getResolutionString(type, true));

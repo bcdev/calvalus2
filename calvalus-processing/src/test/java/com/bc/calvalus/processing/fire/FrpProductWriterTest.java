@@ -92,8 +92,7 @@ public class FrpProductWriterTest {
         verify(fileWriter, times(1)).addGlobalAttribute("time_coverage_duration", "P27D");
         verify(fileWriter, times(1)).addGlobalAttribute("time_coverage_resolution", "P27D");
         verify(fileWriter, times(1)).addGlobalAttribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention");
-        // @todo 1 tb/tb implement 2020-09-25
-//        license = EC C3S FIRE BURNED AREA Data Policy
+        verify(fileWriter, times(1)).addGlobalAttribute("license", "EC C3S FRP Data Policy");
         verify(fileWriter, times(1)).addGlobalAttribute("platform", "Sentinel-3");
         verify(fileWriter, times(1)).addGlobalAttribute("sensor", "SLSTR");
         verify(fileWriter, times(1)).addGlobalAttribute("spatial_resolution", "0.1 degrees");
