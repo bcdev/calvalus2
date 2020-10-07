@@ -199,13 +199,13 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(19.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
         assertEquals(28.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
 
-        variable = netcdfFile.findVariable("cloud_over_land_fraction");
+        variable = netcdfFile.findVariable("slstr_cloud_over_land_fraction");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(31.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(8.f, data.getFloat(index.set(0, 0, 1)), 1e-8);
+        assertEquals(Float.NaN, data.getFloat(index.set(0, 3, 0)), 1e-8);
+        assertEquals(Float.NaN, data.getFloat(index.set(0, 0, 1)), 1e-8);
     }
 
     private Product createTestProduct_daily_cycle() throws ParseException {
@@ -296,8 +296,8 @@ public class FrpProductWriterIntegrationTest {
         final Band slstr_cloud_over_land_pixel = product.addBand("slstr_cloud_over_land_pixel_sum", ProductData.TYPE_FLOAT32);
         slstr_cloud_over_land_pixel.setData(createDataBuffer(6));
 
-        final Band cloud_over_land = product.addBand("cloud_over_land_mean", ProductData.TYPE_FLOAT32);
-        cloud_over_land.setData(createDataBuffer(7));
+//        final Band cloud_over_land = product.addBand("slstr_cloud_over_land_mean", ProductData.TYPE_FLOAT32);
+//        cloud_over_land.setData(createDataBuffer(7));
 
         product.setStartTime(ProductData.UTC.parse("01-APR-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("30-APR-2020 23:59:59"));

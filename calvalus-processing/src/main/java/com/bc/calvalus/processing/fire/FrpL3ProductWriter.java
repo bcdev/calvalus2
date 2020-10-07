@@ -240,7 +240,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("slstr_pixel_sum", new VariableTemplate("slstr_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
         variableTemplates.put("slstr_water_pixel_sum", new VariableTemplate("slstr_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations over water in the grid cell"));
         variableTemplates.put("slstr_cloud_over_land_pixel_sum", new VariableTemplate("slstr_cloud_over_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations with cloud over land in the grid cell"));
-        variableTemplates.put("cloud_over_land_mean", new VariableTemplate("cloud_over_land_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of the non-water pixels in the grid cell"));
+        //variableTemplates.put("slstr_cloud_over_land_mean", new VariableTemplate("slstr_cloud_over_land_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of the non-water pixels in the grid cell"));
     }
 
     private void createBandNamesToIgnore() {
@@ -289,7 +289,11 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         addAxesAndBoundsVariables(fileWriter);
 
         addProductVariables(sourceProduct);
-        addWeightedFRPVariables();
+        if (type == ProductType.DAILY || type == ProductType.CYCLE) {
+            addWeightedFRPVariables();
+        } else if (type == ProductType.MONTHLY) {
+            addWeightedMonthlyVariables();
+        }
 
         fileWriter.create();
 
@@ -361,14 +365,24 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
 
         final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
-        addWeightedFRPVariable(dimensions, "s3a_day_frp_weighted", "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage", "MW");
-        addWeightedFRPVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage", "MW");
-        addWeightedFRPVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", "MW");
-        addWeightedFRPVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "MW");
-        addWeightedFRPVariable(dimensions, "fire_land_weighted_pixel", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "1");
+        addWeightedVariable(dimensions, "s3a_day_frp_weighted", "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage", "MW");
+        addWeightedVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage", "MW");
+        addWeightedVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", "MW");
+        addWeightedVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "MW");
+        addWeightedVariable(dimensions, "fire_land_weighted_pixel", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "1");
     }
 
-    private void addWeightedFRPVariable(int[] dimensions, String name, String longName, String units) {
+    private void addWeightedMonthlyVariables() {
+        final Product sourceProduct = getSourceProduct();
+        final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
+        final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
+
+        final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
+        addWeightedVariable(dimensions, "fire_land_weighted_pixel", "Number of detected land-based active fire pixels adjusted for regional land cloud cover fraction", "1");
+        addWeightedVariable(dimensions, "slstr_cloud_over_land_fraction", "Mean cloud fraction of the non-water (i.e. land) pixels per grid cell", "1");
+    }
+
+    private void addWeightedVariable(int[] dimensions, String name, String longName, String units) {
         final Variable variable = fileWriter.addVariable(name, DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
         variable.addAttribute(new Attribute(CF.UNITS, units));
@@ -505,7 +519,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         return variableTemplate;
     }
 
-    static enum ProductType {
+    enum ProductType {
         UNKNOWN,
         DAILY,
         CYCLE,
