@@ -331,7 +331,7 @@ public class FrpProductWriterIntegrationTest {
 
     private void ensureGlobalAttributes_daily(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(35, globalAttributes.size());
+        assertEquals(38, globalAttributes.size());
         Attribute attribute = globalAttributes.get(0);
         assertEquals("title", attribute.getShortName());
         assertEquals("ECMWF C3S Gridded OLCI Fire Radiative Power product", attribute.getStringValue());
@@ -347,11 +347,15 @@ public class FrpProductWriterIntegrationTest {
         attribute = globalAttributes.get(31);
         assertEquals("platform", attribute.getShortName());
         assertEquals("Sentinel-3", attribute.getStringValue());
+
+        attribute = globalAttributes.get(35);
+        assertEquals("geospatial_lat_units", attribute.getShortName());
+        assertEquals("degrees_north", attribute.getStringValue());
     }
 
     private void ensureGlobalAttributes_monthly(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(35, globalAttributes.size());
+        assertEquals(38, globalAttributes.size());
         Attribute attribute = globalAttributes.get(1);
         assertEquals("institution", attribute.getShortName());
         assertEquals("King's College London, Brockmann Consult GmbH", attribute.getStringValue());
@@ -367,6 +371,10 @@ public class FrpProductWriterIntegrationTest {
         attribute = globalAttributes.get(32);
         assertEquals("sensor", attribute.getShortName());
         assertEquals("SLSTR", attribute.getStringValue());
+
+        attribute = globalAttributes.get(36);
+        assertEquals("geospatial_lon_resolution", attribute.getShortName());
+        assertEquals("0.25", attribute.getStringValue());
     }
 
     private void ensureDimensions(NetcdfFile netcdfFile) {

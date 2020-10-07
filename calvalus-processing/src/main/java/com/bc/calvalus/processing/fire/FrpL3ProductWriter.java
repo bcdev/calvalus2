@@ -112,8 +112,11 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addGlobalAttribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention");
         fileWriter.addGlobalAttribute("platform", "Sentinel-3");
         fileWriter.addGlobalAttribute("sensor", "SLSTR");
+        fileWriter.addGlobalAttribute("spatial_resolution", getResolutionString(type, true));
         fileWriter.addGlobalAttribute("geospatial_lon_units", "degrees_east");
         fileWriter.addGlobalAttribute("geospatial_lat_units", "degrees_north");
+        fileWriter.addGlobalAttribute("geospatial_lon_resolution", getResolutionString(type, false));
+        fileWriter.addGlobalAttribute("geospatial_lat_resolution", getResolutionString(type, false));
     }
 
     static void addAxesAndBoundsVariables(NetcdfFileWriter fileWriter) {
@@ -186,6 +189,24 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             return "P1M";
         }
         return "UNKNOWN";
+    }
+
+    static String getResolutionString(ProductType productType, boolean addUnits) {
+        String resolutionString;
+
+        if (productType == ProductType.DAILY || productType == ProductType.CYCLE) {
+            resolutionString = "0.1";
+        } else if (productType == ProductType.MONTHLY) {
+            resolutionString = "0.25";
+        } else {
+            return "UNKNOWN";
+        }
+
+        if (addUnits) {
+            resolutionString += " degrees";
+        }
+
+        return resolutionString;
     }
 
     private void createVariableTemplates() {

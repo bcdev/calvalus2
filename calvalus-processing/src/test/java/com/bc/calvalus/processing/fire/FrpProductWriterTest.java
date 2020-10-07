@@ -96,13 +96,11 @@ public class FrpProductWriterTest {
 //        license = EC C3S FIRE BURNED AREA Data Policy
         verify(fileWriter, times(1)).addGlobalAttribute("platform", "Sentinel-3");
         verify(fileWriter, times(1)).addGlobalAttribute("sensor", "SLSTR");
-        // @todo 1 tb/tb implement 2020-09-25
-//        spatial_resolution = 0.25 degrees
+        verify(fileWriter, times(1)).addGlobalAttribute("spatial_resolution", "0.1 degrees");
         verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lon_units", "degrees_east");
         verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lat_units", "degrees_north");
-        // @todo 1 tb/tb implement 2020-09-25
-//        geospatial_lon_resolution = 0.25
-//        geospatial_lat_resolution = 0.25
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lon_resolution", "0.1");
+        verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lat_resolution", "0.1");
 
         verifyNoMoreInteractions(fileWriter);
     }
@@ -296,5 +294,25 @@ public class FrpProductWriterTest {
         assertEquals("P1D", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.DAILY));
         assertEquals("P27D", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.CYCLE));
         assertEquals("P1M", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.MONTHLY));
+
+        assertEquals("UNKNOWN", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.UNKNOWN));
+    }
+
+    @Test
+    public void testGetResolutionString_withUnits() {
+        assertEquals("0.1 degrees", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.DAILY, true));
+        assertEquals("0.1 degrees", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.CYCLE, true));
+        assertEquals("0.25 degrees", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.MONTHLY, true));
+
+        assertEquals("UNKNOWN", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.UNKNOWN, true));
+    }
+
+    @Test
+    public void testGetResolutionString_withoutUnits() {
+        assertEquals("0.1", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.DAILY, false));
+        assertEquals("0.1", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.CYCLE, false));
+        assertEquals("0.25", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.MONTHLY, false));
+
+        assertEquals("UNKNOWN", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.UNKNOWN, false));
     }
 }
