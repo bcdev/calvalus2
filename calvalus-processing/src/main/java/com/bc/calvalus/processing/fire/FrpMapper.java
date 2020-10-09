@@ -92,15 +92,16 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "s3b_night_frp"
     };
 
+    // variables with commented names are generated in the ProductWriter
     static String[] VARIABLE_NAMES_MONTHLY = {
             "fire_land_pixel",
-            "fire_land_weighted_pixel",
+//            "fire_land_weighted_pixel",
             "frp_mir_land_mean",
             "fire_water_pixel",
-            "box_pixel",
-            "box_water",
-            "box_land_cloud",
-            "box_land_cloud_fraction",
+            "slstr_pixel",
+            "slstr_water_pixel",
+//            "box_land_cloud",
+//            "box_land_cloud_fraction",
     };
 
     static {
@@ -219,20 +220,19 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
 
+        // create observation variable sequence
+        final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
+        // create lut of fires by row and column
+        final HashMap<Integer, Integer> fireIndex = createFiresLUT(frpArrays, numFires, columns);
+
+        final double mjd = extractMJDFromFilename(inputPath);
+        final int areaIndex = FRP_VARIABLES.IFOV_area.ordinal();
+        final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
+
         if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
-            final double mjd = extractMJDFromFilename(inputPath);
-
-            // create lut of fires by row and column
-            final HashMap<Integer, Integer> fireIndex = createFiresLUT(frpArrays, numFires, columns);
-
-            // create observation variable sequence
-            int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
-
             // pixel loop
             int count = 0;
             int variableOffset = getSensorOffset(platformNumber);
-            final int areaIndex = FRP_VARIABLES.IFOV_area.ordinal();
-            final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
 
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
@@ -242,9 +242,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     // construct observation
                     final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
                     final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
-                    int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                    final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
 
-                    Integer fire = fireIndex.get(row * columns + col);
+                    final Integer fire = fireIndex.get(row * columns + col);
                     float frpMwir = Float.NaN;
                     if (fire != null) {
                         final double area = frpArrays[areaIndex].getDouble(fire);
@@ -279,16 +279,53 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
                 LOG.log(Level.SEVERE, m, exception);
             }
-        } else if("l3monthly".equals(targetFormat)) {
+        } else if ("l3monthly".equals(targetFormat)) {
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
                 for (int col = 0; col < columns; ++col) {
                     // construct observation
                     final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
                     final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
-                    int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                    final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+
+                    final Integer fire = fireIndex.get(row * columns + col);
+                    float frpMwir = Float.NaN;
+                    if (fire != null) {
+                        final double area = frpArrays[areaIndex].getDouble(fire);
+                        if (area > 0.0) {
+                            frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
+                            if (frpMwir <= 0.0) {
+                                frpMwir = Float.NaN;
+                            }
+                        }
+                    }
+
+                    float[] values = new float[5];
+                    float Nlf = 0.f;
+                    if (!Float.isNaN(frpMwir) && ((flags & FRP_CLOUD) != 0)) {
+                        Nlf = 1.f;
+                    }
+
+                    float Frp = Float.NaN;
+                    if (!Float.isNaN(frpMwir) && ((flags & (L1B_WATER | FRP_WATER)) == 0)) {
+                        Frp = frpMwir;
+                    }
+
+                    float Nwf = 0.f;
+                    if (!Float.isNaN(frpMwir) && ((flags & (L1B_WATER | FRP_WATER)) != 0)) {
+                        Nwf = 1.f;
+                    }
+
+                    values[variableIndex[0]] = Nlf;
+                    values[variableIndex[1]] = Frp;
+                    values[variableIndex[2]] = Nwf;
+                    values[variableIndex[3]] = 1;   // No
+                    values[variableIndex[4]] = (flags & (L1B_WATER | FRP_WATER)) != 0 ? 1 : 0;    // Nw
+                    observations[col] = new ObservationImpl(lat, lon, mjd, values);
                 }
+                spatialBinner.processObservationSlice(observations);
             }
+            spatialBinner.complete();
         }
     }
 

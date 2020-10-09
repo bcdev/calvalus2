@@ -239,8 +239,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("fire_water_pixel_sum", new VariableTemplate("fire_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of water-based detected active fire pixels in the grid cell"));
         variableTemplates.put("slstr_pixel_sum", new VariableTemplate("slstr_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
         variableTemplates.put("slstr_water_pixel_sum", new VariableTemplate("slstr_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations over water in the grid cell"));
-        variableTemplates.put("slstr_cloud_over_land_pixel_sum", new VariableTemplate("slstr_cloud_over_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations with cloud over land in the grid cell"));
-        //variableTemplates.put("slstr_cloud_over_land_mean", new VariableTemplate("slstr_cloud_over_land_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of the non-water pixels in the grid cell"));
     }
 
     private void createBandNamesToIgnore() {
@@ -379,6 +377,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
         addWeightedVariable(dimensions, "fire_land_weighted_pixel", "Number of detected land-based active fire pixels adjusted for regional land cloud cover fraction", "1");
+        // @todo 1 tb/tb update long name 2020-10-09
+        addWeightedVariable(dimensions, "slstr_cloud_over_land_pixel", "Number of cloud pixels over land in a box whose ...", "1");
         addWeightedVariable(dimensions, "slstr_cloud_over_land_fraction", "Mean cloud fraction of the non-water (i.e. land) pixels per grid cell", "1");
     }
 
