@@ -87,10 +87,10 @@ public class FrpMapperTest {
         final BinningContext binningContext = mock(BinningContext.class);
         final VariableContext variableContext = mock(VariableContext.class);
         when(variableContext.getVariableIndex("fire_land_pixel")).thenReturn(7);
-        when(variableContext.getVariableIndex("frp_mir_land_mean")).thenReturn(5);
+        when(variableContext.getVariableIndex("frp_mir_land")).thenReturn(5);
         when(variableContext.getVariableIndex("fire_water_pixel")).thenReturn(4);
-        when(variableContext.getVariableIndex("box_pixel")).thenReturn(3);
-        when(variableContext.getVariableIndex("box_water")).thenReturn(2);
+        when(variableContext.getVariableIndex("slstr_pixel")).thenReturn(3);
+        when(variableContext.getVariableIndex("slstr_water_pixel")).thenReturn(2);
         when(variableContext.getVariableCount()).thenReturn(5);
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
@@ -98,7 +98,7 @@ public class FrpMapperTest {
         final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
         assertEquals(5, variableIndex.length);
         assertEquals(5, variableIndex[1]);
-        assertEquals(0, variableIndex[4]);
+        assertEquals(2, variableIndex[4]);
 
         verify(binningContext, times(1)).getVariableContext();
         verify(variableContext, times(5)).getVariableIndex(anyString());

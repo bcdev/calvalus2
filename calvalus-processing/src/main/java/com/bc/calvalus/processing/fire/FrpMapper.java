@@ -96,7 +96,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     static String[] VARIABLE_NAMES_MONTHLY = {
             "fire_land_pixel",
 //            "fire_land_weighted_pixel",
-            "frp_mir_land_mean",
+            "frp_mir_land",
             "fire_water_pixel",
             "slstr_pixel",
             "slstr_water_pixel",
@@ -220,8 +220,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
 
-        // create observation variable sequence
-        final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
         // create lut of fires by row and column
         final HashMap<Integer, Integer> fireIndex = createFiresLUT(frpArrays, numFires, columns);
 
@@ -233,6 +231,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             // pixel loop
             int count = 0;
             int variableOffset = getSensorOffset(platformNumber);
+            // create observation variable sequence
+            final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
 
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
@@ -280,9 +280,14 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 LOG.log(Level.SEVERE, m, exception);
             }
         } else if ("l3monthly".equals(targetFormat)) {
+            // create observation variable sequence
+            final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
+
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
                 for (int col = 0; col < columns; ++col) {
+                    index.set(row, col);
+
                     // construct observation
                     final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
                     final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
@@ -301,18 +306,20 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     }
 
                     float[] values = new float[5];
+                    final boolean isWater = (flags & (L1B_WATER | FRP_WATER)) != 0;
+                    final boolean isFire = !Float.isNaN(frpMwir);
                     float Nlf = 0.f;
-                    if (!Float.isNaN(frpMwir) && ((flags & FRP_CLOUD) != 0)) {
+                    if (isFire && !isWater) {
                         Nlf = 1.f;
                     }
 
                     float Frp = Float.NaN;
-                    if (!Float.isNaN(frpMwir) && ((flags & (L1B_WATER | FRP_WATER)) == 0)) {
+                    if (isFire && !isWater) {
                         Frp = frpMwir;
                     }
 
                     float Nwf = 0.f;
-                    if (!Float.isNaN(frpMwir) && ((flags & (L1B_WATER | FRP_WATER)) != 0)) {
+                    if (isFire && isWater) {
                         Nwf = 1.f;
                     }
 
@@ -320,7 +327,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     values[variableIndex[1]] = Frp;
                     values[variableIndex[2]] = Nwf;
                     values[variableIndex[3]] = 1;   // No
-                    values[variableIndex[4]] = (flags & (L1B_WATER | FRP_WATER)) != 0 ? 1 : 0;    // Nw
+                    values[variableIndex[4]] = isWater ? 1 : 0;    // Nw
                     observations[col] = new ObservationImpl(lat, lon, mjd, values);
                 }
                 spatialBinner.processObservationSlice(observations);
