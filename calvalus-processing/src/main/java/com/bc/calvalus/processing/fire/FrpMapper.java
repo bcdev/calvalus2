@@ -100,6 +100,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "fire_water_pixel",
             "slstr_pixel",
             "slstr_water_pixel",
+            "cloud_land_pixel",
 //            "box_land_cloud",
 //            "box_land_cloud_fraction",
     };
@@ -308,6 +309,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     float[] values = new float[5];
                     final boolean isWater = (flags & (L1B_WATER | FRP_WATER)) != 0;
                     final boolean isFire = !Float.isNaN(frpMwir);
+                    final boolean isCloud = (flags & (FRP_CLOUD)) != 0;
                     float Nlf = 0.f;
                     if (isFire && !isWater) {
                         Nlf = 1.f;
@@ -323,11 +325,17 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                         Nwf = 1.f;
                     }
 
+                    float Ncl = 0.f;
+                    if (isCloud && !isWater) {
+                        Ncl = 1.f;
+                    }
+
                     values[variableIndex[0]] = Nlf;
                     values[variableIndex[1]] = Frp;
                     values[variableIndex[2]] = Nwf;
                     values[variableIndex[3]] = 1;   // No
                     values[variableIndex[4]] = isWater ? 1 : 0;    // Nw
+                    values[variableIndex[5]] = Ncl;
                     observations[col] = new ObservationImpl(lat, lon, mjd, values);
                 }
                 spatialBinner.processObservationSlice(observations);

@@ -325,6 +325,9 @@ public class FrpProductWriterIntegrationTest {
         final Band slstr_water_pixel = product.addBand("slstr_water_pixel_sum", ProductData.TYPE_FLOAT32);
         slstr_water_pixel.setData(createDataBuffer(5));
 
+        final Band cloud_land_pixel = product.addBand("cloud_land_pixel_sum", ProductData.TYPE_FLOAT32);
+        cloud_land_pixel.setData(createDataBuffer(5));
+
         product.setStartTime(ProductData.UTC.parse("01-APR-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("30-APR-2020 23:59:59"));
 

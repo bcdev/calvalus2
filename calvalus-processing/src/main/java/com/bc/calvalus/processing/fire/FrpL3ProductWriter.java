@@ -239,6 +239,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("fire_water_pixel_sum", new VariableTemplate("fire_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of water-based detected active fire pixels in the grid cell"));
         variableTemplates.put("slstr_pixel_sum", new VariableTemplate("slstr_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
         variableTemplates.put("slstr_water_pixel_sum", new VariableTemplate("slstr_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations over water in the grid cell"));
+        variableTemplates.put("cloud_land_pixel_sum", new VariableTemplate("cloud_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations cloud over land in the grid cell"));
     }
 
     private void createBandNamesToIgnore() {

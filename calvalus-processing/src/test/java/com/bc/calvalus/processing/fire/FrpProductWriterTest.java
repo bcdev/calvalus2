@@ -208,6 +208,9 @@ public class FrpProductWriterTest {
         template = writer.getTemplate("slstr_water_pixel_sum");
         assertTemplate(DataType.UINT, "slstr_water_pixel", -1, "1", "Total number of SLSTR observations over water in the grid cell", template);
 
+        template = writer.getTemplate("cloud_land_pixel_sum");
+        assertTemplate(DataType.UINT, "cloud_land_pixel", -1, "1", "Total number of SLSTR observations cloud over land in the grid cell", template);
+
 //        template = writer.getTemplate("slstr_cloud_over_land_pixel_sum");
 //        assertTemplate(DataType.UINT, "slstr_cloud_over_land_pixel", -1, "1", "Total number of SLSTR observations with cloud over land in the grid cell", template);
 //

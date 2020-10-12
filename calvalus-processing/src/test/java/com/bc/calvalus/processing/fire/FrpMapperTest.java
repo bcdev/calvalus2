@@ -91,17 +91,18 @@ public class FrpMapperTest {
         when(variableContext.getVariableIndex("fire_water_pixel")).thenReturn(4);
         when(variableContext.getVariableIndex("slstr_pixel")).thenReturn(3);
         when(variableContext.getVariableIndex("slstr_water_pixel")).thenReturn(2);
-        when(variableContext.getVariableCount()).thenReturn(5);
+        when(variableContext.getVariableIndex("cloud_land_pixel")).thenReturn(1);
+        when(variableContext.getVariableCount()).thenReturn(6);
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
         final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
-        assertEquals(5, variableIndex.length);
+        assertEquals(6, variableIndex.length);
         assertEquals(5, variableIndex[1]);
         assertEquals(2, variableIndex[4]);
 
         verify(binningContext, times(1)).getVariableContext();
-        verify(variableContext, times(5)).getVariableIndex(anyString());
+        verify(variableContext, times(6)).getVariableIndex(anyString());
         verify(variableContext, times(1)).getVariableCount();
         verifyNoMoreInteractions(binningContext, variableContext);
     }
