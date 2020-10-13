@@ -427,6 +427,40 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
             calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
             calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
+        } else if (type == ProductType.MONTHLY) {
+            calculateCloudWindowData();
+
+            final Array NlcArray = variableData.get("slstr_cloud_over_land_fraction");
+            final Array NoArray = variableData.get("slstr_pixel");
+            final Array NwArray = variableData.get("slstr_water_pixel");
+            final Array NlfArray = variableData.get("fire_land_pixel");
+            final Array FlcArray = variableData.get("slstr_cloud_over_land_pixel");
+            final Array NfArray = variableData.get("fire_land_weighted_pixel");
+
+            final long size = NlcArray.getSize();
+            for (int idx = 0; idx < size; idx++) {
+                final float Nlc = NlcArray.getFloat(idx);
+                final float No = NoArray.getFloat(idx);
+                final float Nw = NwArray.getFloat(idx);
+                final float Nlf = NlfArray.getFloat(idx);
+
+                float F1c = Float.NaN;
+                float delta = No - Nw;
+                if (Math.abs(delta) > 1e-6) {
+                    F1c = Nlc / delta;
+                }
+                FlcArray.setFloat(idx, F1c);
+
+                float Nf = Float.NaN;
+                if (!Float.isNaN(F1c)) {
+                    delta = 1.f - F1c;
+                    if (Math.abs(delta) > 1e-6) {
+                        Nf = Nlf / delta;
+                    }
+                }
+                NfArray.setFloat(idx, Nf);
+            }
+
         }
 
         try {
@@ -438,6 +472,53 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             }
         } catch (InvalidRangeException e) {
             throw new IOException(e.getMessage());
+        }
+    }
+
+    private void calculateCloudWindowData() {
+        final Array cloudLandSource = variableData.get("cloud_land_pixel");
+        final Index srcIdx = cloudLandSource.getIndex();
+        final Array cloudLand = variableData.get("slstr_cloud_over_land_fraction");
+        final Index targetIdx = cloudLand.getIndex();
+        final int[] shape = cloudLandSource.getShape();
+        final int width = shape[2];
+        final int height = shape[1];
+        final int windowSize = 3;
+        final int windowOffset = windowSize / 2;
+        final int[] windowData = new int[windowSize * windowSize];
+        int cloudCount;
+        int writeIdx;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                cloudCount = 0;
+                writeIdx = 0;
+                for (int wy = -windowOffset; wy <= windowOffset; wy++) {
+                    for (int wx = -windowOffset; wx <= windowOffset; wx++) {
+                        final int readY = y + wy;
+                        final int readX = x + wx;
+                        if (readY >= 0 && readY < height && readX >= 0 && readX < width) {
+                            srcIdx.set(0, readY, readX);
+                            final int clouds = cloudLandSource.getInt(srcIdx);
+                            if (clouds >= 0) {
+                                ++cloudCount;
+                                windowData[writeIdx] = clouds;
+                            }
+                        } else {
+                            windowData[writeIdx] = 0;
+                        }
+
+                        ++writeIdx;
+                    }
+                }
+
+                int sum = 0;
+                for (int windowValue : windowData) {
+                    sum += windowValue;
+                }
+                final float avgCloud = ((float) sum) / ((float) windowData.length);
+                targetIdx.set(0, y, x);
+                cloudLand.setFloat(targetIdx, avgCloud);
+            }
         }
     }
 
