@@ -306,7 +306,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                         }
                     }
 
-                    float[] values = new float[5];
+                    float[] values = new float[VARIABLE_NAMES_MONTHLY.length];
                     final boolean isWater = (flags & (L1B_WATER | FRP_WATER)) != 0;
                     final boolean isFire = !Float.isNaN(frpMwir);
                     final boolean isCloud = (flags & (FRP_CLOUD)) != 0;
