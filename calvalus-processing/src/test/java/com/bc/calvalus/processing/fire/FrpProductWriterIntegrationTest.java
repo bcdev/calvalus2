@@ -95,7 +95,7 @@ public class FrpProductWriterIntegrationTest {
             ensureAxesAndBoundsVariables_monthly(netcdfFile);
 
             ensureVariables_monthly(netcdfFile);
-//            ensureWeightedFRPVariables(netcdfFile);
+            ensureWindowedCloudVariables(netcdfFile);
         }
     }
 
@@ -214,29 +214,31 @@ public class FrpProductWriterIntegrationTest {
         index = data.getIndex();
         assertEquals(19.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
         assertEquals(28.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
+    }
 
-        variable = netcdfFile.findVariable("fire_land_weighted_pixel");
+    private void ensureWindowedCloudVariables (NetcdfFile netcdfFile) throws IOException {
+        Variable variable = netcdfFile.findVariable("fire_land_weighted_pixel");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
-        data = variable.read();
-        index = data.getIndex();
-        assertEquals(2.027027130126953, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(0.260869562625885, data.getFloat(index.set(0, 0, 1)), 1e-8);
+        Array data = variable.read();
+        Index index = data.getIndex();
+        assertEquals(0.9433962106704712, data.getFloat(index.set(0, 3, 0)), 1e-8);
+        assertEquals(0.1818181872367859, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
         variable = netcdfFile.findVariable("slstr_cloud_over_land_fraction");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(11.333333015441895, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(6.666666507720947, data.getFloat(index.set(0, 0, 1)), 1e-8);
+        assertEquals(25.5, data.getFloat(index.set(0, 3, 0)), 1e-8);
+        assertEquals(10.0, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
         variable = netcdfFile.findVariable("slstr_cloud_over_land_pixel");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(-6.666666507720947, data.getFloat(index.set(0, 0, 1)), 1e-8);
+        assertEquals(-10.0, data.getFloat(index.set(0, 0, 1)), 1e-8);
         assertEquals(-15.0, data.getFloat(index.set(0, 1, 2)), 1e-8);
     }
 

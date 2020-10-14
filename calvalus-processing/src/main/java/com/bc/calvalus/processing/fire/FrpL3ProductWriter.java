@@ -379,7 +379,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
         addWeightedVariable(dimensions, "fire_land_weighted_pixel", "Number of detected land-based active fire pixels adjusted for regional land cloud cover fraction", "1");
         // @todo 1 tb/tb update long name 2020-10-09
-        addWeightedVariable(dimensions, "slstr_cloud_over_land_pixel", "Number of cloud pixels over land in a box whose ...", "1");
+        addWeightedVariable(dimensions, "slstr_cloud_over_land_pixel", "Number of cloud pixels over land averaged over a 3x3 neighbourhood", "1");
         addWeightedVariable(dimensions, "slstr_cloud_over_land_fraction", "Mean cloud fraction of the non-water (i.e. land) pixels per grid cell", "1");
     }
 
@@ -511,15 +511,23 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
                     }
                 }
 
-                int sum = 0;
-                for (int windowValue : windowData) {
-                    sum += windowValue;
-                }
-                final float avgCloud = ((float) sum) / ((float) windowData.length);
+                float avgCloud = calculateAverage(windowData, cloudCount);
                 targetIdx.set(0, y, x);
                 cloudLand.setFloat(targetIdx, avgCloud);
             }
         }
+    }
+
+    static float calculateAverage(int[] windowData, int cloudCount) {
+        float avgCloud = Float.NaN;
+        if (cloudCount > 0) {
+            int sum = 0;
+            for (int windowValue : windowData) {
+                sum += windowValue;
+            }
+            avgCloud = ((float) sum) / ((float) cloudCount);
+        }
+        return avgCloud;
     }
 
     private void calculateWeightedFRP(String weightedFrpName, String frpName, String pxName, String waterName, String cloudName) {
@@ -565,32 +573,32 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     @Override
     public boolean shouldWrite(ProductNode node) {
-        return false;
+        throw new IllegalStateException("not implemented");
     }
 
     @Override
     public boolean isIncrementalMode() {
-        return false;
+        throw new IllegalStateException("not implemented");
     }
 
     @Override
     public void setIncrementalMode(boolean enabled) {
-
+        throw new IllegalStateException("not implemented");
     }
 
     @Override
     public void deleteOutput() throws IOException {
-
+        throw new IllegalStateException("not implemented");
     }
 
     @Override
     public void removeBand(Band band) {
-
+        throw new IllegalStateException("not implemented");
     }
 
     @Override
     public void setFormatName(String formatName) {
-
+        throw new IllegalStateException("not implemented");
     }
 
     VariableTemplate getTemplate(String variableName) {

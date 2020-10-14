@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
-public class FrpProductWriterTest {
+public class FrpL3ProductWriterTest {
 
     @Test
     public void testGetOutputPath() {
@@ -316,5 +316,29 @@ public class FrpProductWriterTest {
         assertEquals("0.25", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.MONTHLY, false));
 
         assertEquals("UNKNOWN", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.UNKNOWN, false));
+    }
+
+    @Test
+    public void testCalculateAverage_noClouds() {
+        final int[] clouds = {1, 2, 3, 4};
+
+        final float average = FrpL3ProductWriter.calculateAverage(clouds, 0);
+        assertEquals(Float.NaN, average, 1e-8);
+    }
+
+    @Test
+    public void testCalculateAverage_clouds() {
+        final int[] clouds = {2, 3, 4, 5};
+
+        final float average = FrpL3ProductWriter.calculateAverage(clouds, 4);
+        assertEquals(3.5, average, 1e-8);
+    }
+
+    @Test
+    public void testCalculateAverage_partialClouds() {
+        final int[] clouds = {0, 6, 0, 5};
+
+        final float average = FrpL3ProductWriter.calculateAverage(clouds, 2);
+        assertEquals(5.5, average, 1e-8);
     }
 }
