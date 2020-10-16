@@ -205,17 +205,11 @@ public class FrpL3ProductWriterTest {
         template = writer.getTemplate("slstr_pixel_sum");
         assertTemplate(DataType.UINT, "slstr_pixel", -1, "1", "Total number of SLSTR observations in the grid cell", template);
 
-        template = writer.getTemplate("slstr_water_pixel_sum");
-        assertTemplate(DataType.UINT, "slstr_water_pixel", -1, "1", "Total number of SLSTR observations over water in the grid cell", template);
+        template = writer.getTemplate("water_pixel_sum");
+        assertTemplate(DataType.UINT, "water_pixel", -1, "1", "Total number of SLSTR observations over water in the grid cell", template);
 
         template = writer.getTemplate("cloud_land_pixel_sum");
         assertTemplate(DataType.UINT, "cloud_land_pixel", -1, "1", "Total number of SLSTR observations cloud over land in the grid cell", template);
-
-//        template = writer.getTemplate("slstr_cloud_over_land_pixel_sum");
-//        assertTemplate(DataType.UINT, "slstr_cloud_over_land_pixel", -1, "1", "Total number of SLSTR observations with cloud over land in the grid cell", template);
-//
-//        template = writer.getTemplate("slstr_cloud_over_land_mean");
-//        assertTemplate(DataType.FLOAT, "slstr_cloud_over_land_fraction", Float.NaN, "1", "Mean cloud fraction of the non-water pixels in the grid cell", template);
     }
 
     private void assertTemplate(DataType dataType, String name, Number fillValue, String units, String longName, FrpL3ProductWriter.VariableTemplate template) {
@@ -319,26 +313,26 @@ public class FrpL3ProductWriterTest {
     }
 
     @Test
-    public void testCalculateAverage_noClouds() {
-        final int[] clouds = {1, 2, 3, 4};
+    public void testCalculateSum_noClouds() {
+        final int[] clouds = {-1, -1, -1, -1};
 
-        final float average = FrpL3ProductWriter.calculateAverage(clouds, 0);
-        assertEquals(Float.NaN, average, 1e-8);
+        final int sum = FrpL3ProductWriter.calculateSum(clouds);
+        assertEquals(-1, sum);
     }
 
     @Test
-    public void testCalculateAverage_clouds() {
+    public void testCalculateSum_clouds() {
         final int[] clouds = {2, 3, 4, 5};
 
-        final float average = FrpL3ProductWriter.calculateAverage(clouds, 4);
-        assertEquals(3.5, average, 1e-8);
+        final int sum = FrpL3ProductWriter.calculateSum(clouds);
+        assertEquals(14, sum);
     }
 
     @Test
-    public void testCalculateAverage_partialClouds() {
-        final int[] clouds = {0, 6, 0, 5};
+    public void testCalculateSum_partialClouds() {
+        final int[] clouds = {-1, 6, -1, 5};
 
-        final float average = FrpL3ProductWriter.calculateAverage(clouds, 2);
-        assertEquals(5.5, average, 1e-8);
+        final int sum = FrpL3ProductWriter.calculateSum(clouds);
+        assertEquals(11, sum);
     }
 }

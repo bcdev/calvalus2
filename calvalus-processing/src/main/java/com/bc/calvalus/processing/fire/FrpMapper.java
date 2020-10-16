@@ -95,14 +95,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     // variables with commented names are generated in the ProductWriter
     static String[] VARIABLE_NAMES_MONTHLY = {
             "fire_land_pixel",
-//            "fire_land_weighted_pixel",
-            "frp_mir_land",
             "fire_water_pixel",
-            "slstr_pixel",
-            "slstr_water_pixel",
+            "frp_mir_land",
             "cloud_land_pixel",
-//            "box_land_cloud",
-//            "box_land_cloud_fraction",
+            "water_pixel",
+            "slstr_pixel",
     };
 
     static {
@@ -315,14 +312,14 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                         Nlf = 1.f;
                     }
 
-                    float Frp = Float.NaN;
-                    if (isFire && !isWater) {
-                        Frp = frpMwir;
-                    }
-
                     float Nwf = 0.f;
                     if (isFire && isWater) {
                         Nwf = 1.f;
+                    }
+
+                    float Frp = Float.NaN;
+                    if (isFire && !isWater) {
+                        Frp = frpMwir;
                     }
 
                     float Ncl = 0.f;
@@ -331,11 +328,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     }
 
                     values[variableIndex[0]] = Nlf;
-                    values[variableIndex[1]] = Frp;
-                    values[variableIndex[2]] = Nwf;
-                    values[variableIndex[3]] = 1;   // No
+                    values[variableIndex[1]] = Nwf;
+                    values[variableIndex[2]] = Frp;
+                    values[variableIndex[3]] = Ncl;
                     values[variableIndex[4]] = isWater ? 1 : 0;    // Nw
-                    values[variableIndex[5]] = Ncl;
+                    values[variableIndex[5]] = 1; // No
                     observations[col] = new ObservationImpl(lat, lon, mjd, values);
                 }
                 spatialBinner.processObservationSlice(observations);

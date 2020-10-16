@@ -95,7 +95,8 @@ public class FrpProductWriterIntegrationTest {
             ensureAxesAndBoundsVariables_monthly(netcdfFile);
 
             ensureVariables_monthly(netcdfFile);
-            ensureWindowedCloudVariables(netcdfFile);
+            ensureWindowedVariables(netcdfFile);
+            ensureTempVariablesDropped(netcdfFile);
         }
     }
 
@@ -199,25 +200,25 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(31, data.getInt(index.set(0, 3, 4)));
         assertEquals(8, data.getInt(index.set(0, 0, 5)));
 
-        variable = netcdfFile.findVariable("slstr_pixel");
+        variable = netcdfFile.findVariable("pixel_boxed");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(18.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
-        assertEquals(27.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
+        assertEquals(162, data.getInt(index.set(0, 1, 6)));
+        assertEquals(159, data.getInt(index.set(0, 2, 7)));
 
-        variable = netcdfFile.findVariable("slstr_water_pixel");
+        variable = netcdfFile.findVariable("water_pixel_boxed");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(19.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
-        assertEquals(28.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
+        assertEquals(171, data.getInt(index.set(0, 1, 6)));
+        assertEquals(165, data.getInt(index.set(0, 2, 7)));
     }
 
-    private void ensureWindowedCloudVariables (NetcdfFile netcdfFile) throws IOException {
-        Variable variable = netcdfFile.findVariable("fire_land_weighted_pixel");
+    private void ensureWindowedVariables(NetcdfFile netcdfFile) throws IOException {
+        Variable variable = netcdfFile.findVariable("fire_land_pixel_weighted");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         Array data = variable.read();
@@ -225,21 +226,40 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(0.9433962106704712, data.getFloat(index.set(0, 3, 0)), 1e-8);
         assertEquals(0.1818181872367859, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
-        variable = netcdfFile.findVariable("slstr_cloud_over_land_fraction");
+        variable = netcdfFile.findVariable("cloud_over_land_fraction_boxed");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(25.5, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(10.0, data.getFloat(index.set(0, 0, 1)), 1e-8);
-
-        variable = netcdfFile.findVariable("slstr_cloud_over_land_pixel");
-        assertEquals(DataType.FLOAT, variable.getDataType());
-        assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
-        data = variable.read();
-        index = data.getIndex();
+        assertEquals(-25.5, data.getFloat(index.set(0, 3, 0)), 1e-8);
         assertEquals(-10.0, data.getFloat(index.set(0, 0, 1)), 1e-8);
-        assertEquals(-15.0, data.getFloat(index.set(0, 1, 2)), 1e-8);
+
+        variable = netcdfFile.findVariable("cloud_over_land_pixel_boxed");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(60, data.getInt(index.set(0, 0, 1)));
+        assertEquals(135, data.getInt(index.set(0, 1, 2)));
+
+        variable = netcdfFile.findVariable("pixel_boxed");
+        assertEquals(DataType.UINT, variable.getDataType());
+        assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(126, data.getInt(index.set(0, 1, 2)));
+        assertEquals(207, data.getInt(index.set(0, 2, 3)));
+    }
+
+    private void ensureTempVariablesDropped(NetcdfFile netcdfFile) {
+        Variable variable = netcdfFile.findVariable("cloud_land_pixel");
+        assertNull(variable);
+
+        variable = netcdfFile.findVariable("slstr_pixel");
+        assertNull(variable);
+
+        variable = netcdfFile.findVariable("water_pixel");
+        assertNull(variable);
     }
 
     private Product createTestProduct_daily_cycle() throws ParseException {
@@ -324,7 +344,7 @@ public class FrpProductWriterIntegrationTest {
         final Band slstr_pixel = product.addBand("slstr_pixel_sum", ProductData.TYPE_FLOAT32);
         slstr_pixel.setData(createDataBuffer(4));
 
-        final Band slstr_water_pixel = product.addBand("slstr_water_pixel_sum", ProductData.TYPE_FLOAT32);
+        final Band slstr_water_pixel = product.addBand("water_pixel_sum", ProductData.TYPE_FLOAT32);
         slstr_water_pixel.setData(createDataBuffer(5));
 
         final Band cloud_land_pixel = product.addBand("cloud_land_pixel_sum", ProductData.TYPE_FLOAT32);
