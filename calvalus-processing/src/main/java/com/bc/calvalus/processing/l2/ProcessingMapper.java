@@ -630,7 +630,8 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         LOG.info("Start writing product to file: " + productFile.getName());
 
         //ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
-        GPF.writeProduct(targetProduct, productFile, outputFormat, false, pm);
+        Boolean writeEntireTileRows = Boolean.valueOf(System.getProperty("snap.dataio.writer.writeEntireTileRows", "true"));
+        GPF.writeProduct(targetProduct, productFile, outputFormat, writeEntireTileRows, false, false, pm);
         LOG.info("formatting done in [ms]: " + (System.currentTimeMillis() - t0));
 
         t0 = System.currentTimeMillis();
