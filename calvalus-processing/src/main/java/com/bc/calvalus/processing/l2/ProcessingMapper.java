@@ -212,7 +212,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
             // check and prepare, localise
 
             long t0 = System.currentTimeMillis();
-            if (productFormatter != null && checkFormattedOutputExists(jobConfig, context, productFormatter.getOutputFilename())) { return; }
+            if (productFormatter != null && !jobConfig.getBoolean(JobConfigNames.FORCE_REPROCESS, false) && checkFormattedOutputExists(jobConfig, context, productFormatter.getOutputFilename())) { return; }
             processorAdapter.prepareProcessing();
             if (checkNativeOutputExists(jobConfig, context, processorAdapter)) { return; }
             if (checkInputIntersectsRoi(jobConfig, context, processorAdapter)) { return; }
@@ -308,8 +308,8 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
 
 
     protected String getProductName(Configuration jobConfig, String fileName) {
-        String regex = jobConfig.get(JobConfigNames.OUTPUT_REGEX, "^(.*)$");
-        String replacement = jobConfig.get(JobConfigNames.OUTPUT_REPLACEMENT, "L2_of_$1");
+        String regex = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REGEX, "^(.*)$");
+        String replacement = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, "L2_of_$1");
         String dateElement = jobConfig.get(JobConfigNames.OUTPUT_DATE_ELEMENT, null);
         String dateFormat = jobConfig.get(JobConfigNames.OUTPUT_DATE_FORMAT, null);
         try {
