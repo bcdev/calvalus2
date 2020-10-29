@@ -26,9 +26,13 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import java.util.logging.Logger;
+
+import static com.bc.calvalus.commons.DateUtils.createCalendar;
 
 /**
  * Merges stream of spatial bins with FRP pixels into one of the aggregation outputs
@@ -53,6 +57,7 @@ public class FrpReducer extends L3Reducer {
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static long THIRTY_YEARS;
 
+
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         try {
@@ -62,16 +67,38 @@ public class FrpReducer extends L3Reducer {
         }
     }
 
+    static String[] getDateTime(Date date, Calendar calendar) {
+        calendar.setTime(date);
+        final int year = calendar.get(Calendar.YEAR);
+        final int month = calendar.get(Calendar.MONTH) + 1;
+        final int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        final int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        final int minute = calendar.get(Calendar.MINUTE);
+
+        final String[] result = new String[2];
+        result[0] = String.format("%04d%02d%02d", year, month, day);
+        result[1] = String.format("%02d%02d", hour, minute);
+        return result;
+    }
+
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         if ("l2monthly".equals(context.getConfiguration().get("calvalus.targetFormat", "l2monthly"))) {
+            final GregorianCalendar utcCalendar = createCalendar();
             try (BufferedWriter out = new BufferedWriter(new FileWriter(new File("somename")))) {
-                out.write("Time\tLatitude\tLongitude\tRow\tColumn\tFRP_MIR\tFRP_SWIR\tAREA\tday_flag\tf1_flag\tPlatform\tConfidence\n");
+                out.write("Date\tTime\tLatitude\tLongitude\tRow\tColumn\tFRP_MIR\tFRP_SWIR\tAREA\tday_flag\tf1_flag\tPlatform\tConfidence\n");
                 while (context.nextKey()) {
                     final LongWritable binIndex = context.getCurrentKey();
                     for (L3SpatialBin bin : context.getValues()) {
-                        out.write(ISO_DATE_FORMAT.format(new Date(binIndex.get() / 1000 + THIRTY_YEARS)));
+                        final Date date = new Date(binIndex.get() / 1000 + THIRTY_YEARS);
+                        final String[] dateTime = getDateTime(date, utcCalendar);
+                        out.write(dateTime[0]);
                         out.write('\t');
+                        out.write(dateTime[1]);
+                        out.write('\t');
+
                         out.write(String.format("%8.5f", bin.getFeatureValues()[LAT_IDX]));
                         out.write('\t');
                         out.write(String.format("%8.5f", bin.getFeatureValues()[LON_IDX]));
