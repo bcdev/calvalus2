@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.utils;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTReader;
@@ -24,6 +25,14 @@ public class GeometryUtils {
 
     public static Geometry createGeometry(String geometryWkt) {
         Geometry geometry = parseWKT(geometryWkt);
+        if (geometryWkt.startsWith("MULTIPOLYGON")) {
+            // geotools does not handle multipolygon intersections as expected,
+            // the inner intersections are considered outside,
+            // and the intersection with an UTM CRS envelope is the complete CRS envelope.
+            // Therefore, we replace the multipolygon with its polygon envelope
+            geometry = geometry.getEnvelope();
+            CalvalusLogger.getLogger().info("target region envelope: " + geometry.toText());
+        }
         if (geometry != null && !isGlobalCoverageGeometry(geometry)) {
             int unwrapDateline = DateLineOps.unwrapDateline(geometry, -180, 180);
             if (unwrapDateline > 0) {
