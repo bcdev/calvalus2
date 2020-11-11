@@ -25,7 +25,7 @@ public class GeometryUtils {
 
     public static Geometry createGeometry(String geometryWkt) {
         Geometry geometry = parseWKT(geometryWkt);
-        if (geometryWkt.startsWith("MULTIPOLYGON")) {
+        if (geometry != null && geometryWkt.startsWith("MULTIPOLYGON")) {
             // geotools does not handle multipolygon intersections as expected,
             // the inner intersections are considered outside,
             // and the intersection with an UTM CRS envelope is the complete CRS envelope.

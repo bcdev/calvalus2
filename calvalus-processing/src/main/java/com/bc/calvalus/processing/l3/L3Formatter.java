@@ -104,7 +104,11 @@ public class L3Formatter {
 
     private static ProductData.UTC parseTime(String timeString) {
         try {
-            return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
+            if (timeString.contains("T")) {
+                return ProductData.UTC.parse(timeString, "yyyyMMdd'T'HHmmss");
+            } else {
+                return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
+            }
         } catch (ParseException e) {
             throw new IllegalArgumentException("Illegal date format.", e);
         }
