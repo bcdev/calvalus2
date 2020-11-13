@@ -273,6 +273,11 @@ public class ProductFormatter {
         }
         Path workPath = new Path(workOutputPath, filename);
         FileSystem fileSystem = workPath.getFileSystem(context.getConfiguration());
+        if (workOutputPath.equals(FileOutputFormat.getOutputPath(context)) && fileSystem.exists(workPath)) {
+            fileSystem.delete(workPath, false);
+            // let the file system breath, we hope that helps to sync
+            try { Thread.currentThread().sleep(1000); } catch (InterruptedException ignored) {}
+        }
         return fileSystem.create(workPath);
     }
 
