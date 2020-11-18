@@ -83,6 +83,11 @@ public class TableInputFormat extends InputFormat {
 
             fileCounter++;
             final Path path = new Path(values[0]);
+            if (values[0].startsWith("s3a:")) {
+                // check access to file on server side only
+                splits.add(new ParameterizedSplit(path, -1, null, parameters));
+                continue;
+            }
             FileSystem fileSystem = path.getFileSystem(configuration);
             try {
                 final FileStatus status = fileSystem.getFileStatus(path);
