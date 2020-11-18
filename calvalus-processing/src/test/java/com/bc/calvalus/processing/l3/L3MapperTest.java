@@ -46,9 +46,12 @@ import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.projection.MapProjection;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.opengis.geometry.Envelope;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -207,6 +210,56 @@ public class L3MapperTest {
         double[] centerLatLon2 = grid.getCenterLatLon(binIndex2);
         assertEquals("lat", centerLatLon[0], centerLatLon2[0], epsDegFor1m);
         assertEquals("lon", centerLatLon[1], centerLatLon2[1], epsDegFor1m);
+    }
+
+    @Test
+    public void testWkt() throws FactoryException {
+        CoordinateReferenceSystem crs = CRS.decode("EPSG:32636");
+        assertEquals("crs", "PROJCS[\"WGS 84 / UTM zone 36N\", \n" +
+                "  GEOGCS[\"WGS 84\", \n" +
+                "    DATUM[\"World Geodetic System 1984\", \n" +
+                "      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n" +
+                "      AUTHORITY[\"EPSG\",\"6326\"]], \n" +
+                "    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n" +
+                "    UNIT[\"degree\", 0.017453292519943295], \n" +
+                "    AXIS[\"Geodetic latitude\", NORTH], \n" +
+                "    AXIS[\"Geodetic longitude\", EAST], \n" +
+                "    AUTHORITY[\"EPSG\",\"4326\"]], \n" +
+                "  PROJECTION[\"Transverse_Mercator\", AUTHORITY[\"EPSG\",\"9807\"]], \n" +
+                "  PARAMETER[\"central_meridian\", 33.0], \n" +
+                "  PARAMETER[\"latitude_of_origin\", 0.0], \n" +
+                "  PARAMETER[\"scale_factor\", 0.9996], \n" +
+                "  PARAMETER[\"false_easting\", 500000.0], \n" +
+                "  PARAMETER[\"false_northing\", 0.0], \n" +
+                "  UNIT[\"m\", 1.0], \n" +
+                "  AXIS[\"Easting\", EAST], \n" +
+                "  AXIS[\"Northing\", NORTH], \n" +
+                "  AUTHORITY[\"EPSG\",\"32636\"]]", crs.toWKT());
+        Envelope envelope = CRS.getEnvelope(crs);
+        assertEquals("min0", 166021.4430960772, envelope.getMinimum(0), 0.0001);
+        assertEquals("max0", 833978.5569039235, envelope.getMaximum(0), 0.0001);
+        assertEquals("min1", 0.0, envelope.getMinimum(1), 0.0001);
+        assertEquals("max1", 9329005.182450451, envelope.getMaximum(1), 0.0001);
+        CoordinateReferenceSystem crs2 = CRS.decode("EPSG:4326");
+        assertEquals("crs", "GEOGCS[\"WGS 84\", \n" +
+                "  DATUM[\"World Geodetic System 1984\", \n" +
+                "    SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n" +
+                "    AUTHORITY[\"EPSG\",\"6326\"]], \n" +
+                "  PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n" +
+                "  UNIT[\"degree\", 0.017453292519943295], \n" +
+                "  AXIS[\"Geodetic latitude\", NORTH], \n" +
+                "  AXIS[\"Geodetic longitude\", EAST], \n" +
+                "  AUTHORITY[\"EPSG\",\"4326\"]]", crs2.toWKT());
+        Envelope envelope2 = CRS.getEnvelope(crs2);
+        assertEquals("min0", -90.0, envelope2.getMinimum(0), 0.0001);
+        assertEquals("max0", 90.0, envelope2.getMaximum(0), 0.0001);
+        assertEquals("min1", -180.0, envelope2.getMinimum(1), 0.0001);
+        assertEquals("max1", 180.0, envelope2.getMaximum(1), 0.0001);
+        final AffineTransform at = new AffineTransform();
+        at.translate(0.0, 0.0);
+        at.scale(0.1, -0.2);
+        at.translate(-30.0, -40.0);
+        assertEquals("at", "AffineTransform[[0.1, 0.0, -3.0], [0.0, -0.2, 8.0]]", at.toString());
     }
 
 }
