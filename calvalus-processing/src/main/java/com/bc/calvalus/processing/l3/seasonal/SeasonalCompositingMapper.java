@@ -68,12 +68,11 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     private static final Pattern SR_FILENAME_PATTERN =
             Pattern.compile("(?:ESACCI-LC-L3-SR-|)([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
 
-    public static final int DEBUG_X = 6700 % (64800/18);
-    public static final int DEBUG_Y = 3700 % (64800/18);
-    public static final int DEBUG_X2 = 6700 % (64800/18);
-    public static final int DEBUG_Y2 = 5500 % (64800/18);
+    public static final int DEBUG_X = 898 % 10800;
+    public static final int DEBUG_Y = 2916 % 10800;
+    public static final int DEBUG_X2 = 854 % 10800;
+    public static final int DEBUG_Y2 = 2910 % 10800;
     public static final boolean DEBUG = false;
-    
     private static final float EPS = 1.0E-6f;
 
     short[][] bandDataB;
@@ -211,13 +210,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                     aggregateByMaxNdvi(bandImages, microTileArea, ndviBandIndex, numSourceBands, numTargetBands,
                                        accu);
                     timestamp3 = System.currentTimeMillis();
-                    LOG.info("best pixels aggregated in " + (timestamp3-timestamp1) + " millis");
+                    LOG.info("max ndvi aggregated in " + (timestamp3-timestamp1) + " millis");
                 } else {
                     aggregateByStatusRank(bandImages, microTileArea, numSourceBands, numTargetBands,
                                           accu);
                     divideByCount(microTileArea, numTargetBands, accu);
                     timestamp3 = System.currentTimeMillis();
-                    LOG.info("best pixels aggregated in " + (timestamp3-timestamp1) + " millis");
+                    LOG.info("average aggregated in " + (timestamp3-timestamp1) + " millis");
                 }
                 // statistics for logging
                 final int[] counts = new int[16];
@@ -335,6 +334,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             break;
                     }
                 }
+                //traceState(state, index, i, statusCount, microTileArea);
             }
             pm.worked(1);
         }
@@ -351,6 +351,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 ndxiMean[i] = Float.NaN;
                 ndxiSdev[i] = Float.NaN;
             }
+            //traceMajoState(state, index, i, ndxiCount, ndxiMean, ndxiSdev, microTileArea);
         }
     }
 
@@ -380,6 +381,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                     for (int b = 3; b < numTargetBands; ++b) {
                                         accu[b][i] += stateCount * bandDataF[b + 3][i];
                                     }
+                                    //traceAggregation(state, i, stateCount, ndvi, bandDataF, microTileArea);
                                 }
                                 break;
                             case 2:
@@ -391,12 +393,17 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                     for (int b = 3; b < numTargetBands; ++b) {
                                         accu[b][i] += stateCount * bandDataF[b + 3][i];
                                     }
+                                    //traceAggregation(state, i, stateCount, ndwi, bandDataF, microTileArea);
                                 }
                                 break;
                             case 4:
                             case 14:
                                 final int stateCount = count(state, bandDataS, i);
                                 accu[1][i] += stateCount;
+                                for (int b = 3; b < numTargetBands; ++b) {
+                                    accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
+                                }
+                                //traceAggregation(state, i, stateCount, bandDataF[10+3][i], bandDataF, microTileArea);
                                 break;
                         }
                     }
@@ -484,6 +491,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 } else {
                     accu[b][i] = Float.NaN;
                 }
+                //traceValue(i, stateCount, b, accu, microTileArea);
             }
         }
     }
@@ -552,27 +560,27 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
         bandDescriptors[1] = new BandMathsOp.BandDescriptor();
         bandDescriptors[1].name = "clear_land_count";
-        bandDescriptors[1].expression = "current_pixel_state == 1 ? num_obs : 0";
+        bandDescriptors[1].expression = "current_pixel_state == 1 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[1].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[2] = new BandMathsOp.BandDescriptor();
         bandDescriptors[2].name = "clear_water_count";
-        bandDescriptors[2].expression = "current_pixel_state == 2 ? num_obs : 0";
+        bandDescriptors[2].expression = "current_pixel_state == 2 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[2].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[3] = new BandMathsOp.BandDescriptor();
         bandDescriptors[3].name = "clear_snow_ice_count";
-        bandDescriptors[3].expression = "current_pixel_state == 3 ? num_obs : 0";
+        bandDescriptors[3].expression = "current_pixel_state == 3 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[3].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[4] = new BandMathsOp.BandDescriptor();
         bandDescriptors[4].name = "cloud_count";
-        bandDescriptors[4].expression = "current_pixel_state == 4 ? num_obs : 0";
+        bandDescriptors[4].expression = "current_pixel_state == 4 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[4].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[5] = new BandMathsOp.BandDescriptor();
         bandDescriptors[5].name = "cloud_shadow_count";
-        bandDescriptors[5].expression = "current_pixel_state >= 5 ? num_obs : 0";
+        bandDescriptors[5].expression = "current_pixel_state >= 5 and !nan(ndvi_max) ? 1 : 0";
         bandDescriptors[5].type = ProductData.TYPESTRING_INT16;
 
         bandDescriptors[6] = new BandMathsOp.BandDescriptor();
@@ -650,15 +658,16 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         return product;
     }
 
-    private int majorityPriorityStatusOf(int[][] ndviCount, int i) {
-        return (ndviCount[1][i] > 0 && ndviCount[1][i] >= ndviCount[0][i] && ndviCount[1][i] >= ndviCount[2][i]) ? 2 :
-               (ndviCount[0][i] > 0 && ndviCount[0][i] >= ndviCount[2][i]) ? 1 :
-               ndviCount[2][i] > 0 ? 3 :
-               ndviCount[3][i] > 0 ? 15 :
-               ndviCount[4][i] > 0 ? 12 :
-               ndviCount[5][i] > 0 ? 11 :
-               ndviCount[6][i] > 0 ? 5 :
-               ndviCount[7][i] > 0 ? 4 : 0;
+    private int majorityPriorityStatusOf(int[][] statusCount, int i) {
+        return (statusCount[1][i] > 0 && statusCount[1][i] >= statusCount[0][i] && statusCount[1][i] >= statusCount[2][i]) ? 2 :  // more water than land or snow
+               (statusCount[0][i] > 0 && statusCount[0][i] >= statusCount[2][i]) ? 1 :  // more land than snow
+               statusCount[2][i] > 0 ? 3 :   // some snow
+               statusCount[3][i] > 0 ? 15 :  // dark
+               statusCount[4][i] > 0 ? 12 :  // bright
+               statusCount[5][i] > 0 ? 11 :  // haze
+               statusCount[6][i] > 0 ? 5 :   // shadow
+               statusCount[7][i] > 0 ? 4 :   // cloud
+                       0;                    // invalid
     }
 
     static int sourceBandIndexOf(String sensorAndResolution, int targetBandIndex) {
@@ -799,37 +808,43 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
-    private boolean isAtPosition(int i, int microTileX, int microTileY, int microTileSize, int x, int y) {
-        return x == microTileX * microTileSize + (i % microTileSize) && y == microTileY * microTileSize + (i / microTileSize);
+    private boolean isAtPosition(int i, Rectangle microTileArea, int x, int y) {
+        return x == microTileArea.x + (i % microTileArea.width) && y == microTileArea.y + (i / microTileArea.width);
     }
 
-    private void traceState(int state, int index, int i, int[][] stateCount,
-                            int microTileX, int microTileY, int microTileSize) {
-        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, DEBUG_X, DEBUG_Y)) {
-            LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " index=" + index + " count=" + stateCount[index][i]);
+    private void traceState(int state, int index, int i, int[][] stateCount, Rectangle microTileArea) {
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X, DEBUG_Y)) {
+            LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " index=" + index + " count=" + (index >= 0 ? stateCount[index][i] : -1));
         }
-        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, DEBUG_X2, DEBUG_Y2)) {
-            LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " index=" + index + " count=" + stateCount[index][i]);
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X2, DEBUG_Y2)) {
+            LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " index=" + index + " count=" + (index >= 0 ? stateCount[index][i] : -1));
         }
     }
 
-    private void traceMajoState(int state, int index, int i, int[][] stateCount, float[] ndviMean, float[] ndviSdev,
-                                int microTileX, int microTileY, int microTileSize) {
-        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, DEBUG_X, DEBUG_Y)) {
+    private void traceMajoState(int state, int index, int i, int[][] stateCount, float[] ndviMean, float[] ndviSdev, Rectangle microTileArea) {
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X, DEBUG_Y)) {
             LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " majostate=" + state + " index=" + index + " count=" + stateCount[index][i] + " mean=" + ndviMean[i] + " sigma=" + ndviSdev[i]);
         }
-        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, DEBUG_X2, DEBUG_Y2)) {
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X2, DEBUG_Y2)) {
             LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " majostate=" + state + " index=" + index + " count=" + stateCount[index][i] + " mean=" + ndviMean[i] + " sigma=" + ndviSdev[i]);
         }
     }
 
-    private void traceAggregation(int state, int i, int stateCount, float ndxi, float[][] bandDataF,
-                                  int microTileX, int microTileY, int microTileSize) {
-        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, DEBUG_X, DEBUG_Y)) {
+    private void traceAggregation(int state, int i, int stateCount, float ndxi, float[][] bandDataF,Rectangle microTileArea) {
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X, DEBUG_Y)) {
             LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " count=" + stateCount + " ndxi=" + ndxi + " band value " + bandDataF[6][i] + " aggregated");
         }
-        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, DEBUG_X2, DEBUG_Y2)) {
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X2, DEBUG_Y2)) {
             LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " count=" + stateCount + " ndxi=" + ndxi + " band value " + bandDataF[6][i] + " aggregated");
+        }
+    }
+
+    private void traceValue(int i, float stateCount, int b, float[][] accu, Rectangle microTileArea) {
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X, DEBUG_Y)) {
+            LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
+        }
+        if (DEBUG && isAtPosition(i, microTileArea, DEBUG_X2, DEBUG_Y2)) {
+            LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
         }
     }
 }

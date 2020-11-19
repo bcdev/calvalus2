@@ -120,8 +120,13 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         // force unburnable pixels to -2
         // suppress LC information of pixels not burned
         for (int i = 0; i < baData.length; i++) {
+            final byte lcValue = lcData[i];
+            final byte firstLevelLcValue = (byte) LcRemapping.remap(lcValue);
+            if (lcValue != firstLevelLcValue) {
+                lcData[i] = firstLevelLcValue;
+            }
             // not burnable: force to -2, delete lc and cl
-            if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[i]))) {
+            if (!LcRemapping.isInBurnableLcClass(firstLevelLcValue)) {
                 baData[i] = -2;
                 clData[i] = 0;
                 lcData[i] = 0;

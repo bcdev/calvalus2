@@ -154,7 +154,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
         final int numberOfBands = context.getCurrentKey().get() >>> 27;
         final String sensor =
-                "OLCI".equals(conf.get("sensor", "unknown")) ? "OLCI" :
+                "OLCI".equals(conf.get("calvalus.lc.sensor", "unknown")) ? "OLCI" :
                         numberOfBands == 13 + 1 ? "MERIS" :
                                 numberOfBands == 5 + 1 ? "AVHRR" :
                                         numberOfBands == 4 + 1 ? "PROBAV" :

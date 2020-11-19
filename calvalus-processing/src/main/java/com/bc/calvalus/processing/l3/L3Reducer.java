@@ -89,15 +89,24 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         setup(context);
         try {
             int numReducers = conf.getInt(JobContext.NUM_REDUCES, 8);
+            final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
             String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
             if ((numReducers == 1 || "org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())) && format != null) {
                 // if only one reducer and output format parameter set, format directly
 
                 // handle metadata
                 // it is always the first key in some reducer
+                // unless we had not inputs at all
                 // TODO what happens if there is no metadata key or does this never happen ??? cell-l3-workflow !!
                 final boolean lookingAtNext = context.nextKey();
-                if (context.getCurrentKey().get() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
+                if (! lookingAtNext) {
+                    if (generateEmptyAggregate) {
+                        CalvalusLogger.getLogger().info("no contributions, generating empty output");
+                        context = new WrappedContext(context, lookingAtNext);
+                    } else {
+                        return;
+                    }
+                } else if (context.getCurrentKey().get() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
                     CalvalusLogger.getLogger().info("metadata record seen");
                     processingGraphMetadata = aggregateMetadata(context.getValues());
                     final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);

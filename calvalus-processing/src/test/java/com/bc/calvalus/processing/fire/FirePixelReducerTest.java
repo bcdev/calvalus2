@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import static org.esa.snap.core.dataio.ProductIO.readProduct;
+import static org.junit.Assert.assertEquals;
 
 public class FirePixelReducerTest {
 
@@ -57,5 +58,21 @@ public class FirePixelReducerTest {
         data.add(rasterStackWritable);
         reducer.reduce(new LongWritable(4665668400L + 1193), data, null);
         reducer.closeNcFile();
+    }
+
+    @Test
+    public void testFirstLevelLc() {
+        byte lc = (byte) 152;
+        int lc1 = LcRemapping.remap(lc);
+        if (lc1 < 0) lc1 += 256;
+        byte lc2 = (byte) lc1;
+        assertEquals(lc1, 150);
+        assertEquals(lc2, 150 - 256);
+        lc = (byte) 62;
+        lc1 = LcRemapping.remap(lc);
+        if (lc1 < 0) lc1 += 256;
+        lc2 = (byte) lc1;
+        assertEquals(lc1, 60);
+        assertEquals(lc2, 60);
     }
 }

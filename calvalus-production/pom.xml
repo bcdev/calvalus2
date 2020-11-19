@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.14</version>
+            <version>1.16</version>
           </dependency>
 
         <!-- Used for staging, for parameterblockconverter -->

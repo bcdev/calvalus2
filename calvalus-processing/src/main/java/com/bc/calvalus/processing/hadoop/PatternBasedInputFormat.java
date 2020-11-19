@@ -78,7 +78,7 @@ import java.util.regex.Pattern;
 public class PatternBasedInputFormat extends InputFormat {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
-    private static final int DEFAULT_SEARCH_CHUNK_SIZE = 20;
+    private static final int DEFAULT_SEARCH_CHUNK_SIZE = 100;
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
     private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
 
@@ -306,6 +306,10 @@ public class PatternBasedInputFormat extends InputFormat {
                                 splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
                                 ++count;
                             }
+                            if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                                LOG.info(String.format("query response truncated to request size limit %d", requestSizeLimit));
+                                break;
+                            }
                             if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
                                 break;
                             }
@@ -324,6 +328,13 @@ public class PatternBasedInputFormat extends InputFormat {
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
                             ++count;
+                            if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                                break;
+                            }
+                        }
+                        if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                            LOG.info(String.format("query response truncated to request size limit %d", requestSizeLimit));
+                            break;
                         }
                         if (count < DEFAULT_SEARCH_CHUNK_SIZE) {
                             break;

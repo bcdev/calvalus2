@@ -325,13 +325,13 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     public Graph createGraph() throws GraphException, IOException {
-        Path inputPath = getInputPath();
+        final Path inputPath = getInputPath();
         CalvalusLogger.getLogger().info("Creating graph for input: " + inputPath);
-        Configuration conf = getConfiguration();
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+        final Configuration conf = getConfiguration();
+        final String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
-        ResourceEngine resourceEngine = new ResourceEngine();
-        VelocityContext velocityContext = resourceEngine.getVelocityContext();
+        final ResourceEngine resourceEngine = new ResourceEngine();
+        final VelocityContext velocityContext = resourceEngine.getVelocityContext();
         final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
         for (int i = 0; i < getInputParameters().length; i += 2) {
             if ("output".equals(getInputParameters()[i])) {
@@ -355,23 +355,34 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
         velocityContext.put("GlobalFunctions", new GlobalFunctions(getLogger()));
 
-        String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
-        Path graphPath = new Path(graphPathAsString);
-        InputStream inputStream = graphPath.getFileSystem(conf).open(graphPath);
-        Reader inputReader = new BufferedReader(new InputStreamReader(inputStream));
-        Resource processedGraph = resourceEngine.processResource(new ReaderResource(graphPathAsString, inputReader));
-        String graphAsText = processedGraph.getContent();
+        final String processorFiles = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
+        final String graphFilename = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR) + "-graph.xml";
+        final String graphPathAsString = findProcessorFile(graphFilename, processorFiles.split(","));
+        final Path graphPath = new Path(graphPathAsString);
+        final InputStream inputStream = graphPath.getFileSystem(conf).open(graphPath);
+        final Reader inputReader = new BufferedReader(new InputStreamReader(inputStream));
+        final Resource processedGraph = resourceEngine.processResource(new ReaderResource(graphPathAsString, inputReader));
+        final String graphAsText = processedGraph.getContent();
         System.out.println("graphAsText = \n" + graphAsText);
         if (graphAsText.contains("CALVALUS_SKIP_PROCESSING yes")) {
             return null;
         }
-        StringReader graphReader = new StringReader(graphAsText);
+        final StringReader graphReader = new StringReader(graphAsText);
         try {
             return GraphIO.read(graphReader);
         } finally {
             inputReader.close();
             graphReader.close();
         }
+    }
+
+    private String findProcessorFile(String filename, String[] paths) {
+        for (String path : paths) {
+            if (path.endsWith(filename)) {
+                return path;
+            }
+        }
+        throw new NoSuchElementException("Graph file " + filename + " not found in processor files");
     }
 
     public static class CalvalusGraphApplicationData implements XmlConvertible {

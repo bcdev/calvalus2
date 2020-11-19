@@ -58,7 +58,18 @@ public class ProductFormatter {
         String outputExtension = "";
         if (outputFormat.equals("BEAM-DIMAP")) {
             outputExtension = ".dim";
-            outputCompression = "zip";
+            if ("dir".equals(desiredOutputCompression)) {
+                outputCompression = "dir2";
+            } else {
+                outputCompression = "zip";
+            }
+        } else if (outputFormat.equalsIgnoreCase("xcube-zarr")) {
+            outputExtension = ".zarr";
+            if ("zip".equals(desiredOutputCompression)) {
+                outputCompression = "zip";
+            } else {
+                outputCompression = "dir2";
+            }
         } else if (outputFormat.equals("NetCDF4-LC")) {
             outputExtension = ".nc";
             outputCompression = ""; // no further compression required
@@ -104,7 +115,6 @@ public class ProductFormatter {
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
-
 
         if ("zip".equals(outputCompression)) {
             outputFilename = productName + ".zip";
@@ -173,6 +183,16 @@ public class ProductFormatter {
                     OutputStream outputStream = createOutputStream(context, file.getName());
                     copyAndClose(inputStream, outputStream, context);
                 }
+            }
+        } else if ("dir2".equals(outputCompression)) {
+            LOG.info("Copying content of tmpDir to HDFS.");
+            DirScanner dirScanner = new DirScanner(tmpDir, true, true);
+            String[] entryPaths = dirScanner.scan();
+            for (String entryPath : entryPaths) {
+                File sourceFile = new File(tmpDir.getAbsolutePath() + File.separator + entryPath);
+                InputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile));
+                OutputStream outputStream = createOutputStream(context, entryPath);
+                copyAndClose(inputStream, outputStream, context);
             }
         } else {
             LOG.info("Copying file to HDFS.");
@@ -253,6 +273,11 @@ public class ProductFormatter {
         }
         Path workPath = new Path(workOutputPath, filename);
         FileSystem fileSystem = workPath.getFileSystem(context.getConfiguration());
+        if (workOutputPath.equals(FileOutputFormat.getOutputPath(context)) && fileSystem.exists(workPath)) {
+            fileSystem.delete(workPath, false);
+            // let the file system breath, we hope that helps to sync
+            try { Thread.currentThread().sleep(1000); } catch (InterruptedException ignored) {}
+        }
         return fileSystem.create(workPath);
     }
 
