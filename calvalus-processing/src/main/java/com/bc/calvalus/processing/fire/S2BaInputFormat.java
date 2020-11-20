@@ -31,28 +31,21 @@ public class S2BaInputFormat extends InputFormat {
     private static final int MAX_PRE_IMAGES_COUNT_MULTI_ORBIT = 8;
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
-        Configuration conf = jobContext.getConfiguration();
-        String inputPathPatterns = conf.get("calvalus.input.pathPatterns");
-        String tile = conf.get("calvalus.tile");
-
-        Set<InputSplit> splits = new HashSet<>(1000);
-
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        FileStatus[] fileStatuses = hdfsInventoryService.globFileStatuses(inputPatterns, conf);
-
-        // for each split, a single mapper is run
-        // --> fileStatuses must contain filestatus for each input product at this stage
-        createSplits(fileStatuses, tile, splits, hdfsInventoryService, conf);
-        // here, each split must contain two files: pre and post period.
-        Logger.getLogger("com.bc.calvalus").info(String.format("Created %d split(s).", splits.size()));
-        return Arrays.asList(splits.toArray(new InputSplit[0]));
+        String inputPathList = jobContext.getConfiguration().get("calvalus.inputPathList");
+        final String[] inputPaths = inputPathList.split(",");
+        final Path[] files = new Path[inputPaths.length];
+        for (int i = 0; i < inputPaths.length; i++) {
+            files[i] = new Path(inputPaths[i]);
+        }
+        final long[] lengths = new long[inputPaths.length];
+        Arrays.fill(lengths, -1);
+        List<InputSplit> splits = new ArrayList<>(1);
+        splits.add(new CombineFileSplit(files, lengths));
+        return splits;
     }
 
-    private void createSplits(FileStatus[] fileStatuses, String tile,
-                              Set<InputSplit> splits, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
+    private void createSplit(FileStatus[] fileStatuses, String tile,
+                             Set<InputSplit> splits, HdfsFileSystemService hdfsInventoryService, Configuration conf) throws IOException {
         /*
         for each file status r:
             take r and (up to) latest 4 or 8 matching files d, c, b, a (getPeriodStatuses)

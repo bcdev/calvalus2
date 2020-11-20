@@ -16,18 +16,35 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+@Deprecated
 public class S2BaPostInputFormat extends InputFormat {
 
+    public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
+        String inputPathList = jobContext.getConfiguration().get("calvalus.inputPathList");
+        final String[] inputPaths = inputPathList.split(",");
+        List<InputSplit> splits = new ArrayList<>(1);
+        final Path[] files = new Path[inputPaths.length];
+        for (int i = 0; i < inputPaths.length; i++) {
+            files[i] = new Path(inputPaths[i]);
+        }
+        final long[] lengths = new long[inputPaths.length];
+        Arrays.fill(lengths, -1);
+        splits.add(new CombineFileSplit(files, lengths));
+        return splits;
+    }
+
+    // kept for reference
     private final S2BaInputFormat delegate;
 
     public S2BaPostInputFormat() {
         delegate = new S2BaInputFormat();
     }
 
-    public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
+    public List<InputSplit> __getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
         String tile = jobContext.getConfiguration().get("calvalus.tile");
