@@ -10,9 +10,9 @@ import ucar.ma2.DataType;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static com.bc.calvalus.processing.fire.FrpMapper.VARIABLE_NAMES;
-import static com.bc.calvalus.processing.fire.FrpMapper.VARIABLE_NAMES_MONTHLY;
+import static com.bc.calvalus.processing.fire.FrpMapper.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
@@ -197,5 +197,15 @@ public class FrpMapperTest {
         assertEquals(2, range.length);
         assertEquals(646876800000000L, range[0]);
         assertEquals(649555199999000L, range[1]);
+    }
+
+    @Test
+    public void testIsCloud() {
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, 0));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD + 19, 128));
+
+        assertEquals(0, FrpMapper.isCloud(0, 0));
+        assertEquals(0, FrpMapper.isCloud(19, 128));
+        assertEquals(0, FrpMapper.isCloud(FRP_CLOUD, CONF_IN_UNFILLED));
     }
 }

@@ -38,6 +38,7 @@ import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
 import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
+import ucar.nc2.Variable;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,19 +56,16 @@ import java.util.logging.Logger;
  */
 public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, L3SpatialBin> {
 
+    static final int CONF_IN_UNFILLED = 32;
+    static final int FRP_CLOUD = 32;
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
-    private static long YEAR2k_MILLIS = Long.MIN_VALUE;
-
     private static final int S3A_OFFSET = 0;   // offset into variables array for s3a data
     private static final int S3B_OFFSET = 10;   // offset into variables array for s3b data
-
     private static final int L1B_WATER = 2;
     private static final int FRP_WATER = 4;
-    private static final int FRP_CLOUD = 32;
     private static final int DAY = 64;
-
     static String[] VARIABLE_NAMES = {
             "s3a_day_pixel",
             "s3a_day_cloud",
@@ -90,7 +88,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "s3b_night_fire",
             "s3b_night_frp"
     };
-
     // variables with commented names are generated in the ProductWriter
     static String[] VARIABLE_NAMES_MONTHLY = {
             "fire_land_pixel",
@@ -100,6 +97,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "water_pixel",
             "slstr_pixel",
     };
+    private static long YEAR2k_MILLIS = Long.MIN_VALUE;
 
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -211,6 +209,14 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         }
     }
 
+    static int isCloud(int flags, int confFlags) {
+        if ((confFlags & CONF_IN_UNFILLED) != 0) {
+            return 0;
+        }
+
+        return (flags & FRP_CLOUD) != 0 ? 1 : 0;
+    }
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
@@ -220,14 +226,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final File[] inputFiles = CalvalusProductIO.uncompressArchiveToCWD(inputPath, conf);
         final int platformNumber = getPlatformNumber(inputPath);
 
-        final File frpFile = findByName("FRP_in.nc", inputFiles);
-        final NetcdfFile frpNetcdf = openNetcdfFile(frpFile);
         final Array[] frpArrays = new Array[FRP_VARIABLES.values().length];
-        for (FRP_VARIABLES v : FRP_VARIABLES.values()) {
-            frpArrays[v.ordinal()] = frpNetcdf.findVariable(v.name()).read();
-        }
-
-        int numFires = frpNetcdf.findDimension("fires").getLength();
+        int numFires = readFrpVariables(inputFiles, frpArrays);
 
         if ("l2monthly".equals(targetFormat)) {
             final int count = writeL2MonthlyBin(context, platformNumber, frpArrays, numFires);
@@ -235,14 +235,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             return;
         }
 
-        final File geodeticFile = findByName("geodetic_in.nc", inputFiles);
-        final NetcdfFile geodeticNetcdf = openNetcdfFile(geodeticFile);
         final Array[] geodeticArrays = new Array[GEODETIC_VARIABLES.values().length];
-        for (GEODETIC_VARIABLES v : GEODETIC_VARIABLES.values()) {
-            geodeticArrays[v.ordinal()] = geodeticNetcdf.findVariable(v.name()).read();
-        }
-        final int columns = geodeticNetcdf.findDimension("columns").getLength();
-        final int rows = geodeticNetcdf.findDimension("rows").getLength();
+        final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
         final int latIndex = GEODETIC_VARIABLES.latitude_in.ordinal();
         final int lonIndex = GEODETIC_VARIABLES.longitude_in.ordinal();
 
@@ -255,11 +249,13 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final Index index = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
 
         // create lut of fires by row and column
-        final HashMap<Integer, Integer> fireIndex = createFiresLUT(frpArrays, numFires, columns);
+        final HashMap<Integer, Integer> fireIndex = createFiresLUT(frpArrays, numFires, rowCol[1]);
 
         final double mjd = extractMJDFromFilename(inputPath);
         final int areaIndex = FRP_VARIABLES.IFOV_area.ordinal();
         final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
+
+        final Array confidenceFlags = readConfidenceFlags(inputFiles);
 
         if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
             // pixel loop
@@ -268,6 +264,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             // create observation variable sequence
             final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
 
+            final int rows = rowCol[0];
+            final int columns = rowCol[1];
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
                 for (int col = 0; col < columns; ++col) {
@@ -277,6 +275,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
                     final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
                     final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                    final int confFlags = confidenceFlags.getInt(index);
 
                     final Integer fire = fireIndex.get(row * columns + col);
                     float frpMwir = Float.NaN;
@@ -296,7 +295,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     // aggregate contributions based on flags and platform
                     float[] values = new float[20];
                     values[variableIndex[writeOffset]] = 1;
-                    values[variableIndex[writeOffset + 1]] = (flags & FRP_CLOUD) != 0 ? 1 : 0;  // frp_cloud
+                    values[variableIndex[writeOffset + 1]] = isCloud(flags, confFlags);  // frp_cloud
                     values[variableIndex[writeOffset + 2]] = (flags & (L1B_WATER | FRP_WATER)) != 0 ? 1 : 0;  // l1b_water | frp_water
                     values[variableIndex[writeOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;
                     values[variableIndex[writeOffset + 4]] = frpMwir;
@@ -317,6 +316,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             // create observation variable sequence
             final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
 
+            final int rows = rowCol[0];
+            final int columns = rowCol[1];
             for (int row = 0; row < rows; ++row) {
                 final ObservationImpl[] observations = new ObservationImpl[columns];
                 for (int col = 0; col < columns; ++col) {
@@ -326,6 +327,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
                     final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
                     final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                    final int confFlags = confidenceFlags.getInt(index);
 
                     final Integer fire = fireIndex.get(row * columns + col);
                     float frpMwir = Float.NaN;
@@ -342,7 +344,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     float[] values = new float[VARIABLE_NAMES_MONTHLY.length];
                     final boolean isWater = (flags & (L1B_WATER | FRP_WATER)) != 0;
                     final boolean isFire = !Float.isNaN(frpMwir);
-                    final boolean isCloud = (flags & (FRP_CLOUD)) != 0;
+                    final boolean isCloud = isCloud(flags, confFlags) > 0;
                     float Nlf = 0.f;
                     if (isFire && !isWater) {
                         Nlf = 1.f;
@@ -374,6 +376,45 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 spatialBinner.processObservationSlice(observations);
             }
             spatialBinner.complete();
+        }
+    }
+
+    private int[] readGeodeticVariables(File[] inputFiles, Array[] geodeticArrays) throws IOException {
+        final File geodeticFile = findByName("geodetic_in.nc", inputFiles);
+        final int[] rowCol;
+        try (NetcdfFile geodeticNetcdf = NetcdfFileOpener.open(geodeticFile.getPath())) {
+            for (GEODETIC_VARIABLES v : GEODETIC_VARIABLES.values()) {
+                geodeticArrays[v.ordinal()] = geodeticNetcdf.findVariable(v.name()).read();
+            }
+
+            final int columns = geodeticNetcdf.findDimension("columns").getLength();
+            final int rows = geodeticNetcdf.findDimension("rows").getLength();
+
+            rowCol = new int[]{rows, columns};
+        }
+
+        return rowCol;
+    }
+
+    private int readFrpVariables(File[] inputFiles, Array[] frpArrays) throws IOException {
+        final File frpFile = findByName("FRP_in.nc", inputFiles);
+
+        int numFires = -1;
+        try (NetcdfFile frpNetcdf = NetcdfFileOpener.open(frpFile.getPath())) {
+            for (FRP_VARIABLES v : FRP_VARIABLES.values()) {
+                frpArrays[v.ordinal()] = frpNetcdf.findVariable(v.name()).read();
+            }
+            numFires = frpNetcdf.findDimension("fires").getLength();
+        }
+
+        return numFires;
+    }
+
+    private Array readConfidenceFlags(File[] inputFiles) throws IOException {
+        final File flagsFile = findByName("flags_in.nc", inputFiles);
+        try (NetcdfFile flagsNetcdf = NetcdfFileOpener.open(flagsFile.getPath())) {
+            final Variable confidence_in = flagsNetcdf.findVariable("confidence_in");
+            return confidence_in.read();
         }
     }
 
@@ -464,14 +505,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             }
         }
         throw new NoSuchElementException(name + " not found");
-    }
-
-    private NetcdfFile openNetcdfFile(File inputFile) throws IOException {
-        final NetcdfFile netcdfFile = NetcdfFileOpener.open(inputFile.getPath());
-        if (netcdfFile == null) {
-            throw new IOException("Failed to open file " + inputFile.getPath());
-        }
-        return netcdfFile;
     }
 
     enum FRP_VARIABLES {
