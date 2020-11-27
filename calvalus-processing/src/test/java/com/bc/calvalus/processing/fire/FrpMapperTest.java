@@ -7,6 +7,7 @@ import org.junit.Test;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import static com.bc.calvalus.processing.fire.FrpMapper.VARIABLE_NAMES;
@@ -188,6 +189,13 @@ public class FrpMapperTest {
             fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException expected) {
         }
+    }
 
+    @Test
+    public void testGetTimeRange() throws IOException {
+        final long[] range = FrpMapper.getTimeRange("[2020-07-01:2020-07-31]");
+        assertEquals(2, range.length);
+        assertEquals(646876800000000L, range[0]);
+        assertEquals(649555199999000L, range[1]);
     }
 }

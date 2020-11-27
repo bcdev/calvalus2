@@ -33,6 +33,7 @@ import org.esa.snap.binning.*;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.support.ObservationImpl;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.StringUtils;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
 import ucar.ma2.Index;
@@ -43,10 +44,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +58,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
+    private static long YEAR2k_MILLIS = Long.MIN_VALUE;
 
     private static final int S3A_OFFSET = 0;   // offset into variables array for s3a data
     private static final int S3B_OFFSET = 10;   // offset into variables array for s3b data
@@ -105,6 +104,12 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     static {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         COMPACT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        try {
+            YEAR2k_MILLIS = ISO_DATE_FORMAT.parse("2000-01-01T00:00:00.000Z").getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     static HashMap<Integer, Integer> createFiresLUT(Array[] frpArrays, int numFires, int columns) {
@@ -173,6 +178,37 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         }
 
         return indices;
+    }
+
+    /**
+     * parses the time range string supplied to Calvalus and returns min and max date in microseconds since 2000-01-01
+     *
+     * @param rangeString the time range string in Calvalus syntax
+     * @return array of min/max times in micros since 2000-01-01
+     */
+    static long[] getTimeRange(String rangeString) throws IOException {
+        // remove square brackets
+        final String substring = rangeString.substring(1, rangeString.length() - 1);
+        final String[] tokens = StringUtils.split(substring, new char[]{':'}, true);
+
+
+        try {
+            final ProductData.UTC minDate = ProductData.UTC.parse(tokens[0], "yyyy-MM-dd");
+            final ProductData.UTC maxDate = ProductData.UTC.parse(tokens[1], "yyyy-MM-dd");
+            final Calendar minCalendar = minDate.getAsCalendar();
+            final Calendar maxCalendar = maxDate.getAsCalendar();
+            maxCalendar.set(Calendar.HOUR_OF_DAY, 23);
+            maxCalendar.set(Calendar.MINUTE, 59);
+            maxCalendar.set(Calendar.SECOND, 59);
+            maxCalendar.set(Calendar.MILLISECOND, 999);
+
+            final long minMicros = (minCalendar.getTimeInMillis() - YEAR2k_MILLIS) * 1000L;
+            final long maxMicros = (maxCalendar.getTimeInMillis() - YEAR2k_MILLIS) * 1000L;
+
+            return new long[]{minMicros, maxMicros};
+        } catch (ParseException e) {
+            throw new IOException("Unable to parse date-range: " + e.getMessage());
+        }
     }
 
     @Override
@@ -342,12 +378,18 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     }
 
     private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, int numFires) throws IOException, InterruptedException {
-        //System.out.print("Time\tLatitude\tLongitude\tRow\tColumn\tFRP_MIR\tFRP_SWIR\tAREA\tday_flag\tf1_flag\tPlatform\tConfidence\n");
+        final Configuration conf = context.getConfiguration();
+        final String dateRanges = conf.get("calvalus.input.dateRanges", null);
+        final long[] timeRange = getTimeRange(dateRanges);
+
         int count = 0;
         final Index flagsIdx = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
         for (int i = 0; i < numFires; ++i) {
             // filter
             final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(i);
+            if (time < timeRange[0] || time > timeRange[1]) {
+                continue;
+            }
             final double latitude = frpArrays[FRP_VARIABLES.latitude.ordinal()].getDouble(i);
             final double longitude = frpArrays[FRP_VARIABLES.longitude.ordinal()].getDouble(i);
             final int row = frpArrays[FRP_VARIABLES.j.ordinal()].getInt(i);
