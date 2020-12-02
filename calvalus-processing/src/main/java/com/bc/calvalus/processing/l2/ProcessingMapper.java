@@ -185,7 +185,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         String inputName = processorAdapter.getInputPath().getName();
         String productName = null;
         if (processorAdapter.getInputParameters() != null) {
-            for (int i = 0; i < processorAdapter.getInputParameters().length; i += 2) {
+            for (int i = 0; i < processorAdapter.getInputParameters().length - 1; i += 2) {
                 if ("output".equals(processorAdapter.getInputParameters()[i])) {
                     productName = getProductName(jobConfig, processorAdapter.getInputParameters()[i + 1]);
                 }
