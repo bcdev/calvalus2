@@ -61,6 +61,7 @@ public class TableInputFormat extends InputFormat {
         final String[] attributes = headLine.split("[ \t]+");
         List<InputSplit> splits = new ArrayList<InputSplit>();
         int fileCounter = 0;
+        boolean irregularTableDetected = false;
         while (true) {
             final String line = in.readLine();
             if (line == null) {
@@ -69,42 +70,49 @@ public class TableInputFormat extends InputFormat {
             if (line.startsWith("#")) {
                 continue;
             }
-            final String[] values = line.split("\t"); // TODO made strict tab-separated, to be documented
-            if (values.length != attributes.length) {
+            final String[] values = line.split("\t");
+            if (! irregularTableDetected && values.length != attributes.length) {
                 LOG.warning("values " + (values.length - 1) + " does not match attributes " +
                                     (attributes.length - 1) + " for " + values[0]);
+                irregularTableDetected = true;
             }
-            final int numParameters = Math.min(values.length, attributes.length) - 1;
-            final String[] parameters = new String[numParameters * 2];
-            for (int i = 1; i <= numParameters; ++i) {
-                parameters[2 * i - 2] = attributes[i];
-                parameters[2 * i - 1] = values[i];
-            }
-
-            fileCounter++;
-            final Path path = new Path(values[0]);
-            if (values[0].startsWith("s3a:")) {
-                // check access to file on server side only
-                splits.add(new ParameterizedSplit(path, -1, null, parameters));
-                continue;
-            }
-            FileSystem fileSystem = path.getFileSystem(configuration);
-            try {
-                final FileStatus status = fileSystem.getFileStatus(path);
-                if (status != null) {
-                    final BlockLocation[] locations = fileSystem.getFileBlockLocations(status, 0, status.getLen());
-                    if (locations == null || locations.length == 0) {
-                        LOG.warning("cannot find hosts of input " + values[0]);
-                    } else {
-                        LOG.fine("adding input split for " + path.getName());
-                        splits.add(new ParameterizedSplit(path, status.getLen(), locations[0].getHosts(), parameters));
-                    }
-                } else {
-                    LOG.warning("cannot find input " + values[0]);
+            ++fileCounter;
+            int inputIndex = attributes.length > 0 && "output".equals(attributes[0]) ? 1 : 0;
+            // collect parameters
+            final String[] parameters = new String[values.length * 2 - 2];
+            int j = 0;
+            for (int i = 0; i < values.length; ++i) {
+                if (i != inputIndex) {
+                    parameters[j++] = i < attributes.length ? attributes[i] : "parameter";
+                    parameters[j++] = values[i];
                 }
-            } catch (FileNotFoundException e) {
-                LOG.warning("cannot find input " + values[0]);
             }
+            // determine path, length, hosts
+            final Path path = new Path(values[inputIndex]);
+            final long size;
+            final String[] hosts;
+            if (values[inputIndex].startsWith("s3a:")) {
+                // check access to file on server side only
+                size = -1;
+                hosts = null;
+            } else {
+                // check access etc. on client side and skip missing and empty files
+                final FileSystem fileSystem = path.getFileSystem(configuration);
+                final FileStatus status = fileSystem.getFileStatus(path);
+                if (status == null) {
+                    LOG.warning("cannot find input " + values[inputIndex] + ". skipping");
+                    continue;
+                }
+                BlockLocation[] locations = fileSystem.getFileBlockLocations(status, 0, status.getLen());
+                if (locations == null || locations.length == 0) {
+                    LOG.warning("cannot find hosts of input " + values[inputIndex] + ". skipping");
+                    continue;
+                }
+                size = status.getLen();
+                hosts = locations[0].getHosts();
+            }
+            // add parameterized split and count
+            splits.add(new ParameterizedSplit(path, size, hosts, parameters));
         }
         if (splits.size() == 0) {
             throw new IOException("no splits found in table " + inputTablePath.getName());
