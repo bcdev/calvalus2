@@ -98,7 +98,12 @@ public class TableInputFormat extends InputFormat {
             } else {
                 // check access etc. on client side and skip missing and empty files
                 final FileSystem fileSystem = path.getFileSystem(configuration);
-                final FileStatus status = fileSystem.getFileStatus(path);
+                FileStatus status;
+                try {
+                    status = fileSystem.getFileStatus(path);
+                } catch (FileNotFoundException e) {
+                    status = null;
+                }
                 if (status == null) {
                     LOG.warning("cannot find input " + values[inputIndex] + ". skipping");
                     continue;
