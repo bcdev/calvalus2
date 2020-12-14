@@ -16,11 +16,13 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.dom.DomElement;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
@@ -29,9 +31,12 @@ import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 import org.esa.snap.core.gpf.annotations.ParameterDescriptorFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,7 +89,22 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                                                sourceProduct.getSceneRasterHeight()));
                 return false;
             }
-            Product processedProduct = getProcessedProduct(sourceProduct, processorName, processorParameters);
+            // maybe retrieve additional inputs
+            Path[] additionalInputPaths = getAdditionalInputPaths();
+            List<Product> inputProducts = null;
+            if (additionalInputPaths != null) {
+                inputProducts = new ArrayList<Product>();
+                inputProducts.add(sourceProduct);
+                for (int i=0; i<additionalInputPaths.length; ++i) {
+                    if (additionalInputPaths[i].getFileSystem(conf).exists(additionalInputPaths[i])) {
+                        inputProducts.add(CalvalusProductIO.readProduct(additionalInputPaths[i], getConfiguration(), null));
+                    }
+                }
+            }
+
+            Product processedProduct = getProcessedProduct(sourceProduct,
+                                                           inputProducts == null ? (Product[]) null : inputProducts.toArray(new Product[0]),
+                                                           processorName, processorParameters);
             if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
                 targetProduct = createSubsetFromOutput(processedProduct);
             } else {
@@ -127,7 +147,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         }
     }
 
-    private Product getProcessedProduct(Product source, String operatorName, String operatorParameters) {
+    private Product getProcessedProduct(Product source, Product[] inputProducts, String operatorName, String operatorParameters) {
         Product product = source;
         if (operatorName != null && !operatorName.isEmpty()) {
             // transform request into parameter objects
@@ -138,16 +158,27 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                 for (int i=0; i<getInputParameters().length; i+=2) {
                     if ("output".equals(getInputParameters()[i])) {
                         // drop parameter, is used later in SubsetProcessorAdapter
+                    } else if ("input".equals(getInputParameters()[i])) {
+                        // drop parameter, is used later in SubsetProcessorAdapter
                     } else if ("regionGeometry".equals(getInputParameters()[i])) {
                         // drop parameter here
                     } else {
+                        if (parameterMap.isEmpty()) {
+                            parameterMap = new HashMap<String, Object>();
+                        }
                         parameterMap.put(getInputParameters()[i], getInputParameters()[i + 1]);
                     }
                 }
             } catch (BindingException e) {
                 throw new IllegalArgumentException("Invalid operator parameters: " + e.getMessage(), e);
             }
-            product = GPF.createProduct(operatorName, parameterMap, product);
+            if (inputProducts == null) {
+                CalvalusLogger.getLogger().info("calling GPF operator " + operatorName + " with " + parameterMap.size()  + " parameters and a single input");
+                product = GPF.createProduct(operatorName, parameterMap, product);
+            } else {
+                CalvalusLogger.getLogger().info("calling GPF operator " + operatorName + " with " + parameterMap.size()  + " parameters and " + inputProducts.length + " inputs");
+                product = GPF.createProduct(operatorName, parameterMap, inputProducts);
+            }
             CalvalusProductIO.printProductOnStdout(product, "computed by operator " + operatorName);
         }
         return product;

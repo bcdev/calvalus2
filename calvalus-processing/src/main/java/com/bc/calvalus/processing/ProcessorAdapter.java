@@ -44,6 +44,8 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -349,6 +351,27 @@ public abstract class ProcessorAdapter {
             return fileSplit.getPath();
         } else {
             throw new IllegalArgumentException("input split is neither a FileSplit nor a ProductSplit");
+        }
+    }
+
+    public Path[] getAdditionalInputPaths() {
+        List<Path> accu = null;
+        if (inputSplit instanceof ParameterizedSplit) {
+            ParameterizedSplit parameterizedSplit = (ParameterizedSplit) this.inputSplit;
+            for (int i=0; i<parameterizedSplit.getParameters().length-1; i+=2) {
+                if ("input".equals(parameterizedSplit.getParameters()[i])) {
+                    Path path = new Path(parameterizedSplit.getParameters()[i + 1]);
+                    if (accu == null) {
+                        accu = new ArrayList<Path>();
+                    }
+                    accu.add(path);
+                }
+            }
+        }
+        if (accu == null) {
+            return null;
+        } else {
+            return accu.toArray(new Path[0]);
         }
     }
 

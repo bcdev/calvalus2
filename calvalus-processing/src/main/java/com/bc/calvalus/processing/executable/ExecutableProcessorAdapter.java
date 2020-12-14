@@ -45,8 +45,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -62,6 +64,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     private final boolean debugScriptGenerator;
     private String[] outputFilesNames;
     private boolean skipProcessing = false;
+    private List<String> additionalInputFiles = null;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
         this(mapContext, "");
@@ -82,18 +85,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
         if (getInputParameters().length > 0) {
-            final StringBuilder accu = new StringBuilder(processorParameters);
+            final StringBuilder accu = processorParameters != null ? new StringBuilder(processorParameters) : new StringBuilder();
             for (int i=0; i<getInputParameters().length; i+=2) {
-                if ("output".equals(getInputParameters()[i])) {
-                    // skip, will be considered in finalise
-                } else if ("regionGeometry".equals(getInputParameters()[i])) {
+//                if ("output".equals(getInputParameters()[i])) {
+//                    // skip, will be considered in finalise
+//                } else
+                if ("regionGeometry".equals(getInputParameters()[i])) {
                     conf.set("calvalus.regionGeometry", getInputParameters()[i + 1]);
                 } else {
                     if (accu.length() > 0) {
                         accu.append('\n');
                     }
                     accu.append(getInputParameters()[i]);
-                    accu.append(':');
+                    accu.append('=');
                     accu.append(getInputParameters()[i + 1]);
                 }
             }
@@ -146,10 +150,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
 
         Path inputPath = getInputPath();
+        Path[] additionalInputPaths = getAdditionalInputPaths();
         File inputFile = getInputFile();
         if (inputFile == null) {
             inputFile = CalvalusProductIO.copyFileToLocal(inputPath, getConfiguration());
             setInputFile(inputFile);
+        }
+        if (additionalInputPaths != null) {
+            additionalInputFiles = new ArrayList<String>();
+            for (Path additionalInputPath : additionalInputPaths) {
+                if (additionalInputPath.getFileSystem(getConfiguration()).exists(additionalInputPath)) {
+                    additionalInputFiles.add(CalvalusProductIO.copyFileToLocal(additionalInputPath, getConfiguration()).getName());
+                }
+            }
         }
         if (getMapContext().getInputSplit() instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
@@ -202,8 +215,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (getInputParameters().length > 0) {
             final StringBuilder accu = new StringBuilder(processorParameters);
             for (int i=0; i<getInputParameters().length; i+=2) {
-                if ("output".equals(getInputParameters()[i])) {
-                    // skip, will be considered in finalise
+                if ("input".equals(getInputParameters()[i])) {
+                    // skip, has been considered as additional input
+//                } else if ("output".equals(getInputParameters()[i])) {
+//                    // skip, will be considered in finalise
                 } else if ("regionGeometry".equals(getInputParameters()[i])) {
                     conf.set("calvalus.regionGeometry", getInputParameters()[i + 1]);
                 } else {
@@ -211,7 +226,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                         accu.append('\n');
                     }
                     accu.append(getInputParameters()[i]);
-                    accu.append(':');
+                    accu.append('=');
                     accu.append(getInputParameters()[i + 1]);
                 }
             }
@@ -246,7 +261,15 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
         getLogger().info("process: " + executable + " " + inputFile.getCanonicalPath());
-        String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
+        String[] cmdArray;
+        if (additionalInputFiles == null) {
+            cmdArray = new String[]{"./process", inputFile.getCanonicalPath()};
+        } else {
+            cmdArray = new String[2 + additionalInputFiles.size()];
+            cmdArray[0] = "./process";
+            cmdArray[1] = inputFile.getCanonicalPath();
+            System.arraycopy(additionalInputFiles.toArray(new String[0]), 0, cmdArray, 2, additionalInputFiles.size());
+        }
         String[] env = new String[] { "HADOOP_USER_NAME=" + user };
         Process process = Runtime.getRuntime().exec(cmdArray, env);
         String processLogName = executable + "-process";
@@ -326,7 +349,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
         String tableOutputFilename = null;
         if (getInputParameters().length > 0) {
-            final StringBuilder accu = new StringBuilder(processorParameters);
+            final StringBuilder accu = processorParameters != null ? new StringBuilder(processorParameters) : new StringBuilder();
             for (int i=0; i<getInputParameters().length; i+=2) {
                 if ("output".equals(getInputParameters()[i])) {
                     tableOutputFilename = getInputParameters()[i+1];
@@ -337,7 +360,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                         accu.append('\n');
                     }
                     accu.append(getInputParameters()[i]);
-                    accu.append(':');
+                    accu.append('=');
                     accu.append(getInputParameters()[i + 1]);
                 }
             }
