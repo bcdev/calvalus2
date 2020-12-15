@@ -21,9 +21,9 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.SimpleOutputFormat;
-import com.bc.calvalus.processing.fire.FireFormattingMapper;
-import com.bc.calvalus.processing.fire.FirePixelInputFormat;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
+import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -32,15 +32,17 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
 /**
- * The production type used for formatting the MERIS BA data to a grid product.
+ * The production type used for formatting the BA data to the grid format.
  *
  * @author thomas
  */
@@ -56,31 +58,28 @@ public class FireGridProductionType extends HadoopProductionType {
 
     FireGridProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                            StagingService stagingService) {
-        super("Fire-Formatting", fileSystemService, processingService, stagingService);
+        super("Fire-Grid-Formatting", fileSystemService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = String.format("Fire Formatting %s/%s", productionRequest.getString("calvalus.year"), productionRequest.getString("calvalus.month"));
+        String defaultProductionName = String.format("Fire Grid Formatting %s/%s", productionRequest.getString("calvalus.year"), productionRequest.getString("calvalus.month"));
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Formatting");
+        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Grid-Formatting");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-        jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, productionRequest.getString("processorName"));
+//        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         setRequestParameters(productionRequest, jobConfig);
 
-        String processorBundle = productionRequest.getParameter("processorBundleName", true) + "-" + productionRequest.getParameter("processorBundleVersion", true);
-        jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundle);
-        Workflow.Sequential merisFormattingWorkflow = new Workflow.Sequential();
+        Workflow.Sequential gridFormattingWorkflow = new Workflow.Sequential();
         String userName = productionRequest.getUserName();
-        MerisFormattingWorkflowItem merisFormattingWorkflowItem = new MerisFormattingWorkflowItem(getProcessingService(), userName, productionName, jobConfig);
-        merisFormattingWorkflow.add(merisFormattingWorkflowItem);
+        FireGridFormattingWorkflowItem fireGridFormattingWorkflowItem = new FireGridFormattingWorkflowItem(getProcessingService(), userName, productionName, jobConfig);
+        gridFormattingWorkflow.add(fireGridFormattingWorkflowItem);
         CalvalusLogger.getLogger().info("Submitting workflow.");
         try {
-            merisFormattingWorkflow.submit();
+            gridFormattingWorkflow.submit();
         } catch (WorkflowException e) {
             throw new ProductionException(e);
         }
@@ -92,18 +91,21 @@ public class FireGridProductionType extends HadoopProductionType {
                 stagingDir,
                 false,
                 productionRequest,
-                merisFormattingWorkflow);
+                gridFormattingWorkflow);
     }
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new UnsupportedOperationException("Staging currently not implemented for fire-cci MERIS BA.");
+        throw new NotImplementedException("Staging currently not implemented for fire-cci BA grid formatting.");
     }
 
-    private static class MerisFormattingWorkflowItem extends HadoopWorkflowItem {
+    private static class FireGridFormattingWorkflowItem extends HadoopWorkflowItem {
 
-        public MerisFormattingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, Configuration jobConfig) {
+        private final SensorStrategy strategy;
+
+        public FireGridFormattingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, Configuration jobConfig) {
             super(processingService, userName, jobName, jobConfig);
+            strategy = CommonUtils.getStrategy(jobConfig);
         }
 
         @Override
@@ -114,19 +116,17 @@ public class FireGridProductionType extends HadoopProductionType {
         @Override
         protected void configureJob(Job job) throws IOException {
             CalvalusLogger.getLogger().info("Configuring job.");
-            job.setInputFormatClass(FirePixelInputFormat.class);
-            job.setMapperClass(FireFormattingMapper.class);
-            job.setOutputFormatClass(SimpleOutputFormat.class);
+            job.setInputFormatClass(strategy.getGridInputFormat());
+            job.setMapperClass(strategy.getGridMapperClass());
+            job.setReducerClass(strategy.getGridReducerClass());
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(GridCells.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }
 
         @Override
         protected String[][] getJobConfigDefaults() {
             return new String[][]{
-                /* {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT}, */
-                    {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                    {JobConfigNames.CALVALUS_BUNDLES, NO_DEFAULT},
-                    {JobConfigNames.CALVALUS_BUNDLES, NO_DEFAULT},
             };
         }
     }
