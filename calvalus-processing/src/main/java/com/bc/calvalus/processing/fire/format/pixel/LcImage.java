@@ -98,8 +98,11 @@ class LcImage extends SingleBandedOpImage {
                     pixelIndex++;
                     continue;
                 }
-
-                dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
+                if (sensor.equals("S2")) {
+                    dest.setSample(x, y, 0, lcValue);
+                } else {
+                    dest.setSample(x, y, 0, LcRemapping.remap(lcValue));
+                }
                 pixelIndex++;
 
             }

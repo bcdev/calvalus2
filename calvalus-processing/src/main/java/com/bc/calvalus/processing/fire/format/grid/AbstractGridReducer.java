@@ -29,9 +29,8 @@ import java.util.regex.Pattern;
 public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullWritable, NullWritable> {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
-
-    private static final int SCENE_RASTER_WIDTH = 1440;
-    private static final int SCENE_RASTER_HEIGHT = 720;
+    private static final int DEFAULT_SCENE_RASTER_HEIGHT = 720;
+    private static final int DEFAULT_NUM_LC_CLASSES = 18;
 
     protected NetcdfFileWriter ncFile;
 
@@ -40,9 +39,12 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     private int targetWidth;
     private int targetHeight;
 
+    protected int numRowsGlobal;
+    protected int numLcClasses = DEFAULT_NUM_LC_CLASSES;
+
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        super.setup(context);
+        numRowsGlobal = context.getConfiguration().getInt("numRowsGlobal", DEFAULT_SCENE_RASTER_HEIGHT);
         prepareTargetProducts(context);
         this.targetWidth = getTargetWidth();
         this.targetHeight = getTargetHeight();
@@ -139,7 +141,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             prepareFloatVariable("burned_area", ncFile);
             prepareFloatVariable("standard_error", ncFile);
 
-            prepareAreas("burned_area_in_vegetation_class", 18, ncFile);
+            prepareAreas("burned_area_in_vegetation_class", numLcClasses, ncFile);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -199,75 +201,75 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         return ChronoUnit.DAYS.between(epoch, current);
     }
 
-    private static void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    private void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lonBnds = ncFile.findVariable("lon_bounds");
-        float[] array = new float[SCENE_RASTER_WIDTH * 2];
+        float[] array = new float[numRowsGlobal * 2 * 2];
         array[0] = -180F;
-        for (int x = 1; x < SCENE_RASTER_WIDTH * 2; x++) {
+        for (int x = 1; x < numRowsGlobal * 2 * 2; x++) {
             if (x % 2 == 0) {
                 array[x] = array[x - 1];
             } else {
-                array[x] = array[x - 1] + 0.25F;
+                array[x] = array[x - 1] + 180.0f / numRowsGlobal;
             }
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{SCENE_RASTER_WIDTH, 2}, array);
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal * 2, 2}, array);
         ncFile.write(lonBnds, values);
     }
 
-    private static void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    private void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable latBnds = ncFile.findVariable("lat_bounds");
-        float[] array = new float[SCENE_RASTER_HEIGHT * 2];
+        float[] array = new float[numRowsGlobal * 2];
         array[0] = 90F;
-        for (int y = 1; y < SCENE_RASTER_HEIGHT * 2; y++) {
+        for (int y = 1; y < numRowsGlobal * 2; y++) {
             if (y % 2 == 0) {
                 array[y] = array[y - 1];
             } else {
-                array[y] = array[y - 1] - 0.25F;
+                array[y] = array[y - 1] - 180.0f / numRowsGlobal;
             }
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{SCENE_RASTER_HEIGHT, 2}, array);
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal, 2}, array);
         ncFile.write(latBnds, values);
     }
 
-    private static void writeLat(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    private void writeLat(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lat = ncFile.findVariable("lat");
-        float[] array = new float[SCENE_RASTER_HEIGHT];
-        array[0] = 89.875F;
-        for (int x = 1; x < SCENE_RASTER_HEIGHT; x++) {
-            array[x] = array[x - 1] - 0.25F;
+        float[] array = new float[numRowsGlobal];
+        array[0] = 90.0f - 180.0f / numRowsGlobal / 2;
+        for (int x = 1; x < numRowsGlobal; x++) {
+            array[x] = array[x - 1] - 180.0f / numRowsGlobal;
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{SCENE_RASTER_HEIGHT}, array);
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal}, array);
         ncFile.write(lat, values);
     }
 
-    private static void writeLon(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    private void writeLon(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lon = ncFile.findVariable("lon");
-        float[] array = new float[SCENE_RASTER_WIDTH];
-        array[0] = -179.875F;
-        for (int x = 1; x < SCENE_RASTER_WIDTH; x++) {
-            array[x] = array[x - 1] + 0.25F;
+        float[] array = new float[numRowsGlobal * 2];
+        array[0] = -180.0f + 180.0f / numRowsGlobal / 2;
+        for (int x = 1; x < numRowsGlobal * 2; x++) {
+            array[x] = array[x - 1] + 180.0f / numRowsGlobal;
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{SCENE_RASTER_WIDTH}, array);
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal * 2}, array);
         ncFile.write(lon, values);
     }
 
-    private static void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    private void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
-        float[] array = new float[SCENE_RASTER_WIDTH];
+        float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, SCENE_RASTER_WIDTH}, array);
-        for (int y = 0; y < 720; y++) {
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, numRowsGlobal * 2}, array);
+        for (int y = 0; y < numRowsGlobal; y++) {
             ncFile.write(variable, new int[]{0, y, 0}, values);
         }
     }
 
-    private static void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    private void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
-        float[] array = new float[SCENE_RASTER_WIDTH];
+        float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 1, SCENE_RASTER_WIDTH}, array);
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 1, numRowsGlobal * 2}, array);
         for (int c=0; c<lcClassCount; ++c) {
-            for (int y = 0; y < 720; y++) {
+            for (int y = 0; y < numRowsGlobal; y++) {
                 ncFile.write(variable, new int[]{0, c, y, 0}, values);
             }
         }

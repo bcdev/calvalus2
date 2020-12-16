@@ -6,6 +6,22 @@ public class LcRemappingS2 {
 
     public static final int INVALID_LC_CLASS = 0;
 
+    /*
+    $ cat ESACCI-LC_S2_Prototype_ColorLegend.csv
+    NB_LAB;LCCOwnLabel;R;G;B
+    0;No data;0;0;0
+    1;Tree cover areas;0;160;0
+    2;Shrubs cover areas;150;100;0
+    3;Grassland;255;180;0
+    4;Cropland;255;255;100
+    5;Vegetation aquatic or regularly flooded;0;220;130
+    6;Lichens Mosses / Sparse vegetation;255;235;175
+    7;Bare areas;255;245;215
+    8;Built up areas;195;20;0
+    9;Snow and/or Ice;255;255;255
+    10;Open Water;0;70;200
+    */
+
     public static boolean isInBurnableLcClass(int sourceLcClass) {
         switch (sourceLcClass) {
             case 1:

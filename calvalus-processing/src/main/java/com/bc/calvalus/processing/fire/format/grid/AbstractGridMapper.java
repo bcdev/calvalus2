@@ -28,9 +28,11 @@ import static com.bc.calvalus.processing.JobConfigNames.CALVALUS_DEBUG_FIRE;
 public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCells> {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
-    protected final int targetRasterWidth;
-    protected final int targetRasterHeight;
+    protected int targetRasterWidth;
+    protected int targetRasterHeight;
     private FireGridDataSource dataSource;
+
+    protected AbstractGridMapper() {}
 
     protected AbstractGridMapper(int targetRasterWidth, int targetRasterHeight) {
         this.targetRasterWidth = targetRasterWidth;

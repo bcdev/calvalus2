@@ -84,7 +84,7 @@ public class OlciGridReducer extends AbstractGridReducer {
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return fileFactory.createNcFile(filename, "v" + version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18);
+        return fileFactory.createNcFile(filename, "v" + version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18, numRowsGlobal);
     }
 
     @Override

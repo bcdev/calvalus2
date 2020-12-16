@@ -27,15 +27,17 @@ import java.util.logging.Logger;
 public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
     private final String tile;
+    private final int numRowsGlobal;
     private final Product[] sourceProducts;
     private final Product[] clProducts;
     private final Product[] lcProducts;
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
-    public S2FireGridDataSource(String tile, Product sourceProducts[], Product[] clProducts, Product[] lcProducts) {
+    public S2FireGridDataSource(String tile, int numRowsGlobal, Product sourceProducts[], Product[] clProducts, Product[] lcProducts) {
         super(-1, -1);
         this.tile = tile;
+        this.numRowsGlobal = numRowsGlobal;
         this.sourceProducts = sourceProducts;
         this.clProducts = clProducts;
         this.lcProducts = lcProducts;
@@ -46,8 +48,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 0.25;
-        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - (y + 1) * 0.25;
+        double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 180.0 / numRowsGlobal;
+        double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - (y + 1) * 180.0 / numRowsGlobal;
 
         int totalWidth = 0;
         int totalHeight = 0;

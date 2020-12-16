@@ -22,12 +22,12 @@ import java.util.UUID;
 
 public abstract class NcFileFactory {
 
-    public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int lcClassesCount) throws IOException {
+    public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int lcClassesCount, int numRowsGlobal) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
 
         ncFile.addDimension(null, "vegetation_class", lcClassesCount);
-        ncFile.addDimension(null, "lat", 720);
-        ncFile.addDimension(null, "lon", 1440);
+        ncFile.addDimension(null, "lat", numRowsGlobal);
+        ncFile.addDimension(null, "lon", 2 * numRowsGlobal);
         ncFile.addDimension(null, "bounds", 2);
         ncFile.addDimension(null, "strlen", 150);
         ncFile.addUnlimitedDimension("time");
@@ -78,9 +78,9 @@ public abstract class NcFileFactory {
 
         try {
             GeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                                   1440, 720,
+                                                   2 * numRowsGlobal, numRowsGlobal,
                                                    -180,90,
-                                                   360.0 / 1440, 180.0 / 720,
+                                                   360.0 / 2 / numRowsGlobal, 180.0 / numRowsGlobal,
                                                    0.0, 0.0);
 
             addWktAsVariable(ncFile, geoCoding);
@@ -88,7 +88,7 @@ public abstract class NcFileFactory {
             throw new IOException(e);
         }
 
-        addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
+        addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays, numRowsGlobal);
         ncFile.create();
         return ncFile;
     }
@@ -110,7 +110,7 @@ public abstract class NcFileFactory {
         return "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/";
     }
 
-    private void addGroupAttributes(String filename, String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration) {
+    private void addGroupAttributes(String filename, String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration, int numRowsGlobal) {
         ncFile.addGroupAttribute(null, new Attribute("title", getTitle()));
         ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("source", getSource()));
@@ -147,11 +147,11 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("license", getLicense()));
         ncFile.addGroupAttribute(null, new Attribute("platform", getPlatformGlobalAttribute()));
         ncFile.addGroupAttribute(null, new Attribute("sensor", getSensorGlobalAttribute()));
-        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25 degrees"));
+        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", String.format("%.2f degrees", 180.0 / numRowsGlobal)));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_units", "degrees_east"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", "0.25"));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", String.format("%.2f", 180.0 / numRowsGlobal)));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", String.format("%.2f", 180.0 / numRowsGlobal)));
     }
 
     protected String getLicense() {

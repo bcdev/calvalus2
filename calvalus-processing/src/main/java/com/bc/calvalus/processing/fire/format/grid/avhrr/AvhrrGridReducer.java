@@ -60,7 +60,7 @@ public class AvhrrGridReducer extends AbstractGridReducer {
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return avhrrNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18);
+        return avhrrNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18, numRowsGlobal);
     }
 
     @Override

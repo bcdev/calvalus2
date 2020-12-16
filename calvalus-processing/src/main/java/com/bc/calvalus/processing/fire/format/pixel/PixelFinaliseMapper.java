@@ -107,12 +107,15 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         Path[] outputPaths = new Path[]{tifPath_JD, tifPath_CL, tifPath_LC};
 
-        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, configuration);
-        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), configuration);
+//        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, configuration);
+//        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), configuration);
+//
+//        Product source = ProductIO.readProduct(localL3);
+//
+//        Product lcProduct = ProductIO.readProduct(localLC);
+        Product source = CalvalusProductIO.readProduct(inputSplitLocation, configuration, null);
+        Product lcProduct = CalvalusProductIO.readProduct(new Path(lcPath), configuration, null);
 
-        Product source = ProductIO.readProduct(localL3);
-
-        Product lcProduct = ProductIO.readProduct(localLC);
         lcProduct = collocateWithSource(lcProduct, source);
 
         Product resultJD = remap(source, baseFilename, lcProduct, JD, areaString.split(";")[1]);
@@ -125,7 +128,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         ExecutorService executor = Executors.newFixedThreadPool(3);
         for (int i = 0; i < results.length; i++) {
-            int finalI = i;
+            final int finalI = i;
             Runnable worker = () -> {
 
                 try {

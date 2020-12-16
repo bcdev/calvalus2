@@ -14,10 +14,10 @@ import java.io.IOException;
 
 public class S2GridReducer extends AbstractGridReducer {
 
-    private static final int S2_CHUNK_SIZE = 4;
     private final NcFileFactory s2NcFileFactory;
 
     public S2GridReducer() {
+        numLcClasses = 6;
         this.s2NcFileFactory = new S2NcFileFactory();
     }
 
@@ -42,31 +42,31 @@ public class S2GridReducer extends AbstractGridReducer {
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return s2NcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, 6);
+        return s2NcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, numLcClasses, numRowsGlobal);
     }
 
     @Override
     protected int getTargetWidth() {
-        return S2_CHUNK_SIZE;
+        return numRowsGlobal / 180;  // cells in one degree
     }
 
     @Override
     protected int getTargetHeight() {
-        return getTargetWidth();
+        return numRowsGlobal / 180;  // cells in one degree
     }
 
     @Override
     protected int getX(String key) {
         key = key.split("-")[2]; // x210y40
         String xPart = key.split("y")[0].substring(1); // 210
-        return Integer.parseInt(xPart) * 4;
+        return Integer.parseInt(xPart) * numRowsGlobal / 180;
     }
 
     @Override
     protected int getY(String key) {
         key = key.split("-")[2];
         int y = Integer.parseInt(key.split("y")[1]);
-        return (180 - y - 1) * 4;
+        return (180 - y - 1) * numRowsGlobal / 180;
     }
 
     @Override
