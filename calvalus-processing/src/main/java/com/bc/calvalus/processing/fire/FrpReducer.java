@@ -26,13 +26,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static com.bc.calvalus.commons.DateUtils.createCalendar;
+import static com.bc.calvalus.processing.fire.FrpMapper.isDay;
+import static com.bc.calvalus.processing.fire.FrpMapper.isWater;
 
 /**
  * Merges stream of spatial bins with FRP pixels into one of the aggregation outputs
@@ -43,16 +42,20 @@ public class FrpReducer extends L3Reducer {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
+    private static final int PLATFORM_IDX = 0;
     private static final int LAT_IDX = 1;
     private static final int LON_IDX = 2;
     private static final int ROW_IDX = 3;
     private static final int COL_IDX = 4;
     private static final int FRP_MIR_IDX = 5;
-    private static final int FRP_SWIR_IDX = 6;
-    private static final int AREA_IDX = 7;
-    private static final int DAY_FLAG_IDX = 8;
-    private static final int F1_FLAG_IDX = 9;
-    private static final int CONF_IDX = 10;
+    private static final int FRP_MIR_UNC_IDX = 6;
+    private static final int FRP_SWIR_IDX = 7;
+    private static final int FRP_SWIR_UNC_IDX = 8;
+    private static final int AREA_IDX = 9;
+    private static final int FLAGS_IDX = 10;
+    private static final int F1_FLAG_IDX = 11;
+    private static final int CLASSIFICATION_IDX = 12;
+    private static final int CONF_IDX = 13;
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static long THIRTY_YEARS;
@@ -75,54 +78,98 @@ public class FrpReducer extends L3Reducer {
 
         final int hour = calendar.get(Calendar.HOUR_OF_DAY);
         final int minute = calendar.get(Calendar.MINUTE);
+        final int second = calendar.get(Calendar.SECOND);
 
         final String[] result = new String[2];
-        result[0] = String.format("%04d%02d%02d", year, month, day);
-        result[1] = String.format("%02d%02d", hour, minute);
+        result[0] = String.format(Locale.ENGLISH, "%04d%02d%02d", year, month, day);
+        result[1] = String.format(Locale.ENGLISH, "%02d%02d%d", hour, minute, second);
         return result;
     }
 
+    static void writeL2CSV(Context context, GregorianCalendar utcCalendar, Writer out) throws IOException, InterruptedException {
+        out.write("Column\tRow\tDate\tTime\tLatitude\tLongitude\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tConfidence\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+        while (context.nextKey()) {
+            final LongWritable binIndex = context.getCurrentKey();
+            for (L3SpatialBin bin : context.getValues()) {
+                final Date date = new Date(binIndex.get() / 1000 + THIRTY_YEARS);
+                final int flags = (int) bin.getFeatureValues()[FLAGS_IDX];
+
+                // Column
+                // Row
+                // Date
+                // Time
+                // Latitude
+                // Longitude
+                // FRP_MWIR
+                // FRP_MWIR_uncertainty
+                // FRP_SWIR
+                // FRP_SWIR_uncertainty
+                // Confidence
+                // F1_flag
+                // Day_flag
+                // Area
+                // Platform
+                // Land/Ocean
+                // Hotspot_class
+
+                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[COL_IDX]));
+                out.write('\t');
+                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[ROW_IDX]));
+                out.write('\t');
+
+                final String[] dateTime = getDateTime(date, utcCalendar);
+                out.write(dateTime[0]);
+                out.write('\t');
+                out.write(dateTime[1]);
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LAT_IDX]));
+                out.write('\t');
+                out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LON_IDX]));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_IDX]));
+                out.write('\t');
+                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_UNC_IDX]));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_IDX]));
+                out.write('\t');
+                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_UNC_IDX]));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[CONF_IDX]));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[F1_FLAG_IDX]));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%d", isDay(flags) ? 1 : 0));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[AREA_IDX]));
+                out.write('\t');
+
+                final int platformNumber = (int) bin.getFeatureValues()[PLATFORM_IDX];
+                out.write(String.format("%s", platformNumber == 1 ? "S3A" : platformNumber == 2 ? "S3B" : "unknown"));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%d", isWater(flags) ? 0 : 1));
+                out.write('\t');
+
+                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[CLASSIFICATION_IDX]));
+
+                out.write('\n');
+            }
+        }
+    }
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         if ("l2monthly".equals(context.getConfiguration().get("calvalus.targetFormat", "l2monthly"))) {
             final GregorianCalendar utcCalendar = createCalendar();
             try (BufferedWriter out = new BufferedWriter(new FileWriter(new File("somename")))) {
-                out.write("Date\tTime\tLatitude\tLongitude\tRow\tColumn\tFRP_MIR\tFRP_SWIR\tAREA\tday_flag\tf1_flag\tPlatform\tConfidence\n");
-                while (context.nextKey()) {
-                    final LongWritable binIndex = context.getCurrentKey();
-                    for (L3SpatialBin bin : context.getValues()) {
-                        final Date date = new Date(binIndex.get() / 1000 + THIRTY_YEARS);
-                        final String[] dateTime = getDateTime(date, utcCalendar);
-                        out.write(dateTime[0]);
-                        out.write('\t');
-                        out.write(dateTime[1]);
-                        out.write('\t');
-
-                        out.write(String.format("%8.5f", bin.getFeatureValues()[LAT_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%8.5f", bin.getFeatureValues()[LON_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%d", (int) bin.getFeatureValues()[ROW_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%d", (int) bin.getFeatureValues()[COL_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%f", bin.getFeatureValues()[FRP_MIR_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%f", bin.getFeatureValues()[FRP_SWIR_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%f", bin.getFeatureValues()[AREA_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%d", (int) bin.getFeatureValues()[DAY_FLAG_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%d", (int) bin.getFeatureValues()[F1_FLAG_IDX]));
-                        out.write('\t');
-                        out.write(String.format("%s", bin.getFeatureValues()[0] == 1 ? "S3A" : bin.getFeatureValues()[0] == 2 ? "S3B" : "unknown"));
-                        out.write('\t');
-                        out.write(String.format("%f", bin.getFeatureValues()[CONF_IDX]));
-                        out.write('\n');
-                    }
-                }
+                writeL2CSV(context, utcCalendar, out);
             }
             LOG.info("Copying file to HDFS");
             final Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), "somename");

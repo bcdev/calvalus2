@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import static com.bc.calvalus.processing.fire.FrpMapper.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 
@@ -201,11 +199,38 @@ public class FrpMapperTest {
 
     @Test
     public void testIsCloud() {
-        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, 0));
-        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD + 19, 128));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD + 19));
 
-        assertEquals(0, FrpMapper.isCloud(0, 0));
-        assertEquals(0, FrpMapper.isCloud(19, 128));
-        assertEquals(0, FrpMapper.isCloud(FRP_CLOUD, CONF_IN_UNFILLED));
+        assertEquals(0, FrpMapper.isCloud(0));
+        assertEquals(0, FrpMapper.isCloud(19));
+    }
+
+    @Test
+    public void testIsUnfilled() {
+        assertTrue(FrpMapper.isUnfilled(CONF_IN_UNFILLED));
+        assertTrue(FrpMapper.isUnfilled(CONF_IN_UNFILLED + 17));
+
+        assertFalse(FrpMapper.isUnfilled(0));
+        assertFalse(FrpMapper.isUnfilled(1024));
+    }
+
+    @Test
+    public void testIsWater() {
+        assertTrue(FrpMapper.isWater(FRP_WATER));
+        assertTrue(FrpMapper.isWater(L1B_WATER));
+
+        assertFalse(FrpMapper.isWater(0));
+        assertFalse(FrpMapper.isWater(CONF_IN_UNFILLED));
+        assertFalse(FrpMapper.isWater(FRP_CLOUD));
+    }
+
+    @Test
+    public void testIsDay() {
+        assertTrue(FrpMapper.isDay(DAY));
+
+        assertFalse(FrpMapper.isDay(0));
+        assertFalse(FrpMapper.isDay(L1B_WATER));
+        assertFalse(FrpMapper.isDay(FRP_CLOUD));
     }
 }
