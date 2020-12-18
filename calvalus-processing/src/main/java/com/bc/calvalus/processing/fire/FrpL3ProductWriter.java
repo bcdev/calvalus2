@@ -37,6 +37,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     private List<String> bandsNotToBeWritten;
     private NetcdfFileWriter fileWriter;
     private ProductType type;
+    private boolean dataWritten;
 
     FrpL3ProductWriter(ProductWriterPlugIn writerPlugIn) {
         super(writerPlugIn);
@@ -234,24 +235,29 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3a_day_water_sum", new VariableTemplate("s3a_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime water pixels"));
         variableTemplates.put("s3a_day_fire_sum", new VariableTemplate("s3a_day_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime active fire pixels"));
         variableTemplates.put("s3a_day_frp_mean", new VariableTemplate("s3a_day_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during daytime"));
+        variableTemplates.put("s3a_day_frp_unc_sum", new VariableTemplate("s3a_day_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3A during daytime"));
         variableTemplates.put("s3a_night_pixel_sum", new VariableTemplate("s3a_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime pixels"));
         variableTemplates.put("s3a_night_cloud_sum", new VariableTemplate("s3a_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime cloudy pixels"));
         variableTemplates.put("s3a_night_water_sum", new VariableTemplate("s3a_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime water pixels"));
         variableTemplates.put("s3a_night_fire_sum", new VariableTemplate("s3a_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime active fire pixels"));
         variableTemplates.put("s3a_night_frp_mean", new VariableTemplate("s3a_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime"));
+        variableTemplates.put("s3a_night_frp_unc_sum", new VariableTemplate("s3a_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3A during nighttime"));
         variableTemplates.put("s3b_day_pixel_sum", new VariableTemplate("s3b_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime pixels"));
         variableTemplates.put("s3b_day_cloud_sum", new VariableTemplate("s3b_day_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime cloudy pixels"));
         variableTemplates.put("s3b_day_water_sum", new VariableTemplate("s3b_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime water pixels"));
         variableTemplates.put("s3b_day_fire_sum", new VariableTemplate("s3b_day_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime active fire pixels"));
         variableTemplates.put("s3b_day_frp_mean", new VariableTemplate("s3b_day_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during daytime"));
+        variableTemplates.put("s3b_day_frp_unc_sum", new VariableTemplate("s3b_day_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during daytime"));
         variableTemplates.put("s3b_night_pixel_sum", new VariableTemplate("s3b_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
         variableTemplates.put("s3b_night_cloud_sum", new VariableTemplate("s3b_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime cloudy pixels"));
         variableTemplates.put("s3b_night_water_sum", new VariableTemplate("s3b_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
         variableTemplates.put("s3b_night_fire_sum", new VariableTemplate("s3b_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
         variableTemplates.put("s3b_night_frp_mean", new VariableTemplate("s3b_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
+        variableTemplates.put("s3b_night_frp_unc_sum", new VariableTemplate("s3b_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during nighttime"));
         // l3 monthly variables
         variableTemplates.put("fire_land_pixel_sum", new VariableTemplate("fire_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of land-based detected active fire pixels in the grid cell"));
         variableTemplates.put("frp_mir_land_mean", new VariableTemplate("frp_mir_land_mean", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power derived from the MIR radiance"));
+        variableTemplates.put("frp_mir_land_unc_sum", new VariableTemplate("frp_mir_land_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty derived from the MIR radiance"));
         variableTemplates.put("fire_water_pixel_sum", new VariableTemplate("fire_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of water-based detected active fire pixels in the grid cell"));
         variableTemplates.put("slstr_pixel_sum", new VariableTemplate("slstr_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
         variableTemplates.put("pixel_boxed", new VariableTemplate("pixel_boxed", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
@@ -322,6 +328,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.create();
 
         writeAxesAndBoundsVariables(sourceProduct);
+
+        dataWritten = false;
     }
 
     private void writeAxesAndBoundsVariables(Product sourceProduct) throws IOException {
@@ -393,7 +401,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         addWeightedVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage", "MW");
         addWeightedVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", "MW");
         addWeightedVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "MW");
-        addWeightedVariable(dimensions, "fire_land_pixel_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "1");
     }
 
     private void addWeightedMonthlyVariables() {
@@ -455,16 +462,26 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         if (fileWriter != null) {
             writeVariableData();
             fileWriter.flush();
+            dataWritten = true;
         }
     }
 
     private void writeVariableData() throws IOException {
+        if (dataWritten) {
+            return;
+
+        }
         if (type == ProductType.DAILY || type == ProductType.CYCLE) {
             calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
             calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
             calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
             calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
+            calculateUncertainty("s3a_day_frp_unc", "s3a_day_fire");
+            calculateUncertainty("s3a_night_frp_unc", "s3a_night_fire");
+            calculateUncertainty("s3b_day_frp_unc", "s3b_day_fire");
+            calculateUncertainty("s3b_night_frp_unc", "s3b_night_fire");
         } else if (type == ProductType.MONTHLY) {
+            calculateUncertainty("frp_mir_land_unc", "fire_land_pixel");
             calculateWindowData();
             calculateWeightedVariables();
         }
@@ -520,12 +537,12 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     }
 
     private void calculateWindowData() {
-        calculateWindowData("cloud_land_pixel", "cloud_over_land_pixel_boxed");
-        calculateWindowData("slstr_pixel", "pixel_boxed");
-        calculateWindowData("water_pixel", "water_pixel_boxed");
+        calculateWindowData("cloud_land_pixel", "cloud_over_land_pixel_boxed", 5);
+        calculateWindowData("slstr_pixel", "pixel_boxed", 5);
+        calculateWindowData("water_pixel", "water_pixel_boxed", 5);
     }
 
-    private void calculateWindowData(String sourceName, String targetName) {
+    private void calculateWindowData(String sourceName, String targetName, int windowSize) {
         final Array source = variableData.get(sourceName);
         final Index srcIdx = source.getIndex();
 
@@ -535,7 +552,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final int[] shape = source.getShape();
         final int width = shape[2];
         final int height = shape[1];
-        final int windowSize = 3;
         final int windowOffset = windowSize / 2;
         final int[] windowData = new int[windowSize * windowSize];
 
@@ -595,6 +611,24 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             }
 
             weightedFRPArray.setFloat(i, weightedFrp);
+        }
+    }
+
+    private void calculateUncertainty(String frpUncSumName, String fireCountName) {
+        final Array uncertainties = variableData.get(frpUncSumName);
+        final Array fireCounts = variableData.get(fireCountName);
+
+        for (int i = 0; i < uncertainties.getSize(); i++) {
+            float uncertainty = Float.NaN;
+            final int numFirePixels = fireCounts.getInt(i);
+            if (numFirePixels > 0) {
+                final float squaredUncertainty = uncertainties.getInt(i);
+                if (squaredUncertainty > 0.f) {
+                    uncertainty = (float) (Math.sqrt(squaredUncertainty)/ numFirePixels);
+                }
+            }
+
+            uncertainties.setFloat(i, uncertainty);
         }
     }
 

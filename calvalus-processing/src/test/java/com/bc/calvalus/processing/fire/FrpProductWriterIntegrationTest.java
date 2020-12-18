@@ -66,6 +66,7 @@ public class FrpProductWriterIntegrationTest {
             ensureAxesAndBoundsVariables_daily(netcdfFile);
 
             ensureVariables_daily(netcdfFile);
+            ensureUncertainties_daily(netcdfFile);
             ensureWeightedFRPVariables(netcdfFile);
         }
     }
@@ -100,10 +101,14 @@ public class FrpProductWriterIntegrationTest {
         }
     }
 
-    private void ensureWeightedFRPVariables(NetcdfFile netcdfFile) {
+    private void ensureWeightedFRPVariables(NetcdfFile netcdfFile) throws IOException {
         Variable variable = netcdfFile.findVariable("s3a_day_frp_weighted");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
+        Array data = variable.read();
+        Index index = data.getIndex();
+        assertEquals(2.153846263885498, data.getFloat(index.set(0, 1, 2)), 1e-8);
+        assertEquals(2.090909004211426, data.getFloat(index.set(0, 2, 3)), 1e-8);
 
         variable = netcdfFile.findVariable("s3a_night_frp_weighted");
         int[] shape = variable.getShape();
@@ -112,10 +117,18 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(4, shape[1]);
         assertEquals(8, shape[2]);
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(2.0740740299224854, data.getFloat(index.set(0, 2, 3)), 1e-8);
+        assertEquals(2.055555582046509, data.getFloat(index.set(0, 3, 4)), 1e-8);
 
         variable = netcdfFile.findVariable("s3b_day_frp_weighted");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals("Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", variable.findAttribute(CF.LONG_NAME).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(2.0487804412841797, data.getFloat(index.set(0, 3, 4)), 1e-8);
+        assertEquals(2.1111111640930176, data.getFloat(index.set(0, 0, 5)), 1e-8);
 
         variable = netcdfFile.findVariable("s3b_night_frp_weighted");
         shape = variable.getShape();
@@ -124,6 +137,10 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(4, shape[1]);
         assertEquals(8, shape[2]);
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(2.0833332538604736, data.getFloat(index.set(0, 0, 6)), 1e-8);
+        assertEquals(2.060606002807617, data.getFloat(index.set(0, 1, 7)), 1e-8);
     }
 
     private void ensureVariables_daily(NetcdfFile netcdfFile) throws IOException {
@@ -170,6 +187,40 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(18, data.getInt(index.set(0, 0, 1)));
     }
 
+    private void ensureUncertainties_daily(NetcdfFile netcdfFile) throws IOException {
+        Variable variable = netcdfFile.findVariable("s3a_day_frp_unc");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
+        Array data = variable.read();
+        Index index = data.getIndex();
+        assertEquals(0.42132505774497986, data.getFloat(index.set(0, 1, 2)), 1e-8);
+        assertEquals(0.28386354446411133, data.getFloat(index.set(0, 2, 3)), 1e-8);
+
+        variable = netcdfFile.findVariable("s3a_night_frp_unc");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue().floatValue(), 1e-8);
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(0.23424279689788818, data.getFloat(index.set(0, 2, 3)), 1e-8);
+        assertEquals(0.1944444477558136, data.getFloat(index.set(0, 3, 4)), 1e-8);
+
+        variable = netcdfFile.findVariable("s3b_day_frp_unc");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("Mean Fire Radiative Power uncertainty measured by S3B during daytime", variable.findAttribute(CF.LONG_NAME).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(0.17246507108211517, data.getFloat(index.set(0, 3, 4)), 1e-8);
+        assertEquals(0.28867512941360474, data.getFloat(index.set(0, 0, 5)), 1e-8);
+
+        variable = netcdfFile.findVariable("s3b_night_frp_unc");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("Mean Fire Radiative Power uncertainty measured by S3B during nighttime", variable.findAttribute(CF.LONG_NAME).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(0.23006533086299896, data.getFloat(index.set(0, 0, 5)), 1e-8);
+        assertEquals(0.190086334943771360, data.getFloat(index.set(0, 1, 6)), 1e-8);
+    }
+
     private void ensureVariables_monthly(NetcdfFile netcdfFile) throws IOException {
         Variable variable = netcdfFile.findVariable("fire_land_pixel");
         assertEquals(DataType.UINT, variable.getDataType());
@@ -189,8 +240,16 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(30, data.getInt(index.set(0, 3, 4)));
-        assertEquals(7, data.getInt(index.set(0, 0, 5)));
+        assertEquals(30, data.getFloat(index.set(0, 3, 4)), 1e-8);
+        assertEquals(7, data.getFloat(index.set(0, 0, 5)), 1e-8);
+
+        variable = netcdfFile.findVariable("frp_mir_land_unc");
+        assertEquals(DataType.FLOAT, variable.getDataType());
+        assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
+        data = variable.read();
+        index = data.getIndex();
+        assertEquals(0.4948716461658478, data.getFloat(index.set(0, 0, 6)), 1e-8);
+        assertEquals(0.2981424033641815, data.getFloat(index.set(0, 1, 6)), 1e-8);
 
         variable = netcdfFile.findVariable("fire_water_pixel");
         assertEquals(DataType.UINT, variable.getDataType());
@@ -205,16 +264,16 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(162, data.getInt(index.set(0, 1, 6)));
-        assertEquals(159, data.getInt(index.set(0, 2, 7)));
+        assertEquals(344, data.getInt(index.set(0, 1, 6)));
+        assertEquals(264, data.getInt(index.set(0, 2, 7)));
 
         variable = netcdfFile.findVariable("water_pixel_boxed");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(171, data.getInt(index.set(0, 1, 6)));
-        assertEquals(165, data.getInt(index.set(0, 2, 7)));
+        assertEquals(360, data.getInt(index.set(0, 1, 6)));
+        assertEquals(276, data.getInt(index.set(0, 2, 7)));
     }
 
     private void ensureWindowedVariables(NetcdfFile netcdfFile) throws IOException {
@@ -223,32 +282,32 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         Array data = variable.read();
         Index index = data.getIndex();
-        assertEquals(0.9433962106704712, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(0.1818181872367859, data.getFloat(index.set(0, 0, 1)), 1e-8);
+        assertEquals(1.08695650100708, data.getFloat(index.set(0, 3, 0)), 1e-8);
+        assertEquals(0.12903225421905518, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
         variable = netcdfFile.findVariable("cloud_over_land_fraction_boxed");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(-25.5, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(-10.0, data.getFloat(index.set(0, 0, 1)), 1e-8);
+        assertEquals(-22.0, data.getFloat(index.set(0, 3, 0)), 1e-8);
+        assertEquals(-14.5, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
         variable = netcdfFile.findVariable("cloud_over_land_pixel_boxed");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(60, data.getInt(index.set(0, 0, 1)));
-        assertEquals(135, data.getInt(index.set(0, 1, 2)));
+        assertEquals(174, data.getInt(index.set(0, 0, 1)));
+        assertEquals(380, data.getInt(index.set(0, 1, 2)));
 
         variable = netcdfFile.findVariable("pixel_boxed");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(126, data.getInt(index.set(0, 1, 2)));
-        assertEquals(207, data.getInt(index.set(0, 2, 3)));
+        assertEquals(360, data.getInt(index.set(0, 1, 2)));
+        assertEquals(380, data.getInt(index.set(0, 2, 3)));
     }
 
     private void ensureTempVariablesDropped(NetcdfFile netcdfFile) {
@@ -279,6 +338,9 @@ public class FrpProductWriterIntegrationTest {
         final Band s3a_day_frp = product.addBand("s3a_day_frp_mean", ProductData.TYPE_FLOAT32);
         s3a_day_frp.setData(createDataBuffer(4));
 
+        final Band s3a_day_frp_unc = product.addBand("s3a_day_frp_unc_sum", ProductData.TYPE_FLOAT32);
+        s3a_day_frp_unc.setData(createDataBuffer(20));
+
         final Band s3a_night_pixel = product.addBand("s3a_night_pixel_sum", ProductData.TYPE_FLOAT32);
         s3a_night_pixel.setData(createDataBuffer(5));
 
@@ -293,6 +355,9 @@ public class FrpProductWriterIntegrationTest {
 
         final Band s3a_night_frp = product.addBand("s3a_night_frp_mean", ProductData.TYPE_FLOAT32);
         s3a_night_frp.setData(createDataBuffer(9));
+
+        final Band s3a_night_frp_unc = product.addBand("s3a_night_frp_unc_sum", ProductData.TYPE_FLOAT32);
+        s3a_night_frp_unc.setData(createDataBuffer(21));
 
         final Band s3b_day_pixel = product.addBand("s3b_day_pixel_sum", ProductData.TYPE_FLOAT32);
         s3b_day_pixel.setData(createDataBuffer(10));
@@ -309,6 +374,9 @@ public class FrpProductWriterIntegrationTest {
         final Band s3b_day_frp = product.addBand("s3b_day_frp_mean", ProductData.TYPE_FLOAT32);
         s3b_day_frp.setData(createDataBuffer(14));
 
+        final Band s3b_day_frp_unc = product.addBand("s3b_day_frp_unc_sum", ProductData.TYPE_FLOAT32);
+        s3b_day_frp_unc.setData(createDataBuffer(22));
+
         final Band s3b_night_pixel = product.addBand("s3b_night_pixel_sum", ProductData.TYPE_FLOAT32);
         s3b_night_pixel.setData(createDataBuffer(15));
 
@@ -324,6 +392,9 @@ public class FrpProductWriterIntegrationTest {
         final Band s3b_night_frp = product.addBand("s3b_night_frp_mean", ProductData.TYPE_FLOAT32);
         s3b_night_frp.setData(createDataBuffer(19));
 
+        final Band s3b_night_frp_unc = product.addBand("s3b_night_frp_unc_sum", ProductData.TYPE_FLOAT32);
+        s3b_night_frp_unc.setData(createDataBuffer(23));
+
         product.setStartTime(ProductData.UTC.parse("22-MAR-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("22-MAR-2020 23:59:59"));
         return product;
@@ -337,6 +408,9 @@ public class FrpProductWriterIntegrationTest {
 
         final Band frp_mir_land = product.addBand("frp_mir_land_mean", ProductData.TYPE_FLOAT32);
         frp_mir_land.setData(createDataBuffer(2));
+
+        final Band frp_mir_land_unc = product.addBand("frp_mir_land_unc_sum", ProductData.TYPE_FLOAT32);
+        frp_mir_land_unc.setData(createDataBuffer(6));
 
         final Band fire_water_pixel = product.addBand("fire_water_pixel_sum", ProductData.TYPE_FLOAT32);
         fire_water_pixel.setData(createDataBuffer(3));

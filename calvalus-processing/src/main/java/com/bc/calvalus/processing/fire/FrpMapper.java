@@ -65,34 +65,39 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     private static final int S3A_OFFSET = 0;   // offset into variables array for s3a data
-    private static final int S3B_OFFSET = 10;   // offset into variables array for s3b data
+    private static final int S3B_OFFSET = 12;   // offset into variables array for s3b data
     static String[] VARIABLE_NAMES = {
             "s3a_day_pixel",
             "s3a_day_cloud",
             "s3a_day_water",
             "s3a_day_fire",
             "s3a_day_frp",
+            "s3a_day_frp_unc",
             "s3a_night_pixel",
             "s3a_night_cloud",
             "s3a_night_water",
             "s3a_night_fire",
             "s3a_night_frp",
+            "s3a_night_frp_unc",
             "s3b_day_pixel",
             "s3b_day_cloud",
             "s3b_day_water",
             "s3b_day_fire",
             "s3b_day_frp",
+            "s3b_day_frp_unc",
             "s3b_night_pixel",
             "s3b_night_cloud",
             "s3b_night_water",
             "s3b_night_fire",
-            "s3b_night_frp"
+            "s3b_night_frp",
+            "s3b_night_frp_unc"
     };
     // variables with commented names are generated in the ProductWriter
     static String[] VARIABLE_NAMES_MONTHLY = {
             "fire_land_pixel",
             "fire_water_pixel",
             "frp_mir_land",
+            "frp_mir_land_unc",
             "cloud_land_pixel",
             "water_pixel",
             "slstr_pixel",
@@ -246,6 +251,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         }
 
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", false);
+        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
 
         final Array[] geodeticArrays = new Array[GEODETIC_VARIABLES.values().length];
         final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
@@ -266,6 +272,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final double mjd = extractMJDFromFilename(inputPath);
         final int areaIndex = FRP_VARIABLES.IFOV_area.ordinal();
         final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
+        final int mwirUncIndex = FRP_VARIABLES.FRP_uncertainty_MWIR.ordinal();
 
         if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
             // pixel loop
@@ -277,13 +284,16 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final int rows = rowCol[0];
             final int columns = rowCol[1];
             for (int row = 0; row < rows; ++row) {
-                final ObservationImpl[] observations = new ObservationImpl[columns];
+                final List<Observation> observations = new ArrayList<>();
                 for (int col = 0; col < columns; ++col) {
                     index.set(row, col);
 
                     // apply flags
                     final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
                     if (isWater(flags) && onlyLand) {
+                        continue;
+                    }
+                    if (isDay(flags) && onlyNight) {
                         continue;
                     }
                     final int confFlags = confidenceFlags.getInt(index);
@@ -295,8 +305,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
                     final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
 
-                    final Integer fire = fireIndex.get(row * columns + col);
                     float frpMwir = Float.NaN;
+                    float frpMwirUnc = Float.NaN;
+                    final Integer fire = fireIndex.get(row * columns + col);
                     if (fire != null) {
                         final double area = frpArrays[areaIndex].getDouble(fire);
                         if (area > 0.0) {
@@ -306,18 +317,20 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                             } else {
                                 ++count;
                             }
+                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
                         }
                     }
 
-                    int writeOffset = variableOffset + (isDay(flags) ? 0 : 5);
+                    int writeOffset = variableOffset + (isDay(flags) ? 0 : 6);
                     // aggregate contributions based on flags and platform
-                    float[] values = new float[20];
-                    values[variableIndex[writeOffset]] = 1;
+                    float[] values = new float[24];
+                    values[variableIndex[writeOffset]] = 1; // total measurement count
                     values[variableIndex[writeOffset + 1]] = isCloud(flags);  // frp_cloud
                     values[variableIndex[writeOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
-                    values[variableIndex[writeOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;
+                    values[variableIndex[writeOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
                     values[variableIndex[writeOffset + 4]] = frpMwir;
-                    observations[col] = new ObservationImpl(lat, lon, mjd, values);
+                    values[variableIndex[writeOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
+                    observations.add(new ObservationImpl(lat, lon, mjd, values));
                 }
                 spatialBinner.processObservationSlice(observations);
             }
@@ -337,13 +350,16 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final int rows = rowCol[0];
             final int columns = rowCol[1];
             for (int row = 0; row < rows; ++row) {
-                final ObservationImpl[] observations = new ObservationImpl[columns];
+                final List<Observation> observations = new ArrayList<>();
                 for (int col = 0; col < columns; ++col) {
                     index.set(row, col);
 
                     // apply flags
                     final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
                     if (isWater(flags) && onlyLand) {
+                        continue;
+                    }
+                    if (isDay(flags) && onlyNight) {
                         continue;
                     }
                     final int confFlags = confidenceFlags.getInt(index);
@@ -357,12 +373,15 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
                     final Integer fire = fireIndex.get(row * columns + col);
                     float frpMwir = Float.NaN;
+                    float frpMwirUnc = Float.NaN;
                     if (fire != null) {
                         final double area = frpArrays[areaIndex].getDouble(fire);
                         if (area > 0.0) {
                             frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
                             if (frpMwir <= 0.0) {
                                 frpMwir = Float.NaN;
+                            } else {
+                                frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
                             }
                         }
                     }
@@ -382,8 +401,10 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     }
 
                     float Frp = Float.NaN;
+                    float FrpUncSquared = Float.NaN;
                     if (isFire && !isWater) {
                         Frp = frpMwir;
+                        FrpUncSquared = frpMwirUnc * frpMwirUnc;
                     }
 
                     float Ncl = 0.f;
@@ -394,10 +415,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     values[variableIndex[0]] = Nlf;
                     values[variableIndex[1]] = Nwf;
                     values[variableIndex[2]] = Frp;
-                    values[variableIndex[3]] = Ncl;
-                    values[variableIndex[4]] = isWater ? 1 : 0;    // Nw
-                    values[variableIndex[5]] = 1; // No
-                    observations[col] = new ObservationImpl(lat, lon, mjd, values);
+                    values[variableIndex[3]] = FrpUncSquared;
+                    values[variableIndex[4]] = Ncl;
+                    values[variableIndex[5]] = isWater ? 1 : 0;    // Nw
+                    values[variableIndex[6]] = 1; // No
+                    observations.add(new ObservationImpl(lat, lon, mjd, values));
                 }
                 spatialBinner.processObservationSlice(observations);
             }
@@ -449,6 +471,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
         final long[] timeRange = getTimeRange(dateRanges);
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", false);
+        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
 
         int count = 0;
         final Index flagsIdx = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
@@ -465,6 +488,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final int col = frpArrays[FRP_VARIABLES.i.ordinal()].getShort(i);
             final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx.set(row, col));
             if (isWater(flags) && onlyLand) {
+                continue;
+            }
+            if (isDay(flags) && onlyNight) {
                 continue;
             }
             confIdx.set(row, col);
