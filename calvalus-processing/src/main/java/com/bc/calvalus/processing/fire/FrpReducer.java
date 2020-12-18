@@ -87,7 +87,7 @@ public class FrpReducer extends L3Reducer {
     }
 
     static void writeL2CSV(Context context, GregorianCalendar utcCalendar, Writer out) throws IOException, InterruptedException {
-        out.write("Column\tRow\tDate\tTime\tLatitude\tLongitude\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tConfidence\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+        out.write("Column\tRow\tDate\tTime\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tConfidence\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
         while (context.nextKey()) {
             final LongWritable binIndex = context.getCurrentKey();
             for (L3SpatialBin bin : context.getValues()) {
@@ -100,6 +100,7 @@ public class FrpReducer extends L3Reducer {
                 // Time
                 // Latitude
                 // Longitude
+                // sat_zenith
                 // FRP_MWIR
                 // FRP_MWIR_uncertainty
                 // FRP_SWIR
@@ -126,6 +127,10 @@ public class FrpReducer extends L3Reducer {
                 out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LAT_IDX]));
                 out.write('\t');
                 out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LON_IDX]));
+                out.write('\t');
+
+                // @todo 1 tb/** add real value for satellite zenith angle 2020-12-18
+                out.write(String.format(Locale.ENGLISH, "%3.5f", Float.NaN));
                 out.write('\t');
 
                 out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_IDX]));
