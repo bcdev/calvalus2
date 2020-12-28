@@ -61,7 +61,7 @@ public class OrderRAProductionView extends OrderProductionView {
         productSetFilterForm.temporalFilterOff.setEnabled(false);
         productSetFilterForm.temporalFilterByDateList.setEnabled(false);
 
-        productSetFilterForm.spatialFilterOff.setValue(true);
+        productSetFilterForm.spatialFilterOff.setValue(false);
         productSetFilterForm.spatialFilterByRegion.setValue(false);
         productSetFilterForm.spatialFilterOff.setEnabled(false);
         productSetFilterForm.spatialFilterByRegion.setEnabled(false);
