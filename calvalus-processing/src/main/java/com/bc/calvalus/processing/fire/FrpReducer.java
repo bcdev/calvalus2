@@ -173,12 +173,16 @@ public class FrpReducer extends L3Reducer {
     public void run(Context context) throws IOException, InterruptedException {
         if ("l2monthly".equals(context.getConfiguration().get("calvalus.targetFormat", "l2monthly"))) {
             final GregorianCalendar utcCalendar = createCalendar();
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(new File("somename")))) {
+            // 20200801-C3S-L2-FRP-SLSTR-P1M-fv0.4.csv
+            final String minDate = context.getConfiguration().get("calvalus.minDate");
+            final String version = context.getConfiguration().get("calvalus.output.version");
+            final String fileName = String.format("%s%s%s-C3S-L2-FRP-SLSTR_P1M-fv%s.csv", minDate.substring(0,4), minDate.substring(5,7), minDate.substring(8,10), version);
+            try (BufferedWriter out = new BufferedWriter(new FileWriter(new File(fileName)))) {
                 writeL2CSV(context, utcCalendar, out);
             }
             LOG.info("Copying file to HDFS");
-            final Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), "somename");
-            try (InputStream inputStream = new BufferedInputStream(new FileInputStream(new File("somename")))) {
+            final Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+            try (InputStream inputStream = new BufferedInputStream(new FileInputStream(new File(fileName)))) {
                 try (OutputStream outputStream = workPath.getFileSystem(context.getConfiguration()).create(workPath)) {
                     byte[] buffer = new byte[64 * 1024];
                     while (true) {

@@ -65,26 +65,26 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     private static final int S3A_OFFSET = 0;   // offset into variables array for s3a data
-    private static final int S3B_OFFSET = 12;   // offset into variables array for s3b data
+    private static final int S3B_OFFSET = 6;   // offset into variables array for s3b data
     static String[] VARIABLE_NAMES = {
-            "s3a_day_pixel",
-            "s3a_day_cloud",
-            "s3a_day_water",
-            "s3a_day_fire",
-            "s3a_day_frp",
-            "s3a_day_frp_unc",
+//            "s3a_day_pixel",
+//            "s3a_day_cloud",
+//            "s3a_day_water",
+//            "s3a_day_fire",
+//            "s3a_day_frp",
+//            "s3a_day_frp_unc",
             "s3a_night_pixel",
             "s3a_night_cloud",
             "s3a_night_water",
             "s3a_night_fire",
             "s3a_night_frp",
             "s3a_night_frp_unc",
-            "s3b_day_pixel",
-            "s3b_day_cloud",
-            "s3b_day_water",
-            "s3b_day_fire",
-            "s3b_day_frp",
-            "s3b_day_frp_unc",
+//            "s3b_day_pixel",
+//            "s3b_day_cloud",
+//            "s3b_day_water",
+//            "s3b_day_fire",
+//            "s3b_day_frp",
+//            "s3b_day_frp_unc",
             "s3b_night_pixel",
             "s3b_night_cloud",
             "s3b_night_water",
@@ -92,15 +92,24 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "s3b_night_frp",
             "s3b_night_frp_unc"
     };
+    private static final int S3A_P1M_OFFSET = 0;   // offset into variables array for s3a data
+    private static final int S3B_P1M_OFFSET = 7;   // offset into variables array for s3b data
     // variables with commented names are generated in the ProductWriter
     static String[] VARIABLE_NAMES_MONTHLY = {
-            "fire_land_pixel",
-            "fire_water_pixel",
-            "frp_mir_land",
-            "frp_mir_land_unc",
-            "cloud_land_pixel",
-            "water_pixel",
-            "slstr_pixel",
+            "s3a_fire_land_pixel",
+            "s3a_fire_water_pixel",
+            "s3a_frp_mir_land",
+            "s3a_frp_mir_land_unc",
+            "s3a_cloud_land_pixel",
+            "s3a_water_pixel",
+            "s3a_slstr_pixel",
+            "s3b_fire_land_pixel",
+            "s3b_fire_water_pixel",
+            "s3b_frp_mir_land",
+            "s3b_frp_mir_land_unc",
+            "s3b_cloud_land_pixel",
+            "s3b_water_pixel",
+            "s3b_slstr_pixel",
     };
     private static long YEAR2k_MILLIS = Long.MIN_VALUE;
 
@@ -250,8 +259,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             return;
         }
 
-        final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", false);
-        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
+        final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", true);
+        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", true);
 
         final Array[] geodeticArrays = new Array[GEODETIC_VARIABLES.values().length];
         final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
@@ -274,7 +283,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
         final int mwirUncIndex = FRP_VARIABLES.FRP_uncertainty_MWIR.ordinal();
 
+/*
         if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
+*/
             // pixel loop
             int count = 0;
             int variableOffset = getSensorOffset(platformNumber);
@@ -290,9 +301,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
                     // apply flags
                     final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
-                    if (isWater(flags) && onlyLand) {
-                        continue;
-                    }
+//                    if (isWater(flags) && onlyLand) {
+//                        continue;
+//                    }
                     if (isDay(flags) && onlyNight) {
                         continue;
                     }
@@ -307,29 +318,38 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
                     float frpMwir = Float.NaN;
                     float frpMwirUnc = Float.NaN;
-                    final Integer fire = fireIndex.get(row * columns + col);
-                    if (fire != null) {
-                        final double area = frpArrays[areaIndex].getDouble(fire);
-                        if (area > 0.0) {
-                            frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
-                            if (frpMwir <= 0.0) {
-                                frpMwir = Float.NaN;
-                            } else {
-                                ++count;
+                    if (! (isWater(flags) && onlyLand)) {
+                        final Integer fire = fireIndex.get(row * columns + col);
+                        if (fire != null) {
+                            final double area = frpArrays[areaIndex].getDouble(fire);
+                            if (area > 0.0) {
+                                frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
+                                if (frpMwir <= 0.0) {
+                                    frpMwir = Float.NaN;
+                                } else {
+                                    ++count;
+                                }
+                                frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
                             }
-                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
                         }
                     }
 
-                    int writeOffset = variableOffset + (isDay(flags) ? 0 : 6);
+                    int writeOffset = variableOffset; // + (isDay(flags) ? 0 : 6);
+                    int emptyOffset = 6 - variableOffset;
                     // aggregate contributions based on flags and platform
-                    float[] values = new float[24];
-                    values[variableIndex[writeOffset]] = 1; // total measurement count
-                    values[variableIndex[writeOffset + 1]] = isCloud(flags);  // frp_cloud
+                    float[] values = new float[12];
+                    values[variableIndex[writeOffset + 0]] = 1; // total measurement count
+                    values[variableIndex[writeOffset + 1]] = isWater(flags) ? 0 : isCloud(flags);  // frp_cloud
                     values[variableIndex[writeOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
                     values[variableIndex[writeOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
                     values[variableIndex[writeOffset + 4]] = frpMwir;
                     values[variableIndex[writeOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
+                    values[variableIndex[emptyOffset + 0]] = Float.NaN;
+                    values[variableIndex[emptyOffset + 1]] = Float.NaN;
+                    values[variableIndex[emptyOffset + 2]] = Float.NaN;
+                    values[variableIndex[emptyOffset + 3]] = Float.NaN;
+                    values[variableIndex[emptyOffset + 4]] = Float.NaN;
+                    values[variableIndex[emptyOffset + 5]] = Float.NaN;
                     observations.add(new ObservationImpl(lat, lon, mjd, values));
                 }
                 spatialBinner.processObservationSlice(observations);
@@ -343,6 +363,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
                 LOG.log(Level.SEVERE, m, exception);
             }
+/*
         } else if ("l3monthly".equals(targetFormat)) {
             // create observation variable sequence
             final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
@@ -412,19 +433,44 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                         Ncl = 1.f;
                     }
 
-                    values[variableIndex[0]] = Nlf;
-                    values[variableIndex[1]] = Nwf;
-                    values[variableIndex[2]] = Frp;
-                    values[variableIndex[3]] = FrpUncSquared;
-                    values[variableIndex[4]] = Ncl;
-                    values[variableIndex[5]] = isWater ? 1 : 0;    // Nw
-                    values[variableIndex[6]] = 1; // No
+                    if (platformNumber == 1) {
+                        values[variableIndex[0]] = Nlf;
+                        values[variableIndex[1]] = Nwf;
+                        values[variableIndex[2]] = Frp;
+                        values[variableIndex[3]] = FrpUncSquared;
+                        values[variableIndex[4]] = Ncl;
+                        values[variableIndex[5]] = isWater ? 1 : 0;    // Nw
+                        values[variableIndex[6]] = 1; // No
+                        values[variableIndex[S3B_P1M_OFFSET + 0]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 1]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 2]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 3]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 4]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 5]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 6]] = Float.NaN;
+                    } else {
+                        values[variableIndex[0]] = Float.NaN;
+                        values[variableIndex[1]] = Float.NaN;
+                        values[variableIndex[2]] = Float.NaN;
+                        values[variableIndex[3]] = Float.NaN;
+                        values[variableIndex[4]] = Float.NaN;
+                        values[variableIndex[5]] = Float.NaN;
+                        values[variableIndex[6]] = Float.NaN;
+                        values[variableIndex[S3B_P1M_OFFSET + 0]] = Nlf;
+                        values[variableIndex[S3B_P1M_OFFSET + 1]] = Nwf;
+                        values[variableIndex[S3B_P1M_OFFSET + 2]] = Frp;
+                        values[variableIndex[S3B_P1M_OFFSET + 3]] = FrpUncSquared;
+                        values[variableIndex[S3B_P1M_OFFSET + 4]] = Ncl;
+                        values[variableIndex[S3B_P1M_OFFSET + 5]] = isWater ? 1 : 0;    // Nw
+                        values[variableIndex[S3B_P1M_OFFSET + 6]] = 1; // No
+                    }
                     observations.add(new ObservationImpl(lat, lon, mjd, values));
                 }
                 spatialBinner.processObservationSlice(observations);
             }
             spatialBinner.complete();
         }
+*/
     }
 
     private int[] readGeodeticVariables(File[] inputFiles, Array[] geodeticArrays) throws IOException {

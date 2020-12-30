@@ -89,24 +89,24 @@ public class FrpMapperTest {
     public void testCreateVariableIndex_monthly() {
         final BinningContext binningContext = mock(BinningContext.class);
         final VariableContext variableContext = mock(VariableContext.class);
-        when(variableContext.getVariableIndex("fire_land_pixel")).thenReturn(7);
-        when(variableContext.getVariableIndex("frp_mir_land_mean")).thenReturn(5);
-        when(variableContext.getVariableIndex("frp_mir_land_unc")).thenReturn(8);
-        when(variableContext.getVariableIndex("fire_water_pixel")).thenReturn(4);
-        when(variableContext.getVariableIndex("pixel")).thenReturn(3);
-        when(variableContext.getVariableIndex("water_pixel")).thenReturn(2);
-        when(variableContext.getVariableIndex("cloud_land_pixel")).thenReturn(1);
-        when(variableContext.getVariableCount()).thenReturn(7);
+        when(variableContext.getVariableIndex("s3a_fire_land_pixel")).thenReturn(7);
+        when(variableContext.getVariableIndex("s3a_frp_mir_land_mean")).thenReturn(5);
+        when(variableContext.getVariableIndex("s3a_frp_mir_land_unc")).thenReturn(8);
+        when(variableContext.getVariableIndex("s3a_fire_water_pixel")).thenReturn(4);
+        when(variableContext.getVariableIndex("s3a_pixel")).thenReturn(3);
+        when(variableContext.getVariableIndex("s3a_water_pixel")).thenReturn(2);
+        when(variableContext.getVariableIndex("s3a_cloud_land_pixel")).thenReturn(1);
+        when(variableContext.getVariableCount()).thenReturn(2*7);
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
         final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
-        assertEquals(7, variableIndex.length);
+        assertEquals(2*7, variableIndex.length);
         assertEquals(4, variableIndex[1]);
         assertEquals(1, variableIndex[4]);
 
         verify(binningContext, times(1)).getVariableContext();
-        verify(variableContext, times(7)).getVariableIndex(anyString());
+        verify(variableContext, times(2*7)).getVariableIndex(anyString());
         verify(variableContext, times(1)).getVariableCount();
         verifyNoMoreInteractions(binningContext, variableContext);
     }
