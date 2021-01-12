@@ -66,25 +66,14 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss");
     private static final int S3A_OFFSET = 0;   // offset into variables array for s3a data
     private static final int S3B_OFFSET = 6;   // offset into variables array for s3b data
+
     static String[] VARIABLE_NAMES = {
-//            "s3a_day_pixel",
-//            "s3a_day_cloud",
-//            "s3a_day_water",
-//            "s3a_day_fire",
-//            "s3a_day_frp",
-//            "s3a_day_frp_unc",
             "s3a_night_pixel",
             "s3a_night_cloud",
             "s3a_night_water",
             "s3a_night_fire",
             "s3a_night_frp",
             "s3a_night_frp_unc",
-//            "s3b_day_pixel",
-//            "s3b_day_cloud",
-//            "s3b_day_water",
-//            "s3b_day_fire",
-//            "s3b_day_frp",
-//            "s3b_day_frp_unc",
             "s3b_night_pixel",
             "s3b_night_cloud",
             "s3b_night_water",
@@ -92,9 +81,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "s3b_night_frp",
             "s3b_night_frp_unc"
     };
-    private static final int S3A_P1M_OFFSET = 0;   // offset into variables array for s3a data
-    private static final int S3B_P1M_OFFSET = 7;   // offset into variables array for s3b data
-    // variables with commented names are generated in the ProductWriter
+
     static String[] VARIABLE_NAMES_MONTHLY = {
             "s3a_fire_land_pixel",
             "s3a_fire_water_pixel",
@@ -334,16 +321,15 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                         }
                     }
 
-                    int writeOffset = variableOffset; // + (isDay(flags) ? 0 : 6);
                     int emptyOffset = 6 - variableOffset;
                     // aggregate contributions based on flags and platform
                     float[] values = new float[12];
-                    values[variableIndex[writeOffset + 0]] = 1; // total measurement count
-                    values[variableIndex[writeOffset + 1]] = isWater(flags) ? 0 : isCloud(flags);  // frp_cloud
-                    values[variableIndex[writeOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
-                    values[variableIndex[writeOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
-                    values[variableIndex[writeOffset + 4]] = frpMwir;
-                    values[variableIndex[writeOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
+                    values[variableIndex[variableOffset + 0]] = 1; // total measurement count
+                    values[variableIndex[variableOffset + 1]] = isWater(flags) ? 0 : isCloud(flags);  // frp_cloud
+                    values[variableIndex[variableOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
+                    values[variableIndex[variableOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
+                    values[variableIndex[variableOffset + 4]] = frpMwir;
+                    values[variableIndex[variableOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
                     values[variableIndex[emptyOffset + 0]] = Float.NaN;
                     values[variableIndex[emptyOffset + 1]] = Float.NaN;
                     values[variableIndex[emptyOffset + 2]] = Float.NaN;

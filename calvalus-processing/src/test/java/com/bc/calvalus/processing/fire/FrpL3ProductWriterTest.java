@@ -133,22 +133,7 @@ public class FrpL3ProductWriterTest {
     public void testGetVariableTemplate() {
         final FrpL3ProductWriter writer = (FrpL3ProductWriter) new FrpL3ProductWriterPlugIn().createWriterInstance();
 
-        FrpL3ProductWriter.VariableTemplate template = writer.getTemplate("s3a_day_pixel_sum");
-        assertTemplate(DataType.UINT, "s3a_day_pixel", -1, "1", "Total number of S3A daytime pixels", template);
-
-        template = writer.getTemplate("s3a_day_cloud_sum");
-        assertTemplate(DataType.UINT, "s3a_day_cloud", -1, "1", "Total number of S3A daytime cloudy pixels", template);
-
-        template = writer.getTemplate("s3a_day_water_sum");
-        assertTemplate(DataType.UINT, "s3a_day_water", -1, "1", "Total number of S3A daytime water pixels", template);
-
-        template = writer.getTemplate("s3a_day_fire_sum");
-        assertTemplate(DataType.UINT, "s3a_day_fire", -1, "1", "Total number of S3A daytime active fire pixels", template);
-
-        template = writer.getTemplate("s3a_day_frp_mean");
-        assertTemplate(DataType.FLOAT, "s3a_day_frp", Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during daytime", template);
-
-        template = writer.getTemplate("s3a_night_pixel_sum");
+        FrpL3ProductWriter.VariableTemplate template = writer.getTemplate("s3a_night_pixel_sum");
         assertTemplate(DataType.UINT, "s3a_night_pixel", -1, "1", "Total number of S3A nighttime pixels", template);
 
         template = writer.getTemplate("s3a_night_cloud_sum");
@@ -162,21 +147,6 @@ public class FrpL3ProductWriterTest {
 
         template = writer.getTemplate("s3a_night_frp_mean");
         assertTemplate(DataType.FLOAT, "s3a_night_frp", Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime", template);
-
-        template = writer.getTemplate("s3b_day_pixel_sum");
-        assertTemplate(DataType.UINT, "s3b_day_pixel", -1, "1", "Total number of S3B daytime pixels", template);
-
-        template = writer.getTemplate("s3b_day_cloud_sum");
-        assertTemplate(DataType.UINT, "s3b_day_cloud", -1, "1", "Total number of S3B daytime cloudy pixels", template);
-
-        template = writer.getTemplate("s3b_day_water_sum");
-        assertTemplate(DataType.UINT, "s3b_day_water", -1, "1", "Total number of S3B daytime water pixels", template);
-
-        template = writer.getTemplate("s3b_day_fire_sum");
-        assertTemplate(DataType.UINT, "s3b_day_fire", -1, "1", "Total number of S3B daytime active fire pixels", template);
-
-        template = writer.getTemplate("s3b_day_frp_mean");
-        assertTemplate(DataType.FLOAT, "s3b_day_frp", Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during daytime", template);
 
         template = writer.getTemplate("s3b_night_pixel_sum");
         assertTemplate(DataType.UINT, "s3b_night_pixel", -1, "1", "Total number of S3B nighttime pixels", template);
@@ -192,24 +162,6 @@ public class FrpL3ProductWriterTest {
 
         template = writer.getTemplate("s3b_night_frp_mean");
         assertTemplate(DataType.FLOAT, "s3b_night_frp", Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime", template);
-
-        template = writer.getTemplate("s3a_fire_land_pixel_sum");
-        assertTemplate(DataType.UINT, "s3a_fire_land_pixel", -1, "1", "Total number of land-based detected active fire pixels in the grid cell", template);
-
-        template = writer.getTemplate("s3a_frp_mir_land_mean");
-        assertTemplate(DataType.FLOAT, "s3a_frp_mir_land_mean", Float.NaN, "MW", "Mean Fire Radiative Power derived from the MIR radiance", template);
-
-        template = writer.getTemplate("s3a_fire_water_pixel_sum");
-        assertTemplate(DataType.UINT, "s3a_fire_water_pixel", -1, "1", "Total number of water-based detected active fire pixels in the grid cell", template);
-
-        template = writer.getTemplate("s3a_slstr_pixel_sum");
-        assertTemplate(DataType.UINT, "s3a_slstr_pixel", -1, "1", "Total number of SLSTR observations in the grid cell", template);
-
-        template = writer.getTemplate("s3a_water_pixel_sum");
-        assertTemplate(DataType.UINT, "s3a_water_pixel", -1, "1", "Total number of SLSTR observations over water in the grid cell", template);
-
-        template = writer.getTemplate("s3a_cloud_land_pixel_sum");
-        assertTemplate(DataType.UINT, "s3a_cloud_land_pixel", -1, "1", "Total number of SLSTR observations cloud over land in the grid cell", template);
     }
 
     private void assertTemplate(DataType dataType, String name, Number fillValue, String units, String longName, FrpL3ProductWriter.VariableTemplate template) {

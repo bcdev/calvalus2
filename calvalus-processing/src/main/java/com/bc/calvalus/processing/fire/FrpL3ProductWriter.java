@@ -230,13 +230,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private void createVariableTemplates() {
         variableTemplates = new HashMap<>();
-        // l3daily and l3cycle variables
-//        variableTemplates.put("s3a_day_pixel_sum", new VariableTemplate("s3a_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime pixels"));
-//        variableTemplates.put("s3a_day_cloud_sum", new VariableTemplate("s3a_day_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime cloudy pixels"));
-//        variableTemplates.put("s3a_day_water_sum", new VariableTemplate("s3a_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime water pixels"));
-//        variableTemplates.put("s3a_day_fire_sum", new VariableTemplate("s3a_day_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A daytime active fire pixels"));
-//        variableTemplates.put("s3a_day_frp_mean", new VariableTemplate("s3a_day_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during daytime"));
-//        variableTemplates.put("s3a_day_frp_unc_sum", new VariableTemplate("s3a_day_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3A during daytime"));
         variableTemplates.put("s3a_night_pixel_sum", new VariableTemplate("s3a_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime pixels"));
         variableTemplates.put("s3a_night_cloud_sum", new VariableTemplate("s3a_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime cloudy pixels"));
         variableTemplates.put("s3a_night_water_sum", new VariableTemplate("s3a_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime water pixels"));
@@ -245,12 +238,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3a_night_frp_unc_sum", new VariableTemplate("s3a_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3A during nighttime"));
         variableTemplates.put("s3a_night_cloud_fraction_sum", new VariableTemplate("s3a_night_cloud_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees"));
         variableTemplates.put("s3a_night_fire_weighted_sum", new VariableTemplate("s3a_night_fire_weighted", DataType.FLOAT, Float.NaN, "1", "Number of S3A nighttime active fire pixels weighted by cloud fraction"));
-//        variableTemplates.put("s3b_day_pixel_sum", new VariableTemplate("s3b_day_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime pixels"));
-//        variableTemplates.put("s3b_day_cloud_sum", new VariableTemplate("s3b_day_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime cloudy pixels"));
-//        variableTemplates.put("s3b_day_water_sum", new VariableTemplate("s3b_day_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime water pixels"));
-//        variableTemplates.put("s3b_day_fire_sum", new VariableTemplate("s3b_day_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B daytime active fire pixels"));
-//        variableTemplates.put("s3b_day_frp_mean", new VariableTemplate("s3b_day_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during daytime"));
-//        variableTemplates.put("s3b_day_frp_unc_sum", new VariableTemplate("s3b_day_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during daytime"));
         variableTemplates.put("s3b_night_pixel_sum", new VariableTemplate("s3b_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
         variableTemplates.put("s3b_night_cloud_sum", new VariableTemplate("s3b_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime cloudy pixels"));
         variableTemplates.put("s3b_night_water_sum", new VariableTemplate("s3b_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
@@ -259,31 +246,14 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3b_night_frp_unc_sum", new VariableTemplate("s3b_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during nighttime"));
         variableTemplates.put("s3b_night_cloud_fraction_sum", new VariableTemplate("s3b_night_cloud_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of S3B land pixels in a macro pixel of 1.1 (1.25) degrees"));
         variableTemplates.put("s3b_night_fire_weighted_sum", new VariableTemplate("s3b_night_fire_weighted", DataType.FLOAT, Float.NaN, "1", "Number of S3B nighttime active fire pixels weighted by cloud fraction"));
-        // l3 monthly variables
-//        for (String p : new String[] { "s3a_", "s3b_" }) {
-//            variableTemplates.put(p + "fire_land_pixel_sum", new VariableTemplate(p + "fire_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of land-based detected active fire pixels in the grid cell"));
-//            variableTemplates.put(p + "frp_mir_land_mean", new VariableTemplate(p + "frp_mir_land_mean", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power derived from the MIR radiance"));
-//            variableTemplates.put(p + "frp_mir_land_unc_sum", new VariableTemplate(p + "frp_mir_land_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty derived from the MIR radiance"));
-//            variableTemplates.put(p + "fire_water_pixel_sum", new VariableTemplate(p + "fire_water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of water-based detected active fire pixels in the grid cell"));
-//            variableTemplates.put(p + "slstr_pixel_sum", new VariableTemplate(p + "slstr_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
-//            variableTemplates.put(p + "pixel_boxed", new VariableTemplate(p + "pixel_boxed", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations in the grid cell"));
-//            variableTemplates.put(p + "water_pixel_sum", new VariableTemplate(p + "water_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations over water in the grid cell"));
-//            variableTemplates.put(p + "cloud_land_pixel_sum", new VariableTemplate(p + "cloud_land_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of SLSTR observations cloud over land in the grid cell"));
-//        }
     }
 
     private void initializeBandNameLists() {
         bandsToIgnore = new ArrayList<>();
         bandsToIgnore.add("num_obs");
         bandsToIgnore.add("num_passes");
-//        bandsToIgnore.add("s3a_day_frp_sigma");
         bandsToIgnore.add("s3a_night_frp_sigma");
-//        bandsToIgnore.add("s3b_day_frp_sigma");
         bandsToIgnore.add("s3b_night_frp_sigma");
-//        for (String p : new String[] { "s3a_", "s3b_" }) {
-//            bandsToIgnore.add(p + "frp_mir_land_sigma");
-//            bandsToIgnore.add(p + "cloud_over_land_sigma");
-//        }
 
         bandsNotToBeWritten = new ArrayList<>();
         if (type == ProductType.CYCLE || type == ProductType.MONTHLY) {
@@ -292,16 +262,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             bandsNotToBeWritten.add("s3a_night_frp_unc_sum");
             bandsNotToBeWritten.add("s3b_night_frp_unc_sum");
         }
-//        for (String p : new String[] { "s3a_", "s3b_" }) {
-//            bandsNotToBeWritten.add(p + "fire_water_pixel_sum");
-//            bandsNotToBeWritten.add(p + "fire_water_pixel");
-//            bandsNotToBeWritten.add(p + "cloud_land_pixel_sum");
-//            bandsNotToBeWritten.add(p + "cloud_land_pixel");
-//            bandsNotToBeWritten.add(p + "slstr_pixel_sum");
-//            bandsNotToBeWritten.add(p + "slstr_pixel");
-//            bandsNotToBeWritten.add(p + "water_pixel_sum");
-//            bandsNotToBeWritten.add(p + "water_pixel");
-//        }
     }
 
     @Override
@@ -339,11 +299,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         initializeBandNameLists();
         addProductVariables(sourceProduct);
-//        if (type == ProductType.DAILY || type == ProductType.CYCLE) {
-//            addWeightedFRPVariables();
-//        } else if (type == ProductType.MONTHLY) {
-//            addWeightedMonthlyVariables();
-//        }
         addFractionAndWeightedVariables();
 
         fileWriter.create();
@@ -423,33 +378,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         addWeightedVariable(dimensions, "s3b_night_fire_weighted", "Number of S3B nighttime active fire pixels weighted by cloud fraction", "1");
     }
 
-    private void addWeightedFRPVariables() {
-        final Product sourceProduct = getSourceProduct();
-        final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
-        final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
-
-        final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
-//        addWeightedVariable(dimensions, "s3a_day_frp_weighted", "Mean Fire Radiative Power measured by S3A during daytime, weighted by cloud coverage", "MW");
-        addWeightedVariable(dimensions, "s3a_night_frp_weighted", "Mean Fire Radiative Power measured by S3A during nighttime, weighted by cloud coverage", "MW");
-//        addWeightedVariable(dimensions, "s3b_day_frp_weighted", "Mean Fire Radiative Power measured by S3B during daytime, weighted by cloud coverage", "MW");
-        addWeightedVariable(dimensions, "s3b_night_frp_weighted", "Mean Fire Radiative Power measured by S3B during nighttime, weighted by cloud coverage", "MW");
-    }
-
-    private void addWeightedMonthlyVariables() {
-        final Product sourceProduct = getSourceProduct();
-        final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
-        final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
-
-        final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
-        for (String p : new String[] { "s3a_", "s3b_" }) {
-            addWeightedVariable(dimensions, p + "fire_land_pixel_weighted", "Number of detected land-based active fire pixels adjusted for regional land cloud cover fraction", "1");
-            addWeightedVariable_uint(dimensions, p + "cloud_over_land_pixel_boxed", "Number of cloud pixels over land aggregated over a 3x3 neighbourhood", "1");
-            addWeightedVariable(dimensions, p + "cloud_over_land_fraction_boxed", "Mean cloud fraction of the non-water (i.e. land) pixels per grid cell", "1");
-            addWeightedVariable_uint(dimensions, p + "pixel_boxed", "Number of SLSTR observations aggregated over a 3x3 neighbourhood", "1");
-            addWeightedVariable_uint(dimensions, p + "water_pixel_boxed", "Number of SLSTR water observations aggregated over a 3x3 neighbourhood", "1");
-        }
-    }
-
     private void addWeightedVariable(int[] dimensions, String name, String longName, String units) {
         final Variable variable = fileWriter.addVariable(name, DataType.FLOAT, DIM_STRING);
         variable.addAttribute(new Attribute(CF.FILL_VALUE, Float.NaN));
@@ -503,41 +431,22 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     private void writeVariableData() throws IOException {
         if (dataWritten) {
             return;
-
         }
-/*
-        if (type == ProductType.DAILY || type == ProductType.CYCLE) {
-//            calculateWeightedFRP("s3a_day_frp_weighted", "s3a_day_frp", "s3a_day_pixel", "s3a_day_water", "s3a_day_cloud");
-            calculateWeightedFRP("s3a_night_frp_weighted", "s3a_night_frp", "s3a_night_pixel", "s3a_night_water", "s3a_night_cloud");
-//            calculateWeightedFRP("s3b_day_frp_weighted", "s3b_day_frp", "s3b_day_pixel", "s3b_day_water", "s3b_day_cloud");
-            calculateWeightedFRP("s3b_night_frp_weighted", "s3b_night_frp", "s3b_night_pixel", "s3b_night_water", "s3b_night_cloud");
-//            calculateUncertainty("s3a_day_frp_unc", "s3a_day_fire");
-            calculateUncertainty("s3a_night_frp_unc", "s3a_night_fire");
-//            calculateUncertainty("s3b_day_frp_unc", "s3b_day_fire");
-            calculateUncertainty("s3b_night_frp_unc", "s3b_night_fire");
-        } else if (type == ProductType.MONTHLY) {
-            for (String p : new String[] { "s3a_", "s3b_" }) {
-                calculateUncertainty(p + "frp_mir_land_unc", p + "fire_land_pixel");
-                calculateWindowData(p);
-                calculateWeightedVariables(p);
-            }
-        }
-*/
 
-        for (String p : new String[] { "s3a_", "s3b_" }) {
-            if (variableData.containsKey(p + "night_frp_unc")) {
-                calculateUncertainty(p + "night_frp_unc", p + "night_fire");
+        for (String sensor : new String[] { "s3a_", "s3b_" }) {
+            if (variableData.containsKey(sensor + "night_frp_unc")) {
+                calculateUncertainty(sensor + "night_frp_unc", sensor + "night_fire");
             }
-            if (variableData.containsKey(p + "night_cloud_fraction")) {
-                calculateCloudFraction(p + "night_cloud_fraction",
-                                       p + "night_cloud",
-                                       p + "night_pixel",
-                                       p + "night_water",
+            if (variableData.containsKey(sensor + "night_cloud_fraction")) {
+                calculateCloudFraction(sensor + "night_cloud_fraction",
+                                       sensor + "night_cloud",
+                                       sensor + "night_pixel",
+                                       sensor + "night_water",
                                        "0.1".equals(getResolutionString(type, false)) ? 11 : 5);
-                if (variableData.containsKey(p + "night_fire_weighted")) {
-                    calculateFireWeighted(p + "night_fire_weighted",
-                                          p + "night_fire",
-                                          p + "night_cloud_fraction");
+                if (variableData.containsKey(sensor + "night_fire_weighted")) {
+                    calculateFireWeighted(sensor + "night_fire_weighted",
+                                          sensor + "night_fire",
+                                          sensor + "night_cloud_fraction");
                 }
             }
         }
@@ -618,117 +527,6 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
                     weightedArray.setFloat(index, -fraction / fraction);
                 }
             }
-        }
-    }
-
-    private void calculateWeightedVariables(String p) {
-        final Array NlcArray = variableData.get(p + "cloud_over_land_pixel_boxed");
-        final Array NoArray = variableData.get(p + "pixel_boxed");
-        final Array NwArray = variableData.get(p + "water_pixel_boxed");
-        final Array NlfArray = variableData.get(p + "fire_land_pixel");
-        final Array FlcArray = variableData.get(p + "cloud_over_land_fraction_boxed");
-        final Array NfArray = variableData.get(p + "fire_land_pixel_weighted");
-
-        final long size = NlcArray.getSize();
-        for (int idx = 0; idx < size; idx++) {
-            final int Nlc = NlcArray.getInt(idx);
-            final int No = NoArray.getInt(idx);
-            final int Nw = NwArray.getInt(idx);
-            final float Nlf = NlfArray.getFloat(idx);
-
-            float Flc = Float.NaN;
-            float delta = No - Nw;
-            if (Math.abs(delta) > 1e-6) {
-                Flc = Nlc / delta;
-            }
-            FlcArray.setFloat(idx, Flc);
-
-            float Nf = Float.NaN;
-            if (!Float.isNaN(Flc)) {
-                delta = 1.f - Flc;
-                if (Math.abs(delta) > 1e-6) {
-                    Nf = Nlf / delta;
-                }
-            }
-            NfArray.setFloat(idx, Nf);
-        }
-    }
-
-    private void calculateWindowData(String p) {
-        calculateWindowData(p + "cloud_land_pixel", p + "cloud_over_land_pixel_boxed", 5);
-        calculateWindowData(p + "slstr_pixel", p + "pixel_boxed", 5);
-        calculateWindowData(p + "water_pixel", p + "water_pixel_boxed", 5);
-    }
-
-    private void calculateWindowData(String sourceName, String targetName, int windowSize) {
-        final Array source = variableData.get(sourceName);
-        final Index srcIdx = source.getIndex();
-
-        final Array target = variableData.get(targetName);
-        final Index targetIdx = target.getIndex();
-
-        final int[] shape = source.getShape();
-        final int width = shape[2];
-        final int height = shape[1];
-        final int windowOffset = windowSize / 2;
-        final int[] windowData = new int[windowSize * windowSize];
-
-        int writeIdx;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                writeIdx = 0;
-                for (int wy = -windowOffset; wy <= windowOffset; wy++) {
-                    for (int wx = -windowOffset; wx <= windowOffset; wx++) {
-                        final int readY = y + wy;
-                        final int readX = x + wx;
-                        if (readY >= 0 && readY < height && readX >= 0 && readX < width) {
-                            srcIdx.set(0, readY, readX);
-                            final int clouds = source.getInt(srcIdx);
-                            if (clouds >= 0) {
-                                windowData[writeIdx] = clouds;
-                            }
-                        } else {
-                            windowData[writeIdx] = 0;
-                        }
-                        ++writeIdx;
-                    }
-                }
-
-                int sum = calculateSum(windowData);
-                targetIdx.set(0, y, x);
-                target.setInt(targetIdx, sum);
-            }
-        }
-    }
-
-    private void calculateWeightedFRP(String weightedFrpName, String frpName, String pxName, String waterName, String cloudName) {
-        final Array weightedFRPArray = variableData.get(weightedFrpName);
-        final Array frpArray = variableData.get(frpName);
-        final Array pixelArray = variableData.get(pxName);
-        final Array waterArray = variableData.get(waterName);
-        final Array cloudArray = variableData.get(cloudName);
-
-        for (int i = 0; i < frpArray.getSize(); i++) {
-            float weightedFrp = Float.NaN;
-            final float frp = frpArray.getFloat(i);
-
-            if (!Float.isNaN(frp)) {
-                final int nPx = pixelArray.getInt(i);
-                final int nWater = waterArray.getInt(i);
-                final int nCloud = cloudArray.getInt(i);
-
-                final int num = nPx - nWater;
-                if (num == 0) {
-                    weightedFrp = 0.f;
-                } else {
-                    final int denom = num - nCloud;
-                    if (denom != 0) {
-                        weightedFrp = frp * (float) num / (float) denom;
-                    }
-                }
-            }
-
-            weightedFRPArray.setFloat(i, weightedFrp);
         }
     }
 
