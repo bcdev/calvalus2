@@ -36,10 +36,14 @@ class JdImage extends SingleBandedOpImage {
         this.sensor = sensor;
         this.area = area;
 
-        if ("h43v13".equals(area)
-                || "h44v14".equals(area)
-                || "h44v15".equals(area)
-                || "h45v15".equals(area)) {
+//        if ("h43v13".equals(area)
+//                || "h44v14".equals(area)
+//                || "h44v15".equals(area)
+//                || "h45v15".equals(area)) {
+        if ("h43v22".equals(area)
+                || "h44v21".equals(area)
+                || "h44v20".equals(area)
+                || "h45v20".equals(area)) {
             try {
                 File maskFile = new File(area + "-mask.nc");
                 CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-mask/" + area + "-mask.nc"), maskFile, configuration);
@@ -105,7 +109,8 @@ class JdImage extends SingleBandedOpImage {
 
                 dest.setSample(x, y, 0, targetJd);
 
-                if ("h38v20".equals(area)) {
+                //if ("h38v20".equals(area)) {
+                if ("h38v15".equals(area)) {
                     Point point = new Point(x, y);
                     if (mask1.contains(point)) {
                         int sample = dest.getSample(x, y, 0);
@@ -115,10 +120,14 @@ class JdImage extends SingleBandedOpImage {
                     }
                 }
 
-                if ("h43v13".equals(area)
-                        || "h44v14".equals(area)
-                        || "h44v15".equals(area)
-                        || "h45v15".equals(area)) {
+//                if ("h43v13".equals(area)
+//                        || "h44v14".equals(area)
+//                        || "h44v15".equals(area)
+//                        || "h45v15".equals(area)) {
+                if ("h43v22".equals(area)
+                        || "h44v21".equals(area)
+                        || "h44v20".equals(area)
+                        || "h45v20".equals(area)) {
                     float maskPixel = maskPixels[pixelIndex];
                     if (maskPixel == 255.0F) {
                         dest.setSample(x, y, 0, -1);

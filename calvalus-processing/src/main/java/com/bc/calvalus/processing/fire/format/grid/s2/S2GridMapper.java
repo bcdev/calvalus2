@@ -158,13 +158,14 @@ public class S2GridMapper extends AbstractGridMapper {
 
             Matcher matcher = CL_FILENAME_PATTERN.matcher(clPath.getName());
             matcher.matches();
-            int fiveDegreeRow = Integer.parseInt(matcher.group(2));
+            int fiveDegreeRow = 35 - Integer.parseInt(matcher.group(2));
             int fiveDegreeCol = Integer.parseInt(matcher.group(1));
 
             ProgressSplitProgressMonitor pm = new ProgressSplitProgressMonitor(context);
             pm.beginTask("writing one degree grid cells", 25);
             for (int degreeRow=0; degreeRow<5; ++degreeRow) {
                 for (int degreeCol=0; degreeCol<5; ++degreeCol) {
+                    // y==0 means lat == -90 of the lower left corner of the 1-degree tile
                     oneDegTile = String.format("x%dy%d", fiveDegreeCol * 5 + degreeCol, fiveDegreeRow * 5 + degreeRow);
                     LOG.info("processing one-degree tile " + oneDegTile);
 

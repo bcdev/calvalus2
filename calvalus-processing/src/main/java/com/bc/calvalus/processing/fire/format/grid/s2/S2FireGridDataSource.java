@@ -48,6 +48,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
+        // the second formula looks strange: why (y+1)*pixelsize? Which values do we get for y? 0 .. 9 for a 1-degree grid cell
+        // It seems the cooordinate system is again inversed, with y=0 being 89.1 which is the lower left corner of the upper left 0.1-deg cell.
         double lon0 = -180 + Integer.parseInt(tile.split("y")[0].replace("x", "")) + x * 180.0 / numRowsGlobal;
         double lat0 = -90 + Integer.parseInt(tile.split("y")[1].replace("y", "")) + 1 - (y + 1) * 180.0 / numRowsGlobal;
 
@@ -145,12 +147,13 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         SubsetOp subsetOp = new SubsetOp();
         Geometry geometry;
         try {
+            double pixelSize = 180.0 / numRowsGlobal;
             geometry = new WKTReader().read(String.format("POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))",
-                    lon0, lat0,
-                    lon0 + 0.25, lat0,
-                    lon0 + 0.25, lat0 + 0.25,
-                    lon0, lat0 + 0.25,
-                    lon0, lat0));
+                                                          lon0, lat0,
+                                                          lon0 + pixelSize, lat0,
+                                                          lon0 + pixelSize, lat0 + pixelSize,
+                                                          lon0, lat0 + pixelSize,
+                                                          lon0, lat0));
         } catch (ParseException e) {
             throw new IllegalStateException(e);
         }
