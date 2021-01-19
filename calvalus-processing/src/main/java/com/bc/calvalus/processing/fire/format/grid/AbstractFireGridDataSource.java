@@ -91,7 +91,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
             return false;
         }
         if (burnable[x][y] && isBurned(array[x][y])) {
-            array[x][y] = 0;
+            array[x][y] = NO_DATA;
             clearObjects(array, burnable, x - 1, y);
             clearObjects(array, burnable, x + 1, y);
             clearObjects(array, burnable, x, y - 1);
@@ -105,7 +105,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
             throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
         }
-        return pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
+        return pixel != NO_DATA && pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999;
     }
 
     protected static void setAreas(GeoCoding gc, Rectangle sourceRect, double[] areas) {
