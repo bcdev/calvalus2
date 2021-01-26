@@ -7,6 +7,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import java.awt.*;
 import java.io.IOException;
 import java.util.SortedMap;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
@@ -45,6 +46,44 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
             for (int j = 0; j < pixels[i].length; j++) {
                 if (clearObjects(pixels, burnable, i, j)) {
                     patchCount++;
+                }
+            }
+        }
+        return patchCount;
+    }
+
+    public int determineNoOfPatches(float[][] pixels, boolean[][] isBurnable) {
+        // check initialisation
+        if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
+            throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
+        }
+        int patchCount = 0;
+        Stack<Point> stack = new Stack<>();
+        for (int j = 0; j < pixels.length; j++) {
+            for (int i = 0; i < pixels[j].length; i++) {
+                boolean patchCounted = false;
+                stack.push(new Point(i, j));
+                while (!stack.empty()) {
+                    Point p = stack.pop();
+                    if (isBurnable[p.y][p.x] && isBurned(pixels[p.y][p.x])) {
+                        if (! patchCounted) {
+                            ++patchCount;
+                            patchCounted = true;
+                        }
+                        pixels[p.y][p.x] = NO_DATA;
+                        if (p.y > 0) {
+                            stack.push(new Point(p.x, p.y - 1));
+                        }
+                        if (p.y + 1 < pixels.length) {
+                            stack.push(new Point(p.x, p.y + 1));
+                        }
+                        if (p.x > 0) {
+                            stack.push(new Point(p.x - 1, p.y));
+                        }
+                        if (p.x + 1 < pixels[j].length) {
+                            stack.push(new Point(p.x + 1, p.y));
+                        }
+                    }
                 }
             }
         }
@@ -102,9 +141,10 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
     }
 
     private boolean isBurned(float pixel) {
-        if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
-            throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
-        }
+//        Bad location for a test here, it is in an inner loop!
+//        if (doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
+//            throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
+//        }
         return pixel != NO_DATA && pixel >= doyFirstOfMonth && pixel <= doyLastOfMonth && pixel != 999;
     }
 
