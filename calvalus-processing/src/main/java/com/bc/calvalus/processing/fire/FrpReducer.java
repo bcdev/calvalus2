@@ -56,6 +56,7 @@ public class FrpReducer extends L3Reducer {
     private static final int F1_FLAG_IDX = 11;
     private static final int CLASSIFICATION_IDX = 12;
     private static final int CONF_IDX = 13;
+    private static final int SAT_ZENITH_IDX = 14;
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static long THIRTY_YEARS;
@@ -129,8 +130,7 @@ public class FrpReducer extends L3Reducer {
                 out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LON_IDX]));
                 out.write('\t');
 
-                // @todo 1 tb/** add real value for satellite zenith angle 2020-12-18
-                out.write(String.format(Locale.ENGLISH, "%3.5f", Float.NaN));
+                out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[SAT_ZENITH_IDX]));
                 out.write('\t');
 
                 out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_IDX]));

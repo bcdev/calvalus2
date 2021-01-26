@@ -33,9 +33,11 @@ import org.esa.snap.binning.*;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.support.ObservationImpl;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.TiePointGrid;
 import org.esa.snap.core.util.StringUtils;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
+import ucar.ma2.DataType;
 import ucar.ma2.Index;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
@@ -241,10 +243,24 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final Array confidenceFlags = readConfidenceFlags(inputFiles);
 
         if ("l2monthly".equals(targetFormat)) {
-            final int count = writeL2MonthlyBin(context, platformNumber, frpArrays, confidenceFlags, numFires);
+            // tie point zenith angle
+           /* int subSamplingX = 16;
+            int subSamplingY = 1;
+            float offsetX = -26.0f;
+            float offsetY = 0.0f;*/
+
+            final Array satelliteZenithArray = readSatelliteZenith(inputFiles);
+            final int[] shape = satelliteZenithArray.getShape();
+            final float[] zenithAngles = (float[]) satelliteZenithArray.get1DJavaArray(DataType.FLOAT);
+            final TiePointGrid sat_zenith = new TiePointGrid("sat_zenith", shape[1], shape[0], -26.0, 0.0, 16.0, 1.0, zenithAngles);
+
+            final int count = writeL2MonthlyBin(context, platformNumber, frpArrays, confidenceFlags, sat_zenith, numFires);
             LOG.info(count + "/" + numFires + " records streamed of " + inputPath.getName());
             return;
         }
+
+        final String dateRanges = conf.get("calvalus.input.dateRanges", null);
+        final long[] timeRange = getTimeRange(dateRanges);
 
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", true);
         final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", true);
@@ -270,117 +286,45 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final int mwirIndex = FRP_VARIABLES.FRP_MWIR.ordinal();
         final int mwirUncIndex = FRP_VARIABLES.FRP_uncertainty_MWIR.ordinal();
 
-/*
-        if ("l3daily".equals(targetFormat) || "l3cycle".equals(targetFormat)) {
-*/
-            // pixel loop
-            int count = 0;
-            int variableOffset = getSensorOffset(platformNumber);
-            // create observation variable sequence
-            final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
+        int count = 0;
+        int variableOffset = getSensorOffset(platformNumber);
+        // create observation variable sequence
+        final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES);
 
-            final int rows = rowCol[0];
-            final int columns = rowCol[1];
-            for (int row = 0; row < rows; ++row) {
-                final List<Observation> observations = new ArrayList<>();
-                for (int col = 0; col < columns; ++col) {
-                    index.set(row, col);
+        final int rows = rowCol[0];
+        final int columns = rowCol[1];
+        for (int row = 0; row < rows; ++row) {
+            final List<Observation> observations = new ArrayList<>();
+            for (int col = 0; col < columns; ++col) {
+                index.set(row, col);
 
-                    // apply flags
-                    final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
-//                    if (isWater(flags) && onlyLand) {
-//                        continue;
-//                    }
-                    if (isDay(flags) && onlyNight) {
-                        continue;
-                    }
-                    final int confFlags = confidenceFlags.getInt(index);
-                    if (isUnfilled(confFlags)) {
-                        continue;
-                    }
-
-                    // construct observation
-                    final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
-                    final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
-
-                    float frpMwir = Float.NaN;
-                    float frpMwirUnc = Float.NaN;
-                    if (! (isWater(flags) && onlyLand)) {
-                        final Integer fire = fireIndex.get(row * columns + col);
-                        if (fire != null) {
-                            final double area = frpArrays[areaIndex].getDouble(fire);
-                            if (area > 0.0) {
-                                frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
-                                if (frpMwir <= 0.0) {
-                                    frpMwir = Float.NaN;
-                                } else {
-                                    ++count;
-                                }
-                                frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
-                            }
-                        }
-                    }
-
-                    int emptyOffset = 6 - variableOffset;
-                    // aggregate contributions based on flags and platform
-                    float[] values = new float[12];
-                    values[variableIndex[variableOffset + 0]] = 1; // total measurement count
-                    values[variableIndex[variableOffset + 1]] = isWater(flags) ? 0 : isCloud(flags);  // frp_cloud
-                    values[variableIndex[variableOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
-                    values[variableIndex[variableOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
-                    values[variableIndex[variableOffset + 4]] = frpMwir;
-                    values[variableIndex[variableOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
-                    values[variableIndex[emptyOffset + 0]] = Float.NaN;
-                    values[variableIndex[emptyOffset + 1]] = Float.NaN;
-                    values[variableIndex[emptyOffset + 2]] = Float.NaN;
-                    values[variableIndex[emptyOffset + 3]] = Float.NaN;
-                    values[variableIndex[emptyOffset + 4]] = Float.NaN;
-                    values[variableIndex[emptyOffset + 5]] = Float.NaN;
-                    observations.add(new ObservationImpl(lat, lon, mjd, values));
+                // filter time
+                final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(index);
+                if (time < timeRange[0] || time > timeRange[1]) {
+                    continue;
                 }
-                spatialBinner.processObservationSlice(observations);
-            }
-            spatialBinner.complete();
-            LOG.info(count + "/" + numFires + " records and " +
-                    spatialBinEmitter.numObsTotal + "/" + spatialBinEmitter.numBinsTotal +
-                    " obs/bins streamed of " + inputPath.getName());
-            final Exception[] exceptions = spatialBinner.getExceptions();
-            for (Exception exception : exceptions) {
-                String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
-                LOG.log(Level.SEVERE, m, exception);
-            }
-/*
-        } else if ("l3monthly".equals(targetFormat)) {
-            // create observation variable sequence
-            final int[] variableIndex = createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
 
-            final int rows = rowCol[0];
-            final int columns = rowCol[1];
-            for (int row = 0; row < rows; ++row) {
-                final List<Observation> observations = new ArrayList<>();
-                for (int col = 0; col < columns; ++col) {
-                    index.set(row, col);
+                // apply flags
+                final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                if (isDay(flags) && onlyNight) {
+                    continue;
+                }
+                final int confFlags = confidenceFlags.getInt(index);
+                if (isUnfilled(confFlags)) {
+                    continue;
+                }
 
-                    // apply flags
-                    final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
-                    if (isWater(flags) && onlyLand) {
-                        continue;
-                    }
-                    if (isDay(flags) && onlyNight) {
-                        continue;
-                    }
-                    final int confFlags = confidenceFlags.getInt(index);
-                    if (isUnfilled(confFlags)) {
-                        continue;
-                    }
+                // construct observation
+                final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
+                final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
 
-                    // construct observation
-                    final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
-                    final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
-
+                float frpMwir = Float.NaN;
+                float frpMwirUnc = Float.NaN;
+                if (!(isWater(flags) && onlyLand)) {
+                    // we do not skip the water measurements, instead just set FRP and uncertainty to NaN. This because
+                    // we need to have cloud flags also in the ocean to have a correct windowing process at the
+                    // continent shores. tb 2021-01-26
                     final Integer fire = fireIndex.get(row * columns + col);
-                    float frpMwir = Float.NaN;
-                    float frpMwirUnc = Float.NaN;
                     if (fire != null) {
                         final double area = frpArrays[areaIndex].getDouble(fire);
                         if (area > 0.0) {
@@ -388,75 +332,41 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                             if (frpMwir <= 0.0) {
                                 frpMwir = Float.NaN;
                             } else {
-                                frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
+                                ++count;
                             }
+                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
                         }
                     }
-
-                    float[] values = new float[VARIABLE_NAMES_MONTHLY.length];
-                    final boolean isWater = isWater(flags);
-                    final boolean isFire = !Float.isNaN(frpMwir);
-                    final boolean isCloud = isCloud(flags) > 0;
-                    float Nlf = 0.f;
-                    if (isFire && !isWater) {
-                        Nlf = 1.f;
-                    }
-
-                    float Nwf = 0.f;
-                    if (isFire && isWater) {
-                        Nwf = 1.f;
-                    }
-
-                    float Frp = Float.NaN;
-                    float FrpUncSquared = Float.NaN;
-                    if (isFire && !isWater) {
-                        Frp = frpMwir;
-                        FrpUncSquared = frpMwirUnc * frpMwirUnc;
-                    }
-
-                    float Ncl = 0.f;
-                    if (isCloud && !isWater) {
-                        Ncl = 1.f;
-                    }
-
-                    if (platformNumber == 1) {
-                        values[variableIndex[0]] = Nlf;
-                        values[variableIndex[1]] = Nwf;
-                        values[variableIndex[2]] = Frp;
-                        values[variableIndex[3]] = FrpUncSquared;
-                        values[variableIndex[4]] = Ncl;
-                        values[variableIndex[5]] = isWater ? 1 : 0;    // Nw
-                        values[variableIndex[6]] = 1; // No
-                        values[variableIndex[S3B_P1M_OFFSET + 0]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 1]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 2]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 3]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 4]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 5]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 6]] = Float.NaN;
-                    } else {
-                        values[variableIndex[0]] = Float.NaN;
-                        values[variableIndex[1]] = Float.NaN;
-                        values[variableIndex[2]] = Float.NaN;
-                        values[variableIndex[3]] = Float.NaN;
-                        values[variableIndex[4]] = Float.NaN;
-                        values[variableIndex[5]] = Float.NaN;
-                        values[variableIndex[6]] = Float.NaN;
-                        values[variableIndex[S3B_P1M_OFFSET + 0]] = Nlf;
-                        values[variableIndex[S3B_P1M_OFFSET + 1]] = Nwf;
-                        values[variableIndex[S3B_P1M_OFFSET + 2]] = Frp;
-                        values[variableIndex[S3B_P1M_OFFSET + 3]] = FrpUncSquared;
-                        values[variableIndex[S3B_P1M_OFFSET + 4]] = Ncl;
-                        values[variableIndex[S3B_P1M_OFFSET + 5]] = isWater ? 1 : 0;    // Nw
-                        values[variableIndex[S3B_P1M_OFFSET + 6]] = 1; // No
-                    }
-                    observations.add(new ObservationImpl(lat, lon, mjd, values));
                 }
-                spatialBinner.processObservationSlice(observations);
+
+                int emptyOffset = 6 - variableOffset;
+                // aggregate contributions based on flags and platform
+                float[] values = new float[12];
+                values[variableIndex[variableOffset + 0]] = 1; // total measurement count
+                values[variableIndex[variableOffset + 1]] = isWater(flags) ? 0 : isCloud(flags);  // frp_cloud
+                values[variableIndex[variableOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
+                values[variableIndex[variableOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
+                values[variableIndex[variableOffset + 4]] = frpMwir;
+                values[variableIndex[variableOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
+                values[variableIndex[emptyOffset + 0]] = Float.NaN;
+                values[variableIndex[emptyOffset + 1]] = Float.NaN;
+                values[variableIndex[emptyOffset + 2]] = Float.NaN;
+                values[variableIndex[emptyOffset + 3]] = Float.NaN;
+                values[variableIndex[emptyOffset + 4]] = Float.NaN;
+                values[variableIndex[emptyOffset + 5]] = Float.NaN;
+                observations.add(new ObservationImpl(lat, lon, mjd, values));
             }
-            spatialBinner.complete();
+            spatialBinner.processObservationSlice(observations);
         }
-*/
+        spatialBinner.complete();
+        LOG.info(count + "/" + numFires + " records and " +
+                spatialBinEmitter.numObsTotal + "/" + spatialBinEmitter.numBinsTotal +
+                " obs/bins streamed of " + inputPath.getName());
+        final Exception[] exceptions = spatialBinner.getExceptions();
+        for (Exception exception : exceptions) {
+            String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
+            LOG.log(Level.SEVERE, m, exception);
+        }
     }
 
     private int[] readGeodeticVariables(File[] inputFiles, Array[] geodeticArrays) throws IOException {
@@ -491,20 +401,29 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     }
 
     private Array readConfidenceFlags(File[] inputFiles) throws IOException {
-        final File flagsFile = findByName("flags_in.nc", inputFiles);
+        return readVariable(inputFiles, "flags_in.nc", "confidence_in");
+    }
+
+    private Array readVariable(File[] inputFiles, String fileName, String variableName) throws IOException {
+        final File flagsFile = findByName(fileName, inputFiles);
         try (NetcdfFile flagsNetcdf = NetcdfFileOpener.open(flagsFile.getPath())) {
-            final Variable confidence_in = flagsNetcdf.findVariable("confidence_in");
+            final Variable confidence_in = flagsNetcdf.findVariable(variableName);
             return confidence_in.read();
         }
     }
 
-    private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, Array confidenceFlags, int numFires) throws IOException, InterruptedException {
+    private Array readSatelliteZenith(File[] inputFiles) throws IOException {
+        return readVariable(inputFiles, "geometry_tn.nc", "sat_zenith_tn");
+    }
+
+    private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, Array confidenceFlags, TiePointGrid satZenithGrid, int numFires) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
         final long[] timeRange = getTimeRange(dateRanges);
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", false);
         final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
 
+        final float[] satZenith = new float[1];
         int count = 0;
         final Index flagsIdx = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
         final Index confIdx = confidenceFlags.getIndex();
@@ -542,6 +461,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 continue;
             }
 
+            satZenithGrid.getPixels(col, row, 1, 1, satZenith);
+
             final double latitude = frpArrays[FRP_VARIABLES.latitude.ordinal()].getDouble(i);
             final double longitude = frpArrays[FRP_VARIABLES.longitude.ordinal()].getDouble(i);
             final double frpSwir = frpArrays[FRP_VARIABLES.FRP_SWIR.ordinal()].getDouble(i);
@@ -571,6 +492,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             featureValues[FRP_VARIABLES.used_channel.ordinal()] = (float) used_channel;
             featureValues[FRP_VARIABLES.classification.ordinal()] = (float) classification;
             featureValues[FRP_VARIABLES.confidence.ordinal()] = (float) confidence;
+            featureValues[FRP_VARIABLES.satZenith.ordinal()] = satZenith[0];
             context.write(new LongWritable(time), bin);
         }
 
@@ -600,7 +522,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         flags,
         used_channel,
         classification,
-        confidence
+        confidence,
+        satZenith
     }
 
     enum GEODETIC_VARIABLES {
