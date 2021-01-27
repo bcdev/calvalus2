@@ -299,9 +299,12 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 index.set(row, col);
 
                 // filter time
-                final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(index);
-                if (time < timeRange[0] || time > timeRange[1]) {
-                    continue;
+                final Integer fireIdx = fireIndex.get(row * columns + col);
+                if (fireIdx != null) {
+                    final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(fireIdx);
+                    if (time < timeRange[0] || time > timeRange[1]) {
+                        continue;
+                    }
                 }
 
                 // apply flags
@@ -324,17 +327,17 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     // we do not skip the water measurements, instead just set FRP and uncertainty to NaN. This because
                     // we need to have cloud flags also in the ocean to have a correct windowing process at the
                     // continent shores. tb 2021-01-26
-                    final Integer fire = fireIndex.get(row * columns + col);
-                    if (fire != null) {
-                        final double area = frpArrays[areaIndex].getDouble(fire);
+
+                    if (fireIdx != null) {
+                        final double area = frpArrays[areaIndex].getDouble(fireIdx);
                         if (area > 0.0) {
-                            frpMwir = (float) frpArrays[mwirIndex].getDouble(fire);
+                            frpMwir = (float) frpArrays[mwirIndex].getDouble(fireIdx);
                             if (frpMwir <= 0.0) {
                                 frpMwir = Float.NaN;
                             } else {
                                 ++count;
                             }
-                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fire);
+                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fireIdx);
                         }
                     }
                 }
@@ -474,8 +477,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
             ++count;
             //
-            // create and write one bin with a record of FRP values
-            final L3SpatialBin bin = new L3SpatialBin(time, FRP_VARIABLES.values().length, 0);
+            // create and write one bin with a record of FRP values. We nned to add one for the satellite zenith which is
+            // not contained in the FRP_in.nc file
+            final L3SpatialBin bin = new L3SpatialBin(time, FRP_VARIABLES.values().length + 1, 0);
             final float[] featureValues = bin.getFeatureValues();
 
             featureValues[0] = platformNumber;
@@ -492,7 +496,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             featureValues[FRP_VARIABLES.used_channel.ordinal()] = (float) used_channel;
             featureValues[FRP_VARIABLES.classification.ordinal()] = (float) classification;
             featureValues[FRP_VARIABLES.confidence.ordinal()] = (float) confidence;
-            featureValues[FRP_VARIABLES.satZenith.ordinal()] = satZenith[0];
+            featureValues[FRP_VARIABLES.values().length] = satZenith[0];
             context.write(new LongWritable(time), bin);
         }
 
@@ -522,8 +526,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         flags,
         used_channel,
         classification,
-        confidence,
-        satZenith
+        confidence
     }
 
     enum GEODETIC_VARIABLES {
