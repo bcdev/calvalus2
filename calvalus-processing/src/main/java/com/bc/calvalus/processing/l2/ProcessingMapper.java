@@ -297,6 +297,8 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         translateParameter(conf, JobConfigNames.QL_PARAMETERS, JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS);
         translateParameter(conf, JobConfigNames.PROCESSOR_NAME, JobConfigNames.CALVALUS_L2_OPERATOR);
         translateParameter(conf, JobConfigNames.FORCE_REPROCESS, JobConfigNames.CALVALUS_PROCESS_ALL);
+        translateParameter(conf, JobConfigNames.OUTPUT_REGEX, JobConfigNames.CALVALUS_OUTPUT_REGEX);
+        translateParameter(conf, JobConfigNames.OUTPUT_REPLACEMENT, JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT);
         translateParameter(conf, JobConfigNames.SNAP_TILECACHE, "calvalus.system.snap.jai.tileCacheSize");
     }
 
