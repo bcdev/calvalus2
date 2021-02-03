@@ -20,7 +20,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
-import org.apache.hadoop.yarn.util.ConverterUtils;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
@@ -160,7 +159,7 @@ public class ProcessingLogHandler {
 
                         ApplicationId appId;
                         try {
-                            appId = ConverterUtils.toApplicationId(appIdStr);
+                            appId = ApplicationId.fromString(appIdStr);
                         } catch (Exception e) {
                             LOGGER.log(Level.SEVERE, "Invalid ApplicationId specified: " + appIdStr);
                             return LOG_GENERAL_ERROR_CODE;
