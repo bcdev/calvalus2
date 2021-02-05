@@ -91,7 +91,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addGlobalAttribute("date_created", dateStringNow);
         fileWriter.addGlobalAttribute("creator_name", "Brockmann Consult GmbH");
         fileWriter.addGlobalAttribute("creator_url", "https://www.brockmann-consult.de");
-        fileWriter.addGlobalAttribute("creator_email", "martin.boettcher@brockmann-consult.de");
+        fileWriter.addGlobalAttribute("creator_email", "info@brockmann-consult.de");
         fileWriter.addGlobalAttribute("contact", "http://copernicus-support.ecmwf.int");
         fileWriter.addGlobalAttribute("project", "EC C3S Fire Radiative Power");
         fileWriter.addGlobalAttribute("geospatial_lat_min", "-90");
@@ -226,6 +226,24 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             return sum;
         }
         return -1;
+    }
+
+    static String getSummaryText(ProductType productType) {
+        final StringBuilder summary = new StringBuilder();
+        summary.append("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. ");
+
+        if (productType == ProductType.DAILY) {
+            summary.append("The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution");
+        } else if (productType == ProductType.CYCLE){
+            summary.append("The global Level 3 27-Day FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 27-day temporal resolution");
+        } else if (productType == ProductType.MONTHLY){
+            summary.append("The global Level 3 Monthly Summary FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.25 degree spatial and at 1 month temporal resolution");
+        } else {
+            throw new IllegalArgumentException("Invalid target product type");
+        }
+
+        summary.append(", and also provide some adjustments for cloud cover variation since clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.");
+        return summary.toString();
     }
 
     private void createVariableTemplates() {

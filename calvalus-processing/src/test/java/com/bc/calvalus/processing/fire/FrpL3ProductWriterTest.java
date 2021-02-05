@@ -11,6 +11,7 @@ import ucar.nc2.Variable;
 import java.io.File;
 import java.text.ParseException;
 
+import static com.bc.calvalus.processing.fire.FrpL3ProductWriter.ProductType.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
@@ -68,7 +69,7 @@ public class FrpL3ProductWriterTest {
         verify(fileWriter, times(1)).addGlobalAttribute("references", "See https://climate.copernicus.eu/");
         verify(fileWriter, times(1)).addGlobalAttribute(eq("tracking_id"), anyString());
         verify(fileWriter, times(1)).addGlobalAttribute("Conventions", "CF-1.7");
-        verify(fileWriter, times(1)).addGlobalAttribute("summary", "TODO!");
+        verify(fileWriter, times(1)).addGlobalAttribute(eq("summary"), anyString());
         verify(fileWriter, times(1)).addGlobalAttribute("keywords", "Fire Radiative Power, Climate Change, ESA, C3S, GCOS");
         verify(fileWriter, times(1)).addGlobalAttribute("id", "C3S-FRP-L3-Map-0.25deg-P1D-2020-09-16-v1.0.nc");
         verify(fileWriter, times(1)).addGlobalAttribute("naming_authority", "org.esa-cci");
@@ -78,7 +79,7 @@ public class FrpL3ProductWriterTest {
         verify(fileWriter, times(1)).addGlobalAttribute(eq("date_created"), anyString());
         verify(fileWriter, times(1)).addGlobalAttribute("creator_name", "Brockmann Consult GmbH");
         verify(fileWriter, times(1)).addGlobalAttribute("creator_url", "https://www.brockmann-consult.de");
-        verify(fileWriter, times(1)).addGlobalAttribute("creator_email", "martin.boettcher@brockmann-consult.de");
+        verify(fileWriter, times(1)).addGlobalAttribute("creator_email", "info@brockmann-consult.de");
         verify(fileWriter, times(1)).addGlobalAttribute("contact", "http://copernicus-support.ecmwf.int");
         verify(fileWriter, times(1)).addGlobalAttribute("project", "EC C3S Fire Radiative Power");
         verify(fileWriter, times(1)).addGlobalAttribute("geospatial_lat_min", "-90");
@@ -226,7 +227,7 @@ public class FrpL3ProductWriterTest {
 
         product.setStartTime(ProductData.UTC.parse("01-JUN-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("01-JUN-2020 23:59:59"));
-        assertEquals(FrpL3ProductWriter.ProductType.DAILY, FrpL3ProductWriter.getProductType(product));
+        assertEquals(DAILY, FrpL3ProductWriter.getProductType(product));
 
         product.setStartTime(ProductData.UTC.parse("01-JUN-2020 00:00:00"));
         product.setEndTime(ProductData.UTC.parse("27-JUN-2020 23:59:59"));
@@ -239,7 +240,7 @@ public class FrpL3ProductWriterTest {
 
     @Test
     public void testGetCoverageString() {
-        assertEquals("P1D", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.DAILY));
+        assertEquals("P1D", FrpL3ProductWriter.getCoverageString(DAILY));
         assertEquals("P27D", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.CYCLE));
         assertEquals("P1M", FrpL3ProductWriter.getCoverageString(FrpL3ProductWriter.ProductType.MONTHLY));
 
@@ -248,7 +249,7 @@ public class FrpL3ProductWriterTest {
 
     @Test
     public void testGetResolutionString_withUnits() {
-        assertEquals("0.1 degrees", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.DAILY, true));
+        assertEquals("0.1 degrees", FrpL3ProductWriter.getResolutionString(DAILY, true));
         assertEquals("0.1 degrees", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.CYCLE, true));
         assertEquals("0.25 degrees", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.MONTHLY, true));
 
@@ -257,7 +258,7 @@ public class FrpL3ProductWriterTest {
 
     @Test
     public void testGetResolutionString_withoutUnits() {
-        assertEquals("0.1", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.DAILY, false));
+        assertEquals("0.1", FrpL3ProductWriter.getResolutionString(DAILY, false));
         assertEquals("0.1", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.CYCLE, false));
         assertEquals("0.25", FrpL3ProductWriter.getResolutionString(FrpL3ProductWriter.ProductType.MONTHLY, false));
 
@@ -286,5 +287,26 @@ public class FrpL3ProductWriterTest {
 
         final int sum = FrpL3ProductWriter.calculateSum(clouds);
         assertEquals(11, sum);
+    }
+
+    @Test
+    public void testGetSummaryText() {
+        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution, and also provide some adjustments for cloud cover variation since clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
+                FrpL3ProductWriter.getSummaryText(DAILY));
+
+        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 27-Day FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 27-day temporal resolution, and also provide some adjustments for cloud cover variation since clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
+                FrpL3ProductWriter.getSummaryText(CYCLE));
+
+        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Monthly Summary FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.25 degree spatial and at 1 month temporal resolution, and also provide some adjustments for cloud cover variation since clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
+                FrpL3ProductWriter.getSummaryText(MONTHLY));
+    }
+
+    @Test
+    public void testGetSummaryText_unknownType() {
+        try {
+            FrpL3ProductWriter.getSummaryText(UNKNOWN);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException expected) {
+        }
     }
 }
