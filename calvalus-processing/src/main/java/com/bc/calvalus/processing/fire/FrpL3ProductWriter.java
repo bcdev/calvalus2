@@ -271,7 +271,9 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         bandsToIgnore.add("num_obs");
         bandsToIgnore.add("num_passes");
         bandsToIgnore.add("s3a_night_frp_sigma");
+        bandsToIgnore.add("s3a_night_frp_counts");
         bandsToIgnore.add("s3b_night_frp_sigma");
+        bandsToIgnore.add("s3b_night_frp_counts");
 
         bandsNotToBeWritten = new ArrayList<>();
         if (type == ProductType.CYCLE || type == ProductType.MONTHLY) {
