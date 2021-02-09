@@ -8,10 +8,15 @@ Calvalus branches and versions
    branches as needed.
  o Calvalus versions shall be done on the main trunc by tagging with the version, e.g. "2.18".
  o Calvalus is developed in a SNAPSHOT version. N+1-SNAPSHOT is created immediately after N is released.
- o Development branches shall be merged into the master and closed.
+ o Calvalus can also be developed in development branches. Development branches shall be merged into the master and closed.
  o SNAPSHOT versions shall be used for testing but shall be replaced by a tagged version for delivery.
    At the same time, the number of versions per year shall be kept reasonable.
  o For changes that break backwards compatiblity see below.
+ o To cope with incompatible SNAP version upgrades a third version level is introduced.
+   Calvalus 2.19.x on the 2.19 branch is maintained for SNAP 7.x.
+   Calvalus 2.20-SNAPSHOT on the master branch starts the SNAP-8 versions.
+ o We aim at a new minor version about every 2-3 months, usually aligned with the start of operations
+   for some project.
 
 Hadoop and SNAP dependencies
 ----------------------------
@@ -21,7 +26,7 @@ Hadoop and SNAP dependencies
    with versions ending -BC (3.2.1-BC) is used as dependency. It contains a few patches to Hadoop
    (additional function, fixed error handling).
  o Calvalus depends on SNAP. The Calvalus main trunc and maintenance branches shall be compiled against
-   the SNAP N.x maintenance branch or a branch N.calvalus derived from it with fixes proposed for
+   the SNAP N.x maintenance branch or a branch N.x.calvalus derived from it with fixes proposed for
    integration into N.x. Important fixes in SNAP master shall be picked/merged into the N.x branch.
    With SNAP major releases a Calvalus version based on the SNAP N+1.x branch (or, for the initial
    version, based on the SNAP N+1 release) is released.
@@ -44,8 +49,8 @@ Calvalus deployment
 
  o A cluster contains several delivery versions of the Calvalus bundle (2.15, 2.16, 2.18) and the SNAP
    bundle (7.0.0, 7.0.patch1, ..., better: 7.1, 7.2, numbering of bundles, not SNAP versions!).
- o A cluster may contain a bundle with a SNAPSHOT version of the newest Calvalus (2.19-SNAPSHOT) and a
-   bundle SNAP (7.3-SNAPSHOT) of recent fixes in SNAP from the SNAP N.x branch or the N.calvalus branch.
-   SNAPSHOT bundles may be updated with some care regarding running jobs.
  o In addition one Calvalus bundle and one SNAP bundle may exist temporally per developer. It is called
    calvalus-<username> and snap-<username> and is maintained and updated freely by the respective user.
+ o CHANGED rule: A cluster shall no longer contain a bundle with a SNAPSHOT version of the newest Calvalus (2.19-SNAPSHOT) and a
+   bundle SNAP (7.3-SNAPSHOT). Instead, personal developer bundles shall be used for development and
+   replaced by proper versions before or during the initial phase of production.
