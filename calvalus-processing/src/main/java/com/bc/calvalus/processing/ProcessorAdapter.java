@@ -28,6 +28,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.core.dataio.ProductIO;
@@ -349,6 +350,13 @@ public abstract class ProcessorAdapter {
         } else if (inputSplit instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) inputSplit;
             return fileSplit.getPath();
+        } else if (inputSplit instanceof CombineFileSplit) {
+            CombineFileSplit fileSplit = (CombineFileSplit) inputSplit;
+            if (fileSplit.getNumPaths() > 0) {
+                return fileSplit.getPaths()[0];
+            } else {
+                throw new IllegalArgumentException("input split contains 0 paths");
+            }
         } else {
             throw new IllegalArgumentException("input split is neither a FileSplit nor a ProductSplit");
         }
@@ -366,6 +374,18 @@ public abstract class ProcessorAdapter {
                     }
                     accu.add(path);
                 }
+            }
+        } else if (inputSplit instanceof CombineFileSplit) {
+            boolean skipFirst = true;
+            for (Path path : ((CombineFileSplit) inputSplit).getPaths()) {
+                if (skipFirst) {
+                    skipFirst = false;
+                    continue;
+                }
+                if (accu == null) {
+                    accu = new ArrayList<Path>();
+                }
+                accu.add(path);
             }
         }
         if (accu == null) {
