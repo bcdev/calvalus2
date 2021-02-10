@@ -136,6 +136,9 @@ public class AggregatorYoungestTest {
             public void put(String name, Object value) {
                 map.put(name, value);
             }
+
+            @Override
+            public String ensureUnique(String name) { return null; }
         };
     }
 

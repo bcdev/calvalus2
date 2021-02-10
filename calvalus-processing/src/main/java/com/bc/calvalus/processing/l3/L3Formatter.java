@@ -27,15 +27,17 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import com.bc.ceres.binding.Converter;
 import com.bc.ceres.binding.ConverterRegistry;
-import com.vividsolutions.jts.geom.Geometry;
+import org.esa.snap.binning.operator.formatter.FormatterFactory;
+import org.esa.snap.binning.support.IsinPlanetaryGrid;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.esa.snap.binning.PlanetaryGrid;
 import org.esa.snap.binning.TemporalBinSource;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.binning.operator.Formatter;
-import org.esa.snap.binning.operator.FormatterConfig;
+import org.esa.snap.binning.operator.formatter.Formatter;
+import org.esa.snap.binning.operator.formatter.FormatterConfig;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -92,7 +94,13 @@ public class L3Formatter {
         final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
         final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
         // TODO maybe replace region information in metadata if overwritten in formatting request
-        Formatter.format(planetaryGrid,
+        org.esa.snap.binning.operator.formatter.Formatter formatter;
+        if (planetaryGrid instanceof IsinPlanetaryGrid) {
+            formatter = FormatterFactory.get("isin");
+        } else {
+            formatter = FormatterFactory.get("default");
+        }
+        formatter.format(planetaryGrid,
                 temporalBinSource,
                 featureNames,
                 formatterConfig,

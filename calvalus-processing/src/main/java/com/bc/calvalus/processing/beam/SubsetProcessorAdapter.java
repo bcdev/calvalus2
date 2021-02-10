@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;

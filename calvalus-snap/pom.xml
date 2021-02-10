@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.19-SNAPSHOT</version>
+        <version>2.20-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-snap</artifactId>
@@ -65,7 +65,7 @@
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-getasse30-dem</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-geotiff</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-hdf5-writer</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId></dependency>
+        <!-- <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId></dependency> -->
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-land-cover</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-ndvi</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-netcdf</artifactId></dependency>
@@ -91,7 +91,7 @@
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-avhrr-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency>
+        <!-- <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency> -->
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-landsat-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-merisl3-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-modis-reader</artifactId></dependency>
@@ -105,8 +105,8 @@
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-openjpeg</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-reader</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>lib-openjpeg</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jp2-reader</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-commons</artifactId></dependency>
         <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot-reader</artifactId></dependency>
@@ -166,7 +166,7 @@
                         <id>libs2</id>
                         <configuration>
                             <unpack>
-                                <artifact>org.esa.s2tbx:lib-openjpeg:jar</artifact>
+                                <artifact>org.esa.snap:lib-openjpeg:jar</artifact>
                                 <resources>
                                     <resource>
                                         <path>auxdata/openjpeg/openjpeg-2.1.0-linux64/bin</path>
@@ -210,9 +210,9 @@
                         <version>${ncsa.version}</version>
                     </dependency>
                     <dependency>
-                        <groupId>org.esa.s2tbx</groupId>
+                        <groupId>org.esa.snap</groupId>
                         <artifactId>lib-openjpeg</artifactId>
-                        <version>${s2tbx.version}</version>
+                        <version>${snap.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>org.esa.snap</groupId>

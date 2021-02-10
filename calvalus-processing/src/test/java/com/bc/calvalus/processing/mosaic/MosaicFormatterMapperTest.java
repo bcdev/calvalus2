@@ -17,8 +17,8 @@
 package com.bc.calvalus.processing.mosaic;
 
 
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

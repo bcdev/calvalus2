@@ -23,4 +23,7 @@ public class TestBinContext implements BinContext {
         map.put(name, value);
     }
 
+    @Override
+    public String ensureUnique(String name) { return null; }
+
 }

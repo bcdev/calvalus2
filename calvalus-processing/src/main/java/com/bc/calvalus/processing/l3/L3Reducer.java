@@ -24,7 +24,7 @@ import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
-import com.vividsolutions.jts.geom.Geometry;
+import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;

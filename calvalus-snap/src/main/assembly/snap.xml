@@ -68,7 +68,7 @@
                 <include>org.esa.snap:snap-getasse30-dem</include>
                 <include>org.esa.snap:snap-geotiff</include>
                 <include>org.esa.snap:snap-hdf5-writer</include>
-                <include>org.esa.snap:snap-jython</include>
+                <!-- <include>org.esa.snap:snap-jython</include> -->
                 <include>org.esa.snap:snap-land-cover</include>
                 <include>org.esa.snap:snap-ndvi</include>
                 <include>org.esa.snap:snap-netcdf</include>
@@ -91,7 +91,7 @@
                 <include>org.esa.s3tbx:s3tbx-alos-reader</include>
                 <include>org.esa.s3tbx:s3tbx-atsr-reader</include>
                 <include>org.esa.s3tbx:s3tbx-avhrr-reader</include>
-                <include>org.esa.s3tbx:s3tbx-chris-reader</include>
+                <!-- <include>org.esa.s3tbx:s3tbx-chris-reader</include> -->
                 <include>org.esa.s3tbx:s3tbx-landsat-reader</include>
                 <include>org.esa.s3tbx:s3tbx-merisl3-reader</include>
                 <include>org.esa.s3tbx:s3tbx-modis-reader</include>
@@ -105,8 +105,8 @@
                 <include>org.esa.s2tbx:s2tbx-cache</include>
                 <include>org.esa.s2tbx:s2tbx-s2msi-reader</include>
                 <include>org.esa.s2tbx:s2tbx-s2msi-resampler</include>
-                <include>org.esa.s2tbx:lib-openjpeg</include>
-                <include>org.esa.s2tbx:s2tbx-jp2-reader</include>
+                <include>org.esa.snap:lib-openjpeg</include>
+                <include>org.esa.snap:snap-jp2-reader</include>
                 <include>org.esa.s2tbx:s2tbx-jp2-writer</include>
                 <include>org.esa.s2tbx:s2tbx-commons</include>
                 <include>org.esa.s2tbx:s2tbx-spot-reader</include>

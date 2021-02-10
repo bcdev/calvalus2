@@ -16,11 +16,11 @@ import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -94,7 +94,7 @@ public class OlciStrategy implements SensorStrategy {
                 pixelProductArea.right - 180, 90 - pixelProductArea.bottom,
                 pixelProductArea.left - 180, 90 - pixelProductArea.bottom,
                 pixelProductArea.left - 180, 90 - pixelProductArea.top
-        }, 2), gf), new LinearRing[0], gf);
+        }, 2, 0), gf), new LinearRing[0], gf);
 
         String tiles = getTiles(pixelProductArea);
         String tilesSpec = "(" + tiles + ")";
