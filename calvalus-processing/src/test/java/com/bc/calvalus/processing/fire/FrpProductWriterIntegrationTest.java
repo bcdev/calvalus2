@@ -437,6 +437,11 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("title", attribute.getShortName());
         assertEquals("ECMWF C3S Gridded OLCI Fire Radiative Power product", attribute.getStringValue());
 
+        attribute = globalAttributes.get(7);
+        assertEquals("summary", attribute.getShortName());
+        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution, and also provide some adjustments for cloud cover variation since clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
+                attribute.getStringValue());
+
         attribute = globalAttributes.get(12);
         assertEquals("cdm_data_type", attribute.getShortName());
         assertEquals("Grid", attribute.getStringValue());

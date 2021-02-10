@@ -27,6 +27,9 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static com.bc.calvalus.processing.fire.FrpL3ProductWriter.ProductType.CYCLE;
+import static com.bc.calvalus.processing.fire.FrpL3ProductWriter.ProductType.DAILY;
+
 public class FrpL3ProductWriter extends AbstractProductWriter {
 
     private static final String DIM_STRING = "time lat lon";
@@ -81,7 +84,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         fileWriter.addGlobalAttribute("references", "See https://climate.copernicus.eu/");
         fileWriter.addGlobalAttribute("tracking_id", UUID.randomUUID().toString());
         fileWriter.addGlobalAttribute("Conventions", "CF-1.7");
-        fileWriter.addGlobalAttribute("summary", "TODO!");
+        fileWriter.addGlobalAttribute("summary", getSummaryText(type));
         fileWriter.addGlobalAttribute("keywords", "Fire Radiative Power, Climate Change, ESA, C3S, GCOS");
         fileWriter.addGlobalAttribute("id", product.getName());
         fileWriter.addGlobalAttribute("naming_authority", "org.esa-cci");
@@ -176,7 +179,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             if (between >= 0 && between <= 1) {
                 return ProductType.DAILY;
             } else if (between >= 26 && between <= 27) {
-                return ProductType.CYCLE;
+                return CYCLE;
             } else if (between >= 27) {
                 return ProductType.MONTHLY;
             }
@@ -187,7 +190,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     static String getCoverageString(ProductType productType) {
         if (productType == ProductType.DAILY) {
             return "P1D";
-        } else if (productType == ProductType.CYCLE) {
+        } else if (productType == CYCLE) {
             return "P27D";
         } else if (productType == ProductType.MONTHLY) {
             return "P1M";
@@ -198,7 +201,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     static String getResolutionString(ProductType productType, boolean addUnits) {
         String resolutionString;
 
-        if (productType == ProductType.DAILY || productType == ProductType.CYCLE) {
+        if (productType == ProductType.DAILY || productType == CYCLE) {
             resolutionString = "0.1";
         } else if (productType == ProductType.MONTHLY) {
             resolutionString = "0.25";
@@ -234,9 +237,9 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         if (productType == ProductType.DAILY) {
             summary.append("The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution");
-        } else if (productType == ProductType.CYCLE){
+        } else if (productType == CYCLE) {
             summary.append("The global Level 3 27-Day FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 27-day temporal resolution");
-        } else if (productType == ProductType.MONTHLY){
+        } else if (productType == ProductType.MONTHLY) {
             summary.append("The global Level 3 Monthly Summary FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.25 degree spatial and at 1 month temporal resolution");
         } else {
             throw new IllegalArgumentException("Invalid target product type");
@@ -276,7 +279,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         bandsToIgnore.add("s3b_night_frp_counts");
 
         bandsNotToBeWritten = new ArrayList<>();
-        if (type == ProductType.CYCLE || type == ProductType.MONTHLY) {
+        if (type == CYCLE || type == ProductType.MONTHLY) {
             bandsNotToBeWritten.add("s3a_night_frp_unc");
             bandsNotToBeWritten.add("s3b_night_frp_unc");
             bandsNotToBeWritten.add("s3a_night_frp_unc_sum");
@@ -319,7 +322,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
 
         initializeBandNameLists();
         addProductVariables(sourceProduct);
-        addFractionAndWeightedVariables();
+        addFractionAndWeightedVariables(type);
 
         fileWriter.create();
 
@@ -387,13 +390,20 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         }
     }
 
-    private void addFractionAndWeightedVariables() {
+    private void addFractionAndWeightedVariables(ProductType type) {
         final Product sourceProduct = getSourceProduct();
         final int sceneRasterWidth = sourceProduct.getSceneRasterWidth();
         final int sceneRasterHeight = sourceProduct.getSceneRasterHeight();
         final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
-        addWeightedVariable(dimensions, "s3a_night_cloud_fraction", "Mean cloud fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees", "1");
-        addWeightedVariable(dimensions, "s3b_night_cloud_fraction", "Mean cloud fraction of S3B land pixels in a macro pixel of 1.1 (1.25) degrees", "1");
+        final String longName;
+        if (type == DAILY || type == CYCLE) {
+            longName = "Mean cloud fraction of S3A land pixels in a macro pixel of 1.1 degrees";
+        } else {
+            longName = "Mean cloud fraction of S3A land pixels in a macro pixel of 1.25 degrees";
+        }
+        addWeightedVariable(dimensions, "s3a_night_cloud_fraction", longName, "1");
+        addWeightedVariable(dimensions, "s3b_night_cloud_fraction", longName, "1");
+
         addWeightedVariable(dimensions, "s3a_night_fire_weighted", "Number of S3A nighttime active fire pixels weighted by cloud fraction", "1");
         addWeightedVariable(dimensions, "s3b_night_fire_weighted", "Number of S3B nighttime active fire pixels weighted by cloud fraction", "1");
     }
@@ -453,20 +463,20 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             return;
         }
 
-        for (String sensor : new String[] { "s3a_", "s3b_" }) {
+        for (String sensor : new String[]{"s3a_", "s3b_"}) {
             if (variableData.containsKey(sensor + "night_frp_unc")) {
                 calculateUncertainty(sensor + "night_frp_unc", sensor + "night_fire");
             }
             if (variableData.containsKey(sensor + "night_cloud_fraction")) {
                 calculateCloudFraction(sensor + "night_cloud_fraction",
-                                       sensor + "night_cloud",
-                                       sensor + "night_pixel",
-                                       sensor + "night_water",
-                                       "0.1".equals(getResolutionString(type, false)) ? 11 : 5);
+                        sensor + "night_cloud",
+                        sensor + "night_pixel",
+                        sensor + "night_water",
+                        "0.1".equals(getResolutionString(type, false)) ? 11 : 5);
                 if (variableData.containsKey(sensor + "night_fire_weighted")) {
                     calculateFireWeighted(sensor + "night_fire_weighted",
-                                          sensor + "night_fire",
-                                          sensor + "night_cloud_fraction");
+                            sensor + "night_fire",
+                            sensor + "night_cloud_fraction");
                 }
             }
         }
@@ -560,7 +570,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             if (numFirePixels > 0) {
                 final float squaredUncertainty = uncertainties.getInt(i);
                 if (squaredUncertainty > 0.f) {
-                    uncertainty = (float) (Math.sqrt(squaredUncertainty)/ numFirePixels);
+                    uncertainty = (float) (Math.sqrt(squaredUncertainty) / numFirePixels);
                 }
             }
 
