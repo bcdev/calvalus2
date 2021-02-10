@@ -196,6 +196,7 @@ public class L3MapperTest {
         assertEquals("lat", 45.972471023394014, geoPos.lat, epsDegFor1m);
         assertEquals("lon", 28.689203148615423, geoPos.lon, epsDegFor1m);
 
+        MapProjection.SKIP_SANITY_CHECKS = true;
         CrsGrid grid = new CrsGrid(60.0, "EPSG:32636");
         long binIndex = grid.getBinIndex(geoPos.lat, geoPos.lon);
         assertEquals("bin", 784687239, binIndex);
@@ -222,8 +223,8 @@ public class L3MapperTest {
                 "      AUTHORITY[\"EPSG\",\"6326\"]], \n" +
                 "    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n" +
                 "    UNIT[\"degree\", 0.017453292519943295], \n" +
-                "    AXIS[\"Geodetic latitude\", NORTH], \n" +
                 "    AXIS[\"Geodetic longitude\", EAST], \n" +
+                "    AXIS[\"Geodetic latitude\", NORTH], \n" +
                 "    AUTHORITY[\"EPSG\",\"4326\"]], \n" +
                 "  PROJECTION[\"Transverse_Mercator\", AUTHORITY[\"EPSG\",\"9807\"]], \n" +
                 "  PARAMETER[\"central_meridian\", 33.0], \n" +
@@ -247,14 +248,14 @@ public class L3MapperTest {
                 "    AUTHORITY[\"EPSG\",\"6326\"]], \n" +
                 "  PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n" +
                 "  UNIT[\"degree\", 0.017453292519943295], \n" +
-                "  AXIS[\"Geodetic latitude\", NORTH], \n" +
                 "  AXIS[\"Geodetic longitude\", EAST], \n" +
+                "  AXIS[\"Geodetic latitude\", NORTH], \n" +
                 "  AUTHORITY[\"EPSG\",\"4326\"]]", crs2.toWKT());
         Envelope envelope2 = CRS.getEnvelope(crs2);
-        assertEquals("min0", -90.0, envelope2.getMinimum(0), 0.0001);
-        assertEquals("max0", 90.0, envelope2.getMaximum(0), 0.0001);
-        assertEquals("min1", -180.0, envelope2.getMinimum(1), 0.0001);
-        assertEquals("max1", 180.0, envelope2.getMaximum(1), 0.0001);
+        assertEquals("min0", -180.0, envelope2.getMinimum(0), 0.0001);
+        assertEquals("max0", 180.0, envelope2.getMaximum(0), 0.0001);
+        assertEquals("min1", -90.0, envelope2.getMinimum(1), 0.0001);
+        assertEquals("max1", 90.0, envelope2.getMaximum(1), 0.0001);
         final AffineTransform at = new AffineTransform();
         at.translate(0.0, 0.0);
         at.scale(0.1, -0.2);
