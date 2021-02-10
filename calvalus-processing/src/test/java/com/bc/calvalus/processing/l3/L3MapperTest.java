@@ -196,6 +196,7 @@ public class L3MapperTest {
         assertEquals("lat", 45.972471023394014, geoPos.lat, epsDegFor1m);
         assertEquals("lon", 28.689203148615423, geoPos.lon, epsDegFor1m);
 
+        MapProjection.SKIP_SANITY_CHECKS = true;
         CrsGrid grid = new CrsGrid(60.0, "EPSG:32636");
         long binIndex = grid.getBinIndex(geoPos.lat, geoPos.lon);
         assertEquals("bin", 784687239, binIndex);
