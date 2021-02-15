@@ -108,10 +108,10 @@ public class CalvalusTileComputationEventLogger extends TileComputationObserver 
         } else {
             getLogger().log(Level.WARNING, "Tile re-computed: " + message);
         }
-        if (noOfPrintedReports < 2 || !newEvent) {
-            printTileCacheReport();
-            ++noOfPrintedReports;
-        }
+//        if (noOfPrintedReports < 2 || !newEvent) {
+//            printTileCacheReport();
+//            ++noOfPrintedReports;
+//        }
     }
 
     void printTileCacheReport() {
