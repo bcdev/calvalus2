@@ -15,8 +15,8 @@
         <calvalus.version>2.20-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>8.0.3cv</snap.version>
-        <s1tbx.version>8.0.1</s1tbx.version>
-        <s2tbx.version>8.0.1</s2tbx.version>
+        <s1tbx.version>8.0.1cv</s1tbx.version>
+        <s2tbx.version>8.0.1cv</s2tbx.version>
         <s3tbx.version>8.0.0</s3tbx.version>
         <seadas.reader.version>1.9.1-SNAPSHOT</seadas.reader.version>
         <probav.reader.version>2.2.0-SNAPSHOT</probav.reader.version>
@@ -25,7 +25,7 @@
         <slf4j.version>1.7.21</slf4j.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
-        <netcdf.version>5.0.0-beta6</netcdf.version>
+        <netcdf.version>5.3.1</netcdf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
