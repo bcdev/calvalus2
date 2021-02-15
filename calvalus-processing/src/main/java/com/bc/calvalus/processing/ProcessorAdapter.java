@@ -421,6 +421,10 @@ public abstract class ProcessorAdapter {
         //if (processCompleteInputFile) {
         //    return null;
         //}
+        // re-introducing it in the course of processing large inputs with executable adapters, to avoid opening them before processing
+        if (! getMapContext().getConfiguration().getBoolean("calvalus.input.checkintersection", true)) {
+            return null;
+        }
 
         if (inputRectangle == null) {
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);

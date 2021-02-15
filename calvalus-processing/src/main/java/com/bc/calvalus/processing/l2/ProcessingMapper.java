@@ -367,6 +367,7 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
     }
 
     protected boolean checkInputIntersectsRoi(Configuration jobConfig, Context context, ProcessorAdapter processorAdapter) throws IOException {
+        if (!jobConfig.getBoolean("calvalus.input.checkintersection", true)) { return false; }
         Rectangle sourceRectangle = processorAdapter.getInputRectangle();
         if (sourceRectangle != null && sourceRectangle.isEmpty()) {
             LOG.info("input product does not cover region, processing skipped");
