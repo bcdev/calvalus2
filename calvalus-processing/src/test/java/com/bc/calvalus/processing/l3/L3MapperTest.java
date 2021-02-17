@@ -216,41 +216,43 @@ public class L3MapperTest {
     @Test
     public void testWkt() throws FactoryException {
         CoordinateReferenceSystem crs = CRS.decode("EPSG:32636");
-        assertEquals("crs", "PROJCS[\"WGS 84 / UTM zone 36N\", \n" +
-                "  GEOGCS[\"WGS 84\", \n" +
-                "    DATUM[\"World Geodetic System 1984\", \n" +
-                "      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n" +
-                "      AUTHORITY[\"EPSG\",\"6326\"]], \n" +
-                "    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n" +
-                "    UNIT[\"degree\", 0.017453292519943295], \n" +
-                "    AXIS[\"Geodetic longitude\", EAST], \n" +
-                "    AXIS[\"Geodetic latitude\", NORTH], \n" +
-                "    AUTHORITY[\"EPSG\",\"4326\"]], \n" +
-                "  PROJECTION[\"Transverse_Mercator\", AUTHORITY[\"EPSG\",\"9807\"]], \n" +
-                "  PARAMETER[\"central_meridian\", 33.0], \n" +
-                "  PARAMETER[\"latitude_of_origin\", 0.0], \n" +
-                "  PARAMETER[\"scale_factor\", 0.9996], \n" +
-                "  PARAMETER[\"false_easting\", 500000.0], \n" +
-                "  PARAMETER[\"false_northing\", 0.0], \n" +
-                "  UNIT[\"m\", 1.0], \n" +
-                "  AXIS[\"Easting\", EAST], \n" +
-                "  AXIS[\"Northing\", NORTH], \n" +
-                "  AUTHORITY[\"EPSG\",\"32636\"]]", crs.toWKT());
+        String wkt = crs.toWKT();
+        assertTrue("crs", wkt.contains("PROJCS[\"WGS 84 / UTM zone 36N\""));
+        assertTrue("crs", wkt.contains("GEOGCS[\"WGS 84\""));
+        assertTrue("crs", wkt.contains("DATUM[\"World Geodetic System 1984\""));
+        assertTrue("crs", wkt.contains("SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]"));
+        assertTrue("crs", wkt.contains("AUTHORITY[\"EPSG\",\"6326\"]]"));
+        assertTrue("crs", wkt.contains("PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]]"));
+        assertTrue("crs", wkt.contains("UNIT[\"degree\", 0.017453292519943295]"));
+        assertTrue("crs", wkt.contains("AXIS[\"Geodetic longitude\", EAST]"));
+        assertTrue("crs", wkt.contains("AXIS[\"Geodetic latitude\", NORTH]"));
+        assertTrue("crs", wkt.contains("AUTHORITY[\"EPSG\",\"4326\"]]"));
+        assertTrue("crs", wkt.contains("PROJECTION[\"Transverse_Mercator\", AUTHORITY[\"EPSG\",\"9807\"]]"));
+        assertTrue("crs", wkt.contains("PARAMETER[\"central_meridian\", 33.0]"));
+        assertTrue("crs", wkt.contains("PARAMETER[\"latitude_of_origin\", 0.0]"));
+        assertTrue("crs", wkt.contains("PARAMETER[\"scale_factor\", 0.9996]"));
+        assertTrue("crs", wkt.contains("PARAMETER[\"false_easting\", 500000.0]"));
+        assertTrue("crs", wkt.contains("PARAMETER[\"false_northing\", 0.0]"));
+        assertTrue("crs", wkt.contains("UNIT[\"m\", 1.0]"));
+        assertTrue("crs", wkt.contains("AXIS[\"Easting\", EAST]"));
+        assertTrue("crs", wkt.contains("AXIS[\"Northing\", NORTH]"));
+        assertTrue("crs", wkt.contains("AUTHORITY[\"EPSG\",\"32636\"]]"));
         Envelope envelope = CRS.getEnvelope(crs);
         assertEquals("min0", 166021.4430960772, envelope.getMinimum(0), 0.0001);
         assertEquals("max0", 833978.5569039235, envelope.getMaximum(0), 0.0001);
         assertEquals("min1", 0.0, envelope.getMinimum(1), 0.0001);
         assertEquals("max1", 9329005.182450451, envelope.getMaximum(1), 0.0001);
         CoordinateReferenceSystem crs2 = CRS.decode("EPSG:4326");
-        assertEquals("crs", "GEOGCS[\"WGS 84\", \n" +
-                "  DATUM[\"World Geodetic System 1984\", \n" +
-                "    SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n" +
-                "    AUTHORITY[\"EPSG\",\"6326\"]], \n" +
-                "  PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \n" +
-                "  UNIT[\"degree\", 0.017453292519943295], \n" +
-                "  AXIS[\"Geodetic longitude\", EAST], \n" +
-                "  AXIS[\"Geodetic latitude\", NORTH], \n" +
-                "  AUTHORITY[\"EPSG\",\"4326\"]]", crs2.toWKT());
+        wkt = crs2.toWKT();
+        assertTrue("crs", wkt.contains("GEOGCS[\"WGS 84\""));
+        assertTrue("crs", wkt.contains("DATUM[\"World Geodetic System 1984\""));
+        assertTrue("crs", wkt.contains("SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]"));
+        assertTrue("crs", wkt.contains("AUTHORITY[\"EPSG\",\"6326\"]]"));
+        assertTrue("crs", wkt.contains("PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]]"));
+        assertTrue("crs", wkt.contains("UNIT[\"degree\", 0.017453292519943295]"));
+        assertTrue("crs", wkt.contains("AXIS[\"Geodetic longitude\", EAST]"));
+        assertTrue("crs", wkt.contains("AXIS[\"Geodetic latitude\", NORTH]"));
+        assertTrue("crs", wkt.contains("AUTHORITY[\"EPSG\",\"4326\"]]"));
         Envelope envelope2 = CRS.getEnvelope(crs2);
         assertEquals("min0", -180.0, envelope2.getMinimum(0), 0.0001);
         assertEquals("max0", 180.0, envelope2.getMaximum(0), 0.0001);
