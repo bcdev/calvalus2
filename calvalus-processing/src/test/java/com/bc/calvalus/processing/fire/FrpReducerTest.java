@@ -19,12 +19,18 @@ public class FrpReducerTest {
 
     @Test
     public void testGetDateTime() {
-        final Date date = new Date(1603948559000L);
+        Date date = new Date(1603948559000L);
 
-        final String[] dateTime = FrpReducer.getDateTime(date, createCalendar());
+        String[] dateTime = FrpReducer.getDateTime(date, createCalendar());
         assertEquals(2, dateTime.length);
         assertEquals("20201029", dateTime[0]);
         assertEquals("051559", dateTime[1]);
+
+        date = new Date(1603963504000L);
+        dateTime = FrpReducer.getDateTime(date, createCalendar());
+        assertEquals(2, dateTime.length);
+        assertEquals("20201029", dateTime[0]);
+        assertEquals("092504", dateTime[1]);
     }
 
     @Test

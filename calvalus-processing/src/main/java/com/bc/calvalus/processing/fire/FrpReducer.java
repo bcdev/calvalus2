@@ -83,7 +83,7 @@ public class FrpReducer extends L3Reducer {
 
         final String[] result = new String[2];
         result[0] = String.format(Locale.ENGLISH, "%04d%02d%02d", year, month, day);
-        result[1] = String.format(Locale.ENGLISH, "%02d%02d%d", hour, minute, second);
+        result[1] = String.format(Locale.ENGLISH, "%02d%02d%02d", hour, minute, second);
         return result;
     }
 
