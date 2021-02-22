@@ -201,8 +201,8 @@ public class FrpMapperTest {
 
     @Test
     public void testIsUnfilled() {
-        assertTrue(FrpMapper.isUnfilled(CONF_IN_UNFILLED));
-        assertTrue(FrpMapper.isUnfilled(CONF_IN_UNFILLED + 17));
+        assertTrue(FrpMapper.isUnfilled(CONF_UNFILLED));
+        assertTrue(FrpMapper.isUnfilled(CONF_UNFILLED + 17));
 
         assertFalse(FrpMapper.isUnfilled(0));
         assertFalse(FrpMapper.isUnfilled(1024));
@@ -210,12 +210,17 @@ public class FrpMapperTest {
 
     @Test
     public void testIsWater() {
-        assertTrue(FrpMapper.isWater(FRP_WATER));
-        assertTrue(FrpMapper.isWater(L1B_WATER));
+        assertTrue(FrpMapper.isWater(FRP_WATER, 0, 0));
+        assertTrue(FrpMapper.isWater(0, CONF_INLAND_WATER, 0));
+        assertTrue(FrpMapper.isWater(0, 0, CONF_INLAND_WATER));
+        assertTrue(FrpMapper.isWater(L1B_WATER, 0, 0));
 
-        assertFalse(FrpMapper.isWater(0));
-        assertFalse(FrpMapper.isWater(CONF_IN_UNFILLED));
-        assertFalse(FrpMapper.isWater(FRP_CLOUD));
+        assertFalse(FrpMapper.isWater(0, 0, 0));
+        assertFalse(FrpMapper.isWater(CONF_UNFILLED, 0, 0));
+        assertFalse(FrpMapper.isWater(0, CONF_LAND, 0));
+        assertFalse(FrpMapper.isWater(0, 0, CONF_LAND));
+        assertTrue(FrpMapper.isWater(L1B_WATER, CONF_LAND, 0));
+        assertTrue(FrpMapper.isWater(L1B_WATER, 0, CONF_LAND));
     }
 
     @Test

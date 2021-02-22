@@ -58,7 +58,9 @@ import java.util.logging.Logger;
  */
 public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, L3SpatialBin> {
 
-    static final int CONF_IN_UNFILLED = 32;
+    static final int CONF_LAND = 8;
+    static final int CONF_INLAND_WATER = 16;
+    static final int CONF_UNFILLED = 32;
     static final int FRP_CLOUD = 32;
     static final int L1B_WATER = 2;
     static final int FRP_WATER = 4;
@@ -216,12 +218,27 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     }
 
     static boolean isUnfilled(int confFlags) {
-        return (confFlags & CONF_IN_UNFILLED) != 0;
+        return (confFlags & CONF_UNFILLED) != 0;
     }
 
     // package access for testing only tb 2020-12-16
-    static boolean isWater(int flags) {
-        return (flags & (L1B_WATER | FRP_WATER)) != 0;
+    static boolean isWater(int flags, int flags_in, int flags_fn) {
+        if ((flags & FRP_WATER) != 0) {
+            return true;
+        }
+        if ((flags_in & CONF_INLAND_WATER) != 0) {
+            return true;
+        }
+        if ((flags_fn & CONF_INLAND_WATER) != 0) {
+            return true;
+        }
+        if ((flags & L1B_WATER) != 0) {
+            if ((flags_in & CONF_LAND) == 0) {
+                return true;
+            }
+            return (flags_fn & CONF_LAND) == 0;
+        }
+        return false;
     }
 
     // package access for testing only tb 2020-12-17
@@ -240,21 +257,16 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
         final Array[] frpArrays = new Array[FRP_VARIABLES.values().length];
         int numFires = readFrpVariables(inputFiles, frpArrays);
-        final Array confidenceFlags = readConfidenceFlags(inputFiles);
+        final Array confidenceFlags_in = readConfidenceFlags_in(inputFiles);
+        final Array confidenceFlags_fn = readConfidenceFlags_fn(inputFiles);
 
         if ("l2monthly".equals(targetFormat)) {
-            // tie point zenith angle
-           /* int subSamplingX = 16;
-            int subSamplingY = 1;
-            float offsetX = -26.0f;
-            float offsetY = 0.0f;*/
-
             final Array satelliteZenithArray = readSatelliteZenith(inputFiles);
             final int[] shape = satelliteZenithArray.getShape();
             final float[] zenithAngles = (float[]) satelliteZenithArray.get1DJavaArray(DataType.FLOAT);
             final TiePointGrid sat_zenith = new TiePointGrid("sat_zenith", shape[1], shape[0], -26.0, 0.0, 16.0, 1.0, zenithAngles);
 
-            final int count = writeL2MonthlyBin(context, platformNumber, frpArrays, confidenceFlags, sat_zenith, numFires);
+            final int count = writeL2MonthlyBin(context, platformNumber, frpArrays, confidenceFlags_in, confidenceFlags_fn, sat_zenith, numFires);
             LOG.info(count + "/" + numFires + " records streamed of " + inputPath.getName());
             return;
         }
@@ -269,6 +281,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
         final int latIndex = GEODETIC_VARIABLES.latitude_in.ordinal();
         final int lonIndex = GEODETIC_VARIABLES.longitude_in.ordinal();
+
 
         final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
@@ -312,10 +325,12 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 if (isDay(flags) && onlyNight) {
                     continue;
                 }
-                final int confFlags = confidenceFlags.getInt(index);
-                if (isUnfilled(confFlags)) {
+                final int confFlags_in = confidenceFlags_in.getInt(index);
+                if (isUnfilled(confFlags_in)) {
                     continue;
                 }
+
+                final int confFlags_fn = confidenceFlags_fn.getInt(index);
 
                 // construct observation
                 final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
@@ -323,7 +338,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
                 float frpMwir = Float.NaN;
                 float frpMwirUnc = Float.NaN;
-                if (!(isWater(flags) && onlyLand)) {
+                final boolean water = isWater(flags, confFlags_in, confFlags_fn);
+                if (!(water && onlyLand)) {
                     // we do not skip the water measurements, instead just set FRP and uncertainty to NaN. This because
                     // we need to have cloud flags also in the ocean to have a correct windowing process at the
                     // continent shores. tb 2021-01-26
@@ -346,8 +362,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 // aggregate contributions based on flags and platform
                 float[] values = new float[12];
                 values[variableIndex[variableOffset + 0]] = 1; // total measurement count
-                values[variableIndex[variableOffset + 1]] = isWater(flags) ? 0 : isCloud(flags);  // frp_cloud
-                values[variableIndex[variableOffset + 2]] = isWater(flags) ? 1 : 0;  // l1b_water | frp_water
+                values[variableIndex[variableOffset + 1]] = water ? 0 : isCloud(flags);  // frp_cloud
+                values[variableIndex[variableOffset + 2]] = water ? 1 : 0;
                 values[variableIndex[variableOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
                 values[variableIndex[variableOffset + 4]] = frpMwir;
                 values[variableIndex[variableOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
@@ -403,8 +419,12 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         return numFires;
     }
 
-    private Array readConfidenceFlags(File[] inputFiles) throws IOException {
+    private Array readConfidenceFlags_in(File[] inputFiles) throws IOException {
         return readVariable(inputFiles, "flags_in.nc", "confidence_in");
+    }
+
+    private Array readConfidenceFlags_fn(File[] inputFiles) throws IOException {
+        return readVariable(inputFiles, "flags_fn.nc", "confidence_fn");
     }
 
     private Array readVariable(File[] inputFiles, String fileName, String variableName) throws IOException {
@@ -419,7 +439,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         return readVariable(inputFiles, "geometry_tn.nc", "sat_zenith_tn");
     }
 
-    private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, Array confidenceFlags, TiePointGrid satZenithGrid, int numFires) throws IOException, InterruptedException {
+    private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, Array confidenceFlags_in, Array confidenceFlags_fn, TiePointGrid satZenithGrid, int numFires) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
         final long[] timeRange = getTimeRange(dateRanges);
@@ -429,7 +449,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final float[] satZenith = new float[1];
         int count = 0;
         final Index flagsIdx = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
-        final Index confIdx = confidenceFlags.getIndex();
+        final Index confIdx = confidenceFlags_in.getIndex();
         for (int i = 0; i < numFires; ++i) {
             // filter time
             final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(i);
@@ -441,15 +461,17 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final int row = frpArrays[FRP_VARIABLES.j.ordinal()].getInt(i);
             final int col = frpArrays[FRP_VARIABLES.i.ordinal()].getShort(i);
             final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx.set(row, col));
-            if (isWater(flags) && onlyLand) {
+            final int confFlags_in = confidenceFlags_in.getInt(confIdx);
+            final int confFlags_fn = confidenceFlags_fn.getInt(confIdx);
+            if (isWater(flags, confFlags_in, confFlags_fn) && onlyLand) {
                 continue;
             }
             if (isDay(flags) && onlyNight) {
                 continue;
             }
             confIdx.set(row, col);
-            final int confFlags = confidenceFlags.getInt(confIdx);
-            if (isUnfilled(confFlags)) {
+
+            if (isUnfilled(confFlags_in)) {
                 continue;
             }
 
@@ -497,6 +519,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             featureValues[FRP_VARIABLES.classification.ordinal()] = (float) classification;
             featureValues[FRP_VARIABLES.confidence.ordinal()] = (float) confidence;
             featureValues[FRP_VARIABLES.values().length] = satZenith[0];
+            featureValues[FRP_VARIABLES.values().length + 1] = confFlags_in;
+            featureValues[FRP_VARIABLES.values().length + 2] = confFlags_fn;
             context.write(new LongWritable(time), bin);
         }
 
