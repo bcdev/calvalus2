@@ -61,6 +61,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     static final int CONF_LAND = 8;
     static final int CONF_INLAND_WATER = 16;
     static final int CONF_UNFILLED = 32;
+    static final int CONF_SUMMARY_CLOUD = 16384;
+
     static final int FRP_CLOUD = 32;
     static final int L1B_WATER = 2;
     static final int FRP_WATER = 4;
@@ -213,8 +215,21 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         }
     }
 
-    static int isCloud(int flags) {
-        return (flags & FRP_CLOUD) != 0 ? 1 : 0;
+    static int isCloud(int flags_in, int flags_fn) {
+        if ((flags_in & CONF_UNFILLED) != 0) {
+            return 0;
+        }
+        if ((flags_fn & CONF_UNFILLED) != 0) {
+            return 0;
+        }
+        if ((flags_in & CONF_SUMMARY_CLOUD) != 0) {
+            return 1;
+        }
+        if ((flags_fn & CONF_SUMMARY_CLOUD) != 0) {
+            return 1;
+        }
+
+        return 0 ;
     }
 
     static boolean isUnfilled(int confFlags) {
@@ -281,7 +296,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
         final int latIndex = GEODETIC_VARIABLES.latitude_in.ordinal();
         final int lonIndex = GEODETIC_VARIABLES.longitude_in.ordinal();
-
 
         final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
@@ -361,10 +375,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 int emptyOffset = 6 - variableOffset;
                 // aggregate contributions based on flags and platform
                 float[] values = new float[12];
+                final boolean isFire = !Float.isNaN(frpMwir);
                 values[variableIndex[variableOffset + 0]] = 1; // total measurement count
-                values[variableIndex[variableOffset + 1]] = water ? 0 : isCloud(flags);  // frp_cloud
-                values[variableIndex[variableOffset + 2]] = water ? 1 : 0;
-                values[variableIndex[variableOffset + 3]] = Float.isNaN(frpMwir) ? 0 : 1;  // valid fire count
+                values[variableIndex[variableOffset + 1]] = isFire ? 0 : isCloud(confFlags_in, confFlags_fn); // cloud count
+                values[variableIndex[variableOffset + 2]] = water ? 1 : 0; // water count
+                values[variableIndex[variableOffset + 3]] = isFire ? 1 : 0;  // valid fire count
                 values[variableIndex[variableOffset + 4]] = frpMwir;
                 values[variableIndex[variableOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
                 values[variableIndex[emptyOffset + 0]] = Float.NaN;

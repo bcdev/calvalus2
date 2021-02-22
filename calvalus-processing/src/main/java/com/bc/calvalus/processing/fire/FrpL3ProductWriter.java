@@ -417,14 +417,14 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableData.put(name, writeFillValue(dataArray));
     }
 
-    private void addWeightedVariable_uint(int[] dimensions, String name, String longName, String units) {
-        final Variable variable = fileWriter.addVariable(name, DataType.UINT, DIM_STRING);
-        variable.addAttribute(new Attribute(CF.FILL_VALUE, CF.FILL_UINT, true));
-        variable.addAttribute(new Attribute(CF.UNITS, units));
-        variable.addAttribute(new Attribute(CF.LONG_NAME, longName));
-        final Array dataArray = Array.factory(DataType.UINT, dimensions);
-        variableData.put(name, writeFillValue(dataArray));
-    }
+//    private void addWeightedVariable_uint(int[] dimensions, String name, String longName, String units) {
+//        final Variable variable = fileWriter.addVariable(name, DataType.UINT, DIM_STRING);
+//        variable.addAttribute(new Attribute(CF.FILL_VALUE, CF.FILL_UINT, true));
+//        variable.addAttribute(new Attribute(CF.UNITS, units));
+//        variable.addAttribute(new Attribute(CF.LONG_NAME, longName));
+//        final Array dataArray = Array.factory(DataType.UINT, dimensions);
+//        variableData.put(name, writeFillValue(dataArray));
+//    }
 
     private void addProductVariables(Product sourceProduct) {
         final Band[] bands = sourceProduct.getBands();

@@ -192,11 +192,13 @@ public class FrpMapperTest {
 
     @Test
     public void testIsCloud() {
-        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD));
-        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD + 19));
+        assertEquals(1, FrpMapper.isCloud(CONF_SUMMARY_CLOUD, 0));
+        assertEquals(1, FrpMapper.isCloud(0, CONF_SUMMARY_CLOUD));
+        assertEquals(1, FrpMapper.isCloud(CONF_SUMMARY_CLOUD, CONF_SUMMARY_CLOUD));
 
-        assertEquals(0, FrpMapper.isCloud(0));
-        assertEquals(0, FrpMapper.isCloud(19));
+        assertEquals(0, FrpMapper.isCloud(0, 0));
+        assertEquals(0, FrpMapper.isCloud(CONF_SUMMARY_CLOUD | CONF_UNFILLED, 0));
+        assertEquals(0, FrpMapper.isCloud(0, CONF_SUMMARY_CLOUD | CONF_UNFILLED));
     }
 
     @Test
