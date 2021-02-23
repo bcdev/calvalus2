@@ -8,6 +8,8 @@ import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -28,11 +30,34 @@ import java.util.Set;
 /**
  * @author thomas
  */
-public class CombineFileInputFormat extends InputFormat {
+public class CombineFileInputFormat extends PatternBasedInputFormat {
+    /**
+     * Creates a single split from a given pattern
+     */
+    @Override
+    public List<InputSplit> getSplits(JobContext context) throws IOException {
+        List<InputSplit> splits = new ArrayList<>(1);
+        List<InputSplit> rawSplits = super.getSplits(context);
+        if (rawSplits.size() > 0 || context.getConfiguration().getBoolean("calvalus.generateEmptyAggregate", false)) {
+            Path[] filePaths = new Path[rawSplits.size()];
+            long[] fileLengths = new long[rawSplits.size()];
+            for (int i = 0; i < rawSplits.size(); ++i) {
+                ProductSplit split = (ProductSplit) rawSplits.get(i);
+                filePaths[i] = split.getPath();
+                fileLengths[i] = split.getLength();
+            }
+            splits.add(new CombineFileSplit(filePaths, fileLengths));
+            CalvalusLogger.getLogger().info(String.format("Combined %d files into 1 split.", rawSplits.size()));
+        } else {
+            CalvalusLogger.getLogger().info(String.format("Combined %d files into 0 splits.", rawSplits.size()));
+        }
+        return splits;
+    }
 
     /**
      * Creates a single split from a given pattern
      */
+/*
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
@@ -80,4 +105,5 @@ public class CombineFileInputFormat extends InputFormat {
     public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) {
         return new NoRecordReader();
     }
+*/
 }
