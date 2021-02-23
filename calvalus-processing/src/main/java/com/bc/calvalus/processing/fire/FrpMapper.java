@@ -514,9 +514,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
             ++count;
             //
-            // create and write one bin with a record of FRP values. We nned to add one for the satellite zenith which is
-            // not contained in the FRP_in.nc file
-            final L3SpatialBin bin = new L3SpatialBin(time, FRP_VARIABLES.values().length + 1, 0);
+            // create and write one bin with a record of FRP values. We need to add three for the satellite zenith angle
+            // and the two confidence flag bands which are not contained in the FRP_in.nc file
+            final L3SpatialBin bin = new L3SpatialBin(time, FRP_VARIABLES.values().length + 3, 0);
             final float[] featureValues = bin.getFeatureValues();
 
             featureValues[0] = platformNumber;
