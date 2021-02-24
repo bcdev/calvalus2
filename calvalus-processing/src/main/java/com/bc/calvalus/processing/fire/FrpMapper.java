@@ -475,7 +475,10 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             // filter flags
             final int row = frpArrays[FRP_VARIABLES.j.ordinal()].getInt(i);
             final int col = frpArrays[FRP_VARIABLES.i.ordinal()].getShort(i);
-            final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx.set(row, col));
+            confIdx.set(row, col);
+            flagsIdx.set(row, col);
+
+            final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx);
             final int confFlags_in = confidenceFlags_in.getInt(confIdx);
             final int confFlags_fn = confidenceFlags_fn.getInt(confIdx);
             if (isWater(flags, confFlags_in, confFlags_fn) && onlyLand) {
@@ -484,7 +487,6 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             if (isDay(flags) && onlyNight) {
                 continue;
             }
-            confIdx.set(row, col);
 
             if (isUnfilled(confFlags_in)) {
                 continue;
