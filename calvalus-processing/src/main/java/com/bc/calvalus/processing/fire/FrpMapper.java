@@ -119,12 +119,16 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
     static HashMap<Integer, Integer> createFiresLUT(Array[] frpArrays, int numFires, int columns) {
         final HashMap<Integer, Integer> fireIndex = new HashMap<>();
-        final int rowIndex = FRP_VARIABLES.j.ordinal();
-        final int colIndex = FRP_VARIABLES.i.ordinal();
+        final Array rowArray = frpArrays[FRP_VARIABLES.j.ordinal()];
+        final Index rowArrayIdx = rowArray.getIndex();
+        final Array colArray = frpArrays[FRP_VARIABLES.i.ordinal()];
+        final Index colArrayIdx = colArray.getIndex();
         for (int i = 0; i < numFires; ++i) {
-            final int row = frpArrays[rowIndex].getInt(i);
-            final int col = frpArrays[colIndex].getShort(i);
-            fireIndex.put(row * columns + col, i);
+            rowArrayIdx.set(i);
+            colArrayIdx.set(i);
+            final int row = rowArray.getInt(rowArrayIdx);
+            final int col = colArray.getShort(colArrayIdx);
+            fireIndex.put(getFireIndex(columns, row, col), i);
         }
         return fireIndex;
     }
@@ -229,7 +233,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             return 1;
         }
 
-        return 0 ;
+        return 0;
     }
 
     static boolean isUnfilled(int confFlags) {
@@ -259,6 +263,35 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     // package access for testing only tb 2020-12-17
     static boolean isDay(int flags) {
         return (flags & (DAY)) != 0;
+    }
+
+    private static void writeDebugStuff(double longitude, double latitude, long time, double frpMwir, double area, int flags, int confFlags_in, int confFlags_fn, float platformNumber) {
+        final StringBuilder builder = new StringBuilder();
+        builder.append(String.format(Locale.ENGLISH, "%f", longitude));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%f", latitude));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%d", time));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%f", frpMwir));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%f", area));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%d", flags));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%d", confFlags_in));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%d", confFlags_fn));
+        builder.append("\t");
+        builder.append(String.format(Locale.ENGLISH, "%b", isWater(flags, confFlags_in, confFlags_fn)));
+        builder.append(" ");
+        builder.append(String.format(Locale.ENGLISH, "%b", isCloud(confFlags_in, confFlags_fn)));
+        builder.append(" ");
+        builder.append(String.format(Locale.ENGLISH, "%b", isDay(flags)));
+        builder.append("\t");
+        builder.append(platformNumber == 1 ? "S3A" : "S3B");
+
+        System.out.println(builder.toString());
     }
 
     @Override
@@ -325,32 +358,51 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             for (int col = 0; col < columns; ++col) {
                 index.set(row, col);
 
-                // filter time
-                final Integer fireIdx = fireIndex.get(row * columns + col);
+                final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
+                final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
+
+                final Integer fireIdx = fireIndex.get(getFireIndex(columns, row, col));
+                long time = Long.MIN_VALUE;
+                float frpMwir = Float.NaN;
+                double area = Float.NaN;
                 if (fireIdx != null) {
-                    final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(fireIdx);
+                    time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(fireIdx);
+                    frpMwir = (float) frpArrays[mwirIndex].getDouble(fireIdx);
+                    area = frpArrays[areaIndex].getDouble(fireIdx);
+                }
+
+                final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                final int confFlags_in = confidenceFlags_in.getInt(index);
+                final int confFlags_fn = confidenceFlags_fn.getInt(index);
+                if ((lon >= -72.2) && (lon <= -72.1) && (lat >= 9.2) && (lat <= 9.3)) {
+                    writeDebugStuff(lon, lat, time, frpMwir, area, flags, confFlags_in, confFlags_fn, platformNumber);
+                }
+
+                // filter time
+                // file index goes here
+                if (fireIdx != null) {
+                    time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(fireIdx);
                     if (time < timeRange[0] || time > timeRange[1]) {
                         continue;
                     }
                 }
 
                 // apply flags
-                final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
+                // flags go here
                 if (isDay(flags) && onlyNight) {
                     continue;
                 }
-                final int confFlags_in = confidenceFlags_in.getInt(index);
+                // conf_in go here
                 if (isUnfilled(confFlags_in)) {
                     continue;
                 }
 
-                final int confFlags_fn = confidenceFlags_fn.getInt(index);
+                // conf_fn go here
 
                 // construct observation
-                final double lat = geodeticArrays[latIndex].getInt(index) * 1e-6;
-                final double lon = geodeticArrays[lonIndex].getInt(index) * 1e-6;
+                // geolocation goes here
 
-                float frpMwir = Float.NaN;
+                frpMwir = Float.NaN;
                 float frpMwirUnc = Float.NaN;
                 final boolean water = isWater(flags, confFlags_in, confFlags_fn);
                 if (!(water && onlyLand)) {
@@ -359,9 +411,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     // continent shores. tb 2021-01-26
 
                     if (fireIdx != null) {
-                        final double area = frpArrays[areaIndex].getDouble(fireIdx);
+                        // area goes here
                         if (area > 0.0) {
-                            frpMwir = (float) frpArrays[mwirIndex].getDouble(fireIdx);
+                            // frpMIR goes here
                             if (frpMwir <= 0.0) {
                                 frpMwir = Float.NaN;
                             } else {
@@ -401,6 +453,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             String m = MessageFormat.format("Failed to process input slice of {0}", inputPath.getName());
             LOG.log(Level.SEVERE, m, exception);
         }
+    }
+
+    // package access for testing only tb 2021-02-26
+    static int getFireIndex(int columns, int row, int col) {
+        return row * columns + col;
     }
 
     private int[] readGeodeticVariables(File[] inputFiles, Array[] geodeticArrays) throws IOException {
@@ -466,8 +523,22 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final Index flagsIdx = frpArrays[FRP_VARIABLES.flags.ordinal()].getIndex();
         final Index confIdx = confidenceFlags_in.getIndex();
         for (int i = 0; i < numFires; ++i) {
-            // filter time
+            final double latitude = frpArrays[FRP_VARIABLES.latitude.ordinal()].getDouble(i);
+            final double longitude = frpArrays[FRP_VARIABLES.longitude.ordinal()].getDouble(i);
+
+            final double frpMwir = frpArrays[FRP_VARIABLES.FRP_MWIR.ordinal()].getDouble(i);
+            final double area = frpArrays[FRP_VARIABLES.IFOV_area.ordinal()].getDouble(i);
             final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(i);
+            final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx);
+            final int confFlags_in = confidenceFlags_in.getInt(confIdx);
+            final int confFlags_fn = confidenceFlags_fn.getInt(confIdx);
+
+            if ((longitude >= -72.2) && (longitude <= -72.1) && (latitude >= 9.2) && (latitude <= 9.3)) {
+                writeDebugStuff(longitude, latitude, time, frpMwir, area, flags, confFlags_in, confFlags_fn, platformNumber);
+            }
+
+            // filter time
+            // time goes here
             if (time < timeRange[0] || time > timeRange[1]) {
                 continue;
             }
@@ -478,9 +549,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             confIdx.set(row, col);
             flagsIdx.set(row, col);
 
-            final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx);
-            final int confFlags_in = confidenceFlags_in.getInt(confIdx);
-            final int confFlags_fn = confidenceFlags_fn.getInt(confIdx);
+            // flags go here
             if (isWater(flags, confFlags_in, confFlags_fn) && onlyLand) {
                 continue;
             }
@@ -492,8 +561,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 continue;
             }
 
-            final double frpMwir = frpArrays[FRP_VARIABLES.FRP_MWIR.ordinal()].getDouble(i);
-            final double area = frpArrays[FRP_VARIABLES.IFOV_area.ordinal()].getDouble(i);
+            // frp and area come here
             if (area <= 0.0) {
                 LOG.info("skipping empty area record at time " + time);
                 continue;
@@ -505,8 +573,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
             satZenithGrid.getPixels(col, row, 1, 1, satZenith);
 
-            final double latitude = frpArrays[FRP_VARIABLES.latitude.ordinal()].getDouble(i);
-            final double longitude = frpArrays[FRP_VARIABLES.longitude.ordinal()].getDouble(i);
+            // geolocation reading here
             final double frpSwir = frpArrays[FRP_VARIABLES.FRP_SWIR.ordinal()].getDouble(i);
             final double frpMwirUnc = frpArrays[FRP_VARIABLES.FRP_uncertainty_MWIR.ordinal()].getDouble(i);
             final double frpSwirUnc = frpArrays[FRP_VARIABLES.FRP_uncertainty_SWIR.ordinal()].getDouble(i);

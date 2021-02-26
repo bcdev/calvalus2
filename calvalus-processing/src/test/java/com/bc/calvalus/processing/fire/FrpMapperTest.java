@@ -43,6 +43,13 @@ public class FrpMapperTest {
     }
 
     @Test
+    public void testGetFireIndex() {
+        assertEquals(5, FrpMapper.getFireIndex(34, 0, 5));
+        assertEquals(41, FrpMapper.getFireIndex(35, 1, 6));
+        assertEquals(79, FrpMapper.getFireIndex(36, 2, 7));
+    }
+
+    @Test
     public void testCreateVariableIndex() {
         final BinningContext binningContext = mock(BinningContext.class);
         final VariableContext variableContext = mock(VariableContext.class);
