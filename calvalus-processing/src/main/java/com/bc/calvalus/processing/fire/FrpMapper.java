@@ -119,14 +119,23 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
     static HashMap<Integer, Integer> createFiresLUT(Array[] frpArrays, int numFires, int columns) {
         final HashMap<Integer, Integer> fireIndex = new HashMap<>();
-        final int rowIndex = FRP_VARIABLES.j.ordinal();
-        final int colIndex = FRP_VARIABLES.i.ordinal();
+        final Array rowArray = frpArrays[FRP_VARIABLES.j.ordinal()];
+        final Index rowArrayIdx = rowArray.getIndex();
+        final Array colArray = frpArrays[FRP_VARIABLES.i.ordinal()];
+        final Index colArrayIdx = colArray.getIndex();
         for (int i = 0; i < numFires; ++i) {
-            final int row = frpArrays[rowIndex].getInt(i);
-            final int col = frpArrays[colIndex].getShort(i);
-            fireIndex.put(row * columns + col, i);
+            rowArrayIdx.set(i);
+            colArrayIdx.set(i);
+            final int row = rowArray.getInt(rowArrayIdx);
+            final int col = colArray.getShort(colArrayIdx);
+            fireIndex.put(getFireIndex(columns, row, col), i);
         }
         return fireIndex;
+    }
+
+    // package access for testing only tb 2021-02-26
+    static int getFireIndex(int columns, int row, int col) {
+        return row * columns + col;
     }
 
     private static double extractMJDFromFilename(Path inputPath) {
@@ -326,7 +335,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 index.set(row, col);
 
                 // filter time
-                final Integer fireIdx = fireIndex.get(row * columns + col);
+                final Integer fireIdx = fireIndex.get(getFireIndex(columns, row, col));
                 if (fireIdx != null) {
                     final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(fireIdx);
                     if (time < timeRange[0] || time > timeRange[1]) {
