@@ -11,10 +11,6 @@
     <artifactId>calvalus-distribution</artifactId>
     <packaging>pom</packaging>
 
-    <properties>
-        <snap.bundle.version>5-cv-2.14</snap.bundle.version>
-    </properties>
-
     <name>Calvalus Distribution CPT+Bundle</name>
     <description>
         Provides the various distributions of calvalus artifacts.
