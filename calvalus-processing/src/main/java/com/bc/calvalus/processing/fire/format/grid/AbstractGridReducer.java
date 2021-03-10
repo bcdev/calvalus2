@@ -203,40 +203,31 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     private void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lonBnds = ncFile.findVariable("lon_bounds");
-        float[] array = new float[numRowsGlobal * 2 * 2];
-        array[0] = -180F;
-        for (int x = 1; x < numRowsGlobal * 2 * 2; x++) {
-            if (x % 2 == 0) {
-                array[x] = array[x - 1];
-            } else {
-                array[x] = array[x - 1] + 180.0f / numRowsGlobal;
-            }
+        double[] array = new double[numRowsGlobal * 2 * 2];
+        for (int x = 0; x < numRowsGlobal * 2; x++) {
+            array[2*x] = -180.0 + 180.0 * x / numRowsGlobal;
+            array[2*x+1] = -180.0 + 180.0 * (x+1) / numRowsGlobal;
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal * 2, 2}, array);
+        Array values = Array.factory(DataType.DOUBLE, new int[]{numRowsGlobal * 2, 2}, array);
         ncFile.write(lonBnds, values);
     }
 
     private void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable latBnds = ncFile.findVariable("lat_bounds");
-        float[] array = new float[numRowsGlobal * 2];
-        array[0] = 90F;
-        for (int y = 1; y < numRowsGlobal * 2; y++) {
-            if (y % 2 == 0) {
-                array[y] = array[y - 1];
-            } else {
-                array[y] = array[y - 1] - 180.0f / numRowsGlobal;
-            }
+        double[] array = new double[numRowsGlobal * 2];
+        for (int y = 0; y < numRowsGlobal; y++) {
+            array[2*y] = 90.0 - 180.0 * y / numRowsGlobal;
+            array[2*y+1] = 90.0 - 180.0 * (y+1) / numRowsGlobal;
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal, 2}, array);
+        Array values = Array.factory(DataType.DOUBLE, new int[]{numRowsGlobal, 2}, array);
         ncFile.write(latBnds, values);
     }
 
     private void writeLat(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lat = ncFile.findVariable("lat");
-        float[] array = new float[numRowsGlobal];
-        array[0] = 90.0f - 180.0f / numRowsGlobal / 2;
+        double[] array = new double[numRowsGlobal];
         for (int x = 1; x < numRowsGlobal; x++) {
-            array[x] = array[x - 1] - 180.0f / numRowsGlobal;
+            array[x] = 90.0 - 180.0 / numRowsGlobal / 2 - 180.0 * x / numRowsGlobal;
         }
         Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal}, array);
         ncFile.write(lat, values);
@@ -244,12 +235,11 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     private void writeLon(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lon = ncFile.findVariable("lon");
-        float[] array = new float[numRowsGlobal * 2];
-        array[0] = -180.0f + 180.0f / numRowsGlobal / 2;
-        for (int x = 1; x < numRowsGlobal * 2; x++) {
-            array[x] = array[x - 1] + 180.0f / numRowsGlobal;
+        double[] array = new double[numRowsGlobal * 2];
+        for (int x = 0; x < numRowsGlobal * 2; x++) {
+            array[x] = -180.0 + 180.0 / numRowsGlobal / 2 + 180.0 * x / numRowsGlobal;
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal * 2}, array);
+        Array values = Array.factory(DataType.DOUBLE, new int[]{numRowsGlobal * 2}, array);
         ncFile.write(lon, values);
     }
 
