@@ -229,7 +229,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         for (int x = 1; x < numRowsGlobal; x++) {
             array[x] = 90.0 - 180.0 / numRowsGlobal / 2 - 180.0 * x / numRowsGlobal;
         }
-        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal}, array);
+        Array values = Array.factory(DataType.DOUBLE, new int[]{numRowsGlobal}, array);
         ncFile.write(lat, values);
     }
 
