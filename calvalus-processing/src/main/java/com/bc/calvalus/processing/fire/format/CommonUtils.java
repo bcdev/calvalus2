@@ -175,11 +175,6 @@ public class CommonUtils {
     public static float checkForBurnability(float sourceJd, int sourceLcClass, String sensor) {
         switch (sensor) {
             case "S2":
-                if (!LcRemappingS2.isInBurnableLcClass(sourceLcClass)) {
-                    return -2;
-                } else {
-                    return sourceJd;
-                }
             case "MODIS":
             case "OLCI":
                 if (!LcRemapping.isInBurnableLcClass(sourceLcClass)) {

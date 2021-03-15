@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.hadoop.RasterStackWritable;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.utils.GeometryUtils;

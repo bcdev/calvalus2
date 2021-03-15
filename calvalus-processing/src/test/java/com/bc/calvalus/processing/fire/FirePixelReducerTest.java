@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.hadoop.RasterStackWritable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
