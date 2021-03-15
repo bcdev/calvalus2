@@ -712,7 +712,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
     private static boolean isInBurnableLcClass(int sourceLcClass, String sensor) {
         switch (sensor) {
             case "S2":
-                return LcRemappingS2.isInBurnableLcClass(sourceLcClass);
             case "MODIS":
             case "OLCI":
                 return LcRemapping.isInBurnableLcClass(sourceLcClass);

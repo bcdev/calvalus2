@@ -4,7 +4,7 @@ import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
@@ -19,6 +19,7 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductNode;
+import org.esa.snap.core.gpf.GPF;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,6 +51,8 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
         numRowsGlobal = context.getConfiguration().getInt("numRowsGlobal", 720);
         targetRasterHeight = numRowsGlobal / 180;
         targetRasterWidth = numRowsGlobal / 180;
@@ -223,14 +226,14 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     protected int getLcClassesCount() {
-        return 6;
+        return LcRemapping.LC_CLASSES_COUNT;
     }
 
     @Override
     protected void addBaInLandCover(List<double[]> baInLc, int targetGridCellIndex, double burnedArea, int sourceLc) {
-        boolean inBurnableClass = LcRemappingS2.isInBurnableLcClass(sourceLc);
-        if (sourceLc <= baInLc.size()) {
-            baInLc.get(sourceLc - 1)[targetGridCellIndex] += inBurnableClass ? burnedArea : 0.0F;
+        for (int currentLcClass = 0; currentLcClass < getLcClassesCount(); currentLcClass++) {
+            boolean inLcClass = LcRemapping.isInLcClass(currentLcClass + 1, sourceLc);
+            baInLc.get(currentLcClass)[targetGridCellIndex] += inLcClass ? burnedArea : 0.0F;
         }
     }
 

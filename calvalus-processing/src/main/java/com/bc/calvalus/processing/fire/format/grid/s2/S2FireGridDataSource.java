@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
@@ -46,7 +46,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
         CalvalusLogger.getLogger().warning("Reading data for pixel x=" + x + ", y=" + y);
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         // the second formula looks strange: why (y+1)*pixelsize? Which values do we get for y? 0 .. 9 for a 1-degree grid cell
         // It seems the cooordinate system is again inversed, with y=0 being 89.1 which is the lower left corner of the upper left 0.1-deg cell.
@@ -81,7 +80,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
             Band jd = jdSubset.getBand("JD");
             Band cl = clSubset.getBand("CL");
-            Band lc = lcSubset.getBand("band_1");
+            Band lc = lcSubset.getBand("lccs_class");
 
             AreaCalculator areaCalculator = new AreaCalculator(jdSubset.getSceneGeoCoding());
 
@@ -102,14 +101,14 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 lc.readPixels(0, lineIndex, width, 1, lcPixels);
 
                 if (geoPos.lat < -34.84) {
-                    Arrays.fill(lcPixels, 10);
+                    Arrays.fill(lcPixels, 210);
                 }
 
                 for (int x0 = 0; x0 < width; x0++) {
                     int sourceJD = jdPixels[x0];
                     float sourceCL = clPixels[x0];
                     int sourceLC = lcPixels[x0];
-                    data.burnable[targetPixelIndex] = LcRemappingS2.isInBurnableLcClass(sourceLC);
+                    data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                     boolean isValidPixel = isValidPixel(doyFirstOfMonth, doyLastOfMonth, sourceJD);
                     if (isValidPixel) {
                         // set burned pixel value consistently with CL value -- both if burned pixel is valid

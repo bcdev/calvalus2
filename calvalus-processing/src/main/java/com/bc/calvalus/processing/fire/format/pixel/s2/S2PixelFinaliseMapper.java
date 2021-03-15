@@ -46,7 +46,7 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
     protected Band getLcBand(Product lcProduct) {
-        return lcProduct.getBand("band_1");
+        return lcProduct.getBand("lccs_class");
     }
 
     @Override

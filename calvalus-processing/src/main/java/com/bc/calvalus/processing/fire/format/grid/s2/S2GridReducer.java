@@ -17,7 +17,6 @@ public class S2GridReducer extends AbstractGridReducer {
     private final NcFileFactory s2NcFileFactory;
 
     public S2GridReducer() {
-        numLcClasses = 6;
         this.s2NcFileFactory = new S2NcFileFactory();
     }
 

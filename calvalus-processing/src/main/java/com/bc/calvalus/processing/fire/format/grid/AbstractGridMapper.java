@@ -198,7 +198,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 targetGridCellIndex++;
                 pm.worked(1);
-
+//                if (Arrays.stream(data.probabilityOfBurn).sum() > 0) {
+//                    writeDebugProduct(data);
+//                }
             }
         }
 
@@ -309,24 +311,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         this.dataSource = dataSource;
     }
 
-    private static void writeDebugProduct(Context context, SourceData data) throws IOException {
-        if (context.getConfiguration().getBoolean(CALVALUS_DEBUG_FIRE, false)) {
-            return;
-        }
-        if (data == null) {
-            LOG.warning("Data is null, unable to create debug file.");
-            return;
-        }
+    private static void writeDebugProduct(SourceData data) throws IOException {
         Product sourceData = data.makeProduct();
-        ProductIO.writeProduct(sourceData, "./debug.nc", "NetCDF4-CF");
-        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/debug.nc");
-
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        if (!fs.exists(path)) {
-            FileUtil.copy(new File("./debug.nc"), fs, path, false, context.getConfiguration());
+        ProductIO.writeProduct(sourceData, "./debug", "GeoTIFF");
+        try {
+            Thread.sleep(1000*60*10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
-        LOG.info("created debug file at hdfs://calvalus/calvalus/home/thomas/debug.nc");
     }
 
 }

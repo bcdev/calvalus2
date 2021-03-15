@@ -58,18 +58,10 @@ class ClImage extends SingleBandedOpImage {
                 int sourceLcClass = lcArray[pixelIndex];
                 float jdValue = sourceJdArray[pixelIndex];
 
-                if (sensor.equals("S2")) {
-                    if (!LcRemappingS2.isInBurnableLcClass(lcArray[pixelIndex])) {
-                        dest.setSample(x, y, 0, 0);
-                        pixelIndex++;
-                        continue;
-                    }
-                } else {
-                    if (!LcRemapping.isInBurnableLcClass(lcArray[pixelIndex])) {
-                        dest.setSample(x, y, 0, 0);
-                        pixelIndex++;
-                        continue;
-                    }
+                if (!LcRemapping.isInBurnableLcClass(lcArray[pixelIndex])) {
+                    dest.setSample(x, y, 0, 0);
+                    pixelIndex++;
+                    continue;
                 }
 
                 if (Float.isNaN(jdValue) || jdValue == 999) {
