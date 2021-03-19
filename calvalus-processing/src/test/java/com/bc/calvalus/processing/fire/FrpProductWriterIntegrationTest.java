@@ -145,7 +145,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(33.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
         assertEquals(42.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3b_night_water");
+        variable = netcdfFile.findVariable("s3b_night_FRP_related_surface_conditions_flag");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
@@ -202,7 +202,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(19, data.getInt(index.set(0, 1, 6)));
         assertEquals(28, data.getInt(index.set(0, 2, 7)));
 
-        variable = netcdfFile.findVariable("s3a_night_water");
+        variable = netcdfFile.findVariable("s3a_night_FRP_related_surface_conditions_flag");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();

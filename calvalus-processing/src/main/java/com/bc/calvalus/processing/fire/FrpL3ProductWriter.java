@@ -252,16 +252,16 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
     private void createVariableTemplates() {
         variableTemplates = new HashMap<>();
         variableTemplates.put("s3a_night_pixel_sum", new VariableTemplate("s3a_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime pixels"));
-        variableTemplates.put("s3a_night_cloud_sum", new VariableTemplate("s3a_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime cloudy pixels"));
-        variableTemplates.put("s3a_night_water_sum", new VariableTemplate("s3a_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime water pixels"));
+        variableTemplates.put("s3a_night_cloud_sum", new VariableTemplate("s3a_night_FRP_related_atmospheric_condition_flag", DataType.UINT, CF.FILL_UINT, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered to have unsuitable atmospheric conditions for FRP product processing, e.g. certain types of cloud"));
+        variableTemplates.put("s3a_night_water_sum", new VariableTemplate("s3a_night_FRP_related_surface_conditions_flag", DataType.UINT, CF.FILL_UINT, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered unsuitable surfaces, e.g. permanent water"));
         variableTemplates.put("s3a_night_fire_sum", new VariableTemplate("s3a_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime active fire pixels"));
         variableTemplates.put("s3a_night_frp_mean", new VariableTemplate("s3a_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime"));
         variableTemplates.put("s3a_night_frp_unc_sum", new VariableTemplate("s3a_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3A during nighttime"));
         variableTemplates.put("s3a_night_cloud_fraction_sum", new VariableTemplate("s3a_night_cloud_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees"));
         variableTemplates.put("s3a_night_fire_weighted_sum", new VariableTemplate("s3a_night_fire_weighted", DataType.FLOAT, Float.NaN, "1", "Number of S3A nighttime active fire pixels weighted by cloud fraction"));
         variableTemplates.put("s3b_night_pixel_sum", new VariableTemplate("s3b_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
-        variableTemplates.put("s3b_night_cloud_sum", new VariableTemplate("s3b_night_cloud", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime cloudy pixels"));
-        variableTemplates.put("s3b_night_water_sum", new VariableTemplate("s3b_night_water", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime water pixels"));
+        variableTemplates.put("s3b_night_cloud_sum", new VariableTemplate("s3b_night_FRP_related_atmospheric_condition_flag", DataType.UINT, CF.FILL_UINT, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered to have unsuitable atmospheric conditions for FRP product processing, e.g. certain types of cloud"));
+        variableTemplates.put("s3b_night_water_sum", new VariableTemplate("s3b_night_FRP_related_surface_conditions_flag", DataType.UINT, CF.FILL_UINT, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered unsuitable surfaces, e.g. permanent water"));
         variableTemplates.put("s3b_night_fire_sum", new VariableTemplate("s3b_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
         variableTemplates.put("s3b_night_frp_mean", new VariableTemplate("s3b_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
         variableTemplates.put("s3b_night_frp_unc_sum", new VariableTemplate("s3b_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during nighttime"));
@@ -469,9 +469,9 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             }
             if (variableData.containsKey(sensor + "night_cloud_fraction")) {
                 calculateCloudFraction(sensor + "night_cloud_fraction",
-                        sensor + "night_cloud",
+                        sensor + "night_FRP_related_atmospheric_condition_flag",
                         sensor + "night_pixel",
-                        sensor + "night_water",
+                        sensor + "night_FRP_related_surface_conditions_flag",
                         "0.1".equals(getResolutionString(type, false)) ? 11 : 5);
                 if (variableData.containsKey(sensor + "night_fire_weighted")) {
                     calculateFireWeighted(sensor + "night_fire_weighted",

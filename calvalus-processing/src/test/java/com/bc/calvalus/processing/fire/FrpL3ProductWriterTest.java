@@ -138,10 +138,10 @@ public class FrpL3ProductWriterTest {
         assertTemplate(DataType.UINT, "s3a_night_pixel", -1, "1", "Total number of S3A nighttime pixels", template);
 
         template = writer.getTemplate("s3a_night_cloud_sum");
-        assertTemplate(DataType.UINT, "s3a_night_cloud", -1, "1", "Total number of S3A nighttime cloudy pixels", template);
+        assertTemplate(DataType.UINT, "s3a_night_FRP_related_atmospheric_condition_flag", -1, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered to have unsuitable atmospheric conditions for FRP product processing, e.g. certain types of cloud", template);
 
         template = writer.getTemplate("s3a_night_water_sum");
-        assertTemplate(DataType.UINT, "s3a_night_water", -1, "1", "Total number of S3A nighttime water pixels", template);
+        assertTemplate(DataType.UINT, "s3a_night_FRP_related_surface_conditions_flag", -1, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered unsuitable surfaces, e.g. permanent water", template);
 
         template = writer.getTemplate("s3a_night_fire_sum");
         assertTemplate(DataType.UINT, "s3a_night_fire", -1, "1", "Total number of S3A nighttime active fire pixels", template);
@@ -153,10 +153,10 @@ public class FrpL3ProductWriterTest {
         assertTemplate(DataType.UINT, "s3b_night_pixel", -1, "1", "Total number of S3B nighttime pixels", template);
 
         template = writer.getTemplate("s3b_night_cloud_sum");
-        assertTemplate(DataType.UINT, "s3b_night_cloud", -1, "1", "Total number of S3B nighttime cloudy pixels", template);
+        assertTemplate(DataType.UINT, "s3b_night_FRP_related_atmospheric_condition_flag", -1, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered to have unsuitable atmospheric conditions for FRP product processing, e.g. certain types of cloud", template);
 
         template = writer.getTemplate("s3b_night_water_sum");
-        assertTemplate(DataType.UINT, "s3b_night_water", -1, "1", "Total number of S3B nighttime water pixels", template);
+        assertTemplate(DataType.UINT, "s3b_night_FRP_related_surface_conditions_flag", -1, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered unsuitable surfaces, e.g. permanent water", template);
 
         template = writer.getTemplate("s3b_night_fire_sum");
         assertTemplate(DataType.UINT, "s3b_night_fire", -1, "1", "Total number of S3B nighttime active fire pixels", template);
