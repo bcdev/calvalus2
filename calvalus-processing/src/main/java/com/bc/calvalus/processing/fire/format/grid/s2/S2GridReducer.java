@@ -11,6 +11,8 @@ import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class S2GridReducer extends AbstractGridReducer {
 
@@ -72,18 +74,15 @@ public class S2GridReducer extends AbstractGridReducer {
     protected void writeVegetationClasses(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable vegetationClass = ncFile.findVariable("vegetation_class");
         int[] array = new int[]{
-                1, 2, 3, 4, 5, 6
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130,
+                140, 150, 160, 170, 180
         };
-        Array values = Array.factory(DataType.INT, new int[]{6}, array);
+        Array values = Array.factory(DataType.INT, new int[]{18}, array);
         ncFile.write(vegetationClass, values);
     }
 
     @Override
     protected void writeVegetationClassNames(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
-
-        return;
-
-        /*
         Variable vegetationClass = ncFile.findVariable("vegetation_class_name");
         List<String> names = new ArrayList<>();
         names.add("Cropland, rainfed");
@@ -110,7 +109,6 @@ public class S2GridReducer extends AbstractGridReducer {
             Array values = Array.factory(DataType.CHAR, new int[]{1, name.length()}, array);
             ncFile.write(vegetationClass, new int[]{i, 0}, values);
         }
-        */
     }
 
 }

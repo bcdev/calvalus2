@@ -216,7 +216,7 @@ public class L3MapperTest {
     @Test
     public void testWkt() throws FactoryException {
         CoordinateReferenceSystem crs = CRS.decode("EPSG:32636");
-        assertEquals("crs", "PROJCS[\"WGS 84 / UTM zone 36N\", \n" +
+        assertEquals("crs", ("PROJCS[\"WGS 84 / UTM zone 36N\", \n" +
                 "  GEOGCS[\"WGS 84\", \n" +
                 "    DATUM[\"World Geodetic System 1984\", \n" +
                 "      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n" +
@@ -235,14 +235,14 @@ public class L3MapperTest {
                 "  UNIT[\"m\", 1.0], \n" +
                 "  AXIS[\"Easting\", EAST], \n" +
                 "  AXIS[\"Northing\", NORTH], \n" +
-                "  AUTHORITY[\"EPSG\",\"32636\"]]", crs.toWKT());
+                "  AUTHORITY[\"EPSG\",\"32636\"]]").replaceAll("\n", "\r\n"), crs.toWKT());
         Envelope envelope = CRS.getEnvelope(crs);
         assertEquals("min0", 166021.4430960772, envelope.getMinimum(0), 0.0001);
         assertEquals("max0", 833978.5569039235, envelope.getMaximum(0), 0.0001);
         assertEquals("min1", 0.0, envelope.getMinimum(1), 0.0001);
         assertEquals("max1", 9329005.182450451, envelope.getMaximum(1), 0.0001);
         CoordinateReferenceSystem crs2 = CRS.decode("EPSG:4326");
-        assertEquals("crs", "GEOGCS[\"WGS 84\", \n" +
+        assertEquals("crs", ("GEOGCS[\"WGS 84\", \n" +
                 "  DATUM[\"World Geodetic System 1984\", \n" +
                 "    SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \n" +
                 "    AUTHORITY[\"EPSG\",\"6326\"]], \n" +
@@ -250,7 +250,7 @@ public class L3MapperTest {
                 "  UNIT[\"degree\", 0.017453292519943295], \n" +
                 "  AXIS[\"Geodetic longitude\", EAST], \n" +
                 "  AXIS[\"Geodetic latitude\", NORTH], \n" +
-                "  AUTHORITY[\"EPSG\",\"4326\"]]", crs2.toWKT());
+                "  AUTHORITY[\"EPSG\",\"4326\"]]").replaceAll("\n", "\r\n"), crs2.toWKT());
         Envelope envelope2 = CRS.getEnvelope(crs2);
         assertEquals("min0", -180.0, envelope2.getMinimum(0), 0.0001);
         assertEquals("max0", 180.0, envelope2.getMaximum(0), 0.0001);
