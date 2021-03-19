@@ -3,11 +3,13 @@ package com.bc.calvalus.processing.fire;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.VariableContext;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 
 import static com.bc.calvalus.processing.fire.FrpMapper.*;
@@ -47,6 +49,18 @@ public class FrpMapperTest {
         assertEquals(5, FrpMapper.getFireIndex(34, 0, 5));
         assertEquals(41, FrpMapper.getFireIndex(35, 1, 6));
         assertEquals(79, FrpMapper.getFireIndex(36, 2, 7));
+    }
+
+    @Test
+    public void testDeleteMe() {
+        final Date minDate = new Date(642999679398391L / 1000L + YEAR2k_MILLIS);
+        final Date maxDate = new Date(642999679998117L / 1000L + YEAR2k_MILLIS);
+
+        final ProductData.UTC minUtc = ProductData.UTC.create(minDate, 0);
+        System.out.println(minUtc.format());
+        final ProductData.UTC maxUtc = ProductData.UTC.create(maxDate, 0);
+        System.out.println(maxUtc.format());
+
     }
 
     @Test
@@ -199,13 +213,15 @@ public class FrpMapperTest {
 
     @Test
     public void testIsCloud() {
-        assertEquals(1, FrpMapper.isCloud(CONF_SUMMARY_CLOUD, 0));
-        assertEquals(1, FrpMapper.isCloud(0, CONF_SUMMARY_CLOUD));
-        assertEquals(1, FrpMapper.isCloud(CONF_SUMMARY_CLOUD, CONF_SUMMARY_CLOUD));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, 0, 0));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, CONF_SUMMARY_CLOUD, 0));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, 0, CONF_SUMMARY_CLOUD));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, CONF_SUMMARY_CLOUD, CONF_SUMMARY_CLOUD));
 
-        assertEquals(0, FrpMapper.isCloud(0, 0));
-        assertEquals(0, FrpMapper.isCloud(CONF_SUMMARY_CLOUD | CONF_UNFILLED, 0));
-        assertEquals(0, FrpMapper.isCloud(0, CONF_SUMMARY_CLOUD | CONF_UNFILLED));
+        assertEquals(0, FrpMapper.isCloud(0, 0, 0));
+        assertEquals(0, FrpMapper.isCloud(FRP_WATER, 0, 0));
+        assertEquals(0, FrpMapper.isCloud(FRP_CLOUD, CONF_UNFILLED, 0));
+        assertEquals(0, FrpMapper.isCloud(FRP_CLOUD, 0, CONF_UNFILLED));
     }
 
     @Test
@@ -219,17 +235,12 @@ public class FrpMapperTest {
 
     @Test
     public void testIsWater() {
-        assertTrue(FrpMapper.isWater(FRP_WATER, 0, 0));
-        assertTrue(FrpMapper.isWater(0, CONF_INLAND_WATER, 0));
-        assertTrue(FrpMapper.isWater(0, 0, CONF_INLAND_WATER));
-        assertTrue(FrpMapper.isWater(L1B_WATER, 0, 0));
+        assertTrue(FrpMapper.isWater(FRP_WATER));
+        assertTrue(FrpMapper.isWater(L1B_WATER));
 
-        assertFalse(FrpMapper.isWater(0, 0, 0));
-        assertFalse(FrpMapper.isWater(CONF_UNFILLED, 0, 0));
-        assertFalse(FrpMapper.isWater(0, CONF_LAND, 0));
-        assertFalse(FrpMapper.isWater(0, 0, CONF_LAND));
-        assertTrue(FrpMapper.isWater(L1B_WATER, CONF_LAND, 0));
-        assertTrue(FrpMapper.isWater(L1B_WATER, 0, CONF_LAND));
+        assertFalse(FrpMapper.isWater(0));
+        assertFalse(FrpMapper.isWater(CONF_UNFILLED));
+        assertFalse(FrpMapper.isWater(CONF_LAND));
     }
 
     @Test
