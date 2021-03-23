@@ -112,25 +112,35 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                     context = new WrappedContext(context, lookingAtNext);
                 }
 
-                final TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context);
-
                 String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
                 String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
                 String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
-                String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
-                String regionWKT = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+                //String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
+                //String regionWKT = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+                final int numRowsGlobal = binningConfig.getNumRows();
+                final int macroTileHeight = conf.getInt("tileHeight", conf.getInt("tileSize", numRowsGlobal));
+                final int macroTileWidth = conf.getInt("tileWidth", conf.getInt("tileSize", numRowsGlobal * 2));
+                final int macroTileRows = numRowsGlobal / macroTileHeight;
+                final int macroTileCols = 2 * numRowsGlobal / macroTileWidth;
 
-                // todo - specify common Calvalus L3 productName convention (mz)
-                String productName = String.format("%s_%s_%s", outputPrefix, dateStart, dateStop);
-                if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
-                        && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
-                    productName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+                final Mosaic2TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context, macroTileCols);
+                while (true) {
+                    int tileIndex = temporalBinSource.nextTile();
+                    if (tileIndex < 0) {
+                        break;
+                    }
+                    String tileName = tileNameOf(tileIndex, macroTileRows, macroTileCols);
+                    String tileWkt = tileWktOf(tileIndex, macroTileRows, macroTileCols);
+                    String productName = String.format("%s_%s_%s_%s", outputPrefix, dateStart, dateStop, tileName);
+                    if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+                            && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+                        productName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+                    }
+                    L3Formatter.write(context, temporalBinSource,
+                                      dateStart, dateStop,
+                                      tileName, tileWkt,
+                                      productName);
                 }
-
-                L3Formatter.write(context, temporalBinSource,
-                                  dateStart, dateStop,
-                                  regionName, regionWKT,
-                                  productName);
             } else {
                 while (context.nextKey()) {
                     reduce(context.getCurrentKey(), context.getValues(), context);
@@ -138,6 +148,27 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             }
         } finally {
             cleanup(context);
+        }
+    }
+
+    private String tileWktOf(int tileIndex, int macroTileRows, int macroTileCols) {
+        int tileRow = tileIndex / macroTileCols;
+        int tileCol = tileIndex % macroTileCols;
+        double latMax = 90.0 - tileRow * 180.0 / macroTileRows;
+        double lonMin = -180.0 + tileCol * 360.0 / macroTileCols;
+        double latMin = latMax - 180.0 / macroTileRows;
+        double lonMax = lonMin + 360.0 / macroTileCols;
+        return String.format("POLYGON((%f %f,%f %f,%f %f,%f %f,%f %f))",
+                             lonMin, latMin, lonMax, latMin, lonMax, latMax, lonMin, latMax, lonMin, latMin);
+    }
+
+    private String tileNameOf(int tileIndex, int macroTileRows, int macroTileCols) {
+        int tileRow = tileIndex / macroTileCols;
+        int tileCol = tileIndex % macroTileCols;
+        if (macroTileRows < 100 && macroTileCols < 100) {
+            return String.format("h%02dv%02d", tileCol, tileRow);
+        } else {
+            return String.format("h%03dv%03d", tileCol, tileRow);
         }
     }
 
@@ -267,10 +298,10 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
 
     private class Mosaic2TemporalBinSource implements TemporalBinSource {
 
-        private final Context context;
+        private final ReducingIterator iterator;
 
-        public Mosaic2TemporalBinSource(Context context) throws IOException, InterruptedException {
-            this.context = context;
+        public Mosaic2TemporalBinSource(Context context, int macroTileCols) throws IOException, InterruptedException {
+            iterator = new ReducingIterator(context, macroTileCols);
         }
 
         @Override
@@ -280,7 +311,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
 
         @Override
         public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
-            return new ReducingIterator(context);
+            return iterator;
         }
 
         @Override
@@ -290,16 +321,34 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
         @Override
         public void close() throws IOException {
         }
+
+        public int nextTile() {
+            return iterator.nextTile();
+        }
     }
 
     private class ReducingIterator implements Iterator<TemporalBin> {
 
         private final Context context;
+        private final int macroTileCols;
         private TemporalBin[] temporalBins;
+        private int previousTile = -1;
+        private int currentTile = -1;
         private int cursor = 0;
 
-        public ReducingIterator(Context context) {
+        public ReducingIterator(Context context, int macroTileCols) {
             this.context = context;
+            this.macroTileCols = macroTileCols;
+            hasNext();
+        }
+
+        public int nextTile() {
+            previousTile = currentTile;
+            if (hasNext()) {
+                return currentTile;
+            } else {
+                return -1;
+            }
         }
 
         @Override
@@ -311,12 +360,16 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                             return false;
                         }
                         TileIndexWritable binIndex = context.getCurrentKey();
+                        currentTile = binIndex.getMacroTileY() * macroTileCols + binIndex.getMacroTileX();
                         Iterable<L3SpatialBinMicroTileWritable> spatialBins = context.getValues();
                         temporalBins = aggregate(binIndex, spatialBins);
                         cursor = 0;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+                }
+                if (currentTile != previousTile) {
+                    return false;
                 }
                 if (temporalBins[cursor] != null) {
                     return true;
@@ -335,7 +388,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            return temporalBins[cursor];
+            return temporalBins[cursor++];
         }
     }
 
