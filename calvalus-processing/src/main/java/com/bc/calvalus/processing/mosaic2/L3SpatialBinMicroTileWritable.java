@@ -54,6 +54,7 @@ public class L3SpatialBinMicroTileWritable extends CompressedWritable {
             out.writeInt(sampleValues.length);
             for (SpatialBin bin : sampleValues) {
                 if (bin != null) {
+                    out.writeLong(bin.getIndex());
                     bin.write(out);
                 } else {
                     out.writeLong(NULL_BIN);
