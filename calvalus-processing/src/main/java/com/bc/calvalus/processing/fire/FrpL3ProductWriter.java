@@ -257,7 +257,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3a_night_fire_sum", new VariableTemplate("s3a_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3A nighttime active fire pixels"));
         variableTemplates.put("s3a_night_frp_mean", new VariableTemplate("s3a_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3A during nighttime"));
         variableTemplates.put("s3a_night_frp_unc_sum", new VariableTemplate("s3a_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3A during nighttime"));
-        variableTemplates.put("s3a_night_cloud_fraction_sum", new VariableTemplate("s3a_night_cloud_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees"));
+        variableTemplates.put("s3a_night_cloud_fraction_sum", new VariableTemplate("s3a_night_related_atmospheric_condition_fraction", DataType.FLOAT, Float.NaN, "1", "Mean unsuitable atmospheric condition fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees"));
         variableTemplates.put("s3a_night_fire_weighted_sum", new VariableTemplate("s3a_night_fire_weighted", DataType.FLOAT, Float.NaN, "1", "Number of S3A nighttime active fire pixels weighted by cloud fraction"));
         variableTemplates.put("s3b_night_pixel_sum", new VariableTemplate("s3b_night_pixel", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime pixels"));
         variableTemplates.put("s3b_night_cloud_sum", new VariableTemplate("s3b_night_FRP_related_atmospheric_condition_flag", DataType.UINT, CF.FILL_UINT, "1", "Total number of pixels unprocessed by the AF detection algorithm due to them being considered to have unsuitable atmospheric conditions for FRP product processing, e.g. certain types of cloud"));
@@ -265,7 +265,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3b_night_fire_sum", new VariableTemplate("s3b_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
         variableTemplates.put("s3b_night_frp_mean", new VariableTemplate("s3b_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
         variableTemplates.put("s3b_night_frp_unc_sum", new VariableTemplate("s3b_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during nighttime"));
-        variableTemplates.put("s3b_night_cloud_fraction_sum", new VariableTemplate("s3b_night_cloud_fraction", DataType.FLOAT, Float.NaN, "1", "Mean cloud fraction of S3B land pixels in a macro pixel of 1.1 (1.25) degrees"));
+        variableTemplates.put("s3b_night_cloud_fraction_sum", new VariableTemplate("s3b_night_related_atmospheric_condition_fraction", DataType.FLOAT, Float.NaN, "1", "Mean unsuitable atmospheric condition fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees"));
         variableTemplates.put("s3b_night_fire_weighted_sum", new VariableTemplate("s3b_night_fire_weighted", DataType.FLOAT, Float.NaN, "1", "Number of S3B nighttime active fire pixels weighted by cloud fraction"));
     }
 
@@ -397,12 +397,12 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final int[] dimensions = {1, sceneRasterHeight, sceneRasterWidth};
         final String longName;
         if (type == DAILY || type == CYCLE) {
-            longName = "Mean cloud fraction of S3A land pixels in a macro pixel of 1.1 degrees";
+            longName = "Mean unsuitable atmospheric condition fraction of S3A land pixels in a macro pixel of 1.1 degrees";
         } else {
-            longName = "Mean cloud fraction of S3A land pixels in a macro pixel of 1.25 degrees";
+            longName = "Mean unsuitable atmospheric condition fraction of S3A land pixels in a macro pixel of 1.25 degrees";
         }
-        addWeightedVariable(dimensions, "s3a_night_cloud_fraction", longName, "1");
-        addWeightedVariable(dimensions, "s3b_night_cloud_fraction", longName, "1");
+        addWeightedVariable(dimensions, "s3a_night_related_atmospheric_condition_fraction", longName, "1");
+        addWeightedVariable(dimensions, "s3b_night_related_atmospheric_condition_fraction", longName, "1");
 
         addWeightedVariable(dimensions, "s3a_night_fire_weighted", "Number of S3A nighttime active fire pixels weighted by cloud fraction", "1");
         addWeightedVariable(dimensions, "s3b_night_fire_weighted", "Number of S3B nighttime active fire pixels weighted by cloud fraction", "1");
@@ -467,8 +467,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
             if (variableData.containsKey(sensor + "night_frp_unc")) {
                 calculateUncertainty(sensor + "night_frp_unc", sensor + "night_fire");
             }
-            if (variableData.containsKey(sensor + "night_cloud_fraction")) {
-                calculateCloudFraction(sensor + "night_cloud_fraction",
+            if (variableData.containsKey(sensor + "night_related_atmospheric_condition_fraction")) {
+                calculateCloudFraction(sensor + "night_related_atmospheric_condition_fraction",
                         sensor + "night_FRP_related_atmospheric_condition_flag",
                         sensor + "night_pixel",
                         sensor + "night_FRP_related_surface_conditions_flag",
@@ -476,7 +476,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
                 if (variableData.containsKey(sensor + "night_fire_weighted")) {
                     calculateFireWeighted(sensor + "night_fire_weighted",
                             sensor + "night_fire",
-                            sensor + "night_cloud_fraction");
+                            sensor + "night_related_atmospheric_condition_fraction");
                 }
             }
         }

@@ -220,7 +220,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(32.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
         assertEquals(9.f, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3a_night_cloud_fraction");
+        variable = netcdfFile.findVariable("s3a_night_related_atmospheric_condition_fraction");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF.FILL_VALUE).getNumericValue());
         data = variable.read();
