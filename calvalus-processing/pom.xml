@@ -152,6 +152,11 @@
             <artifactId>commons-io</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+        </dependency>
+
         <!--  Test -->
 
         <dependency>
