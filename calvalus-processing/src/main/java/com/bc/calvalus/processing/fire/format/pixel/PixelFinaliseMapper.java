@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.fire.format.pixel;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -651,7 +650,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
-    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD, String sensor) {
+    static PositionAndValue findNeighbourValue(float[] jdData, int[] lcArray, int pixelIndex, int width, boolean isJD) {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
@@ -671,7 +670,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     }
                     float neighbourValue = jdData[newPixelIndex];
 
-                    boolean inBurnableLcClass = isInBurnableLcClass(lcArray[newPixelIndex], sensor);
+                    boolean inBurnableLcClass = isInBurnableLcClass(lcArray[newPixelIndex]);
 
                     if (!Float.isNaN(neighbourValue) && neighbourValue != 999 && inBurnableLcClass) {
                         PositionAndValue positionAndValue = new PositionAndValue(newPixelIndex, neighbourValue);
@@ -709,15 +708,8 @@ public abstract class PixelFinaliseMapper extends Mapper {
         return result;
     }
 
-    private static boolean isInBurnableLcClass(int sourceLcClass, String sensor) {
-        switch (sensor) {
-            case "S2":
-            case "MODIS":
-            case "OLCI":
-                return LcRemapping.isInBurnableLcClass(sourceLcClass);
-            default:
-                throw new IllegalStateException("Unknown sensor '" + sensor + "'");
-        }
+    private static boolean isInBurnableLcClass(int sourceLcClass) {
+        return LcRemapping.isInBurnableLcClass(sourceLcClass);
     }
 
     static class PositionAndValue {
@@ -737,6 +729,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         float scaleCl(float cl);
 
     }
+
     static final String S2_TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +

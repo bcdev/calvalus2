@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
-import com.bc.calvalus.processing.fire.format.LcRemappingS2;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.image.ResolutionLevel;
@@ -65,7 +64,7 @@ class ClImage extends SingleBandedOpImage {
                 }
 
                 if (Float.isNaN(jdValue) || jdValue == 999) {
-                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false, sensor);
+                    PixelFinaliseMapper.PositionAndValue positionAndValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
                     if (positionAndValue.newPixelIndex != pixelIndex) {
                         // valid neighbour has been found, use it
                         targetCl = sourceClArray[positionAndValue.newPixelIndex];
@@ -79,7 +78,7 @@ class ClImage extends SingleBandedOpImage {
                 }
 
 //                boolean notCloudy = jdValue != 998 && jdValue != -1.0;
-                jdValue = checkForBurnability(jdValue, sourceLcClass, sensor);
+                jdValue = checkForBurnability(jdValue, sourceLcClass);
 
                 if (jdValue < 0 || jdValue > 900) {
                     dest.setSample(x, y, 0, 0.0F);
