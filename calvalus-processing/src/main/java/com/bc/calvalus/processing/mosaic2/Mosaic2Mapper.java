@@ -170,6 +170,7 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
                 long indexNo = microTileIndexNo(spatialBin.getIndex());
                 SpatialBin[] bin = microTiles.get(indexNo);
                 if (bin == null) {
+                    LOG.info("collecting for micro tile " + indexNo);
                     bin = new SpatialBin[microTileHeight * microTileWidth];
                     microTiles.put(indexNo, bin);
                 }
@@ -181,8 +182,19 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
 
         public void flush() throws IOException, InterruptedException {
             for (Map.Entry<Long, SpatialBin[]> entry : microTiles.entrySet()) {
+                LOG.info("writing micro tile " + entry.getKey() + " with " + countValid(entry.getValue()) + " spatial bins");
                 context.write(tileIndex(entry.getKey()), new L3SpatialBinMicroTileWritable(entry.getValue()));
             }
+        }
+
+        private int countValid(SpatialBin[] bins) {
+            int count = 0;
+            for (SpatialBin bin : bins) {
+                if (bin != null) {
+                    ++count;
+                }
+            }
+            return count;
         }
 
         /** Returns position of bin within micro tile */

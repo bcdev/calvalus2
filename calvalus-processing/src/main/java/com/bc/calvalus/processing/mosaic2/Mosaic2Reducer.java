@@ -44,6 +44,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.security.Credentials;
+import org.esa.snap.binning.Bin;
 import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.SpatialBin;
 import org.esa.snap.binning.TemporalBin;
@@ -63,6 +64,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Reduces mosaics of spatial bins to a temporal bin.
@@ -70,6 +72,8 @@ import java.util.Map;
  * @author Martin
  */
 public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicroTileWritable, LongWritable, L3TemporalBin> {
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private Configuration conf;
     private TemporalBinner temporalBinner;
@@ -87,64 +91,59 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             int numReducers = conf.getInt(JobContext.NUM_REDUCES, 8);
             final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
             String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-            if ((numReducers == 1 || "org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())) && format != null) {
-                // if only one reducer and output format parameter set, format directly
-
-                // handle metadata
-                // it is always the first key in some reducer
-                // unless we had not inputs at all
-                // TODO what happens if there is no metadata key or does this never happen ??? cell-l3-workflow !!
-                final boolean lookingAtNext = context.nextKey();
-                if (! lookingAtNext) {
-                    if (generateEmptyAggregate) {
-                        CalvalusLogger.getLogger().info("no contributions, generating empty output");
-                        context = new WrappedContext(context, lookingAtNext);
-                    } else {
-                        return;
-                    }
-                } else if (context.getCurrentKey().getMacroTileX() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
-                    CalvalusLogger.getLogger().info("metadata record seen");
-                    processingGraphMetadata = aggregateMetadata(context.getValues());
-                    final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
-                    conf.set(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
-                } else {
-                    CalvalusLogger.getLogger().info("no metadata record seen, resetting iterator");
+            // handle metadata
+            // it is always the first key in some reducer
+            // unless we had not inputs at all
+            // TODO what happens if there is no metadata key or does this never happen ??? cell-l3-workflow !!
+            final boolean lookingAtNext = context.nextKey();
+            if (! lookingAtNext) {
+                if (generateEmptyAggregate) {
+                    LOG.info("no contributions, generating empty output");
                     context = new WrappedContext(context, lookingAtNext);
+                } else {
+                    LOG.warning("no contributions, no output");
+                    return;
                 }
-
-                String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
-                String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
-                String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
-                //String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
-                //String regionWKT = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
-                final int numRowsGlobal = binningConfig.getNumRows();
-                final int macroTileHeight = conf.getInt("tileHeight", conf.getInt("tileSize", numRowsGlobal));
-                final int macroTileWidth = conf.getInt("tileWidth", conf.getInt("tileSize", numRowsGlobal * 2));
-                final int macroTileRows = numRowsGlobal / macroTileHeight;
-                final int macroTileCols = 2 * numRowsGlobal / macroTileWidth;
-
-                final Mosaic2TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context, macroTileCols);
-                while (true) {
-                    int tileIndex = temporalBinSource.nextTile();
-                    if (tileIndex < 0) {
-                        break;
-                    }
-                    String tileName = tileNameOf(tileIndex, macroTileRows, macroTileCols);
-                    String tileWkt = tileWktOf(tileIndex, macroTileRows, macroTileCols);
-                    String productName = String.format("%s_%s_%s_%s", outputPrefix, dateStart, dateStop, tileName);
-                    if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
-                            && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
-                        productName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
-                    }
-                    L3Formatter.write(context, temporalBinSource,
-                                      dateStart, dateStop,
-                                      tileName, tileWkt,
-                                      productName);
-                }
+            } else if (context.getCurrentKey().getMacroTileX() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
+                LOG.info("metadata record seen");
+                processingGraphMetadata = aggregateMetadata(context.getValues());
+                final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
+                conf.set(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
             } else {
-                while (context.nextKey()) {
-                    reduce(context.getCurrentKey(), context.getValues(), context);
+                LOG.info("no metadata record seen, resetting iterator");
+                context = new WrappedContext(context, lookingAtNext);
+            }
+
+            String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
+            String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
+            String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
+            //String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
+            //String regionWKT = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            final int numRowsGlobal = binningConfig.getNumRows();
+            final int macroTileHeight = conf.getInt("tileHeight", conf.getInt("tileSize", numRowsGlobal));
+            final int macroTileWidth = conf.getInt("tileWidth", conf.getInt("tileSize", numRowsGlobal * 2));
+            final int macroTileRows = numRowsGlobal / macroTileHeight;
+            final int macroTileCols = 2 * numRowsGlobal / macroTileWidth;
+            LOG.info(String.format("tile configuration with %d*%d tiles, %d lines per tile", macroTileCols, macroTileCols, macroTileHeight));
+
+            final Mosaic2TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context, macroTileCols);
+            while (true) {
+                int tileIndex = temporalBinSource.nextTile();
+                if (tileIndex < 0) {
+                    break;
                 }
+                String tileName = tileNameOf(tileIndex, macroTileRows, macroTileCols);
+                String tileWkt = tileWktOf(tileIndex, macroTileRows, macroTileCols);
+                String productName = String.format("%s_%s_%s_%s", outputPrefix, dateStart, dateStop, tileName);
+                if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+                        && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+                    productName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+                }
+                LOG.info("starting tile " + tileIndex + " " + tileName + " file " + productName + " region " + tileWkt);
+                L3Formatter.write(context, temporalBinSource,
+                                  dateStart, dateStop,
+                                  tileName, tileWkt,
+                                  productName);
             }
         } finally {
             cleanup(context);
@@ -190,15 +189,15 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
     }
 
     @Override
-    protected void reduce(TileIndexWritable binIndex, Iterable<L3SpatialBinMicroTileWritable> spatialBins, Context context) throws IOException, InterruptedException {
-
-        TemporalBin[] temporalBins = aggregate(binIndex, spatialBins);
-        if (temporalBins != null) {
-            for (TemporalBin temporalBin : temporalBins) {
-                if (temporalBin != null) {
-                    context.write(new LongWritable(temporalBin.getIndex()), (L3TemporalBin) temporalBin);
-                }
-            }
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        // only write this file in the first reducer
+        final int partition = context.getTaskAttemptID().getTaskID().getId();
+        if (partition == 0) {
+            final Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+            final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
+            metadata.put(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
+            final Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            ProcessingMetadata.write(workOutputPath, conf, metadata);
         }
     }
 
@@ -211,6 +210,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             TemporalBin[] temporalBins = null;
             for (L3SpatialBinMicroTileWritable spatialBinMicroTile : spatialBinTiles) {
                 SpatialBin[] spatialBins = spatialBinMicroTile.getSamples();
+                LOG.info("reading " + countValid(spatialBins) + " spatial bins for micro tile col " + binIndex.getTileX() + " row " + binIndex.getTileY());
                 // lazy creation of temporalBin array, we need the micro tile size
                 if (temporalBins == null) {
                     temporalBins = new TemporalBin[spatialBins.length];
@@ -238,6 +238,16 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
         }
     }
 
+    private int countValid(Bin[] bins) {
+        int count = 0;
+        for (Bin bin : bins) {
+            if (bin != null) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     private MetadataElement aggregateMetadata(Iterable<L3SpatialBinMicroTileWritable> spatialBins) {
         String metadataAggregatorName = binningConfig.getMetadataAggregatorName();
         final MetadataAggregator metadataAggregator = MetadataAggregatorFactory.create(metadataAggregatorName);
@@ -248,19 +258,6 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
         }
         MetadataElement sourcesMetadata = metadataAggregator.getMetadata();
         return createL3Metadata(sourcesMetadata, binningConfig, conf);
-    }
-
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        // only write this file in the first reducer
-        final int partition = context.getTaskAttemptID().getTaskID().getId();
-        if (partition == 0) {
-            final Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
-            final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
-            metadata.put(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
-            final Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
-            ProcessingMetadata.write(workOutputPath, conf, metadata);
-        }
     }
 
     private static MetadataElement createL3Metadata(MetadataElement sourcesMetadata, BinningConfig binningConfig, Configuration conf) {
@@ -297,36 +294,35 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
     }
 
     private class Mosaic2TemporalBinSource implements TemporalBinSource {
-
         private final ReducingIterator iterator;
-
+        
         public Mosaic2TemporalBinSource(Context context, int macroTileCols) throws IOException, InterruptedException {
             iterator = new ReducingIterator(context, macroTileCols);
         }
 
         @Override
-        public int open() throws IOException {
-            return 1;
-        }
-
+        public int open() throws IOException { return 1; }
         @Override
-        public Iterator<? extends TemporalBin> getPart(int index) throws IOException {
-            return iterator;
-        }
-
+        public Iterator<? extends TemporalBin> getPart(int index) throws IOException { return iterator; }
         @Override
-        public void partProcessed(int index, Iterator<? extends TemporalBin> part) throws IOException {
-        }
-
+        public void partProcessed(int index, Iterator<? extends TemporalBin> part) throws IOException {}
         @Override
-        public void close() throws IOException {
-        }
+        public void close() throws IOException {}
 
-        public int nextTile() {
-            return iterator.nextTile();
-        }
+        public int nextTile() { return iterator.nextTile(); }
     }
 
+    /** 
+     * This iterator receives a stream of micro tiles of spatial bins but has to deliver the temporal bins one by one.
+     * All micro tiles for one tile key are provided in sequence. 
+     * The iterator reads them and performs the temporal aggregation for the complete array keeping an array of TemporalBins.
+     * Additional difficulty is that both SpatialBin and TemporalBin may be null, spatial if the pixel contrib is
+     * missing and temporal if the pixel is outside of the area.
+     * The inner loop is the cursor running over temporalBins positions. The outer loop is over micro tiles, i.e. context keys.
+     * In addition, the iterator stops if the next micro tile is part of another macro tile. Then, a call to nextTile()
+     * re-initialises the iterator to continue.
+     * The iterator uses lookahead.
+     */
     private class ReducingIterator implements Iterator<TemporalBin> {
 
         private final Context context;
@@ -363,6 +359,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                         currentTile = binIndex.getMacroTileY() * macroTileCols + binIndex.getMacroTileX();
                         Iterable<L3SpatialBinMicroTileWritable> spatialBins = context.getValues();
                         temporalBins = aggregate(binIndex, spatialBins);
+                        LOG.info("aggregated " + countValid(temporalBins) + " temporal bins for micro tile " + binIndex.getTileX() + " row " + binIndex.getTileY());
                         cursor = 0;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
