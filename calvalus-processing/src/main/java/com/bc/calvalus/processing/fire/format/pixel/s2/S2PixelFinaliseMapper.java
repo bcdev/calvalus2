@@ -27,7 +27,7 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
     protected ClScaler getClScaler() {
         return cl -> {
             if (cl < 0.05) {
-                return 0;
+                return 1;
             } else if (cl <= 0.14) {
                 return 50;
             } else if (cl <= 0.23) {
