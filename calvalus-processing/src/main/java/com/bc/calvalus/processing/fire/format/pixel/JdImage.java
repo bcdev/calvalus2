@@ -90,15 +90,15 @@ class JdImage extends SingleBandedOpImage {
                 float sourceJd = sourceJdArray[pixelIndex];
                 int sourceLcClass = lcArray[pixelIndex];
 
-                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, sensor);
+                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass);
 
                 if (Float.isNaN(sourceJd) || sourceJd == 999) {
-                    PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true, sensor);
+                    PixelFinaliseMapper.PositionAndValue neighbourValue = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
                     sourceJd = neighbourValue.value;
                     sourceLcClass = lcArray[neighbourValue.newPixelIndex];
                 }
 
-                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass, sensor);
+                sourceJd = CommonUtils.checkForBurnability(sourceJd, sourceLcClass);
 
                 int targetJd;
                 if (sourceJd < 900) {

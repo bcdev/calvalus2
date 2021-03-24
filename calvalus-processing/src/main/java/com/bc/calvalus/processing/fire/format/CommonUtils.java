@@ -172,18 +172,11 @@ public class CommonUtils {
         throw new IllegalArgumentException("Illegal year: " + year);
     }
 
-    public static float checkForBurnability(float sourceJd, int sourceLcClass, String sensor) {
-        switch (sensor) {
-            case "S2":
-            case "MODIS":
-            case "OLCI":
-                if (!LcRemapping.isInBurnableLcClass(sourceLcClass)) {
-                    return -2;
-                } else {
-                    return sourceJd;
-                }
-            default:
-                throw new IllegalStateException("Unknown sensor '" + sensor + "'");
+    public static float checkForBurnability(float sourceJd, int sourceLcClass) {
+        if (!LcRemapping.isInBurnableLcClass(sourceLcClass)) {
+            return -2;
+        } else {
+            return sourceJd;
         }
     }
 
