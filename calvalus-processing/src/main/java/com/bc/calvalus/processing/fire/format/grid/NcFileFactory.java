@@ -32,18 +32,18 @@ public abstract class NcFileFactory {
         ncFile.addDimension(null, "strlen", 150);
         ncFile.addUnlimitedDimension("time");
 
-        Variable latVar = ncFile.addVariable(null, "lat", DataType.FLOAT, "lat");
+        Variable latVar = ncFile.addVariable(null, "lat", DataType.DOUBLE, "lat");
         latVar.addAttribute(new Attribute("units", "degree_north"));
         latVar.addAttribute(new Attribute("standard_name", "latitude"));
         latVar.addAttribute(new Attribute("long_name", "latitude"));
         latVar.addAttribute(new Attribute("bounds", "lat_bounds"));
-        ncFile.addVariable(null, "lat_bounds", DataType.FLOAT, "lat bounds");
-        Variable lonVar = ncFile.addVariable(null, "lon", DataType.FLOAT, "lon");
+        ncFile.addVariable(null, "lat_bounds", DataType.DOUBLE, "lat bounds");
+        Variable lonVar = ncFile.addVariable(null, "lon", DataType.DOUBLE, "lon");
         lonVar.addAttribute(new Attribute("units", "degree_east"));
         lonVar.addAttribute(new Attribute("standard_name", "longitude"));
         lonVar.addAttribute(new Attribute("long_name", "longitude"));
         lonVar.addAttribute(new Attribute("bounds", "lon_bounds"));
-        ncFile.addVariable(null, "lon_bounds", DataType.FLOAT, "lon bounds");
+        ncFile.addVariable(null, "lon_bounds", DataType.DOUBLE, "lon bounds");
         Variable timeVar = ncFile.addVariable(null, "time", DataType.DOUBLE, "time");
         timeVar.addAttribute(new Attribute("units", "days since 1970-01-01 00:00:00"));
         timeVar.addAttribute(new Attribute("standard_name", "time"));
