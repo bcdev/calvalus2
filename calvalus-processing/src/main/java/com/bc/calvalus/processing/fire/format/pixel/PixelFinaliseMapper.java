@@ -785,7 +785,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    <gmd:onlineResource>" +
             "                        <gmd:CI_OnlineResource>" +
             "                            <gmd:linkage>" +
-            "                                <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
             "                            </gmd:linkage>" +
             "                        </gmd:CI_OnlineResource>" +
             "                    </gmd:onlineResource>" +
@@ -793,7 +793,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            </gmd:contactInfo>" +
             "            <gmd:role>" +
             "                <gmd:CI_RoleCode" +
-            "                        codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                        codeList=\"https://standards.iso.org/iso/19139/resources/gmxCodelists.xml\"" +
             "                        codeListValue=\"resourceProvider\">resourceProvider" +
             "                </gmd:CI_RoleCode>" +
             "            </gmd:role>" +
@@ -836,7 +836,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel MSI Burned Area product fv1.1 – Area ${zoneId}" +
+            "                        <gco:CharacterString>ESA Fire_cci Small Fire Database (SFD) Burned Area Pixel product ${REPLACE_WITH_VERSION}, tile ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -880,49 +880,60 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "<gmd:abstract>" +
             "<gco:CharacterString>In support of the IPCC, the ESA Climate Change Initiative (CCI) programme comprises " +
-            "the generation of different projects, each focusing on the production of global coverage of an " +
+            "different projects, each focusing on the production of global coverage of an " +
             "Essential Climate Variable (ECV). The ECV Fire Disturbance (Fire_cci) provides validated, " +
             "error-characterised, global data sets of burned areas (BA) derived from existing satellite " +
             "observations. The Fire_cci BA products consist of a Pixel " +
             "and Grid product addressing the needs and requirements of climate, atmospheric and ecosystem " +
             "scientists and researchers supporting their modelling efforts. Further information on the ESA CCI " +
             "Programme and a comprehensive documentation on the underlying algorithms, work flow, production " +
-            "system and product validation is publicly accessible on https://www.esa-fire-cci.org/." +
+            "system and product validation is publicly accessible on https://climate.esa.int/en/projects/fire/." +
             "</gco:CharacterString>" +
             "<gco:CharacterString>" +
             "#[[" +
             "The product is a set of single-layer GeoTIFF files with the following naming convention: " +
             "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-${xx.x}[-${layer}].tif. " +
-            "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four " +
-            "digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to 31. " +
+            "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four-" +
+            "digit year, MM is the two-digit month from 01 to 12 and DD is the two-digit day of the month from 01 to 31. " +
             "For monthly products the date is set to 01. " +
             "${Indicative sensor} is MSI. ${Additional Segregator} is the AREA_${TILE_CODE} being the tile code " +
             "described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] " +
-            "(That is 1 or more digits followed by optional . and another 1 or more digits.). ${layer} is the code for " +
+            "(That is 1 or more digits followed by optional . and another 1 or more digits.). In this case, it is ${REPLACE_WITH_VERSION}. " +
+            "${layer} is the code for " +
             "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
-            "An example is: 20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_h44v16-fv1.1-JD.tif.]]#" +
+            "An example is: 20190301-ESACCI-L3S_FIRE-BA-MSI-AREA_h33v16-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.2_PUG-MSI_v1.1" +
-            " available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>FFor further information on the product, please consult the Product User Guide " +
+            "available at: https://climate.esa.int/en/projects/fire/key-documents/" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00017966259deg (approx. 20m); " +
+            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00018518519 deg (approx. 20m); " +
             "Pixel value = Day of the year, from 1 to 365 (or 366). A value of 0 is included when the pixel is not burned " +
             "in the month; a value of -1 is allocated to pixels that are not observed in the month; a value of -2 is " +
-            "allocated to pixels that are not burnable (build up areas, bare areas, , snow and/or ice, open water). " +
-            "Data type = Integer; Number of layers = 1; Data depth = 16" +
+            "allocated to pixels that are not burnable (build up areas, bare areas, water bodies and permanent snow and " +
+            "ice). Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00017966259deg (approx. 20m); Pixel " +
-            "value = 0 to 100, where the value is the probability in percentage that the pixel is actually burned, as a " +
-            "result of the different steps of the burned area classification. The higher the value, the higher the " +
-            "confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are not observed in " +
-            "the month, or not taken into account in the burned area processing (non burnable). Data type = Byte; Number " +
-            "of layers = 1; Data depth = 8" +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00018518519 deg (approx. 20m); Pixel " +
+            "value = 0 to 100, where the value is the probability in percentage that the pixel is actually burned, as " +
+            "a result of the different steps of the burned area classification. The higher the value, the higher the " +
+            "confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are not observed " +
+            "in the month, or not taken into account in the burned area processing (non burnable). Data type = Byte; " +
+            "Number of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI S2 prototype Land Cover map " +
-            "at 20m of Africa 2016. N is the number of the land cover categories in the reference map. It is only valid " +
-            "when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: " +
-            "1 – Trees cover area; 2 – Shrubs cover area; 3 – Grassland; 4 – Cropland; 5 – Vegetation aquatic or regularly flooded; 6 – Lichen Mosses / Sparse vegetation; " +
-            "Pixel Spacing = 0.00017966259deg  (approx. 20m); Data type = Byte; Number of layers = 1; Data depth = 8" +
+            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the C3S Land Cover map v2.1.1 of " +
+            "2018 (https://cds.climate.copernicus.eu/cdsapp#!/dataset/satellite-land-cover?tab=overview). N is the " +
+            "number of the land cover categories in the reference map. It is only valid when layer 1 &gt; 0. Pixel " +
+            "value is 0 to N under the following codes: 10 = Cropland, rainfed; 20 = Cropland, irrigated or " +
+            "post-flooding; 30 = Mosaic cropland (&gt;50%) / natural vegetation (tree, shrub, herbaceous cover) " +
+            "(&lt;50%); 40 = Mosaic natural vegetation (tree, shrub, herbaceous cover) (&gt;50%) / cropland (&lt;50%); " +
+            "50 = Tree cover, broadleaved, evergreen, closed to open (&gt;15%); 60 = Tree cover, broadleaved, " +
+            "deciduous, closed to open (&gt;15%); 70 = Tree cover, needleleaved, evergreen, closed to open (&gt;15%); " +
+            "80 = Tree cover, needleleaved, deciduous, closed to open (&gt;15%); 90 = Tree cover, mixed leaf type " +
+            "(broadleaved and needleleaved); 100 = Mosaic tree and shrub (&gt;50%) / herbaceous cover (&lt;50%); " +
+            "110 = Mosaic herbaceous cover (&gt;50%) / tree and shrub (&lt;50%); 120 = Shrubland; 130 = Grassland; " +
+            "140 = Lichens and mosses; 150 = Sparse vegetation (tree, shrub, herbaceous cover) (&lt;15%); " +
+            "160 = Tree cover, flooded, fresh or brackish water; 170 = Tree cover, flooded, saline water; " +
+            "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; Pixel Spacing = 0.00018518519 deg " +
+            "(approx. 20m); Data type = Byte; Number of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
@@ -944,7 +955,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -952,7 +963,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    </gmd:contactInfo>" +
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeList=\"https://standards.iso.org/iso/19139/resources/gmxCodelists.xml\"" +
             "                                codeListValue=\"resourceProvider \">resourceProvider" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
@@ -977,7 +988,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -985,7 +996,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    </gmd:contactInfo>" +
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeList=\"https://standards.iso.org/iso/19139/resources/gmxCodelists.xml\"" +
             "                                codeListValue=\"distributor \">distributor" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
@@ -1010,7 +1021,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -1018,7 +1029,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    </gmd:contactInfo>" +
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeList=\"https://standards.iso.org/iso/19139/resources/gmxCodelists.xml\"" +
             "                                codeListValue=\"principalInvestigator\">principalInvestigator" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
@@ -1051,7 +1062,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    </gmd:contactInfo>" +
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeList=\"https://standards.iso.org/iso/19139/resources/gmxCodelists.xml\"" +
             "                                codeListValue=\"Processor\">Processor" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
@@ -1095,7 +1106,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:spatialResolution>" +
             "                <gmd:MD_Resolution>" +
             "                    <gmd:distance>" +
-            "                        <gco:Distance uom=\"degrees\">0.00017966259</gco:Distance>" +
+            "                        <gco:Distance uom=\"degrees\">0.00018518519</gco:Distance>" +
             "                    </gmd:distance>" +
             "                </gmd:MD_Resolution>" +
             "            </gmd:spatialResolution>" +
@@ -1171,8 +1182,8 @@ public abstract class PixelFinaliseMapper extends Mapper {
         velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
         velocityContext.put("westLon", Integer.parseInt(left) - 180);
         velocityContext.put("eastLon", Integer.parseInt(right) - 180);
-        velocityContext.put("northLat", 90 - Integer.parseInt(top));
-        velocityContext.put("southLat", 90 - Integer.parseInt(bottom));
+        velocityContext.put("northLat", Integer.parseInt(top) - 90);
+        velocityContext.put("southLat", Integer.parseInt(bottom) - 90);
         velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
         velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
 
