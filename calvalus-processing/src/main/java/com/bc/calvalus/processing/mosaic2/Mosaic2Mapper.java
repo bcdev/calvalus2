@@ -29,11 +29,11 @@ import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.DataPeriod;
+import org.esa.snap.binning.Observation;
 import org.esa.snap.binning.SpatialBin;
 import org.esa.snap.binning.SpatialBinConsumer;
 import org.esa.snap.binning.SpatialBinner;
@@ -47,8 +47,11 @@ import org.locationtech.jts.geom.Geometry;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,7 +74,7 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         final DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
         final BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         final SpatialBinMicroTileEmitter spatialBinEmitter = new SpatialBinMicroTileEmitter(context, binningConfig.getNumRows());
-        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
+        final SpatialBinner spatialBinner = new SpatialMicroTileBinner(binningContext, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         final ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
@@ -140,10 +143,32 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         return metadataSerializer.toXml(processingGraph);
     }
 
+    /**
+     * Wraps the processing of an observation slice, tracks micro tiles actively filled, and flushes inactive ones afterwards. Cares for a small memory footprint.
+     */
+    private static class SpatialMicroTileBinner extends SpatialBinner {
+        SpatialBinMicroTileEmitter consumer;
+        public SpatialMicroTileBinner(BinningContext binningContext, SpatialBinConsumer consumer) {
+            super(binningContext, consumer);
+            this.consumer = (SpatialBinMicroTileEmitter) consumer;
+        }
+
+        @Override
+        public long processObservationSlice(Iterable<Observation> observations) {
+            try {
+                consumer.flushInactiveMicroTiles();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            return super.processObservationSlice(observations);
+        }
+    }
+
     private static class SpatialBinMicroTileEmitter implements SpatialBinConsumer {
         int numObsTotal = 0;
         int numBinsTotal = 0;
         Map<Long, SpatialBin[]> microTiles = new HashMap<>();
+        Set<Long> finalisedMicroTileRows = new HashSet<>();
         private Context context;
         int numRowsGlobal;
         int microTileHeight;
@@ -157,24 +182,26 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
             this.context = context;
             this.numRowsGlobal = numRowsGlobal;
             macroTileHeight = context.getConfiguration().getInt("tileHeight", context.getConfiguration().getInt("tileSize", numRowsGlobal));
-            macroTileWidth = context.getConfiguration().getInt("tileWidth", context.getConfiguration().getInt("tileWidth", numRowsGlobal * 2));
+            macroTileWidth = context.getConfiguration().getInt("tileWidth", context.getConfiguration().getInt("tileSize", numRowsGlobal * 2));
             microTileHeight = context.getConfiguration().getInt("microTileHeight", context.getConfiguration().getInt("microTileSize", macroTileHeight));
             microTileWidth = context.getConfiguration().getInt("microTileWidth", context.getConfiguration().getInt("microTileSize", macroTileWidth));
             microTileRows = numRowsGlobal / microTileHeight;
             microTileCols = 2 * numRowsGlobal / microTileWidth;
+            LOG.info(String.format("tile configuration with %d*%d tiles, %d*%d micro tiles, %d lines per tile, %d lines per micro tile", 2 * numRowsGlobal / macroTileWidth, numRowsGlobal / macroTileHeight, microTileCols, microTileRows, macroTileHeight, microTileHeight));
         }
 
         @Override
         public void consumeSpatialBins(BinningContext binningContext, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
-                long indexNo = microTileIndexNo(spatialBin.getIndex());
-                SpatialBin[] bin = microTiles.get(indexNo);
+                long index = microTileIndexNo(spatialBin.getIndex());
+                SpatialBin[] bin = microTiles.get(index);
                 if (bin == null) {
-                    LOG.info("collecting for micro tile " + indexNo);
+                    LOG.info("collecting for micro tile " + index);
                     bin = new SpatialBin[microTileHeight * microTileWidth];
-                    microTiles.put(indexNo, bin);
+                    microTiles.put(index, bin);
                 }
                 bin[microTilePosition(spatialBin.getIndex())] = spatialBin; // do we need a copy here?
+                finalisedMicroTileRows.remove(microTileRow(index));
                 numObsTotal += spatialBin.getNumObs();
                 numBinsTotal++;
             }
@@ -215,6 +242,11 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
             return mRow * microTileCols + mCol;
         }
 
+        /** Returns micro tile row of a bin index */
+        private long microTileRow(long microTileIndex) {
+            return microTileIndex / microTileCols;
+        }
+
         /** Converts micro tile position into index */
         private TileIndexWritable tileIndex(Long microTilePosition) {
             int mCol = (int) (microTilePosition / microTileCols);
@@ -222,6 +254,30 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
             int tCol = mCol / (macroTileWidth / microTileWidth);
             int tRow = mRow / (macroTileHeight / microTileHeight);
             return new TileIndexWritable(tCol, tRow, mCol, mRow);
+        }
+
+        public void flushInactiveMicroTiles() throws IOException, InterruptedException {
+            microTiles.entrySet().removeIf(entry -> flushFinalisedRowEntry(entry));
+            finalisedMicroTileRows.clear();
+            for (long index : microTiles.keySet()) {
+                finalisedMicroTileRows.add(microTileRow(index));
+            }
+        }
+
+        private boolean flushFinalisedRowEntry(Map.Entry<Long,SpatialBin[]> entry) {
+            long index = entry.getKey();
+            long row = microTileRow(index);
+            if (finalisedMicroTileRows.contains(row)) {
+                LOG.info("writing micro tile " + index + " with " + countValid(entry.getValue()) + " spatial bins");
+                try {
+                    context.write(tileIndex(index), new L3SpatialBinMicroTileWritable(entry.getValue()));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 }
