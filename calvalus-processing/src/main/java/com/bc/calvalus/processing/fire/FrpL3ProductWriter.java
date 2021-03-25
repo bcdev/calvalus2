@@ -265,7 +265,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         variableTemplates.put("s3b_night_fire_sum", new VariableTemplate("s3b_night_fire", DataType.UINT, CF.FILL_UINT, "1", "Total number of S3B nighttime active fire pixels"));
         variableTemplates.put("s3b_night_frp_mean", new VariableTemplate("s3b_night_frp", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power measured by S3B during nighttime"));
         variableTemplates.put("s3b_night_frp_unc_sum", new VariableTemplate("s3b_night_frp_unc", DataType.FLOAT, Float.NaN, "MW", "Mean Fire Radiative Power uncertainty measured by S3B during nighttime"));
-        variableTemplates.put("s3b_night_cloud_fraction_sum", new VariableTemplate("s3b_night_related_atmospheric_condition_fraction", DataType.FLOAT, Float.NaN, "1", "Mean unsuitable atmospheric condition fraction of S3A land pixels in a macro pixel of 1.1 (1.25) degrees"));
+        variableTemplates.put("s3b_night_cloud_fraction_sum", new VariableTemplate("s3b_night_related_atmospheric_condition_fraction", DataType.FLOAT, Float.NaN, "1", "Mean unsuitable atmospheric condition fraction of S3B land pixels in a macro pixel of 1.1 (1.25) degrees"));
         variableTemplates.put("s3b_night_fire_weighted_sum", new VariableTemplate("s3b_night_fire_weighted", DataType.FLOAT, Float.NaN, "1", "Number of S3B nighttime active fire pixels weighted by atmospheric condition fraction"));
     }
 
