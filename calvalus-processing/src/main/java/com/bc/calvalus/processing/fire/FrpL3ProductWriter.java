@@ -404,8 +404,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         addWeightedVariable(dimensions, "s3a_night_related_atmospheric_condition_fraction", longName, "1");
         addWeightedVariable(dimensions, "s3b_night_related_atmospheric_condition_fraction", longName, "1");
 
-        addWeightedVariable(dimensions, "s3a_night_fire_weighted", "Number of S3A nighttime active fire pixels weighted by cloud fraction", "1");
-        addWeightedVariable(dimensions, "s3b_night_fire_weighted", "Number of S3B nighttime active fire pixels weighted by cloud fraction", "1");
+        addWeightedVariable(dimensions, "s3a_night_fire_weighted", "Number of S3A nighttime active fire pixels weighted by atmospheric condition fraction", "1");
+        addWeightedVariable(dimensions, "s3b_night_fire_weighted", "Number of S3B nighttime active fire pixels weighted by atmospheric condition fraction", "1");
     }
 
     private void addWeightedVariable(int[] dimensions, String name, String longName, String units) {
