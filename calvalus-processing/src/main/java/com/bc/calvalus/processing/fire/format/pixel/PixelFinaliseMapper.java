@@ -829,7 +829,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>ESA Fire_cci Small Fire Database (SFD) Burned Area Pixel product ${REPLACE_WITH_VERSION}, tile ${zoneId}" +
+            "                        <gco:CharacterString>ESA Fire_cci Small Fire Database (SFD) Burned Area Pixel product ${REPLACE_WITH_VERSION}, tile ${zoneName}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
