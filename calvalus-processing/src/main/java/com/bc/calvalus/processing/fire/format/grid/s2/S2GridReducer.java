@@ -36,7 +36,7 @@ public class S2GridReducer extends AbstractGridReducer {
 
     @Override
     protected String getFilename(String year, String month, String version) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-f%s.nc", year, month, "01", version);
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-fv%s.nc", year, month, "01", version);
     }
 
     @Override

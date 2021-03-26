@@ -51,7 +51,7 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
 
     @Override
     public String createBaseFilename(String year, String month, String version, String areaString) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, areaString.split(";")[1], version);
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-fv%s", year, month, areaString.split(";")[1], version);
     }
 
 }
