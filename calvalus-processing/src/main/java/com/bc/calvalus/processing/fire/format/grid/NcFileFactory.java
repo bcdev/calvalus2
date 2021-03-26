@@ -120,19 +120,19 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.7"));
         ncFile.addGroupAttribute(null, new Attribute("product_version", version));
         ncFile.addGroupAttribute(null, new Attribute("summary", getSummary()));
-        ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, C3S, GCOS"));
+        ncFile.addGroupAttribute(null, new Attribute("keywords", getKeywordsMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", getNamingAuthority()));
 //        ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
         ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "NASA Global Change Master Directory (GCMD) Science keywords"));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
-        ncFile.addGroupAttribute(null, new Attribute("comment", "These data were produced as part of the Copernicus Climate Change Service programme."));
+        ncFile.addGroupAttribute(null, new Attribute("comment", getCommentMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
         ncFile.addGroupAttribute(null, new Attribute("creator_name", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("creator_url", getCreatorUrl()));
         ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
-        ncFile.addGroupAttribute(null, new Attribute("contact", "http://copernicus-support.ecmwf.int"));
-        ncFile.addGroupAttribute(null, new Attribute("project", "EC C3S Fire Burned Area"));
+        ncFile.addGroupAttribute(null, new Attribute("contact", getContactMetadata()));
+        ncFile.addGroupAttribute(null, new Attribute("project", getProjectMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", "90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", "-180"));
@@ -152,6 +152,22 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", String.format("%.2f", 180.0 / numRowsGlobal)));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", String.format("%.2f", 180.0 / numRowsGlobal)));
+    }
+
+    protected String getCommentMetadata() {
+        return "These data were produced as part of the Copernicus Climate Change Service programme.";
+    }
+
+    protected String getKeywordsMetadata() {
+        return "Burned Area, Fire Disturbance, Climate Change, ESA, C3S, GCOS";
+    }
+
+    protected String getProjectMetadata() {
+        return "EC C3S Fire Burned Area";
+    }
+
+    protected String getContactMetadata() {
+        return "http://copernicus-support.ecmwf.int";
     }
 
     protected String getLicense() {
