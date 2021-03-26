@@ -18,12 +18,12 @@ public class S2NcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSource() {
-        return "MSI L1C, MODIS MCD14ML Collection 6, ESA CCI S2 prototype land cover 20m map of Africa 2016";
+        return "MSI L1C, VIIRS FIRMS, ESA CCI land cover 300m map of 2018";
     }
 
     @Override
     protected String getDoi() {
-        return "10.5285/4b0773a84e8142c688a628c9ce62d4ec";
+        return "TBD";
     }
 
     @Override
@@ -38,16 +38,33 @@ public class S2NcFileFactory extends NcFileFactory {
 
     @Override
     protected String getTitle() {
-        return "Fire_cci Gridded MSI Burned Area product";
+        return "ESA Fire_cci Small Fire Database (SFD) Burned Area Grid product";
     }
 
     @Override
     protected String getSummary() {
-        return "The grid product is the result of summing up burned area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in monthly composites. The attributes stored are sum of burned area, standard error, fraction of burnable area, fraction of observed area, number of patches and the burned area for 6 land cover classes of land cover.";
+        return "The grid product is the result of summing up burned area pixels within each cell of 0.05 degrees in a regular grid covering the whole Earth in monthly composites. The attributes stored are sum of burned area, standard error, fraction of burnable area, fraction of observed area, number of patches and the burned area for 18 individual land cover classes.";
     }
 
     @Override
     protected String getBurnedAreaInVegClassComment() {
-        return "Burned area by land cover classes; land cover classes are from CCI Land Cover S2 prototype land cover 20m map of Africa 2016, http://2016africalandcover20m.esrin.esa.int/";
+        return "Burned area by land cover classes; land cover classes are from CCI Land Cover 300m map of 2018.";
     }
+
+    protected String getCommentMetadata() {
+        return "These data were produced as part of the ESA CCI programme.";
+    }
+
+    protected String getKeywordsMetadata() {
+        return "Burned Area, Fire Disturbance, Climate Change, ESA, GCOS";
+    }
+
+    protected String getProjectMetadata() {
+        return "ESA Fire_cci";
+    }
+
+    protected String getContactMetadata() {
+        return "https://climate.esa.int/en/projects/fire";
+    }
+
 }
