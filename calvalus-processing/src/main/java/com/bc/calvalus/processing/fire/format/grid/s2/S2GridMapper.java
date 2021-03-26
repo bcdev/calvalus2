@@ -40,7 +40,7 @@ public class S2GridMapper extends AbstractGridMapper {
 
     private static final int GRID_CELLS_PER_DEGREE = 4;
     private static final int NUM_GRID_CELLS = 1;
-    // 20190101-ESACCI-L3S_FIRE-BA-MSI-AREA_h39v19-0.1-CL.tif
+    // 20190101-ESACCI-L3S_FIRE-BA-MSI-AREA_h39v19-fv0.1-CL.tif
     private static final Pattern CL_FILENAME_PATTERN = Pattern.compile("........-ESACCI-L3S_FIRE-BA-MSI-AREA_h(..)v(..)-.*-CL.tif");
     private String oneDegTile;
     protected int numRowsGlobal;
