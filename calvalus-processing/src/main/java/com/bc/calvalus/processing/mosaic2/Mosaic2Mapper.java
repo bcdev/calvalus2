@@ -51,7 +51,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -193,10 +192,10 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         @Override
         public void consumeSpatialBins(BinningContext binningContext, List<SpatialBin> spatialBins) throws Exception {
             for (SpatialBin spatialBin : spatialBins) {
-                long index = microTileIndexNo(spatialBin.getIndex());
+                long index = microTileIndex(spatialBin.getIndex());
                 SpatialBin[] bin = microTiles.get(index);
                 if (bin == null) {
-                    LOG.info("collecting for micro tile " + index);
+                    LOG.info("collecting for micro tile x" + index%microTileCols + "y" + index/microTileCols + " pixel bin " + spatialBin.getIndex());
                     bin = new SpatialBin[microTileHeight * microTileWidth];
                     microTiles.put(index, bin);
                 }
@@ -209,8 +208,9 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
 
         public void flush() throws IOException, InterruptedException {
             for (Map.Entry<Long, SpatialBin[]> entry : microTiles.entrySet()) {
-                LOG.info("writing micro tile " + entry.getKey() + " with " + countValid(entry.getValue()) + " spatial bins");
-                context.write(tileIndex(entry.getKey()), new L3SpatialBinMicroTileWritable(entry.getValue()));
+                TileIndexWritable key = tileIndex(entry.getKey());
+                LOG.info("writing micro tile x" + entry.getKey()%microTileCols + "y" + entry.getKey()/microTileCols + " with " + countValid(entry.getValue()) + " spatial bins " + key.getMacroTileX() + " " + key.getMacroTileY() + " " + key.getTileX() + " " + key.getTileY());
+                context.write(key, new L3SpatialBinMicroTileWritable(entry.getValue()));
             }
         }
 
@@ -226,17 +226,17 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
 
         /** Returns position of bin within micro tile */
         private int microTilePosition(long binIndex) {
-            int row = (int) (binIndex / numRowsGlobal);
-            int col = (int) (binIndex % numRowsGlobal);
+            int row = (int) (binIndex / (numRowsGlobal * 2));
+            int col = (int) (binIndex % (numRowsGlobal * 2));
             int mRow = row % microTileHeight;
             int mCol = col % microTileWidth;
             return mRow * microTileCols + mCol;
         }
 
         /** Returns position of micro tile within global grid of micro tiles */
-        private long microTileIndexNo(long binIndex) {
-            int row = (int) (binIndex / numRowsGlobal);
-            int col = (int) (binIndex % numRowsGlobal);
+        private long microTileIndex(long binIndex) {
+            int row = (int) (binIndex / (numRowsGlobal * 2));
+            int col = (int) (binIndex % (numRowsGlobal * 2));
             int mRow = row / microTileHeight;
             int mCol = col / microTileWidth;
             return mRow * microTileCols + mCol;
@@ -248,11 +248,11 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         }
 
         /** Converts micro tile position into index */
-        private TileIndexWritable tileIndex(Long microTilePosition) {
-            int mCol = (int) (microTilePosition / microTileCols);
-            int mRow = (int) (microTilePosition % microTileCols);
-            int tCol = mCol / (macroTileWidth / microTileWidth);
+        private TileIndexWritable tileIndex(Long microTileIndex) {
+            int mRow = (int) (microTileIndex / microTileCols);
+            int mCol = (int) (microTileIndex % microTileCols);
             int tRow = mRow / (macroTileHeight / microTileHeight);
+            int tCol = mCol / (macroTileWidth / microTileWidth);
             return new TileIndexWritable(tCol, tRow, mCol, mRow);
         }
 
@@ -268,9 +268,10 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
             long index = entry.getKey();
             long row = microTileRow(index);
             if (finalisedMicroTileRows.contains(row)) {
-                LOG.info("writing micro tile " + index + " with " + countValid(entry.getValue()) + " spatial bins");
+                TileIndexWritable key = tileIndex(index);
+                LOG.info("writing micro tile x" + index%microTileCols + "y" + index/microTileCols + " with " + countValid(entry.getValue()) + " spatial bins " + key.getMacroTileX() + " " + key.getMacroTileY() + " " + key.getTileX() + " " + key.getTileY());
                 try {
-                    context.write(tileIndex(index), new L3SpatialBinMicroTileWritable(entry.getValue()));
+                    context.write(key, new L3SpatialBinMicroTileWritable(entry.getValue()));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

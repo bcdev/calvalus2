@@ -83,6 +83,10 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
     private BinningContext binningContext;
     private MetadataElement processingGraphMetadata;
     private MetadataSerializer metadataSerializer = new MetadataSerializer();
+    int microTileHeight;
+    int microTileWidth;
+    int microTileRows;
+    int microTileCols;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -124,7 +128,11 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             final int macroTileWidth = conf.getInt("tileWidth", conf.getInt("tileSize", numRowsGlobal * 2));
             final int macroTileRows = numRowsGlobal / macroTileHeight;
             final int macroTileCols = 2 * numRowsGlobal / macroTileWidth;
-            LOG.info(String.format("tile configuration with %d*%d tiles, %d lines per tile", macroTileCols, macroTileCols, macroTileHeight));
+            microTileHeight = context.getConfiguration().getInt("microTileHeight", context.getConfiguration().getInt("microTileSize", macroTileHeight));
+            microTileWidth = context.getConfiguration().getInt("microTileWidth", context.getConfiguration().getInt("microTileSize", macroTileWidth));
+            microTileRows = numRowsGlobal / microTileHeight;
+            microTileCols = 2 * numRowsGlobal / microTileWidth;
+            LOG.info(String.format("tile configuration with %d*%d tiles, %d*%d micro tiles, %d lines per tile, %d lines per micro tile", 2 * numRowsGlobal / macroTileWidth, numRowsGlobal / macroTileHeight, microTileCols, microTileRows, macroTileHeight, microTileHeight));
 
             final Mosaic2TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context, macroTileCols);
             while (true) {
@@ -139,7 +147,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                         && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
                     productName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
                 }
-                LOG.info("starting tile " + tileIndex + " " + tileName + " file " + productName + " region " + tileWkt);
+                LOG.info("starting tile " + tileName + " file " + productName + " region " + tileWkt);
                 L3Formatter.write(context, temporalBinSource,
                                   dateStart, dateStop,
                                   tileName, tileWkt,
@@ -210,7 +218,6 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             TemporalBin[] temporalBins = null;
             for (L3SpatialBinMicroTileWritable spatialBinMicroTile : spatialBinTiles) {
                 SpatialBin[] spatialBins = spatialBinMicroTile.getSamples();
-                LOG.info("reading " + countValid(spatialBins) + " spatial bins for micro tile col " + binIndex.getTileX() + " row " + binIndex.getTileY());
                 // lazy creation of temporalBin array, we need the micro tile size
                 if (temporalBins == null) {
                     temporalBins = new TemporalBin[spatialBins.length];
@@ -359,7 +366,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                         currentTile = binIndex.getMacroTileY() * macroTileCols + binIndex.getMacroTileX();
                         Iterable<L3SpatialBinMicroTileWritable> spatialBins = context.getValues();
                         temporalBins = aggregate(binIndex, spatialBins);
-                        LOG.info("aggregated " + countValid(temporalBins) + " temporal bins for micro tile " + binIndex.getTileX() + " row " + binIndex.getTileY());
+                        LOG.info("aggregated " + countValid(temporalBins) + " temporal bins for micro tile x" + binIndex.getTileX() + "y" + binIndex.getTileY());
                         cursor = 0;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
