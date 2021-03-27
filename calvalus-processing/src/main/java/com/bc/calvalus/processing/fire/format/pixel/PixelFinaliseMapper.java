@@ -864,7 +864,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    <gmd:identifier>" +
             "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString>doi: 10.5285/065f6040ef08485db989cbd89d536167</gco:CharacterString>" +
+            "                                <gco:CharacterString>doi: </gco:CharacterString>" +
             "                            </gmd:code>" +
             "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +
