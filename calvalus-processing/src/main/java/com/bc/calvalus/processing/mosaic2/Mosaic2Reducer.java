@@ -210,8 +210,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
     }
 
     private TemporalBin[] aggregate(TileIndexWritable binIndex, Iterable<L3SpatialBinMicroTileWritable> spatialBinTiles) throws IOException, InterruptedException {
-        final long idx = binIndex.getMacroTileX();
-        if (idx == L3SpatialBin.METADATA_MAGIC_NUMBER) {
+        if ((long) binIndex.getMacroTileX() == L3SpatialBin.METADATA_MAGIC_NUMBER) {
             processingGraphMetadata = aggregateMetadata(spatialBinTiles);
             return null;
         } else {
@@ -236,7 +235,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                 if (temporalBins[i] != null) {
                     binningContext.getBinManager().completeTemporalBin(temporalBins[i]);
                     if (computeOutput) {
-                        temporalBins[i] = temporalBinner.computeOutput(idx, temporalBins[i]);
+                        temporalBins[i] = temporalBinner.computeOutput(temporalBins[i].getIndex(), temporalBins[i]);
                         temporalBins[i] = cellChain.process(temporalBins[i]);
                     }
                 }
@@ -335,8 +334,8 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
         private final Context context;
         private final int macroTileCols;
         private TemporalBin[] temporalBins;
-        private int previousTile = -1;
-        private int currentTile = -1;
+        private int macroTileOfCurrentCycle = -1;
+        private int macroTileOfCurrentBin = -1;
         private int cursor = 0;
 
         public ReducingIterator(Context context, int macroTileCols) {
@@ -346,9 +345,9 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
         }
 
         public int nextTile() {
-            previousTile = currentTile;
+            macroTileOfCurrentCycle = macroTileOfCurrentBin;
             if (hasNext()) {
-                return currentTile;
+                return macroTileOfCurrentBin;
             } else {
                 return -1;
             }
@@ -363,7 +362,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                             return false;
                         }
                         TileIndexWritable binIndex = context.getCurrentKey();
-                        currentTile = binIndex.getMacroTileY() * macroTileCols + binIndex.getMacroTileX();
+                        macroTileOfCurrentBin = binIndex.getMacroTileY() * macroTileCols + binIndex.getMacroTileX();
                         Iterable<L3SpatialBinMicroTileWritable> spatialBins = context.getValues();
                         temporalBins = aggregate(binIndex, spatialBins);
                         LOG.info("aggregated " + countValid(temporalBins) + " temporal bins for micro tile x" + binIndex.getTileX() + "y" + binIndex.getTileY());
@@ -372,7 +371,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
                         throw new RuntimeException(e);
                     }
                 }
-                if (currentTile != previousTile) {
+                if (macroTileOfCurrentBin != macroTileOfCurrentCycle) {
                     return false;
                 }
                 if (temporalBins[cursor] != null) {
