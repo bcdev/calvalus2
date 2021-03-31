@@ -23,7 +23,12 @@ public class S2NcFileFactory extends NcFileFactory {
 
     @Override
     protected String getDoi() {
-        return "TBD";
+        return "10.5285/01b00854797d44a59d57c8cce08821eb";
+    }
+
+    @Override
+    protected String getPublicationDate() {
+        return "2021-04-30";
     }
 
     @Override

@@ -27,6 +27,11 @@ public class AvhrrNcFileFactory extends NcFileFactory {
     }
 
     @Override
+    protected String getPublicationDate() {
+        return null;
+    }
+
+    @Override
     protected String getPlatformGlobalAttribute() {
         return "NOAA-7, 9, 11, 14, 16, 18 and 19";
     }

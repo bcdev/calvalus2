@@ -850,7 +850,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2019-06-15</gco:Date>" +
+            "                                <gco:Date>2021-04-30</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -864,7 +864,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                    <gmd:identifier>" +
             "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString>doi: </gco:CharacterString>" +
+            "                                <gco:CharacterString>doi: 10.5285/4c5feb539f1f44308ca7ec26e0bb7316</gco:CharacterString>" +
             "                            </gmd:code>" +
             "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +

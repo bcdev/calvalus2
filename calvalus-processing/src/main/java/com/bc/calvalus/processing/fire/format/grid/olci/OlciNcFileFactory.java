@@ -31,7 +31,12 @@ public class OlciNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getDoi() {
-        return "TBD";
+        return null;
+    }
+
+    @Override
+    protected String getPublicationDate() {
+        return null;
     }
 
     @Override

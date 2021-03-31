@@ -133,6 +133,8 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
         ncFile.addGroupAttribute(null, new Attribute("contact", getContactMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("project", getProjectMetadata()));
+        if (getDoi() != null) { ncFile.addGroupAttribute(null, new Attribute("doi", getDoi())); }
+        if (getPublicationDate() != null) { ncFile.addGroupAttribute(null, new Attribute("publication_date", getPublicationDate())); }
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", "90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", "-180"));
@@ -191,6 +193,8 @@ public abstract class NcFileFactory {
     protected abstract String getSource();
 
     protected abstract String getDoi();
+
+    protected abstract String getPublicationDate();
 
     protected abstract void addBurnableAreaFractionVar(NetcdfFileWriter ncFile);
 

@@ -40,6 +40,11 @@ class ModisNcFileFactory extends NcFileFactory {
     }
 
     @Override
+    protected String getPublicationDate() {
+        return null;
+    }
+
+    @Override
     protected void addBurnableAreaFractionVar(NetcdfFileWriter ncFile) {
         Variable burnableAreaFractionVar = ncFile.addVariable(null, "fraction_of_burnable_area", DataType.FLOAT, "time lat lon");
         burnableAreaFractionVar.addAttribute(new Attribute("units", "1"));

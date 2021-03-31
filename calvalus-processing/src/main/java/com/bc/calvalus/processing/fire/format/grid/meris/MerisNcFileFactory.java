@@ -32,6 +32,11 @@ class MerisNcFileFactory extends NcFileFactory {
     }
 
     @Override
+    protected String getPublicationDate() {
+        return null;
+    }
+
+    @Override
     protected void addBurnableAreaFractionVar(NetcdfFileWriter ncFile) {
         // nothing to do
     }
