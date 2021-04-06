@@ -84,8 +84,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         String template;
         switch (configuration.get("calvalus.sensor")) {
             case "OLCI":
-                template = S2_TEMPLATE;
-                break;
+                throw new IllegalStateException("Should never come here; for producing the OLCI pixel products, com.bc.calvalus.processing.fire.FirePixelNcFactory is used.");
             case "MODIS":
                 template = MODIS_TEMPLATE;
                 break;

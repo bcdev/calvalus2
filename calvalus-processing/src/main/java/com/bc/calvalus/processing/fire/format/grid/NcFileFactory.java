@@ -177,15 +177,15 @@ public abstract class NcFileFactory {
     }
 
     protected String getCreatorUrl() {
-        return "www.esa-fire-cci.org";
+        return "https://climate.esa.int/en/projects/fire/";
     }
 
     protected String getNamingAuthority() {
-        return "org.esa-fire-cci";
+        return "int.esa.climate";
     }
 
     protected String getReference() {
-        return "See www.esa-fire-cci.org";
+        return "See https://climate.esa.int/en/projects/fire/";
     }
 
     protected abstract String getSummary();
