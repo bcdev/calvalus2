@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import org.esa.snap.core.dataio.geocoding.ComponentGeoCoding;
 import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
