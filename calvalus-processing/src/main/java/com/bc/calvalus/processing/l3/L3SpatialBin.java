@@ -17,7 +17,7 @@ import java.util.Arrays;
  * @author Norman Fomferra
  * @author Martin
  */
-public final class L3SpatialBin extends SpatialBin implements Writable {
+public class L3SpatialBin extends SpatialBin implements Writable {
 
     public static final int METADATA_MAGIC_NUMBER = -1;
 
