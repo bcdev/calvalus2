@@ -108,7 +108,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 }
                 if (numObs > 0 || generateEmptyAggregate) {
                     final String metaXml = extractProcessingGraphXml(product);
-                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
+                    L3SpatialBin spatialBin = (L3SpatialBin) binningContext.getBinManager().createSpatialBin(L3SpatialBin.METADATA_MAGIC_NUMBER);
+                    spatialBin.setMetadata(metaXml);
+                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), spatialBin);
                 }
 
             } else {

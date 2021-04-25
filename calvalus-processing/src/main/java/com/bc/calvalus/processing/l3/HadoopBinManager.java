@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import org.locationtech.jts.geom.Geometry;
@@ -72,8 +73,15 @@ public class HadoopBinManager extends BinManager {
     public static BinningContext createBinningContext(BinningConfig binningConfig, DataPeriod dataPeriod, Geometry regionGeometry) {
         VariableContext variableContext = binningConfig.createVariableContext();
         Aggregator[] aggregators = binningConfig.createAggregators(variableContext);
-        HadoopBinManager binManager = new HadoopBinManager(variableContext, binningConfig.getPostProcessorConfig(),
-                                                           aggregators);
+        HadoopBinManager binManager;
+        if ("JD".equals(aggregators[0].getName())) {
+            binManager = new PackedJDBinManager(variableContext, binningConfig.getPostProcessorConfig(), aggregators);
+            CalvalusLogger.getLogger().info("using packed JD bins");
+        } else {
+            binManager = new HadoopBinManager(variableContext, binningConfig.getPostProcessorConfig(),
+                                              aggregators);
+            CalvalusLogger.getLogger().info("using standard bins");
+        }
         PlanetaryGrid planetaryGrid = binningConfig.createPlanetaryGrid();
         Integer superSampling = binningConfig.getSuperSampling();
 
