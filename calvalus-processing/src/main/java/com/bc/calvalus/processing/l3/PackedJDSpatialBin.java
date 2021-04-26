@@ -29,9 +29,9 @@ public class PackedJDSpatialBin extends L3SpatialBin implements Writable {
 
     public void write(DataOutput dataOutput) throws IOException {
         if (metadata == null) {
-            dataOutput.writeShort((int) getFeatureValues()[0]);        // mjd2000 in days
-            dataOutput.writeShort((int) getFeatureValues()[1]);        // jd
-            dataOutput.writeShort((int) (getFeatureValues()[2]*100));  // cl
+            dataOutput.writeShort((int) getFeatureValues()[0]);            // mjd2000 in days
+            dataOutput.writeShort((int) getFeatureValues()[1]);            // jd
+            dataOutput.writeShort((int) (getFeatureValues()[2]*100+0.1));  // cl
         } else {
             dataOutput.writeShort(L3SpatialBin.METADATA_MAGIC_NUMBER);
             int chunkSize = 65535 / 3;  // UTF may blow up the string to trice the size in bytes
@@ -51,9 +51,9 @@ public class PackedJDSpatialBin extends L3SpatialBin implements Writable {
          short v0 = dataInput.readShort();
          if (v0 != L3SpatialBin.METADATA_MAGIC_NUMBER) {
              setNumFeatures(3);
-             getFeatureValues()[0] = v0;                             // mjd2000 in days
-             getFeatureValues()[1] = dataInput.readShort();          // jd
-             getFeatureValues()[2] = dataInput.readShort() * 0.01f;  // cl
+             getFeatureValues()[0] = v0;                                     // mjd2000 in days
+             getFeatureValues()[1] = dataInput.readShort();                  // jd
+             getFeatureValues()[2] = ((float) dataInput.readShort()) / 100;  // cl
          } else {
              int noOfChunks = dataInput.readInt();
              StringBuffer accu = new StringBuffer();
