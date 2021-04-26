@@ -120,8 +120,9 @@ public class S2JDAggregator extends AbstractAggregator {
     }
 
     void aggregate(float obs_mjd, float obs_jd, float obs_cl, WritableVector state) {
-        float agg_mjd = state.get(0);
-        float agg_jd = state.get(1);
+        final float agg_mjd = state.get(0);
+        final float agg_jd = state.get(1);
+        final float agg_cl = state.get(2);
         // are we within the month?
         if (isInMonth(obs_mjd)) {
             // prefer water
@@ -135,7 +136,8 @@ public class S2JDAggregator extends AbstractAggregator {
                 setAggregate(CLEAR_LAND, 0.0f, state);
             }
             // prefer earlier BA within months (agg BA is in the month, checked by the condition above)
-            else if (isBurned(obs_jd) && (!isBurned(agg_jd) || obs_mjd < agg_mjd)) {
+            // for BA at the same date prefer higher CL (for adjacent granules with overlap)
+            else if (isBurned(obs_jd) && (!isBurned(agg_jd) || (obs_mjd < agg_mjd || (obs_mjd == agg_mjd && obs_cl > agg_cl)))) {
                 setAggregate(obs_mjd, obs_jd, obs_cl, state);
             }
             // seen BA has next priority
