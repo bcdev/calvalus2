@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
@@ -52,12 +53,14 @@ public class L3TemporalBinSource implements TemporalBinSource {
     private final Mapper.Context context;
     private List<PartFile> partFiles;
     private FileSystem hdfs;
+    private boolean withLocalCopy;
 
     public L3TemporalBinSource(Path partsDir, Mapper.Context context) {
         this.context = context;
         this.configuration = context.getConfiguration();
         this.partsDir = partsDir;
         this.startTime = System.nanoTime();
+        withLocalCopy = this.configuration.getBoolean("calvalus.input.withLocalCopy", false);
     }
 
     @Override
@@ -101,8 +104,17 @@ public class L3TemporalBinSource implements TemporalBinSource {
         context.setStatus(String.format("part %d/%d", (index + 1), (partFiles.size() + 1)));
         context.progress();
         Path partFile = partFiles.get(index).getPath();
-        LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
-        SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, configuration);
+        SequenceFile.Reader reader;
+        if (withLocalCopy) {
+            Path localFile = new Path(new Path("file://" + System.getProperty("user.dir")), partFile.getName());
+            LOG.info(MessageFormat.format("copying {0} to working dir {1}", partFile, localFile));
+            hdfs.copyToLocalFile(partFile, localFile);
+            LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile.getName()));
+            reader = new SequenceFile.Reader(localFile.getFileSystem(configuration), localFile, configuration);
+        } else {
+            LOG.info(MessageFormat.format("reading and reprojecting part {0}", partFile));
+            reader = new SequenceFile.Reader(hdfs, partFile, configuration);
+        }
         return new SequenceFileBinIterator(reader);
     }
 
@@ -110,6 +122,11 @@ public class L3TemporalBinSource implements TemporalBinSource {
     public void partProcessed(int index, Iterator<? extends TemporalBin> part) throws IOException {
         context.progress();
         ((SequenceFileBinIterator) part).getReader().close();
+        if (withLocalCopy) {
+            Path partFile = partFiles.get(index).getPath();
+            Path localFile = new Path(new Path("file://" + System.getProperty("user.dir")), partFile.getName());
+            localFile.getFileSystem(configuration).delete(localFile, false);
+        }
     }
 
     @Override
