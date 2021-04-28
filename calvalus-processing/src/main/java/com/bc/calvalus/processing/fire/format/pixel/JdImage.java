@@ -35,24 +35,6 @@ class JdImage extends SingleBandedOpImage {
         this.lcBand = lcBand;
         this.sensor = sensor;
         this.area = area;
-
-//        if ("h43v13".equals(area)
-//                || "h44v14".equals(area)
-//                || "h44v15".equals(area)
-//                || "h45v15".equals(area)) {
-        if ("h43v22".equals(area)
-                || "h44v21".equals(area)
-                || "h44v20".equals(area)
-                || "h45v20".equals(area)) {
-            try {
-                File maskFile = new File(area + "-mask.nc");
-                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-mask/" + area + "-mask.nc"), maskFile, configuration);
-                maskProduct = ProductIO.readProduct(maskFile);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-
     }
 
     @Override
