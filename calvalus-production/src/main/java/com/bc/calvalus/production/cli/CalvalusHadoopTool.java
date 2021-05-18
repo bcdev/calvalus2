@@ -201,7 +201,7 @@ public class CalvalusHadoopTool {
 
         StringBuilder accu = new StringBuilder();
         statusConverter.initialiseJobStatus(accu);
-        if (ids.length == 1) {
+        if (ids.length == 1 && ! Boolean.getBoolean("nosinglejobquery")) {
             String id = ids[0];
             JobID jobId = JobID.forName(id);
             JobStatus status = hadoopConnection.getJobStatus(jobId);
