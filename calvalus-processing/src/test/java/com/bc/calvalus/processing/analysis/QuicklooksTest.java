@@ -16,7 +16,35 @@
 
 package com.bc.calvalus.processing.analysis;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.RawComparator;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TaskAttemptContext;
+import org.apache.hadoop.mapred.TaskAttemptID;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.util.Progressable;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.imageio.ImageIO;
+import java.awt.image.RenderedImage;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
 
 import static org.junit.Assert.*;
 
@@ -111,7 +139,259 @@ public class QuicklooksTest {
         assertEquals("chl_conc", configs[0].getBandName());
         assertEquals("alpha", configs[1].getBandName());
         assertEquals("RGB", configs[2].getBandName());
+    }
 
+    @Ignore
+    @Test
+    public void testGernerateQuicklook() throws IOException {
+        TaskAttemptContext context = new TaskAttemptContext() {
+            @Override
+            public TaskAttemptID getTaskAttemptID() {
+                return null;
+            }
+
+            @Override
+            public Progressable getProgressible() {
+                return null;
+            }
+
+            @Override
+            public JobConf getJobConf() {
+                return null;
+            }
+
+            @Override
+            public void setStatus(String msg) {
+
+            }
+
+            @Override
+            public String getStatus() {
+                return null;
+            }
+
+            @Override
+            public float getProgress() {
+                return 0;
+            }
+
+            @Override
+            public Counter getCounter(Enum<?> counterName) {
+                return null;
+            }
+
+            @Override
+            public Counter getCounter(String groupName, String counterName) {
+                return null;
+            }
+
+            @Override
+            public Configuration getConfiguration() {
+                return new Configuration();
+            }
+
+            @Override
+            public Credentials getCredentials() {
+                return null;
+            }
+
+            @Override
+            public JobID getJobID() {
+                return null;
+            }
+
+            @Override
+            public int getNumReduceTasks() {
+                return 0;
+            }
+
+            @Override
+            public Path getWorkingDirectory() throws IOException {
+                return null;
+            }
+
+            @Override
+            public Class<?> getOutputKeyClass() {
+                return null;
+            }
+
+            @Override
+            public Class<?> getOutputValueClass() {
+                return null;
+            }
+
+            @Override
+            public Class<?> getMapOutputKeyClass() {
+                return null;
+            }
+
+            @Override
+            public Class<?> getMapOutputValueClass() {
+                return null;
+            }
+
+            @Override
+            public String getJobName() {
+                return null;
+            }
+
+            @Override
+            public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
+                return null;
+            }
+
+            @Override
+            public RawComparator<?> getSortComparator() {
+                return null;
+            }
+
+            @Override
+            public String getJar() {
+                return null;
+            }
+
+            @Override
+            public RawComparator<?> getCombinerKeyGroupingComparator() {
+                return null;
+            }
+
+            @Override
+            public RawComparator<?> getGroupingComparator() {
+                return null;
+            }
+
+            @Override
+            public boolean getJobSetupCleanupNeeded() {
+                return false;
+            }
+
+            @Override
+            public boolean getTaskCleanupNeeded() {
+                return false;
+            }
+
+            @Override
+            public boolean getProfileEnabled() {
+                return false;
+            }
+
+            @Override
+            public String getProfileParams() {
+                return null;
+            }
+
+            @Override
+            public Configuration.IntegerRanges getProfileTaskRange(boolean isMap) {
+                return null;
+            }
+
+            @Override
+            public String getUser() {
+                return null;
+            }
+
+            @Override
+            public boolean getSymlink() {
+                return false;
+            }
+
+            @Override
+            public Path[] getArchiveClassPaths() {
+                return new Path[0];
+            }
+
+            @Override
+            public URI[] getCacheArchives() throws IOException {
+                return new URI[0];
+            }
+
+            @Override
+            public URI[] getCacheFiles() throws IOException {
+                return new URI[0];
+            }
+
+            @Override
+            public Path[] getLocalCacheArchives() throws IOException {
+                return new Path[0];
+            }
+
+            @Override
+            public Path[] getLocalCacheFiles() throws IOException {
+                return new Path[0];
+            }
+
+            @Override
+            public Path[] getFileClassPaths() {
+                return new Path[0];
+            }
+
+            @Override
+            public String[] getArchiveTimestamps() {
+                return new String[0];
+            }
+
+            @Override
+            public String[] getFileTimestamps() {
+                return new String[0];
+            }
+
+            @Override
+            public int getMaxMapAttempts() {
+                return 0;
+            }
+
+            @Override
+            public int getMaxReduceAttempts() {
+                return 0;
+            }
+
+            @Override
+            public void progress() {
+
+            }
+        };
+        Product product = ProductIO.readProduct("/windows/tmp/L3_2021-05-10_2021-05-10.nc");
+        //Quicklooks.QLConfig qlConfig = Quicklooks.fromXml("<parameters> <quicklooks><config><RGBAExpressions>B4,B3,B2,</RGBAExpressions><RGBAMinSamples>0.0,0.0,0.0</RGBAMinSamples><RGBAMaxSamples>0.21,0.21,0.21</RGBAMaxSamples><shapefileURL>file:///windows/tmp/country_tiles_lines_for_ql_sub.zip</shapefileURL><imageType>png</imageType></config></quicklooks> </parameters>").getConfigs()[0];
+        Quicklooks.QLConfig qlConfig = Quicklooks.fromXml("<parameters> <quicklooks><config><RGBAExpressions>B4,B3,B2,</RGBAExpressions><RGBAMinSamples>0.0,0.0,0.0</RGBAMinSamples><RGBAMaxSamples>0.21,0.21,0.21</RGBAMaxSamples><shapefileURL>file:///windows/tmp/country_tiles_orbits_lines_20190610_sub.zip</shapefileURL><imageType>png</imageType></config></quicklooks> </parameters>").getConfigs()[0];
+        QuicklookGenerator quicklookGenerator = new QuicklookGenerator(context, product, qlConfig);
+        RenderedImage image = quicklookGenerator.createImage();
+        OutputStream outputStream = new FileOutputStream("/windows/tmp/ql." + qlConfig.getImageType());
+        try {
+            ImageIO.write(image, qlConfig.getImageType(), outputStream);
+        } finally {
+            outputStream.close();
+        }
+    }
+
+    private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+        final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
+        return new BufferedOutputStream(fsDataOutputStream);
     }
 
 }

@@ -201,7 +201,7 @@ public class QuicklookGenerator {
         BufferedImage bufferedImage = new BufferedImage((int) imageBounds.getWidth(),
                                                         (int) imageBounds.getHeight(), imageType);
 
-        final BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage);
+        final BufferedImageRendering rendering = new BufferedImageRendering(bufferedImage, new StretchedViewport());
         Viewport viewport = rendering.getViewport();
         viewport.setModelYAxisDown(isModelYAxisDown(imageLayer));
         viewport.zoom(modelBounds);
