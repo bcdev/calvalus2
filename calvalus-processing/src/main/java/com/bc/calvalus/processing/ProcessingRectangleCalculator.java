@@ -46,9 +46,10 @@ public abstract class ProcessingRectangleCalculator {
      *
      * @return The intersection, or {@code null} if no restriction is given.
      * @throws IOException
+     * @param regionBufferPixels
      */
-    public Rectangle computeRect() throws IOException {
-        Rectangle geometryRect = getGeometryAsRectangle(getProduct(), regionGeometry);
+    public Rectangle computeRect(int regionBufferPixels) throws IOException {
+        Rectangle geometryRect = getGeometryAsRectangle(getProduct(), regionGeometry, regionBufferPixels);
         Rectangle productSplitRect = getProductSplitAsRectangle();
 
         Rectangle pixelRectangle = intersectionSafe(geometryRect, productSplitRect);
@@ -77,18 +78,18 @@ public abstract class ProcessingRectangleCalculator {
         return null;
     }
 
-    public static Rectangle getGeometryAsRectangle(Product product, Geometry regionGeometry) {
+    public static Rectangle getGeometryAsRectangle(Product product, Geometry regionGeometry, int regionBufferPixels) {
         if (!(product == null || regionGeometry == null || regionGeometry.isEmpty() || GeometryUtils.isGlobalCoverageGeometry(regionGeometry))) {
             try {
                 if (product.getSceneGeoCoding() != null) {
                     LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
                     try {
-                        return SubsetOp.computePixelRegion(product, regionGeometry, 1);
+                        return SubsetOp.computePixelRegion(product, regionGeometry, regionBufferPixels);
                     } catch (TopologyException e2) {
-                        return SubsetOp.computePixelRegion(product, new ConvexHull(regionGeometry).getConvexHull(), 1);
+                        return SubsetOp.computePixelRegion(product, new ConvexHull(regionGeometry).getConvexHull(), regionBufferPixels);
                     }
                 } else {
-                    return EosRectangleCalculator.computePixelRegion(product, regionGeometry, 1);
+                    return EosRectangleCalculator.computePixelRegion(product, regionGeometry, regionBufferPixels);
                 }
             } catch (Exception e) {
                 String msg = "Exception from SubsetOp.computePixelRegion: " + e.getMessage();

@@ -428,6 +428,7 @@ public abstract class ProcessorAdapter {
 
         if (inputRectangle == null) {
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
+            int regionBufferPixels = getConfiguration().getInt("calvalus.regionBufferPixels", 1);
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             // check table for table input format
             for (int i=0; i<getInputParameters().length; i += 2) {
@@ -448,7 +449,7 @@ public abstract class ProcessorAdapter {
                 }
             };
             try {
-                inputRectangle = calculator.computeRect();
+                inputRectangle = calculator.computeRect(regionBufferPixels);
             } catch (IOException _) {}
             LOG.info("getInputRectangle: calculated inputRectangle = " + inputRectangle);
         }

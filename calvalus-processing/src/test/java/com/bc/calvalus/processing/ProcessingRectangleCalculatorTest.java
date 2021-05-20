@@ -73,7 +73,7 @@ public class ProcessingRectangleCalculatorTest {
         System.setProperty("snap.useAlternatePixelGeoCoding", "true");
 
         product = ProductIO.readProduct("C:\\ssd\\fire\\S3A_OL_1_EFR____20190101T144647_20190101T144947_20190102T215705_0179_039_367_2880_MAR_O_NT_002.tif_idepix.nc");
-        Rectangle rectangle = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry);
+        Rectangle rectangle = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry, 1);
         System.out.println(product.getSceneGeoCoding());
         System.out.println(rectangle);
     }

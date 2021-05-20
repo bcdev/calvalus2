@@ -150,8 +150,9 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
 
     protected Product createSubsetFromOutput(Product product) throws IOException {
         String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        int regionBufferPixels = getConfiguration().getInt("calvalus.regionBufferPixels", 1);
         Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
-        Rectangle outputProductRect = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry);
+        Rectangle outputProductRect = ProcessingRectangleCalculator.getGeometryAsRectangle(product, regionGeometry, regionBufferPixels);
         getLogger().info("createSubsetFromOutput: calculated outputProductRect = " + outputProductRect);
         if (outputProductRect == null ||
                 (outputProductRect.width == product.getSceneRasterWidth() && outputProductRect.height == product.getSceneRasterHeight())) {
