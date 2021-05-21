@@ -143,7 +143,7 @@ public class QuicklooksTest {
 
     @Ignore
     @Test
-    public void testGernerateQuicklook() throws IOException {
+    public void testGenerateQuicklook() throws IOException {
         TaskAttemptContext context = new TaskAttemptContext() {
             @Override
             public TaskAttemptID getTaskAttemptID() {
