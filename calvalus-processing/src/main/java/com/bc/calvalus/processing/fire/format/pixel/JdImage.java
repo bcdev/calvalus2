@@ -40,18 +40,18 @@ class JdImage extends SingleBandedOpImage {
 //                || "h44v14".equals(area)
 //                || "h44v15".equals(area)
 //                || "h45v15".equals(area)) {
-        if ("h43v22".equals(area)
-                || "h44v21".equals(area)
-                || "h44v20".equals(area)
-                || "h45v20".equals(area)) {
-            try {
-                File maskFile = new File(area + "-mask.nc");
-                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-mask/" + area + "-mask.nc"), maskFile, configuration);
-                maskProduct = ProductIO.readProduct(maskFile);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
+//        if ("h43v22".equals(area)
+//                || "h44v21".equals(area)
+//                || "h44v20".equals(area)
+//                || "h45v20".equals(area)) {
+//            try {
+//                File maskFile = new File(area + "-mask.nc");
+//                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-mask/" + area + "-mask.nc"), maskFile, configuration);
+//                maskProduct = ProductIO.readProduct(maskFile);
+//            } catch (IOException e) {
+//                throw new IllegalStateException(e);
+//            }
+//        }
 
     }
 
@@ -80,7 +80,7 @@ class JdImage extends SingleBandedOpImage {
         int pixelIndex = 0;
         PixelPos pixelPos = new PixelPos();
 
-        Polygon mask1 = new Polygon(new int[]{11170, 11170, 8942, 9888, 10141, 10087, 10277, 11147}, new int[]{20407, 27816, 27816, 25623, 24088, 23259, 21898, 20271}, 8);
+//        Polygon mask1 = new Polygon(new int[]{11170, 11170, 8942, 9888, 10141, 10087, 10277, 11147}, new int[]{20407, 27816, 27816, 25623, 24088, 23259, 21898, 20271}, 8);
 
         for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
             for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
@@ -109,30 +109,30 @@ class JdImage extends SingleBandedOpImage {
 
                 dest.setSample(x, y, 0, targetJd);
 
-                //if ("h38v20".equals(area)) {
-                if ("h38v15".equals(area)) {
-                    Point point = new Point(x, y);
-                    if (mask1.contains(point)) {
-                        int sample = dest.getSample(x, y, 0);
-                        if (sample != -1) {
-                            dest.setSample(x, y, 0, -2);
-                        }
-                    }
-                }
+//                //if ("h38v20".equals(area)) {
+//                if ("h38v15".equals(area)) {
+//                    Point point = new Point(x, y);
+//                    if (mask1.contains(point)) {
+//                        int sample = dest.getSample(x, y, 0);
+//                        if (sample != -1) {
+//                            dest.setSample(x, y, 0, -2);
+//                        }
+//                    }
+//                }
 
 //                if ("h43v13".equals(area)
 //                        || "h44v14".equals(area)
 //                        || "h44v15".equals(area)
 //                        || "h45v15".equals(area)) {
-                if ("h43v22".equals(area)
-                        || "h44v21".equals(area)
-                        || "h44v20".equals(area)
-                        || "h45v20".equals(area)) {
-                    float maskPixel = maskPixels[pixelIndex];
-                    if (maskPixel == 255.0F) {
-                        dest.setSample(x, y, 0, -1);
-                    }
-                }
+//                if ("h43v22".equals(area)
+//                        || "h44v21".equals(area)
+//                        || "h44v20".equals(area)
+//                        || "h45v20".equals(area)) {
+//                    float maskPixel = maskPixels[pixelIndex];
+//                    if (maskPixel == 255.0F) {
+//                        dest.setSample(x, y, 0, -1);
+//                    }
+//                }
 
                 pixelIndex++;
             }
