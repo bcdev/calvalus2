@@ -375,7 +375,8 @@ public class QuicklooksTest {
 
             }
         };
-        Product product = ProductIO.readProduct("/windows/tmp/L3_2021-05-10_2021-05-10.nc");
+        //Product product = ProductIO.readProduct("/windows/tmp/L3_2021-05-10_2021-05-10.nc");
+        Product product = ProductIO.readProduct("/windows/tmp/20210531_P1D_CMEMS_HROC_L3-rgb_ARC__500m-v01.0.nc");
         //Quicklooks.QLConfig qlConfig = Quicklooks.fromXml("<parameters> <quicklooks><config><RGBAExpressions>B4,B3,B2,</RGBAExpressions><RGBAMinSamples>0.0,0.0,0.0</RGBAMinSamples><RGBAMaxSamples>0.21,0.21,0.21</RGBAMaxSamples><shapefileURL>file:///windows/tmp/country_tiles_lines_for_ql_sub.zip</shapefileURL><imageType>png</imageType></config></quicklooks> </parameters>").getConfigs()[0];
         Quicklooks.QLConfig qlConfig = Quicklooks.fromXml("<parameters> <quicklooks><config><RGBAExpressions>B4,B3,B2,</RGBAExpressions><RGBAMinSamples>0.0,0.0,0.0</RGBAMinSamples><RGBAMaxSamples>0.21,0.21,0.21</RGBAMaxSamples><shapefileURL>file:///windows/tmp/country_tiles_orbits_lines_20190610_sub.zip</shapefileURL><imageType>png</imageType></config></quicklooks> </parameters>").getConfigs()[0];
         QuicklookGenerator quicklookGenerator = new QuicklookGenerator(context, product, qlConfig);
