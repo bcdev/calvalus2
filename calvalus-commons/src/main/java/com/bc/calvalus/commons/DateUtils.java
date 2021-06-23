@@ -32,9 +32,11 @@ public class DateUtils {
 
     public static final String ISO_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss";
     public static final String DATE_FORMAT_STRING = "yyyy-MM-dd";
+    public static final String DATETIME_OUTPUT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
     public static final DateFormat ISO_FORMAT = createDateFormat(ISO_FORMAT_STRING);
     public static final DateFormat DATE_FORMAT = createDateFormat(DATE_FORMAT_STRING);
+    public static final DateFormat DATETIME_OUTPUT_FORMAT = DateUtils.createDateFormat(DATETIME_OUTPUT_PATTERN);
 
     public static GregorianCalendar createCalendar() {
         final GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE, Locale.ENGLISH);
