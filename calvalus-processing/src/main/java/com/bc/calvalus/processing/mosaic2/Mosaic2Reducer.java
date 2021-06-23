@@ -134,7 +134,7 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             microTileCols = 2 * numRowsGlobal / microTileWidth;
             LOG.info(String.format("tile configuration with %d*%d tiles, %d*%d micro tiles, %d lines per tile, %d lines per micro tile", 2 * numRowsGlobal / macroTileWidth, numRowsGlobal / macroTileHeight, microTileCols, microTileRows, macroTileHeight, microTileHeight));
 
-            final Mosaic2TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context, macroTileCols);
+            final Mosaic2TemporalBinSource temporalBinSource = new Mosaic2TemporalBinSource(context, macroTileCols, macroTileWidth, microTileWidth, microTileHeight);
             while (true) {
                 int tileIndex = temporalBinSource.nextTile();
                 if (tileIndex < 0) {
@@ -214,13 +214,10 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
             processingGraphMetadata = aggregateMetadata(spatialBinTiles);
             return null;
         } else {
-            TemporalBin[] temporalBins = null;
+            TemporalBin[] temporalBins = new TemporalBin[microTileHeight*microTileWidth];
             for (L3SpatialBinMicroTileWritable spatialBinMicroTile : spatialBinTiles) {
                 SpatialBin[] spatialBins = spatialBinMicroTile.getSamples();
-                // lazy creation of temporalBin array, we need the micro tile size
-                if (temporalBins == null) {
-                    temporalBins = new TemporalBin[spatialBins.length];
-                }
+                // bin cell loop
                 for (int i=0; i<temporalBins.length; ++i) {
                     if (spatialBins[i] != null) {
                         // lazy creation of the temporal bin, we do not do it for out-of-area pixels
@@ -302,8 +299,8 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
     private class Mosaic2TemporalBinSource implements TemporalBinSource {
         private final ReducingIterator iterator;
         
-        public Mosaic2TemporalBinSource(Context context, int macroTileCols) throws IOException, InterruptedException {
-            iterator = new ReducingIterator(context, macroTileCols);
+        public Mosaic2TemporalBinSource(Context context, int macroTileCols, int macroTileWidth, int microTileWidth, int microTileHeight) throws IOException, InterruptedException {
+            iterator = new ReducingIterator(context, macroTileCols, macroTileWidth, microTileWidth, microTileHeight);
         }
 
         @Override
@@ -333,15 +330,22 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
 
         private final Context context;
         private final int macroTileCols;
-        private TemporalBin[] temporalBins;
+        private final int macroTileWidth;
+        private final int microTileWidth;
+        private final int microTileHeight;
+        private TemporalBin[][] temporalBins;  // contains output pixels of one micro tile
         private int macroTileOfCurrentCycle = -1;
         private int macroTileOfCurrentBin = -1;
-        private int cursor = 0;
+        private int cursor = 0;  // position of next output pixel in temporalBins
+        private boolean atEnd = false;
 
-        public ReducingIterator(Context context, int macroTileCols) {
+        public ReducingIterator(Context context, int macroTileCols, int macroTileWidth, int microTileWidth, int microTileHeight) {
             this.context = context;
             this.macroTileCols = macroTileCols;
-            hasNext();
+            this.macroTileWidth = macroTileWidth;
+            this.microTileWidth = microTileWidth;
+            this.microTileHeight = microTileHeight;
+            hasNext();  // initialise lookahead
         }
 
         public int nextTile() {
@@ -356,42 +360,86 @@ public class Mosaic2Reducer extends Reducer<TileIndexWritable, L3SpatialBinMicro
         @Override
         public boolean hasNext() {
             while (true) {
-                if (temporalBins == null || cursor >= temporalBins.length) {
+                // ensure lookahead
+                if (temporalBins == null || cursor >= macroTileWidth * microTileHeight) {
                     try {
-                        if (!context.nextKey()) {
+                        // ensure there are more sets of spatial bins
+                        if (temporalBins == null || atEnd) {
+                            if (!context.nextKey()) {
+                                atEnd = true;
+                                return false;
+                            }
+                        } else if (context.getCurrentKey() == null) {
                             return false;
                         }
-                        TileIndexWritable binIndex = context.getCurrentKey();
-                        macroTileOfCurrentBin = binIndex.getMacroTileY() * macroTileCols + binIndex.getMacroTileX();
-                        Iterable<L3SpatialBinMicroTileWritable> spatialBins = context.getValues();
-                        temporalBins = aggregate(binIndex, spatialBins);
-                        LOG.info("aggregated " + countValid(temporalBins) + " temporal bins for micro tile x" + binIndex.getTileX() + "y" + binIndex.getTileY());
+                        // We are looking at the next set of spatial bins. Read a complete row of microtiles.
+                        final int firstMicroTileY = context.getCurrentKey().getTileY();
+                        final int firstMicroTileX = context.getCurrentKey().getTileX();
+                        macroTileOfCurrentBin = context.getCurrentKey().getMacroTileY() * macroTileCols + context.getCurrentKey().getMacroTileX();
+                        final int numMicroTileColsInMacroTile = macroTileWidth / microTileWidth;
+                        temporalBins = new TemporalBin[numMicroTileColsInMacroTile][];
+                        while (true) {
+                            TileIndexWritable microTileIndex = context.getCurrentKey();
+                            // check whether we are in the same row still
+                            if (microTileIndex.getTileY() != firstMicroTileY
+                                    || microTileIndex.getMacroTileY() * macroTileCols + microTileIndex.getMacroTileX() != macroTileOfCurrentBin) {
+                                break;
+                            }
+                            // aggregate temporally, apply aggregators
+                            Iterable<L3SpatialBinMicroTileWritable> spatialBins = context.getValues();
+                            int col = microTileIndex.getTileX() - firstMicroTileX;
+                            temporalBins[col] = aggregate(microTileIndex, spatialBins);
+                            LOG.info("aggregated " + countValid(temporalBins[col]) + " temporal bins for micro tile x" + microTileIndex.getTileX() + "y" + microTileIndex.getTileY());
+                            // check whether we are not at the end of microtiles
+                            if (!context.nextKey()) {
+                                atEnd = true;
+                                break;
+                            }
+                        }
+                        LOG.info("micro tile row " + firstMicroTileY + " complete. writing ...");
                         cursor = 0;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
+                // check that lookahead still is (a row) in the same macrotile
                 if (macroTileOfCurrentBin != macroTileOfCurrentCycle) {
                     return false;
                 }
-                if (temporalBins[cursor] != null) {
+                // check whether the microtile is empty or the pixel within it is missing
+                final int tileCol      = cursor % macroTileWidth;
+                final int microTileRow = cursor / macroTileWidth;
+                final int microTileCol = tileCol % microTileWidth;
+                final int block        = tileCol / microTileWidth;
+                final int posInBlock   = microTileRow * microTileWidth + microTileCol;
+                if (temporalBins[block] == null) {
+                    cursor += microTileWidth;
+                } else if(temporalBins[block][posInBlock] == null) {
+                    ++cursor;
+                } else {
                     return true;
                 }
-                ++cursor;
             }
         }
 
         @Override
         public TemporalBin next() {
-            if (temporalBins == null || cursor >= temporalBins.length) {
+            if (temporalBins == null || cursor >= macroTileWidth * microTileHeight) {
                 throw new IllegalStateException("next() called with hasNext() false in temporal binning");
             }
+            final int tileCol      = cursor % macroTileWidth;
+            final int microTileRow = cursor / macroTileWidth;
+            final int microTileCol = tileCol % microTileWidth;
+            final int block        = tileCol / microTileWidth;
+            final int posInBlock   = microTileRow * microTileWidth + microTileCol;
+            final TemporalBin temporalBin = temporalBins[block][posInBlock];
             try {
-                context.write(new LongWritable(temporalBins[cursor].getIndex()), (L3TemporalBin) temporalBins[cursor]);
+                context.write(new LongWritable(temporalBin.getIndex()), (L3TemporalBin) temporalBin);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            return temporalBins[cursor++];
+            ++cursor;
+            return temporalBin;
         }
     }
 

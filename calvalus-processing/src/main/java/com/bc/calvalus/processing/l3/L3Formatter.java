@@ -56,7 +56,7 @@ public class L3Formatter {
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
-
+    private static boolean snapIsInitialised = false;
 
     private final ProductData.UTC startTime;
     private final ProductData.UTC endTime;
@@ -128,10 +128,13 @@ public class L3Formatter {
                              String productName ) throws IOException {
 
         Configuration conf = context.getConfiguration();
-        GpfUtils.init(conf);
-        Engine.start();  // required here!  L3Formatter has no ProcessorAdapter
-        CalvalusLogger.restoreCalvalusLogFormatter();
-        ConverterRegistry.getInstance().setConverter(Product.class, new ProductConverter(conf));
+        if (! snapIsInitialised) {
+            GpfUtils.init(conf);
+            Engine.start();  // required here!  L3Formatter has no ProcessorAdapter
+            CalvalusLogger.restoreCalvalusLogFormatter();
+            ConverterRegistry.getInstance().setConverter(Product.class, new ProductConverter(conf));
+            snapIsInitialised = true;
+        }
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);

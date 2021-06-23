@@ -69,6 +69,7 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         final Configuration conf = context.getConfiguration();
         final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
+        final int microTileSize = conf.getInt("microTileSize", 256);
         final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
         final DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
         final BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
@@ -84,6 +85,7 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
+                product.setPreferredTileSize(microTileSize*4, microTileSize*4);
                 HashMap<Product, List<Band>> addedBands = new HashMap<>();
                 long numObs;
                 try {
@@ -163,7 +165,7 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         }
     }
 
-    private static class SpatialBinMicroTileEmitter implements SpatialBinConsumer {
+    static class SpatialBinMicroTileEmitter implements SpatialBinConsumer {
         int numObsTotal = 0;
         int numBinsTotal = 0;
         Map<Long, SpatialBin[]> microTiles = new HashMap<>();
@@ -195,7 +197,7 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
                 long index = microTileIndex(spatialBin.getIndex());
                 SpatialBin[] bin = microTiles.get(index);
                 if (bin == null) {
-                    LOG.info("collecting for micro tile x" + index%microTileCols + "y" + index/microTileCols + " pixel bin " + spatialBin.getIndex());
+                    //LOG.info("collecting for micro tile x" + index%microTileCols + "y" + index/microTileCols + " pixel bin " + spatialBin.getIndex());
                     bin = new SpatialBin[microTileHeight * microTileWidth];
                     microTiles.put(index, bin);
                 }
@@ -209,12 +211,12 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         public void flush() throws IOException, InterruptedException {
             for (Map.Entry<Long, SpatialBin[]> entry : microTiles.entrySet()) {
                 TileIndexWritable key = tileIndex(entry.getKey());
-                LOG.info("writing micro tile x" + entry.getKey()%microTileCols + "y" + entry.getKey()/microTileCols + " with " + countValid(entry.getValue()) + " spatial bins " + key.getMacroTileX() + " " + key.getMacroTileY() + " " + key.getTileX() + " " + key.getTileY());
+                LOG.info("writing micro tile x" + entry.getKey()%microTileCols + "y" + entry.getKey()/microTileCols + " with " + countValid(entry.getValue()) + " spatial bins");
                 context.write(key, new L3SpatialBinMicroTileWritable(entry.getValue()));
             }
         }
 
-        private int countValid(SpatialBin[] bins) {
+        int countValid(SpatialBin[] bins) {
             int count = 0;
             for (SpatialBin bin : bins) {
                 if (bin != null) {
@@ -225,16 +227,16 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
         }
 
         /** Returns position of bin within micro tile */
-        private int microTilePosition(long binIndex) {
+        int microTilePosition(long binIndex) {
             int row = (int) (binIndex / (numRowsGlobal * 2));
             int col = (int) (binIndex % (numRowsGlobal * 2));
             int mRow = row % microTileHeight;
             int mCol = col % microTileWidth;
-            return mRow * microTileCols + mCol;
+            return mRow * microTileWidth + mCol;
         }
 
         /** Returns position of micro tile within global grid of micro tiles */
-        private long microTileIndex(long binIndex) {
+        long microTileIndex(long binIndex) {
             int row = (int) (binIndex / (numRowsGlobal * 2));
             int col = (int) (binIndex % (numRowsGlobal * 2));
             int mRow = row / microTileHeight;
@@ -242,13 +244,13 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
             return mRow * microTileCols + mCol;
         }
 
-        /** Returns micro tile row of a bin index */
-        private long microTileRow(long microTileIndex) {
+        /** Returns micro tile row of a micro tile index */
+        long microTileRow(long microTileIndex) {
             return microTileIndex / microTileCols;
         }
 
         /** Converts micro tile position into index */
-        private TileIndexWritable tileIndex(Long microTileIndex) {
+        TileIndexWritable tileIndex(Long microTileIndex) {
             int mRow = (int) (microTileIndex / microTileCols);
             int mCol = (int) (microTileIndex % microTileCols);
             int tRow = mRow / (macroTileHeight / microTileHeight);
@@ -264,12 +266,12 @@ public class Mosaic2Mapper extends Mapper<NullWritable, NullWritable, TileIndexW
             }
         }
 
-        private boolean flushFinalisedRowEntry(Map.Entry<Long,SpatialBin[]> entry) {
+        boolean flushFinalisedRowEntry(Map.Entry<Long,SpatialBin[]> entry) {
             long index = entry.getKey();
             long row = microTileRow(index);
             if (finalisedMicroTileRows.contains(row)) {
                 TileIndexWritable key = tileIndex(index);
-                LOG.info("writing micro tile x" + index%microTileCols + "y" + index/microTileCols + " with " + countValid(entry.getValue()) + " spatial bins " + key.getMacroTileX() + " " + key.getMacroTileY() + " " + key.getTileX() + " " + key.getTileY());
+                LOG.info("writing micro tile x" + index%microTileCols + "y" + index/microTileCols + " with " + countValid(entry.getValue()) + " spatial bins");
                 try {
                     context.write(key, new L3SpatialBinMicroTileWritable(entry.getValue()));
                 } catch (Exception e) {
