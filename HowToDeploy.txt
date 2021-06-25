@@ -52,8 +52,8 @@ tar cvzf calvalus-src-$(date +%Y-%m-%d).tgz  --exclude .git --exclude target cal
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.21
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.21
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.22
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.22
 
 for lc-cci
 ----------
@@ -105,8 +105,8 @@ java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.4-fex /h
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.21
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.21
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.22
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.22
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
