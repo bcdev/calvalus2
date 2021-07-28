@@ -17,7 +17,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * Computes the rectangle of fo the input product that should be processed.
+ * Computes the rectangle of the input product that should be processed.
  */
 public abstract class ProcessingRectangleCalculator {
 
