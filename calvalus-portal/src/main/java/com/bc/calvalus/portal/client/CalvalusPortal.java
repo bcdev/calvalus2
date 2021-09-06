@@ -11,6 +11,7 @@ import com.bc.calvalus.portal.shared.ContextRetrievalService;
 import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoColorPalette;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -60,6 +61,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 "vicariousCalibrationView",
                 "matchupComparisonView",
                 "l2ToL3ComparisonView",
+                "qlView",
                 "regionsView",
                 "requestsView",
                 "bundlesView",
@@ -74,6 +76,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     // Data provided by various external services
     private ListDataProvider<Region> regions;
     private DtoProductSet[] productSets;
+    private DtoColorPalette[] colorPalettes;
     private DtoProcessorDescriptor[] systemProcessors;
     private DtoProcessorDescriptor[] userProcessors;
     private DtoProcessorDescriptor[] allUserProcessors;
@@ -128,6 +131,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         Runnable runnable = new Runnable() {
             public void run() {
                 backendService.loadRegions(NO_FILTER, new InitRegionsCallback());
+                backendService.loadColorPalettes(NO_FILTER, new InitColorPaletteSetsCallback());
                 backendService.getProductSets(NO_FILTER, new InitProductSetsCallback());
 
                 final BundleFilter systemFilter = new BundleFilter();
@@ -180,6 +184,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     @Override
     public DtoProductSet[] getProductSets() {
         return productSets;
+    }
+
+    @Override
+    public DtoColorPalette[] getColorPalettes() {
+        return colorPalettes;
     }
 
     @Override
@@ -285,6 +294,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             return new OrderMACProductionView(this);
         case "l2ToL3ComparisonView":
             return new OrderL2toL3ProductionView(this);
+        case "qlView":
+            return new OrderQLProductionView(this);
         case "regionsView":
             return new ManageRegionsView(this);
         case "bundlesView":
@@ -479,6 +490,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             caught.printStackTrace(System.err);
             Dialog.error("Server-side Error", caught.getMessage());
             CalvalusPortal.this.productSets = new DtoProductSet[0];
+        }
+    }
+
+    private class InitColorPaletteSetsCallback implements AsyncCallback<DtoColorPalette[]> {
+
+        @Override
+        public void onSuccess(DtoColorPalette[] dtoColorPalettes) {
+            CalvalusPortal.this.colorPalettes = dtoColorPalettes;
+            maybeInitFrontend();
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            Dialog.error("Server-side Error", caught.getMessage());
+            CalvalusPortal.this.colorPalettes = new DtoColorPalette[0];
         }
     }
 

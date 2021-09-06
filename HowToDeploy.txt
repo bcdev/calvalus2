@@ -221,5 +221,15 @@ calvalus.ql.upload.password = geoserver
 # GeoServer workspace to use. Mandatory. Example:
 calvalus.ql.upload.workspace = calmar
 
+===========================================================================
+GeoServer - Calvalus portal support
+-----------------------------------
+Once GeoServer is enabled in the Calvalus production system, it is also possible to configure a
+quicklooks WMS checkbox in the portal user interface. To enable this WMS checkbox please set the
+following configuration option, this is an example:
+
+# Quicklooks WMS checkbox - access control and visual configuration
+calvalus.portal.ql.wms = calvalus bc bg coastcolour calwps
+
 
 
