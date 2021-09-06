@@ -57,6 +57,11 @@ public interface JobConfigNames {
 
     String CALVALUS_OUTPUT_QUICKLOOKS = "calvalus.output.quicklooks";
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
+    String CALVALUS_QUICKLOOK_UPLOAD_HANDLER = "calvalus.ql.upload.handler";
+    String CALVALUS_QUICKLOOK_UPLOAD_URL = "calvalus.ql.upload.URL";
+    String CALVALUS_QUICKLOOK_UPLOAD_USERNAME = "calvalus.ql.upload.username";
+    String CALVALUS_QUICKLOOK_UPLOAD_PASSWORD = "calvalus.ql.upload.password";
+    String CALVALUS_QUICKLOOK_UPLOAD_WORKSPACE = "calvalus.ql.upload.workspace";
 
     String CALVALUS_REQUEST_SIZE_LIMIT = "calvalus.requestSizeLimit";
 
