@@ -87,7 +87,7 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{FORMAT_NAME_S3, FORMAT_NAME_SLSTRL1B_500m, FORMAT_NAME_SLSTRL1B_1km};
+        return new String[]{FORMAT_NAME_S3, FORMAT_NAME_SLSTRL1B_500m, FORMAT_NAME_SLSTRL1B_1km, "S3Syn"};
     }
 
     @Override
@@ -149,6 +149,8 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
                     return ProductIO.readProduct(productManifest, "Sen3_SLSTRL1B_500m");
                 } else if (inputFormat != null && inputFormat.equals(FORMAT_NAME_SLSTRL1B_1km)) {
                     return ProductIO.readProduct(productManifest, "Sen3_SLSTRL1B_1km");
+                } else if (inputFormat != null) {
+                    return ProductIO.readProduct(productManifest, inputFormat);
                 } else {
                     return ProductIO.readProduct(productManifest);
                 }
