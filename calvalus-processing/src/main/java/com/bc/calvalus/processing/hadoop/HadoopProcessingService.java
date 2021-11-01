@@ -659,6 +659,19 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return filename.endsWith(".so") || filename.contains(".so.") || filename.equals("VERSION.txt");
     }
 
+    public static void addBundleScripts(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+        final FileStatus[] libs = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return ! isLib(path) && ! isArchive(path);
+            }
+        });
+        for (FileStatus lib : libs) {
+            URI uri = fs.makeQualified(lib.getPath()).toUri();
+            DistributedCache.addCacheFile(uri, conf);
+        }
+    }
+
 
     private static class BundleQueryCacheEntry {
 

@@ -20,6 +20,7 @@ import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
+import com.bc.calvalus.processing.executable.PythonProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -48,7 +49,7 @@ public class ProcessorFactory {
     public static final String CALVALUS_L2_PROCESSOR_FILES = "calvalus.l2.scriptFiles";
     private static final Logger logger = Logger.getLogger("com.bc.calvalus");
 
-    enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE}
+    enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE, PYTHON}
 
     public static ProcessorAdapter createAdapter(MapContext mapContext) throws IOException {
         String processorTypeString = mapContext.getConfiguration().get(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE, "NONE");
@@ -62,6 +63,8 @@ public class ProcessorFactory {
                 return new ExecutableProcessorAdapter(mapContext);
             case NONE:
                 return new SubsetProcessorAdapter(mapContext);
+            case PYTHON:
+                return new PythonProcessorAdapter(mapContext);
 
         }
         throw new IllegalArgumentException("Unknown processor type.");
@@ -92,8 +95,10 @@ public class ProcessorFactory {
                         if (i == 0) {
                             processorType = detectProcessorType(bundlePath, executable, fs);
                         }
-                        Collections.addAll(processorFiles, getBundleProcessorFiles(executable, bundlePath, fs));
-
+                        Collections.addAll(processorFiles, getBundleProcessorFiles(processorType, executable, bundlePath, fs));
+                        if (processorType == ProcessorType.PYTHON) {
+                            HadoopProcessingService.addBundleScripts(bundlePath, fs, conf);
+                        }
                     }
                     // check for bundle to include, install it
                     try {
@@ -142,6 +147,15 @@ public class ProcessorFactory {
         });
         if (executableFiles.length == 1) {
             return ProcessorType.EXEC;
+        }
+        final FileStatus[] pythonFiles = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().equals(executable + ".py");
+            }
+        });
+        if (pythonFiles.length == 1) {
+            return ProcessorType.PYTHON;
         }
         return ProcessorType.OPERATOR;
     }
@@ -219,12 +233,12 @@ public class ProcessorFactory {
     }
 */
 
-    private static String[] getBundleProcessorFiles(final String processorName, Path bundlePath, FileSystem fs) throws IOException {
+    private static String[] getBundleProcessorFiles(final ProcessorType processorType, final String processorName, Path bundlePath, FileSystem fs) throws IOException {
         final FileStatus[] processorStatuses = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
                 String filename = path.getName();
-                return (filename.startsWith("common-") || filename.startsWith(processorName + "-")) && !isArchive(path);
+                return (filename.startsWith("common-") || filename.startsWith(processorName + "-") || processorType == ProcessorType.PYTHON) && !isArchive(path);
             }
         });
         String[] processorFiles = new String[processorStatuses.length];
