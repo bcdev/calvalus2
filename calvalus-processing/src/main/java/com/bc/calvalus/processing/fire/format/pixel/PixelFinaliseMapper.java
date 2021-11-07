@@ -363,7 +363,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2019-06-15</gco:Date>" +
+            "                                <gco:Date>2021-11-15</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -408,7 +408,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
             "An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.4 available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the FireCCI51 Product User Guide at https://climate.esa.int/en/projects/fire/key-documents/" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.0022457331 deg  (approx. 250m); " +
             "Pixel value = Day of the year, from 1 to 365 (or 366). A value of 0 is included when the pixel is not burned " +
