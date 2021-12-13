@@ -201,6 +201,10 @@ public abstract class HadoopProductionType implements ProductionType {
         if (outputDir.endsWith("/")) {
             outputDir = outputDir.substring(0, outputDir.length() - 1);
         }
+        // avoid checking for S3 as we do not have credentials here
+        if (outputDir.startsWith("s3")) {
+            return outputDir;
+        }
         try {
             return getFileSystemService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
         } catch (IOException e) {

@@ -114,6 +114,16 @@
             <version>3.2.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
+        </dependency>
+        
     </dependencies>
 
     <build>
@@ -267,6 +277,21 @@
                             <resources>
                                 <resource>
                                     <directory>src/main/webapp-calbfg-patch</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>calbigfe-patch</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www/calbigfe-patch</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp-bigfe-patch</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -460,6 +485,40 @@
                                 </resource>
                                 <resource>
                                     <directory>src/main/webapp-calbfg-patch</directory>
+                                </resource>
+                            </webResources>
+                            <warSourceDirectory>src/main/webapp</warSourceDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>bigfe</id>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                        <directory>src/main/resources-code/WEB-INF/classes</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <attachClasses>true</attachClasses>
+                            <webResources>
+                                <resource>
+                                    <directory>src/main/resources-default</directory>
+                                </resource>
+                                <resource>
+                                    <directory>src/main/webapp-bigfe-patch</directory>
                                 </resource>
                             </webResources>
                             <warSourceDirectory>src/main/webapp</warSourceDirectory>

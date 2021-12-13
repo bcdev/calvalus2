@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.core.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -51,6 +52,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -133,6 +135,7 @@ public class PatternBasedInputFormat extends InputFormat {
         String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
+        String timeIndex = conf.get(JobConfigNames.CALVALUS_INPUT_TIME_INDEX);
         Set<String> productIdentifiers = new HashSet<>(conf.getStringCollection(
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
 
@@ -365,8 +368,39 @@ public class PatternBasedInputFormat extends InputFormat {
                                       JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY,
                                       JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
         }
+
+        // add parameters for cube generation if requested
+
+        if (timeIndex != null) {
+            sortAndIndexSplits(timeIndex, splits);
+        }
+
         LOG.info("Total files to process : " + splits.size());
         return splits;
+    }
+
+    private void sortAndIndexSplits(String timeIndex, List<InputSplit> splits) throws IOException {
+        // timeIndex may contain a position to start the file name comparison, or just true
+        int p;
+        try {
+            p = Integer.parseInt(timeIndex);
+        } catch (Exception _e) {
+            p = 0;
+        }
+        final int pos = p;
+        LOG.info(String.format("Sorting inputs by position %d", pos));
+        Collections.sort(splits, (s1, s2) ->
+                ((FileSplit) s1).getPath().getName().substring(pos).compareTo(
+                        ((FileSplit) s2).getPath().getName().substring(pos)));
+        for (int i = 0; i< splits.size(); ++i) {
+            FileSplit split = (FileSplit) splits.get(i);
+            final String[] parameters = {
+                    "timeAxisLength", String.valueOf(splits.size()),
+                    "timeIndex", String.valueOf(i),
+                    "writeChunksOnly", i==0 ? "false" : "true"
+            };
+            splits.set(i, new ParameterizedSplit(split.getPath(), split.getLength(), split.getLocations(), parameters));
+        }
     }
 
     private Map<String, String> parseSearchParameters(String catalogue) {
@@ -524,6 +558,9 @@ public class PatternBasedInputFormat extends InputFormat {
                                 Configuration conf, int requestSizeLimit, boolean withDirs) throws IOException {
         while (fileStatusIt.hasNext()) {
             LocatedFileStatus locatedFileStatus = fileStatusIt.next();
+            if (containsPath(locatedFileStatus.getPath(), splits)) {
+                continue;
+            }
             InputSplit split = createSplit(productInventory, conf, locatedFileStatus, withDirs);
             if (split != null) {
                 splits.add(split);
@@ -532,6 +569,15 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
             }
         }
+    }
+
+    private boolean containsPath(Path p, List<InputSplit> splits) {
+        for (InputSplit s : splits) {
+            if (p.equals(((FileSplit)s).getPath())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file, boolean withDirs) throws
