@@ -39,7 +39,7 @@
                 <table class="headerPanel">
                     <tr>
                     <td>
-                        <a href="https://www.ufz.de/index.php?de=36336&webc_pm=43/2021"><img src="/calbigfe/images/BIGFE_Logo_Platzhalter.png" height="65" alt="BIGFE logo"/></a>
+                        <a href="https://www.ufz.de/index.php?de=36336&amp;webc_pm=43/2021"><img src="/calbigfe/images/BIGFE_Logo_Platzhalter.png" height="65" alt="BIGFE logo"/></a>
                     </td>
                         <td>
                             <h1 class="title">BIGFE</h1>
