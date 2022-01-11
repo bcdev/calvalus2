@@ -2,23 +2,22 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.bc.calvalus</groupId>
-        <artifactId>calvalus</artifactId>
-        <version>2.19-SNAPSHOT</version>
-    </parent>
-
+    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-snap</artifactId>
+    <version>2.20-SNAPSHOT</version>
     <packaging>pom</packaging>
-
-    <properties>
-        <snap.bundle.version>6.0-SNAPSHOT</snap.bundle.version>
-    </properties>
 
     <name>Calvalus Distribution SNAP</name>
     <description>
         Provides the SNAP artifacts of a Calvalus distribution.
     </description>
+
+    <properties>
+        <snap.bundle.version>8.0.6cv</snap.bundle.version>
+        <snap.version>8.0.6cv</snap.version>
+        <ncsa.version>2.7.1</ncsa.version>
+        <ncsaj.version>2.7</ncsaj.version>
+    </properties>
 
     <dependencies>
 
@@ -32,16 +31,47 @@
 
         <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
         commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
-        <dependency><groupId>org.esa.snap</groupId><artifactId>ceres-metadata</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>ceres-metadata</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
 
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-core</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-runtime</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-gpf</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-runtime</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-gpf</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
 
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-arcbingrid-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-bigtiff</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-binning</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-classification</artifactId>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-arcbingrid-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-bigtiff</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-binning</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-classification</artifactId>
+            <version>${snap.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>xerces</groupId>
@@ -49,10 +79,25 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-cluster-analysis</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-collocation</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-csv-dataio</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-dem</artifactId>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-cluster-analysis</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-collocation</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-csv-dataio</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-dem</artifactId>
+            <version>${snap.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>xerces</groupId>
@@ -60,77 +105,316 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envi-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envisat-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-getasse30-dem</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-geotiff</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-hdf5-writer</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-land-cover</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-ndvi</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-netcdf</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pconvert</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pgx-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pixel-extraction</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-python</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-raster</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-rtp-codec</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-smart-configurator</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-statistics</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-temporal-percentile</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-unmix</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-watermask</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-sta</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-envi-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-envisat-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-getasse30-dem</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-geotiff</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-hdf5-writer</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <!--        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId></dependency>-->
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-land-cover</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-ndvi</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-netcdf</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-pconvert</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-pgx-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-pixel-extraction</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-python</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-raster</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-rtp-codec</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-smart-configurator</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-statistics</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-temporal-percentile</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-unmix</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-watermask</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-sta</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
 
 
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdfobj</artifactId></dependency>
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId></dependency>
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId></dependency>
-        <dependency><groupId>ncsa.hdf</groupId><artifactId>lib-hdf</artifactId></dependency>
+        <dependency>
+            <groupId>ncsa.hdf</groupId>
+            <artifactId>jhdfobj</artifactId>
+            <version>${ncsaj.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ncsa.hdf</groupId>
+            <artifactId>jhdf4obj</artifactId>
+            <version>${ncsaj.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ncsa.hdf</groupId>
+            <artifactId>jhdf5obj</artifactId>
+            <version>${ncsaj.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ncsa.hdf</groupId>
+            <artifactId>lib-hdf</artifactId>
+            <version>${ncsaj.version}</version>
+        </dependency>
 
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-avhrr-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-landsat-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-merisl3-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-modis-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-rad2refl</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-sentinel3-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId></dependency>
-        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId></dependency>
-        <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-alos-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-atsr-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-avhrr-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <!--        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency>-->
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-landsat-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-merisl3-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-modis-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-rad2refl</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-sentinel3-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-slstr-regrid</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-spot-vgt-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap.seadas</groupId>
+            <artifactId>seadas-reader</artifactId>
+            <version>1.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.vito.probavbox</groupId>
+            <artifactId>probavbox-reader</artifactId>
+            <version>2.1.0</version>
+        </dependency>
 
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-openjpeg</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-commons</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot6-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-rapideye-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-deimos-reader</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-sta-adapters-help</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-radiometric-indices</artifactId></dependency>
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-reflectance-to-radiance</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-cache</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-s2msi-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-s2msi-resampler</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>lib-openjpeg</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-jp2-writer</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-commons</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-spot-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-spot6-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-rapideye-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-deimos-reader</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-sta-adapters-help</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-radiometric-indices</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-reflectance-to-radiance</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
         <!--<dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-gdal</artifactId></dependency>-->
         <!--<dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-gdal-reader</artifactId></dependency>-->
-        <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-grm</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-grm</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
 
-        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-commons</artifactId></dependency>
-        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-io</artifactId></dependency>
-        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1</artifactId></dependency>
-        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1-ui</artifactId></dependency>
-        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-utilities</artifactId></dependency>
-        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-rcp</artifactId></dependency>
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-commons</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-io</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-op-sentinel1</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-op-sentinel1-ui</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-op-utilities</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-rcp</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
 
-        <dependency><groupId>org.xeustechnologies</groupId><artifactId>jtar</artifactId></dependency>
-        <dependency><groupId>com.thoughtworks.xstream</groupId><artifactId>xstream</artifactId></dependency>
-        <dependency><groupId>xerces</groupId><artifactId>xercesImpl</artifactId></dependency>
-        <dependency><groupId>com.googlecode.json-simple</groupId><artifactId>json-simple</artifactId></dependency>
+        <dependency>
+            <groupId>org.xeustechnologies</groupId>
+            <artifactId>jtar</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.8</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
 
     </dependencies>
 
@@ -165,7 +449,7 @@
                         <id>libs2</id>
                         <configuration>
                             <unpack>
-                                <artifact>org.esa.s2tbx:lib-openjpeg:jar</artifact>
+                                <artifact>org.esa.snap:lib-openjpeg:jar</artifact>
                                 <resources>
                                     <resource>
                                         <path>auxdata/openjpeg/openjpeg-2.1.0-linux64/bin</path>
@@ -189,19 +473,19 @@
                         <version>${ncsa.version}</version>
                     </dependency>
                     <dependency>
-                        <groupId>org.esa.s2tbx</groupId>
+                        <groupId>org.esa.snap</groupId>
                         <artifactId>lib-openjpeg</artifactId>
                         <version>${snap.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>ncsa.hdf</groupId>
                         <artifactId>jhdfobj</artifactId>
-                        <version>2.7</version>
+                        <version>${ncsaj.version}</version>
                     </dependency>
                     <dependency>
                         <groupId>ncsa.hdf</groupId>
                         <artifactId>jhdf5obj</artifactId>
-                        <version>2.7</version>
+                        <version>${ncsaj.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -255,4 +539,39 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>osgeo</id>
+            <name>Open Source Geospatial Foundation Repository</name>
+            <url>http://download.osgeo.org/webdav/geotools/</url>
+        </repository>
+    </repositories>
+
 </project>

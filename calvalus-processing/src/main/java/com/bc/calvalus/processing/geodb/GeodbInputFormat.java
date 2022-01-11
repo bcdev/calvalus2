@@ -29,7 +29,6 @@ import com.bc.inventory.search.Constrain;
 import com.bc.inventory.search.SafeUpdateInventory;
 import com.bc.inventory.search.StreamFactory;
 import com.bc.inventory.utils.SimpleRecord;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -43,6 +42,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.util.StringUtils;
+import org.locationtech.jts.geom.Geometry;
 
 import java.awt.geom.Point2D;
 import java.io.FileNotFoundException;

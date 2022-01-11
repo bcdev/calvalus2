@@ -26,6 +26,7 @@ import org.apache.hadoop.io.Text;
 import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
+import org.esa.snap.core.dataio.dimap.DimapProductConstants;
 import org.esa.snap.core.dataio.dimap.DimapProductHelpers;
 import org.esa.snap.core.datamodel.*;
 import org.esa.snap.core.image.ImageManager;
@@ -34,6 +35,7 @@ import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.core.util.ImageUtils;
 import org.esa.snap.core.util.math.MathUtils;
 import org.jdom.Document;
+import org.jdom.Element;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
@@ -105,7 +107,8 @@ public class StreamingProductReader extends AbstractProductReader {
         sliceHeight = Integer.parseInt(sliceHeightText.toString());
 
         dom = createDOM(metadata.get(new Text("dim")));
-        Product product = DimapProductHelpers.createProduct(dom);
+        Dimension productSize = ImageUtils.computeSceneRasterSize(getSceneRasterWidth(dom), getSceneRasterHeight(dom), null);
+        Product product = DimapProductHelpers.createProduct(dom, "stream product", productSize);
         readTiepoints(product);
 
 
@@ -123,6 +126,20 @@ public class StreamingProductReader extends AbstractProductReader {
     private Document createDOM(Text dimText) {
         final InputStream inputStream = new ByteArrayInputStream(dimText.getBytes());
         return DimapProductHelpers.createDom(inputStream);
+    }
+
+    private int getSceneRasterWidth(Document dom) {
+        final Element child = getRootElement(dom).getChild(DimapProductConstants.TAG_RASTER_DIMENSIONS);
+        return Integer.parseInt(child.getChildTextTrim(DimapProductConstants.TAG_NCOLS));
+    }
+
+    private int getSceneRasterHeight(Document dom) {
+        final Element child = getRootElement(dom).getChild(DimapProductConstants.TAG_RASTER_DIMENSIONS);
+        return Integer.parseInt(child.getChildTextTrim(DimapProductConstants.TAG_NROWS));
+    }
+
+    private Element getRootElement(Document dom) {
+        return dom.getRootElement();
     }
 
     private void readTiepoints(Product product) throws IOException {

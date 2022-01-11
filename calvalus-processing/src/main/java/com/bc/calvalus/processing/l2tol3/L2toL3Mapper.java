@@ -29,7 +29,6 @@ import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -45,6 +44,7 @@ import org.esa.snap.binning.operator.SpatialProductBinner;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.locationtech.jts.geom.Geometry;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

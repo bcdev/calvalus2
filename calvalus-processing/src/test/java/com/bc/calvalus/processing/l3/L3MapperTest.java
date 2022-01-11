@@ -1,26 +1,9 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.SimpleOutputFormat;
-import com.bc.calvalus.processing.hadoop.NoRecordReader;
-import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.calvalus.processing.utils.DateLineOps;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.OutputCommitter;
-import org.apache.hadoop.mapreduce.StatusReporter;
-import org.apache.hadoop.mapreduce.TaskAttemptID;
-import org.apache.hadoop.mapreduce.TaskType;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
-import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.BinManager;
 import org.esa.snap.binning.BinningContext;
@@ -37,9 +20,9 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.VirtualBand;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.util.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.locationtech.jts.geom.Geometry;
 
 import java.io.File;
 import java.io.IOException;

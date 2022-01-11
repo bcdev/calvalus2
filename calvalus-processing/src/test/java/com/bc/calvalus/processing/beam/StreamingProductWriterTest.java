@@ -120,20 +120,6 @@ public class StreamingProductWriterTest {
                         throw new RuntimeException("not implemented");
                     }
 
-                    @Override
-                    public void prepareWriting(ProgressMonitor pm) {
-                        throw new RuntimeException("not implemented");
-                    }
-
-                    @Override
-                    public void addProductWriterListener(ProductWriterListener productWriterListener) {
-                        throw new RuntimeException("not implemented");
-                    }
-
-                    @Override
-                    public void removeProductWriterListener(ProductWriterListener productWriterListener) {
-                        // nothing to do here tb 2019-10-14
-                    }
                 };
             }
         };

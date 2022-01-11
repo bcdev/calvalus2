@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.19-SNAPSHOT</version>
+        <version>2.20-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-processing</artifactId>
@@ -66,6 +66,20 @@
             <groupId>org.xeustechnologies</groupId>
             <artifactId>jtar</artifactId>
             <version>1.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <version>1.13</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.measure</groupId>
+            <artifactId>unit-api</artifactId>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>

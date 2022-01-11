@@ -3,17 +3,13 @@ package com.bc.calvalus.processing.l3.multiregion;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.bc.calvalus.processing.utils.GeometryUtils;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.binning.PlanetaryGrid;
 import org.esa.snap.binning.operator.BinningConfig;
+import org.locationtech.jts.geom.*;
 
 import java.io.IOException;
 

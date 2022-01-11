@@ -22,12 +22,6 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -40,11 +34,15 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.ProductNodeGroup;
 import org.esa.snap.core.datamodel.VectorDataNode;
+import org.esa.snap.core.util.GeoUtils;
 import org.esa.snap.core.util.ProductUtils;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.geometry.jts.GeometryCoordinateSequenceTransformer;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.simplify.TopologyPreservingSimplifier;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -72,9 +70,9 @@ public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Te
         try {
             Product product = processorAdapter.getInputProduct();
             if (product != null) {
-                Polygon poylgon = computeProductGeometry(product);
-                if (poylgon != null) {
-                    String wkt = poylgon.toString();
+                Polygon polygon = computeProductGeometry(product);
+                if (polygon != null) {
+                    String wkt = polygon.toString();
                     pm.worked(50);
 
                     DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -182,7 +180,7 @@ public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Te
             final boolean usePixelCenter = true;
             final Rectangle region = new Rectangle(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
             final int step = Math.min(region.width, region.height) / 8;
-            final GeoPos[] geoPoints = ProductUtils.createGeoBoundary(product, region, step, usePixelCenter);
+            final GeoPos[] geoPoints = GeoUtils.createGeoBoundary(product, region, step, usePixelCenter);
 
             final Coordinate[] coordinates = new Coordinate[geoPoints.length + 1];
             for (int i = 0; i < geoPoints.length; i++) {

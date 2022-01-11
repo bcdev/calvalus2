@@ -16,8 +16,8 @@
 
 package com.bc.calvalus.processing.utils;
 
-import com.vividsolutions.jts.geom.Geometry;
 import org.junit.Test;
+import org.locationtech.jts.geom.Geometry;
 
 import static com.bc.calvalus.processing.utils.GeometryUtils.isGlobalCoverageGeometry;
 import static com.bc.calvalus.processing.utils.GeometryUtils.parseWKT;

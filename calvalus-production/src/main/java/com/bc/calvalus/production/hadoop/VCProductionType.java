@@ -26,13 +26,10 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
-
-import java.io.IOException;
+import org.locationtech.jts.geom.Geometry;
 
 /**
  * Vicarious Calibration: A production type used for supporting the computation of vicarious calibration coefficients

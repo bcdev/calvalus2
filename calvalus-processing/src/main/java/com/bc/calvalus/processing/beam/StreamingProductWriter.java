@@ -247,6 +247,8 @@ public class StreamingProductWriter extends AbstractProductWriter {
                     Raster tile = band.getSourceImage().getData(rectangle);
                     tileCacheDebugging(band, rectangle);
                     boolean directMode = tile.getDataBuffer().getSize() == w * h;
+                    System.out.println("Writing " + band.getName() + " in " + (directMode ? "dm" : "im"));
+
                     ProductData productData;
                     if (directMode) {
                         Object primitiveArray = ImageUtils.getPrimitiveArray(tile.getDataBuffer());

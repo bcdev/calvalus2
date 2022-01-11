@@ -10,14 +10,12 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
+import org.locationtech.jts.geom.Geometry;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

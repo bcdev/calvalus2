@@ -2,19 +2,17 @@ package com.bc.calvalus.processing.mosaic;
 
 
 import com.bc.calvalus.processing.utils.GeometryUtils;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
 
-import java.awt.*;
+import java.awt.Rectangle;
+import java.awt.Point;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.io.IOException;
@@ -360,7 +358,7 @@ public class MosaicGridTest {
     public void testGetBounds() throws IOException {
         Product product = ProductIO.readProduct("/home/boe/tmp/sen2agri/S2A_MSIL2A_20170216T170351_N0204_R069_T14QNF_20170216T171642.SAFE/S2A_OPER_SSC_L2VALD_14QNF____20170216.HDR");
         final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
-        final com.vividsolutions.jts.geom.Polygon[] polygons = new com.vividsolutions.jts.geom.Polygon[paths.length];
+        final Polygon[] polygons = new Polygon[paths.length];
 
         for (int i = 0; i < paths.length; i++) {
             polygons[i] = convertToJtsPolygon(paths[i].getPathIterator(null));
@@ -378,7 +376,7 @@ public class MosaicGridTest {
         System.out.println("class " + boundary.getClass());
         System.out.println("boundary=" + boundary);
     }
-    private com.vividsolutions.jts.geom.Polygon convertToJtsPolygon(PathIterator pathIterator) {
+    private Polygon convertToJtsPolygon(PathIterator pathIterator) {
         ArrayList<double[]> coordList = new ArrayList<double[]>();
         int lastOpenIndex = 0;
         while (!pathIterator.isDone()) {

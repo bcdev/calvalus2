@@ -22,13 +22,13 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.util.io.FileUtils;
+import org.locationtech.jts.geom.Geometry;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;

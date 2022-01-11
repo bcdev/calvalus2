@@ -21,7 +21,6 @@ import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
 import com.bc.calvalus.processing.utils.GeometryUtils;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -31,6 +30,7 @@ import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinner;
 import org.esa.snap.binning.operator.BinningConfig;
+import org.locationtech.jts.geom.Geometry;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

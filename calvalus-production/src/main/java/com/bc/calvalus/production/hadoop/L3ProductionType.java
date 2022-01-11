@@ -20,13 +20,13 @@ import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyContainer;
 import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.CompositingType;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.VariableConfig;
 import org.esa.snap.binning.support.SEAGrid;
+import org.locationtech.jts.geom.Geometry;
 
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;

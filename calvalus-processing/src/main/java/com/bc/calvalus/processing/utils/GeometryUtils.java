@@ -16,9 +16,11 @@
 
 package com.bc.calvalus.processing.utils;
 
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.WKTReader;
+
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 
 public class GeometryUtils {
 
@@ -48,7 +50,7 @@ public class GeometryUtils {
         final WKTReader wktReader = new WKTReader();
         try {
             return wktReader.read(geometryWkt);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
+        } catch (ParseException e) {
             throw new IllegalArgumentException("Illegal region geometry: " + geometryWkt, e);
         }
     }

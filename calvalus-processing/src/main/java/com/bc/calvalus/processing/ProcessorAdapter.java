@@ -23,7 +23,6 @@ import com.bc.calvalus.processing.hadoop.ParameterizedSplit;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -34,6 +33,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.runtime.Engine;
+import org.locationtech.jts.geom.Geometry;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;

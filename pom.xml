@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.19-SNAPSHOT</version>
+    <version>2.20-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,10 +12,11 @@
 
     <properties>
         <hadoop.version>3.2.1-BC</hadoop.version>
-        <calvalus.version>2.19-SNAPSHOT</calvalus.version>
+        <calvalus.version>2.20-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>8.0.0-SNAPSHOT</snap.version>
-        <ceres.version>8.0.0-SNAPSHOT</ceres.version>
+        <snap.version>8.0.6cv</snap.version>
+        <ceres.version>8.0.6cv</ceres.version>
+        <s3tbx.version>8.0.6cv</s3tbx.version>
         <seadas.reader.version>1.8</seadas.reader.version>
         <probav.reader.version>2.1.0</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
@@ -318,7 +319,7 @@
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId><version>${snap.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-openjpeg</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>lib-openjpeg</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-reader</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-commons</artifactId><version>${snap.version}</version></dependency>
@@ -344,6 +345,11 @@
                 <groupId>org.xeustechnologies</groupId>
                 <artifactId>jtar</artifactId>
                 <version>1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.locationtech.jts</groupId>
+                <artifactId>jts-core</artifactId>
+                <version>1.16.0</version>
             </dependency>
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
