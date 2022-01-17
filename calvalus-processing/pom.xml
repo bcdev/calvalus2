@@ -79,6 +79,10 @@
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
+            <artifactId>snap-python</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
             <artifactId>snap-envisat-reader</artifactId>
             <scope>test</scope>
         </dependency>

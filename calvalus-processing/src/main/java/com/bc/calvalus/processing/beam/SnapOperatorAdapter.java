@@ -30,6 +30,7 @@ import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 import org.esa.snap.core.gpf.annotations.ParameterDescriptorFactory;
+import org.esa.snap.python.gpf.PyOperator;
 
 import java.io.File;
 import java.io.IOException;
@@ -153,8 +154,8 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             // transform request into parameter objects
             Map<String, Object> parameterMap;
             try {
-                //parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
-                parameterMap = getOperatorParameterMap(source, null, operatorParameters);
+                parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
+//                parameterMap = getOperatorParameterMap(source, null, operatorParameters);
                 for (int i=0; i<getInputParameters().length; i+=2) {
                     if ("output".equals(getInputParameters()[i])) {
                         // drop parameter, is used later in SubsetProcessorAdapter
@@ -199,8 +200,8 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         } else {
             parameterBlockConverter = new ParameterBlockConverter();
         }
-        if (operatorName != null) {
-            Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
+        Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
+        if (!isPythonOperator(operatorClass)) {
             return parameterBlockConverter.convertXmlToMap(level2Parameters, operatorClass);
         } else {
             DomElement dom = parameterBlockConverter.convertXmlToDomElement(level2Parameters);
@@ -211,6 +212,10 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             }
             return parameterMap;
         }
+    }
+
+    private static boolean isPythonOperator(Class<? extends Operator> operatorClass) {
+        return PyOperator.class.isAssignableFrom(operatorClass);
     }
 
     private static Class<? extends Operator> getOperatorClass(String operatorName) {
