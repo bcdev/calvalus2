@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-snap</artifactId>
-    <version>2.23-SNAPSHOT</version>
+    <version>2.23</version>
     <packaging>pom</packaging>
 
     <name>Calvalus Distribution SNAP</name>
@@ -13,8 +13,11 @@
     </description>
 
     <properties>
-        <snap.bundle.version>8.6cv</snap.bundle.version>
-        <snap.version>8.6cv</snap.version>
+        <snap.bundle.version>8.7cv</snap.bundle.version>
+        <snap.version>8.0.3.6cv</snap.version>
+        <s1tbx.version>8.0.1cv</s1tbx.version>
+        <s2tbx.version>8.0.6.1cv</s2tbx.version>
+        <s3tbx.version>8.0.1cv</s3tbx.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
     </properties>
@@ -232,53 +235,53 @@
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-alos-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-atsr-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-avhrr-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <!--        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency>-->
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-landsat-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-merisl3-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-modis-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-rad2refl</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-sentinel3-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-slstr-regrid</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-spot-vgt-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s3tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap.seadas</groupId>
@@ -294,17 +297,17 @@
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-cache</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-s2msi-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-s2msi-resampler</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
@@ -314,85 +317,85 @@
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-jp2-writer</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-commons</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-spot-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-spot6-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-rapideye-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-deimos-reader</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-sta-adapters-help</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-radiometric-indices</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-reflectance-to-radiance</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
         <!--<dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-gdal</artifactId></dependency>-->
         <!--<dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-gdal-reader</artifactId></dependency>-->
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-grm</artifactId>
-            <version>${snap.version}</version>
+            <version>${s2tbx.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.s1tbx</groupId>
             <artifactId>s1tbx-commons</artifactId>
-            <version>${snap.version}</version>
+            <version>${s1tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s1tbx</groupId>
             <artifactId>s1tbx-io</artifactId>
-            <version>${snap.version}</version>
+            <version>${s1tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s1tbx</groupId>
             <artifactId>s1tbx-op-sentinel1</artifactId>
-            <version>${snap.version}</version>
+            <version>${s1tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s1tbx</groupId>
             <artifactId>s1tbx-op-sentinel1-ui</artifactId>
-            <version>${snap.version}</version>
+            <version>${s1tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s1tbx</groupId>
             <artifactId>s1tbx-op-utilities</artifactId>
-            <version>${snap.version}</version>
+            <version>${s1tbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s1tbx</groupId>
             <artifactId>s1tbx-rcp</artifactId>
-            <version>${snap.version}</version>
+            <version>${s1tbx.version}</version>
         </dependency>
 
         <dependency>
