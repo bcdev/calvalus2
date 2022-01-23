@@ -66,7 +66,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
-//import java.util.Vector;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 /**
@@ -145,49 +145,42 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             product = GPF.createProduct("Reproject", reprojParams, product);
             quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
-                final int width = product.getSceneRasterWidth();
-                final int height = product.getSceneRasterHeight();
+                final int datasetWidth = product.getSceneRasterWidth();
+                final int datasetHeight = product.getSceneRasterHeight();
                 final GeoCoding geoCoding = product.getSceneGeoCoding();
                 final PixelPos posA = new org.esa.snap.core.datamodel.PixelPos(0, 0);
                 final GeoPos geoPosA = geoCoding.getGeoPos(posA, null);
-                final PixelPos posB = new org.esa.snap.core.datamodel.PixelPos(width, height);
+                final PixelPos posB = new org.esa.snap.core.datamodel.PixelPos(datasetWidth, datasetHeight);
                 final GeoPos geoPosB = geoCoding.getGeoPos(posB, null);
 
                 if (isCloudOptimizedGeoTIFF(config)) {
                     // use GDAL Java bindings API to create a Cloud Optimized GeoTIFF (COG)
                     gdal.AllRegister();
-                    Driver driverGeoTiff = gdal.GetDriverByName("GTiff");
-                    if (driverGeoTiff == null) {
-                        throw new RuntimeException("Could not load GDAL GTiff driver required for Cloud Optimized GeoTIFF (COG)");
+                    Driver driverMemory = gdal.GetDriverByName("MEM");
+                    if (driverMemory == null) {
+                        throw new RuntimeException("Could not load GDAL MEM driver required for Cloud Optimized GeoTIFF (COG)");
                     }
                     Driver driverCOG = gdal.GetDriverByName("COG");
                     if (driverCOG == null) {
                         throw new RuntimeException("Could not load GDAL COG driver required for Cloud Optimized GeoTIFF (COG)");
                     }
                     Raster quicklookRaster = quicklookImage.getData();
-                    int numberOfRasterBands = quicklookRaster.getNumBands();
+                    int quicklookImageWidth = quicklookRaster.getWidth();
+                    int quicklookImageHeight = quicklookRaster.getHeight();
+                    int quicklookImageNumBands = quicklookRaster.getNumBands();
                     String tmpImageFileName = getTmpImageFileName(imageBaseName, config);
 
-                    /*
-                    // Add GDAL specific control parameters for the GTiff driver if required in future. Example:
-                    final Vector<String> geoTiffCreationOptions = new Vector<>(4);
-                    imageCreationOptions.add("COMPRESS=JPEG");
-                    imageCreationOptions.add("TILED=FALSE");
-                    imageCreationOptions.add("SPARSE_OK=FALSE");
-                    imageCreationOptions.add("PROFILE=GeoTIFF");
-                    Dataset geoTiffDataset = driverGeoTiff.Create(tmpImageFileName, width, height, numberOfRasterBands, gdalconst.GDT_Byte, geoTiffCreationOptions);
-                    */
-                    Dataset geoTiffDataset = driverGeoTiff.Create(tmpImageFileName, width, height, numberOfRasterBands, gdalconst.GDT_Byte);
+                    Dataset memoryDataset = driverMemory.Create(tmpImageFileName, quicklookImageWidth, quicklookImageHeight, quicklookImageNumBands, gdalconst.GDT_Byte);
 
                     // add SRS to the GDAL dataset object
                     SpatialReference srs = new SpatialReference();
                     srs.ImportFromEPSG(4326);
-                    geoTiffDataset.SetSpatialRef(srs);
+                    memoryDataset.SetSpatialRef(srs);
 
                     // add Geotransform (north up image) to the GDAL dataset object
                     // assumes longitude is between -90 and 90, and latitude between -180 and 180
-                    double pixelSizeX = Math.abs(geoPosA.getLon() - geoPosB.getLon()) / (double) width;
-                    double pixelSizeY = Math.abs(geoPosA.getLat() - geoPosB.getLat()) / (double) height;
+                    double pixelSizeX = Math.abs(geoPosA.getLon() - geoPosB.getLon()) / (double) quicklookImageWidth;
+                    double pixelSizeY = Math.abs(geoPosA.getLat() - geoPosB.getLat()) / (double) quicklookImageHeight;
                     double[] geotransform = new double[6];
                     geotransform[0] = geoPosA.getLon();     // longitude value for the top left pixel of the raster
                     geotransform[1] = pixelSizeX;           // pixel width
@@ -195,26 +188,30 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                     geotransform[3] = geoPosA.getLat();     // latitude value for the top left pixel of the raster
                     geotransform[4] = 0;                    // 0
                     geotransform[5] = -pixelSizeY;          // pixel height (negative value)
-                    geoTiffDataset.SetGeoTransform(geotransform);
+                    memoryDataset.SetGeoTransform(geotransform);
 
                     // add image data to the GDAL dataset object, for each image band
-                    int[] band = new int[(height * width)];
-                    for (int i = 0; i < numberOfRasterBands; i++) {
-                        quicklookRaster.getSamples(0, 0, width, height, i, band);
-                        Band outBand = geoTiffDataset.GetRasterBand(i + 1);
-                        outBand.WriteRaster(0, 0, width, height, gdalconst.GDT_Int32, band);
+                    int[] band = new int[(quicklookImageHeight * quicklookImageWidth)];
+                    for (int i = 0; i < quicklookImageNumBands; i++) {
+                        quicklookRaster.getSamples(0, 0, quicklookImageWidth, quicklookImageHeight, i, band);
+                        Band outBand = memoryDataset.GetRasterBand(i + 1);
+                        outBand.WriteRaster(0, 0, quicklookImageWidth, quicklookImageHeight, gdalconst.GDT_Int32, band);
                         outBand.FlushCache();
                     }
-                    geoTiffDataset.FlushCache();
+                    memoryDataset.FlushCache();
 
-                    // create and copy COG image file using the GeoTIFF dataset
-                    Dataset cogDataset = driverCOG.CreateCopy(imageFileName, geoTiffDataset);
+                    // create and copy COG image file using the in-memory dataset
+                    // add GDAL specific format parameters for the COG
+                    final Vector<String> formatParameters = new Vector<>(1);
+                    //formatParameters.add("COMPRESS=NONE");
+                    formatParameters.add("COMPRESS=LZW");
+                    Dataset cogDataset = driverCOG.CreateCopy(imageFileName, memoryDataset, formatParameters);
 
-                    // must do this cleanup now, to get all header and data to disk.
-                    // Otherwise the COG image becomes corrupt
+                    // flush header and data to disk and then delete the objects
+                    // from past testing the COG image became corrupt without this now
                     cogDataset.FlushCache();
                     cogDataset.delete();
-                    geoTiffDataset.delete();
+                    memoryDataset.delete();
 
                     // copy local Cloud Optimized GeoTIFF file to the HDFS filesystem
                     FileSystem localFilesystem = FileSystem.getLocal(context.getConfiguration());
