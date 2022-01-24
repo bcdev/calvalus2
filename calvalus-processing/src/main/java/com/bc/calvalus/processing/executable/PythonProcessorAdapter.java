@@ -110,16 +110,16 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
                 "    mkdir -p /home/yarn/opt; " +
                 "    ln -s -f -T $miniconda_dir /home/yarn/opt/$c; " +
                 "  fi; " +
+                "  set -e; " +
                 "  eval \"$(/home/yarn/opt/$c/bin/conda shell.bash hook)\"; " +
                 "  conda activate ${e##*/}; " +
                 "else " +
-                String.format("  export PATH=%s/bin:$PATH; ", condaenvName) +
-                "  . activate; " +
+                "  set -e; " +
+                String.format("  source %s/bin/activate; export PATH; ", condaenvName) +
                 "fi; " +
                 (inputLocalPath.endsWith(".zip") ? String.format("unzip %s; ", inputLocalPath) : "") +
                 String.format("./%s; ", processorCall) +
                 String.format("for n in $(ls %s); do echo CALVALUS_OUTPUT_PRODUCT $n; done", outputPattern);
-        final String script2 = String.format("./process %s %s '%s' %s", memoryLimit, condaenvName, outputPattern, processorCall);
         getLogger().info("script=" + script);
         final String[] cmdArray = {"/bin/bash", "-c", script};
         final String[] env = new String[] { "HADOOP_USER_NAME=" + user };
