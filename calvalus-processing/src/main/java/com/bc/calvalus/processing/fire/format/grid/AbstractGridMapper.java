@@ -6,24 +6,18 @@ import com.bc.calvalus.processing.fire.format.grid.avhrr.AvhrrGridMapper;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.NullProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-
-import static com.bc.calvalus.processing.JobConfigNames.CALVALUS_DEBUG_FIRE;
 
 public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCells> {
 
@@ -146,7 +140,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     patchNumber[targetGridCellIndex] = data.patchCount;
 
                     if (burnedArea025 >= 0.00001) {
-                        errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, area025, avhrrBurnedPercentage);
+                        errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, area025, data.areas, avhrrBurnedPercentage);
                     } else {
                         errors[targetGridCellIndex] = 0;
                     }
@@ -185,8 +179,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                         validate(burnableFraction[targetGridCellIndex], baInLc, targetGridCellIndex, areas[targetGridCellIndex]);
                     }
 
-
-                    errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], Float.NaN);
+                    errors[targetGridCellIndex] = getErrorPerPixel(data.probabilityOfBurn, areas[targetGridCellIndex], data.areas, Float.NaN);
 
                     for (int i = 0; i < errors.length; i++) {
                         if (ba[i] < 0.00001) {
@@ -243,7 +236,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedPercentage);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double[] areas, double burnedPercentage);
 
     protected abstract void predict(double[] ba, double[] areas, float[] originalErrors);
 

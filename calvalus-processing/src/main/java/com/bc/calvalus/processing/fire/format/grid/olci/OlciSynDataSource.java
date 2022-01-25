@@ -9,8 +9,9 @@ import org.esa.snap.core.datamodel.Product;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.Arrays;
 
-public class OlciDataSource extends AbstractFireGridDataSource {
+public class OlciSynDataSource extends AbstractFireGridDataSource {
 
     private final Product classificationProduct;
     private final Product foaProduct;
@@ -20,7 +21,7 @@ public class OlciDataSource extends AbstractFireGridDataSource {
     private final int sourceHeight;
     private GeoCoding geoCoding;
 
-    OlciDataSource(Product classificationProduct, Product foaProduct, Product uncertaintyProduct, Product lcProduct) {
+    public OlciSynDataSource(Product classificationProduct, Product foaProduct, Product uncertaintyProduct, Product lcProduct) {
         super(-1, -1);
         this.classificationProduct = classificationProduct;
         this.uncertaintyProduct = uncertaintyProduct;
