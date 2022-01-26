@@ -24,4 +24,10 @@ public enum ContinentalArea {
         this.index = index;
         this.nicename = nicename;
     }
+
+
+    @Override
+    public String toString() {
+        return String.format("%s;%s;%d;%d;%d;%d", index, nicename, left, top, right, bottom);
+    }
 }

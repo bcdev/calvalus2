@@ -46,16 +46,16 @@ import java.util.regex.Pattern;
 
 public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable, NullWritable, NullWritable> {
 
-    private Logger LOG = CalvalusLogger.getLogger();
+    protected Logger LOG = CalvalusLogger.getLogger();
 
     protected String outputFilename;
     protected NetcdfFileWriter outputFile;
+    protected String filenamePattern;
+    protected Rectangle continentalRectangle;
 
-    private int numRowsGlobal;
-    private Rectangle continentalRectangle;
+    protected int numRowsGlobal;
     private CrsGrid planetaryGrid;
     private Product lcProduct;
-    private String filenamePattern;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -199,7 +199,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         return SubsetOp.computePixelRegion(dummyProduct, continentalGeometry, 0);
     }
 
-    private void prepareTargetProduct(String regionName, String timeCoverageStart, String timeCoverageEnd, String year, String month, String version) throws IOException, InvalidRangeException {
+    protected void prepareTargetProduct(String regionName, String timeCoverageStart, String timeCoverageEnd, String year, String month, String version) throws IOException, InvalidRangeException {
         outputFilename = String.format(filenamePattern, year, Integer.parseInt(month), regionName, version);
         outputFile = new FirePixelNcFactory().
                 createNcFile(outputFilename, version, timeCoverageStart, timeCoverageEnd, numRowsGlobal, continentalRectangle);
@@ -244,7 +244,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
 
     private void prepareJdLayer(String varName, short fillValue, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Band lcBand = lcProduct.getBand("lccs_class");
-        int chunkSize = 3600;
+        int chunkSize = 1200;
         short[] data = new short[chunkSize * chunkSize];
         byte[] lcData = new byte[chunkSize * chunkSize];
         for (int y=0; y<continentalRectangle.height; y+= chunkSize) {
