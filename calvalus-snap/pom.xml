@@ -14,10 +14,10 @@
 
     <properties>
         <snap.bundle.version>8.7cv</snap.bundle.version>
-        <snap.version>8.0.3.6cv</snap.version>
-        <s1tbx.version>8.0.1cv</s1tbx.version>
+        <snap.version>8.0.9.1cv</snap.version>
+        <s1tbx.version>8.0.6.1cv</s1tbx.version>
         <s2tbx.version>8.0.6.1cv</s2tbx.version>
-        <s3tbx.version>8.0.1cv</s3tbx.version>
+        <s3tbx.version>8.0.5.1cv</s3tbx.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
     </properties>
