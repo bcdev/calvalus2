@@ -14,13 +14,14 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.fire.format.grid.olci;
+package com.bc.calvalus.processing.fire.format.grid.syn;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
+import com.bc.calvalus.processing.fire.format.grid.olci.OlciSynDataSource;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -29,14 +30,12 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Runs the fire formatting grid mapper for OLCI.
@@ -44,9 +43,9 @@ import java.util.regex.Pattern;
  * @author thomas
  * @author marcop
  */
-public class OlciGridMapper extends AbstractGridMapper {
+public class SynGridMapper extends AbstractGridMapper {
 
-    protected OlciGridMapper() {
+    protected SynGridMapper() {
         super(40, 40);
     }
 
@@ -57,15 +56,12 @@ public class OlciGridMapper extends AbstractGridMapper {
 
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
 
-        Path compositesPath = getCompositesPath(context, fileSplit.getPath());
         Path lcMapPath = new Path(context.getConfiguration().get("calvalus.aux.lcMapPath"));
 
         LOG.info("Input split             : " + fileSplit);
-        LOG.info("Corresponding composites: " + compositesPath);
         LOG.info("Previous year's LC Map  : " + lcMapPath);
 
-        File outputTarFile = CalvalusProductIO.copyFileToLocal(fileSplit.getPath(), context.getConfiguration());
-        File foaTarFile = CalvalusProductIO.copyFileToLocal(compositesPath, context.getConfiguration());
+        File inputTarFile = CalvalusProductIO.copyFileToLocal(fileSplit.getPath(), context.getConfiguration());
         File lcProductFile =
                 (! (lcMapPath.getFileSystem(context.getConfiguration()) instanceof LocalFileSystem)) ?
                         CalvalusProductIO.copyFileToLocal(lcMapPath, context.getConfiguration()) :
@@ -73,10 +69,10 @@ public class OlciGridMapper extends AbstractGridMapper {
                                 new File(lcMapPath.toString().substring(5)) :
                                 new File(lcMapPath.toString());
 
-        File[] outputsFiles = CommonUtils.untar(outputTarFile, "(.*Classification.*|.*Uncertainty.*)");
-        File classificationFile = outputsFiles[0];
-        File uncertaintyFile = outputsFiles[1];
-        File foaFile = CommonUtils.untar(foaTarFile, ".*FractionOfObservedArea.*")[0];
+        File[] outputsFiles = CommonUtils.untar(inputTarFile, "(.*Classification.*|.*BurnProbabilityError.*|.*FractionOfObservedArea.*)");
+        File uncertaintyFile = outputsFiles[0];
+        File classificationFile = outputsFiles[1];
+        File foaFile = outputsFiles[2];
 
         Product baProduct = ProductIO.readProduct(classificationFile);
         Product uncertaintyProduct = ProductIO.readProduct(uncertaintyFile);
@@ -100,14 +96,8 @@ public class OlciGridMapper extends AbstractGridMapper {
         LOG.info(String.format("Uncertainty product   : %s", uncertaintyProduct.getName()));
         LOG.info(String.format("Land cover product    : %s", lcProduct.getName()));
 
-        String dateRanges = context.getConfiguration().get("calvalus.input.dateRanges");
-        Matcher m = Pattern.compile(".*\\[.*(....-..-..).*:.*(....-..-..).*\\].*").matcher(dateRanges);
-        if (! m.matches()) {
-            throw new IllegalArgumentException(dateRanges + " is not a date range");
-        }
-        String timeCoverageStart = m.group(1);
-        int year = Integer.parseInt(timeCoverageStart.substring(0,4));
-        int month = Integer.parseInt(timeCoverageStart.substring(5,7));
+        int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
+        int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
         setDataSource(new OlciSynDataSource(baProduct, foaProduct, uncertaintyProduct, lcProduct));
         GridCells gridCells = computeGridCells(year, month, context);
@@ -115,21 +105,6 @@ public class OlciGridMapper extends AbstractGridMapper {
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCells);
 
         LOG.info(String.format("Grid cells for %d-%02d-%s streamed", year, month, tile));
-    }
-
-    private Path getCompositesPath(Context context, Path outputPath) throws IOException {
-        final String compositesFilename = outputPath.getName().replace("outputs", "composites");
-        // look for composites file in previous months' dir
-        final String compositesMonthDir = context.getConfiguration().get("calvalus.aux.compositesMonthDir");
-        if (compositesMonthDir != null) {
-            final String tileDirname = outputPath.getParent().getName();
-            Path compositesPath = new Path(new Path(new Path(compositesMonthDir), tileDirname), compositesFilename);
-            if (compositesPath.getFileSystem(context.getConfiguration()).exists(compositesPath)) {
-                return compositesPath;
-            }
-        }
-        // assume that composites file is in same directory
-        return new Path(outputPath.getParent(), compositesFilename);
     }
 
     @Override
@@ -159,32 +134,50 @@ public class OlciGridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double[] areas, double burnedPercentage) {
-        // Mask all pixels with value 255 in the confidence level (corresponding to the pixels not observed or non-burnable in the JD layer)
-        // From the remaining pixels, reassign all values of 0 to 1
-
-        double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
-// 2019-11-04 looks strange, the unburnable pixels are 0, and they shall be filtered, not shifted
-//                .map(d -> d == 0 ? 1.0 : d)
-                .filter(d -> d <= 100.0 && d >= 1.0)
-                .toArray();
-
-        // n is the number of pixels in the 0.25º cell that were not masked
-        int n = probabilityOfBurnMasked.length;
-
-        if (n == 1) {
-            return (float) (gridCellArea / probabilityOfBurn.length);
+        int[] indices = Arrays.stream(probabilityOfBurn).mapToInt(value -> value > 0 ? 1 : 0).toArray();
+        double[] u = Arrays.stream(probabilityOfBurn).filter(value -> value > 0).toArray();
+        int N = u.length;
+        double[][] Sx = new double[N][N];
+        for (int i = 0; i < Sx.length; i++) {
+            Sx[i] = new double[N];
+            for (int j = 0; j < Sx[i].length; j++) {
+                Sx[i][j] = u[i] * u[j];
+            }
         }
 
-        // pb_i = value of confidence level of pixel /100
-        // Var_c = sum (pb_i*(1-pb_i)
-        double var_c = Arrays.stream(probabilityOfBurnMasked)
-                .map(d -> d / 100.0)
-                .map(pb_i -> (pb_i * (1.0 - pb_i)))
-                .sum();
+        double[] C = getC(areas, indices, N);
+        double[][] C_T = transpose(C);
+        double[] V = getDotProduct(C, Sx);
+        double result = getDotProduct(V, C_T)[0];
 
-        // SE = sqr(var_c*(n/(n-1))) * pixel area
-        // pixel area is the average area of a pixel contributing to the grid cell.
-        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * (gridCellArea / probabilityOfBurn.length));
+        return (float) Math.sqrt(result);
+    }
+
+    static double[][] transpose(double[] C) {
+        double[][] C_T = new double[1][];
+        C_T[0] = C;
+        return C_T;
+    }
+
+    static double[] getDotProduct(double[] C, double[][] Sx) {
+        double[] V = new double[Sx.length];
+        for (int c = 0; c < V.length; c++) {
+            for (int r = 0 ; r < C.length; r++) {
+                V[c] += C[r] * Sx[c][r];
+            }
+        }
+        return V;
+    }
+
+    private static double[] getC(double[] areas, int[] indices, int N) {
+        double[] C = new double[N];
+        int j = 0;
+        for (int k = 0; k < indices.length; k++) {
+            if (indices[k] == 1) {
+                C[j++] = areas[k];
+            }
+        }
+        return C;
     }
 
     @Override

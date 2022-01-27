@@ -46,13 +46,14 @@ import java.util.regex.Pattern;
 
 public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable, NullWritable, NullWritable> {
 
-    private Logger LOG = CalvalusLogger.getLogger();
+    protected Logger LOG = CalvalusLogger.getLogger();
 
     protected String outputFilename;
     protected NetcdfFileWriter outputFile;
+    protected String filenamePattern;
+    protected Rectangle continentalRectangle;
 
-    private int numRowsGlobal;
-    private Rectangle continentalRectangle;
+    protected int numRowsGlobal;
     private CrsGrid planetaryGrid;
     private Product lcProduct;
 
@@ -73,6 +74,7 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         String regionWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         String regionName = conf.get("calvalus.input.regionName");
         String version = conf.get("calvalus.output.version", "v5.1");
+        filenamePattern = conf.get("calvalus.filenamePattern", "%s%02d01-C3S-L3S_FIRE-BA-OLCI-%s-fv%s.nc");
         numRowsGlobal = HadoopBinManager.getBinningConfig(conf).getNumRows();
         // set derived parameters
         continentalRectangle = computeContinentalRectangle(regionWkt);
@@ -197,9 +199,8 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         return SubsetOp.computePixelRegion(dummyProduct, continentalGeometry, 0);
     }
 
-    private void prepareTargetProduct(String regionName, String timeCoverageStart, String timeCoverageEnd, String year, String month, String version) throws IOException, InvalidRangeException {
-        outputFilename = String.format("%s%02d01-C3S-L3S_FIRE-BA-OLCI-%s-fv%s.nc",
-                                       year, Integer.parseInt(month), regionName, version);
+    protected void prepareTargetProduct(String regionName, String timeCoverageStart, String timeCoverageEnd, String year, String month, String version) throws IOException, InvalidRangeException {
+        outputFilename = String.format(filenamePattern, year, Integer.parseInt(month), regionName, version);
         outputFile = new FirePixelNcFactory().
                 createNcFile(outputFilename, version, timeCoverageStart, timeCoverageEnd, numRowsGlobal, continentalRectangle);
 
@@ -243,14 +244,15 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
 
     private void prepareJdLayer(String varName, short fillValue, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Band lcBand = lcProduct.getBand("lccs_class");
-        short[] data = new short[1200*1200];
-        byte[] lcData = new byte[1200*1200];
-        for (int y=0; y<continentalRectangle.height; y+=1200) {
-            int h=Math.min(continentalRectangle.height-y, 1200);
-            for (int x=0; x<continentalRectangle.width; x+=1200) {
-                int w=Math.min(continentalRectangle.width-x, 1200);
+        int chunkSize = 1200;
+        short[] data = new short[chunkSize * chunkSize];
+        byte[] lcData = new byte[chunkSize * chunkSize];
+        for (int y=0; y<continentalRectangle.height; y+= chunkSize) {
+            int h=Math.min(continentalRectangle.height-y, chunkSize);
+            for (int x=0; x<continentalRectangle.width; x+= chunkSize) {
+                int w=Math.min(continentalRectangle.width-x, chunkSize);
                 Arrays.fill(data, fillValue);
-                // TODO: this only works as long as the resolution of BA and LC is the same. Fine for OLCI.
+                // TODO: this only works as long as the resolution of BA and LC is the same. Fine for OLCI and SYN.
                 lcBand.readRasterData(continentalRectangle.x+x, continentalRectangle.y+y, w, h, new ProductData.Byte(lcData));
                 for (int i=0; i<h*w; ++i) {
                     if (LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[i]))) {

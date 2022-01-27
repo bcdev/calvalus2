@@ -198,7 +198,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double burnedPercentage) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double[] areas, double burnedPercentage) {
         // Mask all pixels with value of 0 in the confidence level layer (they should not be included in the analysis)
         double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn).filter(d -> d > 0).toArray();
         int n = probabilityOfBurnMasked.length;

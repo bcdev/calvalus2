@@ -181,10 +181,14 @@ public class CommonUtils {
     }
 
     public static File[] untar(File tarFile, String filterRegEx) {
-        return untar(tarFile, filterRegEx, null);
+        return untar(tarFile, filterRegEx, "", null);
     }
 
-    public static File[] untar(File tarFile, String filterRegEx, List<String> newDirs) {
+    public static File[] untar(File tarFile, String filterRegEx, String ignoreRegEx) {
+        return untar(tarFile, filterRegEx, ignoreRegEx, null);
+    }
+
+    public static File[] untar(File tarFile, String filterRegEx, String ignoreRegEx, List<String> newDirs) {
         List<File> result = new ArrayList<>();
         try (FileInputStream in = new FileInputStream(tarFile);
              GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
@@ -204,6 +208,9 @@ public class CommonUtils {
                     int count;
                     byte[] data = new byte[1024];
                     if (!entry.getName().matches(filterRegEx)) {
+                        continue;
+                    }
+                    if (entry.getName().matches(ignoreRegEx)) {
                         continue;
                     }
                     int lastIndex = entry.getName().lastIndexOf("/");

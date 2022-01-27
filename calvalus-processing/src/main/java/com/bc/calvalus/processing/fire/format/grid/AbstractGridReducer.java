@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Year;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -105,22 +106,34 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     protected abstract NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException;
 
     private void prepareTargetProducts(Context context) throws IOException {
-        String dateRanges = context.getConfiguration().get("calvalus.input.dateRanges");
         String version = context.getConfiguration().get("calvalus.output.version", "v5.1");
-        // set derived parameters
-        Matcher m = Pattern.compile(".*\\[.*(....-..-..).*:.*(....-..-..).*\\].*").matcher(dateRanges);
-        if (! m.matches()) {
-            throw new IllegalArgumentException(dateRanges + " is not a date range");
+        String dateRanges = context.getConfiguration().get("calvalus.input.dateRanges");
+
+        String year;
+        String month;
+        int lastDayOfMonth;
+        if (dateRanges != null) {
+            Matcher m = Pattern.compile(".*\\[.*(....-..-..).*:.*(....-..-..).*\\].*").matcher(dateRanges);
+            if (! m.matches()) {
+                throw new IllegalArgumentException(dateRanges + " is not a date range");
+            }
+            String timeCoverageStart = m.group(1);
+            String timeCoverageEnd = m.group(2);
+            year = timeCoverageStart.substring(0,4);
+            month = timeCoverageStart.substring(5,7);
+            lastDayOfMonth = Integer.parseInt(timeCoverageEnd.substring(8,10));
+        } else {
+            year = context.getConfiguration().get("calvalus.year");
+            month = context.getConfiguration().get("calvalus.month");
+            if (Integer.parseInt(month) < 10) {
+                month = "0" + month;
+            }
+            lastDayOfMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).atEndOfMonth().getDayOfMonth();
         }
-        String timeCoverageStart = m.group(1);
-        String timeCoverageEnd = m.group(2);
-        String year = timeCoverageStart.substring(0,4);
-        String month = timeCoverageStart.substring(5,7);
-        int lastDayOfMonth = Integer.parseInt(timeCoverageEnd.substring(8,10));
 
         outputFilename = getFilename(year, month, version);
 
-        ncFile = createNcFile(outputFilename, version, timeCoverageStart, timeCoverageEnd, lastDayOfMonth);
+        ncFile = createNcFile(outputFilename, version, year + "-" + month + "-" + "01", year + "-" + month + "-" + lastDayOfMonth, lastDayOfMonth);
 
         try {
             writeLon(ncFile);
@@ -205,8 +218,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         Variable lonBnds = ncFile.findVariable("lon_bounds");
         double[] array = new double[numRowsGlobal * 2 * 2];
         for (int x = 0; x < numRowsGlobal * 2; x++) {
-            array[2*x] = -180.0 + 180.0 * x / numRowsGlobal;
-            array[2*x+1] = -180.0 + 180.0 * (x+1) / numRowsGlobal;
+            array[2 * x] = -180.0 + 180.0 * x / numRowsGlobal;
+            array[2 * x + 1] = -180.0 + 180.0 * (x + 1) / numRowsGlobal;
         }
         Array values = Array.factory(DataType.DOUBLE, new int[]{numRowsGlobal * 2, 2}, array);
         ncFile.write(lonBnds, values);
@@ -216,8 +229,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         Variable latBnds = ncFile.findVariable("lat_bounds");
         double[] array = new double[numRowsGlobal * 2];
         for (int y = 0; y < numRowsGlobal; y++) {
-            array[2*y] = 90.0 - 180.0 * y / numRowsGlobal;
-            array[2*y+1] = 90.0 - 180.0 * (y+1) / numRowsGlobal;
+            array[2 * y] = 90.0 - 180.0 * y / numRowsGlobal;
+            array[2 * y + 1] = 90.0 - 180.0 * (y + 1) / numRowsGlobal;
         }
         Array values = Array.factory(DataType.DOUBLE, new int[]{numRowsGlobal, 2}, array);
         ncFile.write(latBnds, values);
@@ -258,7 +271,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 1, numRowsGlobal * 2}, array);
-        for (int c=0; c<lcClassCount; ++c) {
+        for (int c = 0; c < lcClassCount; ++c) {
             for (int y = 0; y < numRowsGlobal; y++) {
                 ncFile.write(variable, new int[]{0, c, y, 0}, values);
             }
@@ -280,6 +293,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     /**
      * Returns the start y for the given tile, where <code>targetWidth * targetHeight</code> many values are written to
      * the target raster.
+     *
      * @param key The mapper key.
      * @return The start y.
      */

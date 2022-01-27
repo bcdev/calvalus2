@@ -1157,7 +1157,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
-    static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
+    protected static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
         String area = areaString.split(";")[0];
         String nicename = areaString.split(";")[1];
         String left = areaString.split(";")[2];

@@ -19,13 +19,12 @@ package com.bc.calvalus.processing.fire;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.hadoop.RasterStackWritable;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.utils.GeometryUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.locationtech.jts.geom.Geometry;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -41,16 +40,8 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.common.SubsetOp;
 
 import java.awt.Rectangle;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class FirePixelMapper extends Mapper<NullWritable, NullWritable, LongWritable, RasterStackWritable> {
@@ -62,14 +53,16 @@ public class FirePixelMapper extends Mapper<NullWritable, NullWritable, LongWrit
         Configuration conf = context.getConfiguration();
         int numRowsGlobal = HadoopBinManager.getBinningConfig(conf).getNumRows();
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
-
         LOG.info(String.format("Input split: %s", fileSplit.toString()));
 
-        File localOutputFile = CalvalusProductIO.copyFileToLocal(fileSplit.getPath(), conf);
-        File[] untarredOutput = untar(localOutputFile, "(.*Classification.*|.*Uncertainty.*)");
+        String uncertaintyFilename = conf.get("calvalus.uncertaintyFilename", "Uncertainty");
 
-        Product classificationProduct = ProductIO.readProduct(untarredOutput[0]);
-        Product uncertaintyProduct = ProductIO.readProduct(untarredOutput[1]);
+        File localOutputFile = CalvalusProductIO.copyFileToLocal(fileSplit.getPath(), conf);
+        String filterRegex = String.format("(.*Classification.*|.*%s.*)", uncertaintyFilename);
+        File[] untarredOutput = CommonUtils.untar(localOutputFile, filterRegex, ".*Raw.*|.*BurnProbabilityError.*");
+
+        Product uncertaintyProduct = ProductIO.readProduct(untarredOutput[0]);
+        Product classificationProduct = ProductIO.readProduct(untarredOutput[1]);
 
         LOG.info(String.format("classificationProduct: %s", classificationProduct.getName()));
         LOG.info(String.format("uncertaintyProduct: %s", uncertaintyProduct.getName()));
@@ -83,16 +76,25 @@ public class FirePixelMapper extends Mapper<NullWritable, NullWritable, LongWrit
         long binIndex = getBinIndex(classificationProduct, rectangle, numRowsGlobal);
 
         short[] classificationPixels = new short[rectangle.width * rectangle.height];
-        byte[] uncertaintyPixels = new byte[rectangle.width * rectangle.height];
 
         readData(classificationProduct, rectangle, classificationPixels);
-        readData(uncertaintyProduct, rectangle, uncertaintyPixels);
 
         RasterStackWritable rasterStackWritable = new RasterStackWritable(rectangle.width, rectangle.height, 2);
         rasterStackWritable.setBandType(0, RasterStackWritable.Type.SHORT);
         rasterStackWritable.setData(0, classificationPixels, RasterStackWritable.Type.SHORT);
         rasterStackWritable.setBandType(1, RasterStackWritable.Type.BYTE);
-        rasterStackWritable.setData(1, uncertaintyPixels, RasterStackWritable.Type.BYTE);
+
+        if (uncertaintyProduct.getBand("band_1").getDataType() == ProductData.TYPE_UINT8) {
+            byte[] uncertaintyPixels = new byte[rectangle.width * rectangle.height];
+            readData(uncertaintyProduct, rectangle, uncertaintyPixels);
+            rasterStackWritable.setData(1, uncertaintyPixels, RasterStackWritable.Type.BYTE);
+        } else if (uncertaintyProduct.getBand("band_1").getDataType() == ProductData.TYPE_FLOAT32) {
+            float[] uncertaintyPixels = new float[rectangle.width * rectangle.height];
+            readData(uncertaintyProduct, rectangle, uncertaintyPixels);
+            rasterStackWritable.setData(1, uncertaintyPixels, RasterStackWritable.Type.FLOAT);
+        } else {
+            throw new NotImplementedException("Only uncertainty bands of type byte or float supported.");
+        }
 
         context.write(new LongWritable(binIndex), rasterStackWritable);
 
@@ -106,64 +108,22 @@ public class FirePixelMapper extends Mapper<NullWritable, NullWritable, LongWrit
         return crsGrid.getBinIndex(geoPos.lat, geoPos.lon);
     }
 
-    static void readData(Product uncertaintyProduct, Rectangle rectangle, byte[] uncertaintyPixels) throws IOException {
-        Band classificationProductBand = uncertaintyProduct.getBand("band_1");
-        ProductData.Byte buffer = new ProductData.Byte(uncertaintyPixels);
-        classificationProductBand.readRasterData(rectangle.x, rectangle.y, rectangle.width, rectangle.height, buffer);
+    static void readData(Product product, Rectangle rectangle, byte[] pixels) throws IOException {
+        Band band = product.getBand("band_1");
+        ProductData.Byte buffer = new ProductData.Byte(pixels);
+        band.readRasterData(rectangle.x, rectangle.y, rectangle.width, rectangle.height, buffer);
     }
 
-    static void readData(Product classificationProduct, Rectangle rectangle, short[] classificationPixels) throws IOException {
-        Band classificationProductBand = classificationProduct.getBand("band_1");
-        ProductData.Short buffer = new ProductData.Short(classificationPixels);
-        classificationProductBand.readRasterData(rectangle.x, rectangle.y, rectangle.width, rectangle.height, buffer);
+    static void readData(Product product, Rectangle rectangle, float[] pixels) throws IOException {
+        Band band = product.getBand("band_1");
+        ProductData.Float buffer = new ProductData.Float(pixels);
+        band.readRasterData(rectangle.x, rectangle.y, rectangle.width, rectangle.height, buffer);
     }
 
-    private static File[] untar(File tarFile, String filterRegEx) {
-        return untar(tarFile, filterRegEx, null);
+    static void readData(Product product, Rectangle rectangle, short[] pixels) throws IOException {
+        Band band = product.getBand("band_1");
+        ProductData.Short buffer = new ProductData.Short(pixels);
+        band.readRasterData(rectangle.x, rectangle.y, rectangle.width, rectangle.height, buffer);
     }
 
-    private static File[] untar(File tarFile, String filterRegEx, List<String> newDirs) {
-        List<File> result = new ArrayList<>();
-        try (FileInputStream in = new FileInputStream(tarFile);
-             GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
-             TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn)) {
-
-            TarArchiveEntry entry;
-
-            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
-                if (entry.isDirectory()) {
-                    if (!new File(entry.getName()).exists()) {
-                        boolean created = new File(entry.getName()).mkdirs();
-                        if (!created) {
-                            throw new IOException(String.format("Unable to create directory '%s' during extraction of contents of archive: '", entry.getName()));
-                        }
-                    }
-                } else {
-                    int count;
-                    byte[] data = new byte[1024];
-                    if (!entry.getName().matches(filterRegEx)) {
-                        continue;
-                    }
-                    int lastIndex = entry.getName().lastIndexOf("/");
-                    boolean created = new File(entry.getName().substring(0, lastIndex)).mkdirs();
-                    if (created && newDirs != null) {
-                        Collections.addAll(newDirs, entry.getName().substring(0, lastIndex).split("/"));
-                    }
-                    FileOutputStream fos = new FileOutputStream(entry.getName(), false);
-                    try (BufferedOutputStream dest = new BufferedOutputStream(fos, 1024)) {
-                        while ((count = tarIn.read(data, 0, 1024)) != -1) {
-                            dest.write(data, 0, count);
-                        }
-                    }
-                    result.add(new File(entry.getName()));
-                }
-            }
-
-        } catch (IOException e) {
-            throw new IllegalStateException("Unable to extract tar archive '" + tarFile + "'", e);
-        }
-        File[] untarredFiles = result.toArray(new File[0]);
-        Arrays.sort(untarredFiles, Comparator.comparing(File::getName));
-        return untarredFiles;
-    }
 }
