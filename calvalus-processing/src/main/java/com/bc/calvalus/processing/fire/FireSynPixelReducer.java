@@ -39,8 +39,8 @@ public class FireSynPixelReducer extends FirePixelReducer {
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Config.instance().preferences().putBoolean("snap.dataio.bigtiff.support.pushprocessing", true);
-        super.setup(context);
         configuration = context.getConfiguration();
+        super.setup(context);
     }
 
     @Override
