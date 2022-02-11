@@ -64,6 +64,7 @@ public class SynGridInputFormat extends InputFormat {
         InputPathResolver inputPathResolver = new InputPathResolver();
         String inputRootDir = conf.get("calvalus.input.root", "hdfs://calvalus/calvalus/projects/fire/syn-ba/main-output-test-v1.3");
         String inputPathPattern = String.format(inputRootDir + "/%s-%02d/.*/ba-outputs-.*-%s-%02d.tar.gz", nextYear, nextMonth, year, month);
+        inputPathPattern += String.format("|hdfs://calvalus/calvalus/projects/fire/syn-ba/dummy-tiles/ba-outputs-.*-%s-%02d.tar.gz", year, month);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
     }
@@ -125,14 +126,14 @@ public class SynGridInputFormat extends InputFormat {
 
     public static void createDummyTiles(String targetDir) throws IOException, FactoryException, TransformException {
 
-        for (int year = 2017; year <= 2018; year++) {
+        for (int year = 2019; year <= 2019; year++) {
             for (int month = 1; month <= 12; month++) {
                 for (String tile : NORTHERN_TILES) {
                     double easting = Integer.parseInt(tile.substring(1, 3)) * 10 - 180;
 
-                    String filenameC = String.format("OLCIMODIS%s_%s_%s_Classification.tif", year, month, tile);
-                    String filenameU = String.format("OLCIMODIS%s_%s_%s_Uncertainty.tif", year, month, tile);
-                    String filenameF = String.format("OLCIMODIS%s_%s_%s_FractionOfObservedArea.tif", year, month, tile);
+                    String filenameC = String.format("SYNVIIRS%s_%s_%s_Classification.tif", year, month, tile);
+                    String filenameU = String.format("SYNVIIRS%s_%s_%s_BurnProbabilityError.tif", year, month, tile);
+                    String filenameF = String.format("SYNVIIRS%s_%s_%s_FractionOfObservedArea.tif", year, month, tile);
 
                     Product productC = new Product("dummy", "dummy", 3600, 3600);
                     Band cBand = productC.addBand("band_1", ProductData.TYPE_INT16);
@@ -151,9 +152,13 @@ public class SynGridInputFormat extends InputFormat {
                     Arrays.fill(foaValues, (byte) 3);
                     fBand.setRasterData(new ProductData.UByte(foaValues));
 
-                    ProductIO.writeProduct(productC, targetDir + File.separator + filenameC, "GeoTIFF");
-                    ProductIO.writeProduct(productU, targetDir + File.separator + filenameU, "GeoTIFF");
-                    ProductIO.writeProduct(productF, targetDir + File.separator + filenameF, "GeoTIFF");
+                    final String filePathC = targetDir + File.separator + filenameC;
+                    final String filePathU = targetDir + File.separator + filenameU;
+                    final String filePathF = targetDir + File.separator + filenameF;
+
+                    ProductIO.writeProduct(productC, filePathC, "GeoTIFF");
+                    ProductIO.writeProduct(productU, filePathU, "GeoTIFF");
+                    ProductIO.writeProduct(productF, filePathF, "GeoTIFF");
                 }
             }
         }

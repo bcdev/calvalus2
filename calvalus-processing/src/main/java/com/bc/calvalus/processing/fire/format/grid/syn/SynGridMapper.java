@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCells;
+import com.bc.calvalus.processing.fire.format.grid.modis.ModisFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.olci.OlciSynDataSource;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
@@ -134,50 +135,49 @@ public class SynGridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn, double gridCellArea, double[] areas, double burnedPercentage) {
-        int[] indices = Arrays.stream(probabilityOfBurn).mapToInt(value -> value > 0 ? 1 : 0).toArray();
-        double[] u = Arrays.stream(probabilityOfBurn).filter(value -> value > 0).toArray();
-        int N = u.length;
-        double[][] Sx = new double[N][N];
-        for (int i = 0; i < Sx.length; i++) {
-            Sx[i] = new double[N];
-            for (int j = 0; j < Sx[i].length; j++) {
-                Sx[i][j] = u[i] * u[j];
-            }
-        }
+        double[] probabilityOfBurnMasked = Arrays.stream(probabilityOfBurn)
+                .map(d -> d == 0 ? 1.0 : d)
+                .filter(d -> d <= 100.0 && d >= 0.0)
+                .toArray();
 
-        double[] C = getC(areas, indices, N);
-        double[][] C_T = transpose(C);
-        double[] V = getDotProduct(C, Sx);
-        double result = getDotProduct(V, C_T)[0];
+        int[] indices = Arrays.stream(probabilityOfBurn)
+                .map(d -> d == 0 ? 1.0 : d)
+                .mapToInt(d -> d <= 100.0 && d >= 0.0 ? 1 : 0)
+                .toArray();
 
-        return (float) Math.sqrt(result);
-    }
+        double[] areasMasked = new double[probabilityOfBurnMasked.length];
 
-    static double[][] transpose(double[] C) {
-        double[][] C_T = new double[1][];
-        C_T[0] = C;
-        return C_T;
-    }
-
-    static double[] getDotProduct(double[] C, double[][] Sx) {
-        double[] V = new double[Sx.length];
-        for (int c = 0; c < V.length; c++) {
-            for (int r = 0 ; r < C.length; r++) {
-                V[c] += C[r] * Sx[c][r];
-            }
-        }
-        return V;
-    }
-
-    private static double[] getC(double[] areas, int[] indices, int N) {
-        double[] C = new double[N];
         int j = 0;
-        for (int k = 0; k < indices.length; k++) {
-            if (indices[k] == 1) {
-                C[j++] = areas[k];
+        for (int i = 0; i < indices.length; i++) {
+            if (indices[i] == 1) {
+                areasMasked[j++] = areas[i];
             }
         }
-        return C;
+
+        // n is the number of pixels in the 0.25º cell that were not masked
+        int n = probabilityOfBurnMasked.length;
+        if (indices.length != areas.length) {
+            throw new IllegalStateException("Programming error, check code");
+        }
+
+        if (n == 1) {
+            for (int i = 0; i < indices.length; i++) {
+                if (indices[i] == 1) {
+                    return (float) areas[i];
+                }
+            }
+        }
+
+        // pb_i = value of confidence level of pixel /100
+        double[] pb = Arrays.stream(probabilityOfBurnMasked).map(d -> d / 100.0).toArray();
+
+        // Var_c = sum (pb_i*(1-pb_i)
+        double var_c = Arrays.stream(pb)
+                .map(pb_i -> (pb_i * (1.0 - pb_i)))
+                .sum();
+
+        double avgArea = Arrays.stream(areasMasked).average().getAsDouble();
+        return (float) (Math.sqrt(var_c * (n / (n - 1.0))) * avgArea);
     }
 
     @Override
