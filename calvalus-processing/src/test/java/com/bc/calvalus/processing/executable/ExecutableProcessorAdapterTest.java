@@ -4,7 +4,6 @@ import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.PathConfiguration;
 import com.bc.calvalus.processing.beam.Sentinel2CalvalusReaderPlugin;
 import com.bc.ceres.core.NullProgressMonitor;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.dataio.ProductIO;

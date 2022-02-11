@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.l3;
 
-import com.sun.tracing.dtrace.ProviderAttributes;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.junit.Before;
