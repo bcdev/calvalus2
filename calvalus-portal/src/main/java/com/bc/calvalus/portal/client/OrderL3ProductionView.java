@@ -41,6 +41,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     public static final String ID = OrderL3ProductionView.class.getName();
 
+    private TemplateSelectionForm templateSelectionForm;
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private ProductsFromCatalogueForm productsFromCatalogueForm;
@@ -52,6 +53,8 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     public OrderL3ProductionView(PortalContext portalContext) {
         super(portalContext);
+
+        templateSelectionForm = new TemplateSelectionForm(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
         productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
@@ -117,6 +120,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
+        panel.add(templateSelectionForm);
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
         if (productsFromCatalogueForm != null) {

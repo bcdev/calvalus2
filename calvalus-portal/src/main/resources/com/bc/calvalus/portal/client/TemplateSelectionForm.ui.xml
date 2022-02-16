@@ -1,0 +1,19 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
+
+    <g:HorizontalPanel width="100%">
+        <g:VerticalPanel spacing="2">
+            <!-- <g:HTMLPanel styleName="{style.panelTitle}">
+                <g:InlineLabel styleName="{style.panelTitleText}">Templates to pre-fill the form</g:InlineLabel>
+            </g:HTMLPanel> -->
+            <g:HTMLPanel styleName="{style.panelTitle}">
+                <g:ListBox ui:field="requestList" width="25em"  visibleItemCount="3"/>
+                <g:Button ui:field='editButton' text="Fill form"/>
+            </g:HTMLPanel>
+        </g:VerticalPanel>
+    </g:HorizontalPanel>
+
+</ui:UiBinder>

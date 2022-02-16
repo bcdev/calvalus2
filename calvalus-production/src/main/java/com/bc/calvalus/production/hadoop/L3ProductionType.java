@@ -5,9 +5,11 @@ import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.FileSystemService;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.QLWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -150,9 +152,22 @@ public class L3ProductionType extends HadoopProductionType {
                     JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
-            WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-                                                               productionRequest.getUserName(),
-                                                               productionName + " Format", jobConfig);
+            HadoopWorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
+                                                                     productionRequest.getUserName(),
+                                                                     productionName + " Format", jobConfig);
+            if (jobConfig.getBoolean("calvalus.l3.writeProductSetsCsv", false)) {
+                ProductSet productSet = new ProductSet("L3",
+                                                       productionName,
+                                                       outputDir + "/.*.(nc|tif|tiff)",
+                                                       dateRanges.get(0).getStartDate(),
+                                                       dateRanges.get(dateRanges.size() - 1).getStopDate(),
+                                                       productionRequest.getRegionName(),
+                                                       regionGeometry != null ? regionGeometry.toString() : "",
+                                                       new String[]{}
+                                                       //L2ProductionType.getResultingBandNames(processorDesc)
+                );
+                formatItem.addWorkflowStatusListener(new ProductSetSaver(formatItem, productSet, outputDir));
+            }
             workflow = new Workflow.Sequential(workflow, formatItem);
 
             if (hasQuicklookParameters) {
