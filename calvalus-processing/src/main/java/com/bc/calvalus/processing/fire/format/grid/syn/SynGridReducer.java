@@ -31,7 +31,7 @@ public class SynGridReducer extends OlciGridReducer {
     @Override
     protected String getFilename(String year, String month, String version) {
         String paddedMonth = String.format("%02d", Integer.parseInt(month));
-        return String.format("%s%s01-C3S-L4_FIRE-BA-OLCI-fv%s.nc", year, paddedMonth, version);
+        return String.format("%s%s01-ESACCI-L4_FIRE-BA-SYN-fv%s.nc", year, paddedMonth, version);
     }
 
     @Override

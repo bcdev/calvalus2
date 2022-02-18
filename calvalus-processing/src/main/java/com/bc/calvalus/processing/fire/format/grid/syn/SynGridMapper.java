@@ -70,10 +70,20 @@ public class SynGridMapper extends AbstractGridMapper {
                                 new File(lcMapPath.toString().substring(5)) :
                                 new File(lcMapPath.toString());
 
-        File[] outputsFiles = CommonUtils.untar(inputTarFile, "(.*Classification.*|.*BurnProbabilityError.*|.*FractionOfObservedArea.*)");
-        File uncertaintyFile = outputsFiles[0];
-        File classificationFile = outputsFiles[1];
-        File foaFile = outputsFiles[2];
+        File[] outputsFiles = CommonUtils.untar(inputTarFile, "(.*_Classification.*|.*BurnProbabilityError.*|.*FractionOfObservedArea.*)");
+        File uncertaintyFile;
+        File classificationFile;
+        File foaFile;
+        if (outputsFiles.length == 3) {
+            uncertaintyFile = outputsFiles[0];
+            classificationFile = outputsFiles[1];
+            foaFile = outputsFiles[2];
+        } else {
+            outputsFiles = CommonUtils.untar(inputTarFile, "(.*_Classification.*|.*BurnProbability.*|.*FractionOfObservedArea.*)");
+            uncertaintyFile = outputsFiles[0];
+            classificationFile = outputsFiles[1];
+            foaFile = outputsFiles[2];
+        }
 
         Product baProduct = ProductIO.readProduct(classificationFile);
         Product uncertaintyProduct = ProductIO.readProduct(uncertaintyFile);
@@ -87,7 +97,7 @@ public class SynGridMapper extends AbstractGridMapper {
         int x0 = h * 3600;
         int y0 = v * 3600;
         HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("bandNames", new String[]{"lccs_class"});
+        parameters.put("bandNames", new String[]{"band_1"});
         parameters.put("region", new Rectangle(x0, y0, 3600, 3600));
         Product lcProduct = GPF.createProduct("Subset", parameters, lcGlobal);
 
@@ -139,6 +149,10 @@ public class SynGridMapper extends AbstractGridMapper {
                 .map(d -> d == 0 ? 1.0 : d)
                 .filter(d -> d <= 100.0 && d >= 0.0)
                 .toArray();
+
+        if (probabilityOfBurnMasked.length == 0) {
+            return 0.0F;
+        }
 
         int[] indices = Arrays.stream(probabilityOfBurn)
                 .map(d -> d == 0 ? 1.0 : d)

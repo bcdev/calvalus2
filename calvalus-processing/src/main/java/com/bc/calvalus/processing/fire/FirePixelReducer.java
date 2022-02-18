@@ -117,8 +117,12 @@ public class FirePixelReducer extends Reducer<LongWritable, RasterStackWritable,
         short[] baData = (short[]) rasterStackWritable.data[0];
         byte[] clData = (byte[]) rasterStackWritable.data[1];
         byte[] lcData = new byte[rasterStackWritable.width * rasterStackWritable.height];
-        // TODO: this only works as long as the resolution of BA and LC is the same. Fine for OLCI.
-        lcProduct.getBand("lccs_class").readRasterData(binX, binY, rasterStackWritable.width, rasterStackWritable.height, new ProductData.Byte(lcData));
+        // TODO: this only works as long as the resolution of BA and LC is the same. Fine for OLCI and SYN.
+        Band lcBand = lcProduct.getBand("lccs_class");
+        if (lcBand == null) {
+            lcBand = lcProduct.getBand("band_1");
+        }
+        lcBand.readRasterData(binX, binY, rasterStackWritable.width, rasterStackWritable.height, new ProductData.Byte(lcData));
 
         // force unburnable pixels to -2
         // suppress LC information of pixels not burned

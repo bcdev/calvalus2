@@ -181,14 +181,10 @@ public class CommonUtils {
     }
 
     public static File[] untar(File tarFile, String filterRegEx) {
-        return untar(tarFile, filterRegEx, "", null);
+        return untar(tarFile, filterRegEx, "");
     }
 
     public static File[] untar(File tarFile, String filterRegEx, String ignoreRegEx) {
-        return untar(tarFile, filterRegEx, ignoreRegEx, null);
-    }
-
-    public static File[] untar(File tarFile, String filterRegEx, String ignoreRegEx, List<String> newDirs) {
         List<File> result = new ArrayList<>();
         try (FileInputStream in = new FileInputStream(tarFile);
              GzipCompressorInputStream gzipIn = new GzipCompressorInputStream(in);
@@ -214,9 +210,12 @@ public class CommonUtils {
                         continue;
                     }
                     int lastIndex = entry.getName().lastIndexOf("/");
-                    boolean created = new File(entry.getName().substring(0, lastIndex)).mkdirs();
-                    if (created && newDirs != null) {
-                        Collections.addAll(newDirs, entry.getName().substring(0, lastIndex).split("/"));
+                    if (lastIndex != -1) {
+                        // files are not in root dir of tar, need to create directories
+                        boolean created = new File(entry.getName().substring(0, lastIndex)).mkdirs();
+                        if (!created) {
+                            throw new IOException(String.format("Unable to create directory '%s' during extraction of contents of archive: '", entry.getName()));
+                        }
                     }
                     FileOutputStream fos = new FileOutputStream(entry.getName(), false);
                     try (BufferedOutputStream dest = new BufferedOutputStream(fos, 1024)) {

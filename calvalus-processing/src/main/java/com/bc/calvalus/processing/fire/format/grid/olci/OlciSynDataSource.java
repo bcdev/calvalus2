@@ -41,6 +41,9 @@ public class OlciSynDataSource extends AbstractFireGridDataSource {
         baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.burnedPixels);
 
         Band lcClassification = lcProduct.getBand("lccs_class");
+        if (lcClassification == null) {
+            lcClassification = lcProduct.getBand("band_1");
+        }
         lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
 
         for (int i = 0; i < data.lcClasses.length; i++) {

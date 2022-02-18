@@ -64,7 +64,7 @@ public class SynGridInputFormat extends InputFormat {
         InputPathResolver inputPathResolver = new InputPathResolver();
         String inputRootDir = conf.get("calvalus.input.root", "hdfs://calvalus/calvalus/projects/fire/syn-ba/main-output-test-v1.3");
         String inputPathPattern = String.format(inputRootDir + "/%s-%02d/.*/ba-outputs-.*-%s-%02d.tar.gz", nextYear, nextMonth, year, month);
-        inputPathPattern += String.format("|hdfs://calvalus/calvalus/projects/fire/syn-ba/dummy-tiles/ba-outputs-.*-%s-%02d.tar.gz", year, month);
+        inputPathPattern += String.format(",hdfs://calvalus/calvalus/projects/fire/syn-ba/dummy-tiles/ba-outputs-.*-%s-%02d.tar.gz", year, month);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);
     }

@@ -8,6 +8,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
@@ -22,8 +23,10 @@ import java.util.UUID;
 
 public abstract class NcFileFactory {
 
+    private static final float MAX_GRID = 769314629F;
+
     public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int lcClassesCount, int numRowsGlobal) throws IOException {
-        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
+        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename);
 
         ncFile.addDimension(null, "vegetation_class", lcClassesCount);
         ncFile.addDimension(null, "lat", numRowsGlobal);
@@ -61,20 +64,24 @@ public abstract class NcFileFactory {
         burnedAreaVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaVar.addAttribute(new Attribute("standard_name", "burned_area"));
         burnedAreaVar.addAttribute(new Attribute("long_name", "total burned_area"));
+        burnedAreaVar.addAttribute(new Attribute("valid_range", Array.factory(DataType.FLOAT, new int[]{2}, new float[]{0, MAX_GRID})));
         burnedAreaVar.addAttribute(new Attribute("cell_methods", "time: sum"));
         Variable standardErrorVar = ncFile.addVariable(null, "standard_error", DataType.FLOAT, "time lat lon");
         standardErrorVar.addAttribute(new Attribute("units", "m2"));
         standardErrorVar.addAttribute(new Attribute("long_name", "standard error of the estimation of burned area"));
+        standardErrorVar.addAttribute(new Attribute("valid_range", Array.factory(DataType.FLOAT, new int[]{2}, new float[]{0, MAX_GRID})));
         addBurnableAreaFractionVar(ncFile);
         Variable observedAreaFractionVar = ncFile.addVariable(null, "fraction_of_observed_area", DataType.FLOAT, "time lat lon");
         observedAreaFractionVar.addAttribute(new Attribute("units", "1"));
         observedAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of observed area"));
-        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of the lack of input data (non-existing data for that location and period)."));
+        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of observed area is the fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of the lack of input data (non-existing data for that location and period)."));
+        observedAreaFractionVar.addAttribute(new Attribute("valid_range", Array.factory(DataType.FLOAT, new int[]{2}, new float[]{0, 1})));
         Variable burnedAreaInVegClassVar = ncFile.addVariable(null, "burned_area_in_vegetation_class", DataType.FLOAT, "time vegetation_class lat lon");
         burnedAreaInVegClassVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("long_name", "burned area in vegetation class"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("comment", getBurnedAreaInVegClassComment()));
+        burnedAreaInVegClassVar.addAttribute(new Attribute("valid_range", Array.factory(DataType.FLOAT, new int[]{2}, new float[]{0, MAX_GRID})));
 
         try {
             GeoCoding geoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84,
@@ -119,12 +126,13 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("tracking_id", UUID.randomUUID().toString()));
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.7"));
         ncFile.addGroupAttribute(null, new Attribute("product_version", version));
+        ncFile.addGroupAttribute(null, new Attribute("format_version", "CCI Data Standards v2.3"));
         ncFile.addGroupAttribute(null, new Attribute("summary", getSummary()));
         ncFile.addGroupAttribute(null, new Attribute("keywords", getKeywordsMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", getNamingAuthority()));
 //        ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
-        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "NASA Global Change Master Directory (GCMD) Science keywords"));
+        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", getKeywordsVocabulary()));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
         ncFile.addGroupAttribute(null, new Attribute("comment", getCommentMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
@@ -147,11 +155,16 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("license", getLicense()));
         ncFile.addGroupAttribute(null, new Attribute("platform", getPlatformGlobalAttribute()));
         ncFile.addGroupAttribute(null, new Attribute("sensor", getSensorGlobalAttribute()));
-        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", String.format("%.2f degrees", 180.0 / numRowsGlobal)));
+        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25 degrees"));
+        ncFile.addGroupAttribute(null, new Attribute("key_variables", "burned_area"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_units", "degrees_east"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", String.format("%.2f", 180.0 / numRowsGlobal)));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", String.format("%.2f", 180.0 / numRowsGlobal)));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", "0.25"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
+    }
+
+    protected String getKeywordsVocabulary() {
+        return "NASA Global Change Master Directory (GCMD) Science keywords";
     }
 
     protected String getCommentMetadata() {
@@ -159,7 +172,7 @@ public abstract class NcFileFactory {
     }
 
     protected String getKeywordsMetadata() {
-        return "Burned Area, Fire Disturbance, Climate Change, ESA, C3S, GCOS";
+        return "Burned Area, Fire Disturbance, Climate Change, ESA, GCOS";
     }
 
     protected String getProjectMetadata() {

@@ -2,8 +2,6 @@ package com.bc.calvalus.processing.fire.format.pixel.syn;
 
 import com.bc.calvalus.processing.fire.ContinentalArea;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
-import org.esa.snap.collocation.CollocateOp;
-import org.esa.snap.collocation.ResamplingType;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 
@@ -110,7 +108,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                    <gmd:onlineResource>" +
                     "                        <gmd:CI_OnlineResource>" +
                     "                            <gmd:linkage>" +
-                    "                                <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
+                    "                                <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
                     "                            </gmd:linkage>" +
                     "                        </gmd:CI_OnlineResource>" +
                     "                    </gmd:onlineResource>" +
@@ -161,7 +159,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "            <gmd:citation>" +
                     "                <gmd:CI_Citation>" +
                     "                    <gmd:title>" +
-                    "                        <gco:CharacterString>Fire_cci Pixel SYN Burned Area product ${REPLACE_WITH_VERSION} – Zone ${zoneId}" +
+                    "                        <gco:CharacterString>Fire_cci Sentinel-3 SYN Burned Area Pixel product, version ${REPLACE_WITH_VERSION} - Area ${zoneId}" +
                     "                        </gco:CharacterString>" +
                     "                    </gmd:title>" +
                     "                    <gmd:date>" +
@@ -182,7 +180,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                        <!-- publication date-->" +
                     "                        <gmd:CI_Date>" +
                     "                            <gmd:date>" +
-                    "                                <gco:Date>TBD</gco:Date>" +
+                    "                                <gco:Date>28/02/2022</gco:Date>" +
                     "                            </gmd:date>" +
                     "                            <gmd:dateType>" +
                     "                                <gmd:CI_DateTypeCode" +
@@ -196,7 +194,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                    <gmd:identifier>" +
                     "                        <gmd:MD_Identifier>" +
                     "                            <gmd:code>" +
-                    "                                <gco:CharacterString>TBD</gco:CharacterString>" +
+                    "                                <gco:CharacterString>10.5285/c98515f1934a4db68d2007b47c5a8d04</gco:CharacterString>" +
                     "                            </gmd:code>" +
                     "                        </gmd:MD_Identifier>" +
                     "                    </gmd:identifier>" +
@@ -204,30 +202,31 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "            </gmd:citation>" +
                     "" +
                     "<gmd:abstract>" +
-                    "<gco:CharacterString>In support of the IPCC, the ESA Climate Change Initiative (CCI) programme comprises " +
-                    "the generation of different projects, each focusing on the production of global coverage of an " +
-                    "Essential Climate Variable (ECV). The ECV Fire Disturbance (Fire_cci) provides validated, " +
-                    "error-characterised, global data sets of burned areas (BA) derived from existing satellite " +
-                    "observations. The Fire_cci BA products consist of a Pixel " +
-                    "and Grid product addressing the needs and requirements of climate, atmospheric and ecosystem " +
-                    "scientists and researchers supporting their modelling efforts. Further information on the ESA CCI " +
-                    "Programme and a comprehensive documentation on the underlying algorithms, work flow, production " +
-                    "system and product validation is publicly accessible on https://www.esa-fire-cci.org/." +
+                    "<gco:CharacterString>In support of the IPCC, the ESA Climate Change Initiative (CCI) programme" +
+                    " comprises different projects, each focusing on the production of global coverage of an Essential" +
+                    " Climate Variable (ECV). The ECV Fire Disturbance (Fire_cci) provides validated," +
+                    " error-characterised, global data sets of burned area (BA) derived from existing satellite" +
+                    " observations. The Fire_cci BA products consist of a Pixel and Grid product addressing the needs" +
+                    " and requirements of climate, atmospheric and ecosystem scientists and researchers supporting" +
+                    " their modelling efforts. Further information on the ESA CCI Programme and a comprehensive" +
+                    " documentation on the underlying algorithms, workflow, production system and product validation" +
+                    " is publicly accessible on https://climate.esa.int/en/projects/fire/." +
                     "</gco:CharacterString>" +
                     "<gco:CharacterString>" +
                     "#[[" +
                     "The product is a set of single-layer GeoTIFF files with the following naming convention: " +
-                    "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}[-${layer}].tif. " +
-                    "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four " +
-                    "digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to 31. " +
-                    "For monthly products the date will be set to 01. " +
-                    "${Indicative sensor} is SYN. ${Additional Segregator} is the AREA_${TILE_CODE} being the tile code " +
-                    "described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] " +
-                    "(That is 1 or more digits followed by optional . and another 1 or more digits.). ${layer} is the code for " +
-                    "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
-                    "An example is: 20050301-ESACCI-L3S_FIRE-BA-SYN-AREA_5-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
+                    "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}" +
+                    "[-${layer}].tif. ${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD," +
+                    " where YYYY is the four-digit year, MM is the two-digit month from 01 to 12 and DD is the" +
+                    " two-digit day of the month from 01 to 31. For monthly products, the date is set to 01." +
+                    " ${Indicative sensor} is SYN, corresponding to the Synergy product derived from the Sentinel-3" +
+                    " OLCI and SLSTR sensors. ${Additional Segregator} is the AREA_${TILE_CODE} being the tile code" +
+                    " described in the Product User Guide. ${File Version} is the File version number in the form" +
+                    " n{1,}[.n{1,}] (That is 1 or more digits followed by optional . and another 1 or more digits.)." +
+                    " ${layer} is the code for the layer represented in each file, being: JD: layer 1, CL: layer 2," +
+                    " and LC: layer 3. An example is: 20190301-ESACCI-L3S_FIRE-BA-SYN-AREA_5-fv1.0-JD.tif.]]#" +
                     "</gco:CharacterString>" +
-                    "<gco:CharacterString>For further information on the product, please consult the Product User Guide: ..." +
+                    "<gco:CharacterString>For further information on the product, please consult the Product User Guide." +
                     "</gco:CharacterString>" +
                     "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00277777778 deg  (approx. 300m); " +
                     "Pixel value = Day of the year, from 1 to 365 (or 366). A value of 0 is included when the pixel is not burned " +
@@ -285,7 +284,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                            <gmd:onlineResource>" +
                     "                                <gmd:CI_OnlineResource>" +
                     "                                    <gmd:linkage>" +
-                    "                                        <gmd:URL>https://www.esa-fire-cci.org/</gmd:URL>" +
+                    "                                        <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
                     "                                    </gmd:linkage>" +
                     "                                </gmd:CI_OnlineResource>" +
                     "                            </gmd:onlineResource>" +
@@ -318,7 +317,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                            <gmd:onlineResource>" +
                     "                                <gmd:CI_OnlineResource>" +
                     "                                    <gmd:linkage>" +
-                    "                                        <gmd:URL>https://www.esa-fire-cci.org/</gmd:URL>" +
+                    "                                        <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
                     "                                    </gmd:linkage>" +
                     "                                </gmd:CI_OnlineResource>" +
                     "                            </gmd:onlineResource>" +
@@ -351,7 +350,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                            <gmd:onlineResource>" +
                     "                                <gmd:CI_OnlineResource>" +
                     "                                    <gmd:linkage>" +
-                    "                                        <gmd:URL>https://www.esa-fire-cci.org/</gmd:URL>" +
+                    "                                        <gmd:URL>https://climate.esa.int/en/projects/fire/</gmd:URL>" +
                     "                                    </gmd:linkage>" +
                     "                                </gmd:CI_OnlineResource>" +
                     "                            </gmd:onlineResource>" +
