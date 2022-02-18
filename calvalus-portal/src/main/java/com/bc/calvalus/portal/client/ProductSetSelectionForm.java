@@ -66,10 +66,14 @@ public class ProductSetSelectionForm extends Composite {
     Anchor showProductSetSelectionHelp;
 
     public ProductSetSelectionForm(PortalContext portal) {
-        this(portal, null);
+        this(portal, null, false);
     }
 
     public ProductSetSelectionForm(PortalContext portalContext, Filter<DtoProductSet> productSetFilter) {
+        this(portalContext, productSetFilter, false);
+    }
+
+    public ProductSetSelectionForm(PortalContext portalContext, Filter<DtoProductSet> productSetFilter, boolean preselectUserDefinedProductSets) {
         this.portal = portalContext;
         this.productSetFilter = productSetFilter;
 
@@ -81,11 +85,14 @@ public class ProductSetSelectionForm extends Composite {
 
         ValueChangeHandler<Boolean> valueChangeHandler = booleanValueChangeEvent -> updateProductSetsListBox();
         predefinedProductSets.addValueChangeHandler(valueChangeHandler);
+        predefinedProductSets.setValue(!preselectUserDefinedProductSets);
         userProductionProductSets.addValueChangeHandler(valueChangeHandler);
+        userProductionProductSets.setValue(preselectUserDefinedProductSets);
         allProductionProductSets.addValueChangeHandler(valueChangeHandler);
+        allProductionProductSets.setValue(false);
 
         allProductionProductSets.setEnabled(portal.withPortalFeature("otherSets"));
-        updateListBox(portal.getProductSets());
+        updateProductSetsListBox();
         updateDetailsView();
 
         HelpSystem.addClickHandler(showProductSetSelectionHelp, "productSetSelection");
