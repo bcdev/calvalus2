@@ -464,8 +464,14 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         ProductionRequest productionRequest = convert(dtoProductionRequest);
         WpsXmlRequestConverter xmlRequestConverter = new WpsXmlRequestConverter(productionRequest);
         try {
-            String fileName = createRequestId(dtoProductionRequest.getProductionType());
+            String fileName = productionRequest.getProductionType() + "_" +
+                    productionRequest.getProductionName("template").
+                            replaceAll("[ \t\n\\/]", "_") + REQUEST_FILE_EXTENSION;
             String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + fileName);
+            if (fileName == null || serviceContainer.getFileSystemService().pathExists(userPath, userName)) {
+                fileName = createRequestId(fileName);
+                userPath = AbstractFileSystemService.getUserPath(userName, "request/" + fileName);
+            }
             try (OutputStream out = new BufferedOutputStream(serviceContainer.getFileSystemService().addFile(userName, userPath), 64 * 1024)) {
                 out.write(xmlRequestConverter.toXml().getBytes());
             }
@@ -685,9 +691,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
-    private String createRequestId(String productionType) {
+    private String createRequestId(String nonUniqueFilename) {
         DateFormat dateFormat = DateUtils.createDateFormat("yyyyMMdd_HHmmssSSS");
-        return dateFormat.format(new Date()) + "_" + productionType + REQUEST_FILE_EXTENSION;
+        return nonUniqueFilename.substring(0, nonUniqueFilename.length()-REQUEST_FILE_EXTENSION.length())
+                + "_" + dateFormat.format(new Date()) + REQUEST_FILE_EXTENSION;
     }
 
     private String[] convert(String[] strings) {

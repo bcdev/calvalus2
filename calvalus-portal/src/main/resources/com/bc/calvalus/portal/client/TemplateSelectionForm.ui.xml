@@ -4,15 +4,17 @@
 
     <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
 
-    <g:HorizontalPanel width="100%">
-        <g:VerticalPanel spacing="2">
+    <g:HorizontalPanel spacing="0">
+        <g:VerticalPanel spacing="0">
             <!-- <g:HTMLPanel styleName="{style.panelTitle}">
                 <g:InlineLabel styleName="{style.panelTitleText}">Templates to pre-fill the form</g:InlineLabel>
             </g:HTMLPanel> -->
-            <g:HTMLPanel styleName="{style.panelTitle}">
-                <g:ListBox ui:field="requestList" width="25em"  visibleItemCount="3"/>
+            <g:FlowPanel styleName="{style.centeredHorizontalPanel} {style.flexRow} {style.outputProductionName}">
+                <g:VerticalPanel width="2em"/>
+                <g:ListBox ui:field="requestList" width="35em" visibleItemCount="3"/>
+                <g:VerticalPanel width="1em"/>
                 <g:Button ui:field='editButton' text="Fill form"/>
-            </g:HTMLPanel>
+            </g:FlowPanel>
         </g:VerticalPanel>
     </g:HorizontalPanel>
 
