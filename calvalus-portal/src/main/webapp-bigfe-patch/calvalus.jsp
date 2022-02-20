@@ -36,7 +36,7 @@
                         <a href="https://www.ufz.de/index.php?de=36336&webc_pm=43/2021"><img src="/calbigfe/images/BIGFE_Logo_Platzhalter.png" height="65" alt="BIGFE logo"/></a>
                     </td>
                     <td>
-                        <h1 class="title">BIGFE</h1>
+                        <h1 class="title">Calvalus</h1>
 
                         <h2 class="subTitle">Calvalus portal for on-demand processing</h2>
                     </td>
