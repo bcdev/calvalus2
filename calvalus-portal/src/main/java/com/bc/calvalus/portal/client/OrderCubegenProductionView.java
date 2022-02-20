@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -34,7 +35,14 @@ public class OrderCubegenProductionView extends OrderProductionView {
     public OrderCubegenProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        productSetSelectionForm = new ProductSetSelectionForm(getPortal(), null, true);
+        Filter<DtoProductSet> productSetFilter = new Filter<DtoProductSet>() {
+            @Override
+            public boolean accept(DtoProductSet dtoProductSet) {
+                return dtoProductSet.getProductType() != null && dtoProductSet.getProductType().startsWith("L3");
+            }
+        };
+
+        productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter, true);
         outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.setAvailableOutputFormats(new String[]{"XCube"});
         outputParametersForm.autoStaging.setVisible(false);
@@ -61,7 +69,7 @@ public class OrderCubegenProductionView extends OrderProductionView {
 
     @Override
     public String getTitle() {
-        return "Cubegen Processing";
+        return "Cube Generation";
     }
 
     @Override
