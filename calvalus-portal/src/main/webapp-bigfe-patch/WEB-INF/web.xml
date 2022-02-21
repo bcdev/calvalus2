@@ -125,7 +125,7 @@
         </web-resource-collection>
         <auth-constraint>
             <!-- Anyone with one of the listed roles may access this area -->
-            <role-name>calbigfe</role-name>
+            <role-name>bigfe</role-name>
             <role-name>bc</role-name>
         </auth-constraint>
     </security-constraint>
@@ -142,8 +142,13 @@
 
     <!-- Security roles referenced by this web application -->
     <security-role>
+        <role-name>bigfe</role-name>
+    </security-role>
+    <security-role>
+        <role-name>bc</role-name>
+    </security-role>
+    <security-role>
         <role-name>calvalus</role-name>
-        <role-name>calbigfe</role-name>
     </security-role>
 
 </web-app>
