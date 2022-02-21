@@ -16,9 +16,11 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
-import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -31,6 +33,7 @@ public class OrderCubegenProductionView extends OrderProductionView {
     private ProductSetSelectionForm productSetSelectionForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
+    private final String[] processorConfig;
 
     public OrderCubegenProductionView(PortalContext portalContext) {
         super(portalContext);
@@ -44,7 +47,7 @@ public class OrderCubegenProductionView extends OrderProductionView {
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter, true);
         outputParametersForm = new OutputParametersForm(portalContext);
-        outputParametersForm.setAvailableOutputFormats(new String[]{"XCube"});
+        outputParametersForm.setAvailableOutputFormats("XCube");
         outputParametersForm.autoStaging.setVisible(false);
         outputParametersForm.processingFormatCluster.setVisible(false);
 
@@ -54,7 +57,34 @@ public class OrderCubegenProductionView extends OrderProductionView {
         panel.add(outputParametersForm);
         panel.add(createOrderPanel());
 
+        processorConfig = new String[7];
+
         this.widget = panel;
+        final BackendServiceAsync backendService = portalContext.getBackendService();
+        backendService.getCalvalusConfig(new AsyncCallback<DtoCalvalusConfig>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Error in retrieving calvalus config", caught.getMessage());
+            }
+
+            @Override
+            public void onSuccess(DtoCalvalusConfig result) {
+                String bundleName = result.getConfig().get("calvalus.cubegen.processor.bundleName");
+                String bundleVersion = result.getConfig().get("calvalus.cubegen.processor.bundleVersion");
+                String bundleLocation = result.getConfig().get("calvalus.cubegen.processor.bundleLocation");
+                String processorName = result.getConfig().get("calvalus.cubegen.processor.name");
+                String processorDescription = result.getConfig().get("calvalus.cubegen.processor.description");
+                String processorParameters = result.getConfig().get("calvalus.cubegen.processor.parameters");
+                String processorOutputType = result.getConfig().get("calvalus.cubegen.processor.outputType");
+                processorConfig[0] = bundleName;
+                processorConfig[1] = bundleVersion;
+                processorConfig[2] = bundleLocation;
+                processorConfig[3] = processorName;
+                processorConfig[4] = processorDescription;
+                processorConfig[5] = processorParameters;
+                processorConfig[6] = processorOutputType;
+            }
+        });
     }
 
     @Override
@@ -93,13 +123,13 @@ public class OrderCubegenProductionView extends OrderProductionView {
     protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<>();
         parameters.putAll(productSetSelectionForm.getValueMap());
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "cubegen");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "1.1");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/projects/bigfe/software/cubegen-1.1");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, "XCube");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_DESCRIPTION, "Cube generation");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "");
-        parameters.put(ProcessorProductionRequest.OUTPUT_PRODUCT_TYPE, "XCube_S2_L2_C2RCC");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorConfig[0]);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorConfig[1]);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorConfig[2]);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorConfig[3]);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_DESCRIPTION, processorConfig[4]);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, processorConfig[5]);
+        parameters.put(ProcessorProductionRequest.OUTPUT_PRODUCT_TYPE, processorConfig[6]);
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
     }
