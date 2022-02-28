@@ -51,7 +51,7 @@ public class SynNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getNamingAuthority() {
-        return "org.esa-cci";
+        return "int.esa.climate";
     }
 
     @Override

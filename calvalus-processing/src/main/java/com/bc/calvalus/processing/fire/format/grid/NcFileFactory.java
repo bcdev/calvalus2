@@ -131,7 +131,7 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("keywords", getKeywordsMetadata()));
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", getNamingAuthority()));
-//        ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
+        ncFile.addGroupAttribute(null, new Attribute("doi", getDoi()));
         ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", getKeywordsVocabulary()));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
         ncFile.addGroupAttribute(null, new Attribute("comment", getCommentMetadata()));
