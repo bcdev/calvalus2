@@ -361,7 +361,33 @@
                     </deployer>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>maven-replacer-plugin</artifactId>
+                <version>1.3.2</version>
+                <executions>
+                    <execution>
+                        <!--<phase>prepare-package</phase>-->
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
 
+                <configuration>
+                    <!-- replace the token in this file -->
+                    <file>target/www/WEB-INF/classes/com/bc/calvalus/portal/client/key.txt</file>
+                    <replacements>
+                        <replacement>
+                            <!-- the name of the token to replace -->
+                            <token>REPLACED_BY_MAVEN</token>
+                            <!-- file below must contain the key in plaintext, nothing else -->
+                            <valueFile>google-maps-api-key.txt</valueFile>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

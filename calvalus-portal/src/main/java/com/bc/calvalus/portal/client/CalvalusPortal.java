@@ -164,7 +164,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         //LoadApi.go(runnable, loadLibraries, false);
         // Google API key of martin.boettcher@brockmann-consult.de for test purposes
-        LoadApi.go(runnable, loadLibraries, false, "key=AIzaSyDC6oUduMAdfWa48HkKSQyExtEGEWL2A2I");
+        String key = KeyResource.INSTANCE.mapsKey().getText();
+        LoadApi.go(runnable, loadLibraries, false, "key=" + key);
     }
 
     @Override
