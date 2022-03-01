@@ -383,7 +383,7 @@
                             <!-- the name of the token to replace -->
                             <token>REPLACED_BY_MAVEN</token>
                             <!-- file below must contain the key in plaintext, nothing else -->
-                            <valueFile>google-maps-api-key.txt</valueFile>
+                            <valueFile>${pom.basedir}/google-maps-api-key.txt</valueFile>
                         </replacement>
                     </replacements>
                 </configuration>
