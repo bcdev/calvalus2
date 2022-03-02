@@ -18,8 +18,11 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -33,17 +36,14 @@ public class OrderCubegenProductionView extends OrderProductionView {
     private ProductSetSelectionForm productSetSelectionForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
-    private final String[] processorConfig;
+    private DtoProcessorDescriptor processorDescriptor;
+    private String processorParameters;
 
     public OrderCubegenProductionView(PortalContext portalContext) {
         super(portalContext);
 
-        Filter<DtoProductSet> productSetFilter = new Filter<DtoProductSet>() {
-            @Override
-            public boolean accept(DtoProductSet dtoProductSet) {
-                return dtoProductSet.getProductType() != null && dtoProductSet.getProductType().startsWith("L3");
-            }
-        };
+        Filter<DtoProductSet> productSetFilter = dtoProductSet ->
+                dtoProductSet.getProductType() != null && dtoProductSet.getProductType().startsWith("L3");
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter, true);
         outputParametersForm = new OutputParametersForm(portalContext);
@@ -57,8 +57,6 @@ public class OrderCubegenProductionView extends OrderProductionView {
         panel.add(outputParametersForm);
         panel.add(createOrderPanel());
 
-        processorConfig = new String[7];
-
         this.widget = panel;
         final BackendServiceAsync backendService = portalContext.getBackendService();
         backendService.getCalvalusConfig(new AsyncCallback<DtoCalvalusConfig>() {
@@ -69,20 +67,20 @@ public class OrderCubegenProductionView extends OrderProductionView {
 
             @Override
             public void onSuccess(DtoCalvalusConfig result) {
-                String bundleName = result.getConfig().get("calvalus.cubegen.processor.bundleName");
-                String bundleVersion = result.getConfig().get("calvalus.cubegen.processor.bundleVersion");
-                String bundleLocation = result.getConfig().get("calvalus.cubegen.processor.bundleLocation");
                 String processorName = result.getConfig().get("calvalus.cubegen.processor.name");
-                String processorDescription = result.getConfig().get("calvalus.cubegen.processor.description");
-                String processorParameters = result.getConfig().get("calvalus.cubegen.processor.parameters");
-                String processorOutputType = result.getConfig().get("calvalus.cubegen.processor.outputType");
-                processorConfig[0] = bundleName;
-                processorConfig[1] = bundleVersion;
-                processorConfig[2] = bundleLocation;
-                processorConfig[3] = processorName;
-                processorConfig[4] = processorDescription;
-                processorConfig[5] = processorParameters;
-                processorConfig[6] = processorOutputType;
+                String processorVersion = result.getConfig().get("calvalus.cubegen.processor.version");
+                processorParameters = result.getConfig().get("calvalus.cubegen.processor.parameters");
+                backendService.getProcessors("processor=" + processorName + "," + processorVersion, new AsyncCallback<DtoProcessorDescriptor[]>() {
+                    @Override
+                    public void onFailure(Throwable caught) {
+                        Dialog.error("Error in retrieving processors", caught.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(DtoProcessorDescriptor[] result) {
+                        processorDescriptor = result[0];
+                    }
+                });
             }
         });
     }
@@ -123,13 +121,13 @@ public class OrderCubegenProductionView extends OrderProductionView {
     protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<>();
         parameters.putAll(productSetSelectionForm.getValueMap());
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorConfig[0]);
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorConfig[1]);
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorConfig[2]);
-        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorConfig[3]);
-        parameters.put(ProcessorProductionRequest.PROCESSOR_DESCRIPTION, processorConfig[4]);
-        parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, processorConfig[5]);
-        parameters.put(ProcessorProductionRequest.OUTPUT_PRODUCT_TYPE, processorConfig[6]);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, processorParameters);
+        parameters.put(ProcessorProductionRequest.PROCESSOR_DESCRIPTION, processorDescriptor.getDescriptionHtml());
+        parameters.put(ProcessorProductionRequest.OUTPUT_PRODUCT_TYPE, processorDescriptor.getOutputProductType());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
     }
