@@ -212,10 +212,8 @@ public class CommonUtils {
                     int lastIndex = entry.getName().lastIndexOf("/");
                     if (lastIndex != -1) {
                         // files are not in root dir of tar, need to create directories
-                        boolean created = new File(entry.getName().substring(0, lastIndex)).mkdirs();
-                        if (!created) {
-                            throw new IOException(String.format("Unable to create directory '%s' during extraction of contents of archive: '", entry.getName()));
-                        }
+                        final String targetDir = entry.getName().substring(0, lastIndex);
+                        new File(targetDir).mkdirs();
                     }
                     FileOutputStream fos = new FileOutputStream(entry.getName(), false);
                     try (BufferedOutputStream dest = new BufferedOutputStream(fos, 1024)) {
