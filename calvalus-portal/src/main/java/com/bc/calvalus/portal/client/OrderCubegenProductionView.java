@@ -134,7 +134,7 @@ public class OrderCubegenProductionView extends OrderProductionView {
 
     @Override
     public boolean isRestoringRequestPossible() {
-        return true;
+        return false;
     }
 
     @Override
