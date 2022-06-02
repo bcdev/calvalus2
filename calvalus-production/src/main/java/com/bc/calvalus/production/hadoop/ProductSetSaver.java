@@ -20,12 +20,12 @@ class ProductSetSaver implements WorkflowStatusListener {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private final HadoopWorkflowItem l2WorkflowItem;
+    private final HadoopWorkflowItem productSetWorkflowItem;
     private final ProductSet productSet;
     private final String outputDir;
 
-    public ProductSetSaver(HadoopWorkflowItem l2WorkflowItem, ProductSet productSet, String outputDir) {
-        this.l2WorkflowItem = l2WorkflowItem;
+    public ProductSetSaver(HadoopWorkflowItem productSetWorkflowItem, ProductSet productSet, String outputDir) {
+        this.productSetWorkflowItem = productSetWorkflowItem;
         this.productSet = productSet;
         this.outputDir = outputDir;
     }
@@ -36,7 +36,7 @@ class ProductSetSaver implements WorkflowStatusListener {
 
     @Override
     public void handleStatusChanged(WorkflowStatusEvent event) {
-        if (event.getSource() == l2WorkflowItem && event.getNewStatus().getState() == ProcessState.COMPLETED) {
+        if (event.getSource() == productSetWorkflowItem && event.getNewStatus().getState() == ProcessState.COMPLETED) {
             String productSetDefinition = ProductSetPersistable.convertToCSV(productSet);
             writeProductSetFile(productSetDefinition);
         }
@@ -46,7 +46,7 @@ class ProductSetSaver implements WorkflowStatusListener {
         Path productSetsFile = new Path(outputDir, ProductSetPersistable.FILENAME);
         OutputStreamWriter outputStreamWriter = null;
         try {
-            FileSystem fileSystem = l2WorkflowItem.getProcessingService().getFileSystem(l2WorkflowItem.getUserName(), productSetsFile.toString());
+            FileSystem fileSystem = productSetWorkflowItem.getProcessingService().getFileSystem(productSetWorkflowItem.getUserName(), productSetsFile.toString());
             OutputStream fsDataOutputStream = fileSystem.create(productSetsFile);
             outputStreamWriter = new OutputStreamWriter(fsDataOutputStream);
             outputStreamWriter.write(text);

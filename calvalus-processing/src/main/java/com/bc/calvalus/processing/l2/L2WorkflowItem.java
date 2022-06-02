@@ -32,8 +32,18 @@ import java.io.IOException;
  */
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
+    private final Class mapperClass;
+    private final Class outputFormatClass;
+
     public L2WorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        this(processingService, username, jobName, jobConfig, L2Mapper.class, SimpleOutputFormat.class);
+    }
+
+    public L2WorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig,
+                          Class mapperClass, Class outputFormatClass) {
         super(processingService, username, jobName, jobConfig);
+        this.mapperClass = mapperClass;
+        this.outputFormatClass = outputFormatClass;
     }
 
     @Override
@@ -67,9 +77,9 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
 
         job.setInputFormatClass(getInputFormatClass(jobConfig));
-        job.setMapperClass(L2Mapper.class);
+        job.setMapperClass(mapperClass);
         job.setNumReduceTasks(0);
-        job.setOutputFormatClass(SimpleOutputFormat.class);
+        job.setOutputFormatClass(outputFormatClass);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
     }

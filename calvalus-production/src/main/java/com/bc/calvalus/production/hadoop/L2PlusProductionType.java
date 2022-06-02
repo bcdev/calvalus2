@@ -23,10 +23,14 @@ import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.beam.S3aCompatibleOutputFormat;
+import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.l2.L2FormattingWorkflowItem;
+import com.bc.calvalus.processing.l2.L2Mapper;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
+import com.bc.calvalus.processing.l2.ProcessingMapper;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -38,6 +42,7 @@ import org.esa.snap.core.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -67,98 +72,100 @@ public class L2PlusProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        final String productionName = productionRequest.getProductionName(
-                createProductionName("Level 2 ", productionRequest));
+        final String productionName = productionRequest.getProductionName(createProductionName("Level 2 ", productionRequest));
+        final String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
+        final String outputBandList = productionRequest.getString("outputBandList", "");
+        final List<DateRange> dateRanges = productionRequest.getDateRanges();
+        final ProcessorProductionRequest processor = new ProcessorProductionRequest(productionRequest);
+        final String processorName = processor.getProcessorName();
+        final ProcessorDescriptor processorDescriptor = (processorName != null) ? processor.getProcessorDescriptor(getProcessingService()) : null;
+        final boolean isXCubeRequested = "XCube".equals(outputFormat);
+        final boolean isFormattingImplicit = processorDescriptor != null && processorDescriptor.getFormatting() == ProcessorDescriptor.FormattingType.IMPLICIT;
+        final boolean isFormattingRequested = ! isXCubeRequested && ! "SEQ".equals(outputFormat);
 
-        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        final Workflow.Sequential workflowSequence = new Workflow.Sequential();
+        String workflowOutputDir = productionRequest.getString("inputPath", "");
+        String formattingInputDir = workflowOutputDir;
 
-        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
-
-        String globalOutputDir = "";
-        String formattingInputDir;
-        Workflow.Sequential l2WorkflowItem = new Workflow.Sequential();
-        String processorName = processorProductionRequest.getProcessorName();
-        if (processorName != null && processorName.equals("Formatting")) {
-            formattingInputDir = productionRequest.getString("inputPath");
-        } else {
-            HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
-                                                                     productionRequest, processorProductionRequest);
-            globalOutputDir = processingItem.getOutputDir();
-            ProcessorDescriptor processorDesc = null;
+        if (isXCubeRequested) {
+            // set output url, create step and add it to sequence
+            Configuration l2JobConfig = createJobConfig(productionRequest);
+            setDefaultProcessorParameters(processor, l2JobConfig);
+            String bucketUrl = l2JobConfig.get("calvalus.xcube.bucketurl");
+            productionRequest.setParameter("outputPath", String.format("%s/cubes/%s", bucketUrl, productionRequest.getUserName()));
+            HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges, productionRequest, processor,
+                                                                     ProcessingMapper.class, bucketUrl.startsWith("s3") ? S3aCompatibleOutputFormat.class : SimpleOutputFormat.class);
+            // use ProcessingMapper to include formatting
+            processingItem.getJobConfig().set("mapreduce.job.map.class", ProcessingMapper.class.getName());
+            processingItem.getJobConfig().set("outputFormat", "xcube-zarr");
+            processingItem.getJobConfig().set("outputReplacement", productionName.replaceAll(" ", "_"));
+            workflowSequence.add(processingItem);
+            workflowOutputDir = processingItem.getOutputDir();
+        } else if (! "Formatting".equals(processorName)) {
+            // create step and add it to sequence
+            HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges, productionRequest, processor);
+            workflowSequence.add(processingItem);
+            // memorise intermediate and maybe output
+            workflowOutputDir = processingItem.getOutputDir();
+            formattingInputDir = workflowOutputDir + "/" + L2ProductionType.getPathPatternForProcessingResult(processorDescriptor);
+            // log
             if (processorName != null) {
-                processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-            }
-            formattingInputDir = globalOutputDir + "/" + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
-            if (processorName != null) {
-                LOG.info("choosing pattern " + formattingInputDir + " for processor " + processorName + " descriptor " + processorDesc);
-                if (processorDesc == null) {
-                    LOG.info("looking for bundle " + processorProductionRequest.getProcessorBundle() + " location " + processorProductionRequest.getProcessorBundleLocation());
+                LOG.info("choosing pattern " + formattingInputDir + " for processor " + processorName + " descriptor " + processorDescriptor);
+                if (processorDescriptor == null) {
+                    LOG.info("looking for bundle " + processor.getProcessorBundle() + " location " + processor.getProcessorBundleLocation());
                 }
             }
-            l2WorkflowItem.add(processingItem);
         }
 
-        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
-                JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
+        if (isFormattingRequested && !isFormattingImplicit && ! isXCubeRequested) {
+            workflowOutputDir = getOutputPath(productionRequest, productionId, "-output");
 
-        ProcessorDescriptor processorDescriptor = null;
-        if (processorName != null) {
-            processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        }
-        boolean isFormattingImplicit = processorDescriptor != null &&
-                                       processorDescriptor.getFormatting() == ProcessorDescriptor.FormattingType.IMPLICIT;
-        boolean isFormattingRequested = outputFormat != null && !outputFormat.equals("SEQ");
-
-        if (isFormattingRequested && !isFormattingImplicit) {
-            String formattingOutputDir = getOutputPath(productionRequest, productionId, "-output");
-            globalOutputDir = formattingOutputDir;
-
-            Workflow.Parallel formattingItem = new Workflow.Parallel();
-            String outputBandList = productionRequest.getString("outputBandList", "");
-            if (outputFormat.equals("Multi-GeoTIFF")) {
-                if (!outputBandList.isEmpty()) {
-                    for (String bandName : StringUtils.csvToArray(outputBandList)) {
-                        HadoopWorkflowItem item = createFormattingItem(productionName + " Format: " + bandName,
-                                                                       dateRanges,
-                                                                       formattingInputDir, formattingOutputDir,
-                                                                       productionRequest,
-                                                                       processorProductionRequest, bandName, "GeoTIFF");
-                        Configuration jobConfig = item.getJobConfig();
-                        // TODO generalize
-                        if ("FRESHMON".equalsIgnoreCase(jobConfig.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
-                            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX,
-                                          "L2_of_MER_..._1.....(........_......).*");
-                            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT,
-                                          String.format("%s_%s_BC_$1", bandName, productionRequest.getRegionName()));
-                        }
-                        formattingItem.add(item);
-                    }
-                } else {
-                    throw new ProductionException(
-                            "If Multi-GeoTiff is specified as format also tailoring must be enabled and bands must be selected");
-                }
+            if (! "Multi-GeoTIFF".equals(outputFormat)) {
+                // normal formatting of sequence files
+                HadoopWorkflowItem formattingItem =
+                        createFormattingItem(productionName + " Format", dateRanges,
+                                             formattingInputDir, workflowOutputDir, productionRequest,
+                                             processor, outputBandList,
+                                             outputFormat);
+                workflowSequence.add(formattingItem);
             } else {
-                formattingItem.add(createFormattingItem(productionName + " Format", dateRanges,
-                                                        formattingInputDir, formattingOutputDir, productionRequest,
-                                                        processorProductionRequest, outputBandList,
-                                                        outputFormat));
+                // parallel formatting of bands into GeoTIFF files
+                if (outputBandList.isEmpty()) {
+                    throw new ProductionException("If Multi-GeoTiff is specified as format also tailoring must be enabled and bands must be selected");
+                }
+                Workflow.Parallel formattingItems = new Workflow.Parallel();
+                for (String bandName : StringUtils.csvToArray(outputBandList)) {
+                    HadoopWorkflowItem formattingItem =
+                            createFormattingItem(productionName + " Format: " + bandName,
+                                                 dateRanges,
+                                                 formattingInputDir, workflowOutputDir,
+                                                 productionRequest,
+                                                 processor, bandName, "GeoTIFF");
+                    Configuration jobConfig = formattingItem.getJobConfig();
+                    if ("FRESHMON".equalsIgnoreCase(jobConfig.get(JobConfigNames.CALVALUS_PROJECT_NAME))) {
+                        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX, "L2_of_MER_..._1.....(........_......).*");
+                        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, String.format("%s_%s_BC_$1", bandName, productionRequest.getRegionName()));
+                    }
+                    formattingItems.add(formattingItem);
+                }
+                workflowSequence.add(formattingItems);
             }
-            l2WorkflowItem.add(formattingItem);
         }
-        if (l2WorkflowItem.getItems().length == 0) {
+
+        if (workflowSequence.getItems().length == 0) {
             throw new ProductionException("Neither Processing nor Formatting selected.");
         }
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
-        boolean autoStaging = productionRequest.isAutoStaging();
+        boolean autoStaging = productionRequest.isAutoStaging() && ! isXCubeRequested;
         return new Production(productionId,
                               productionName,
-                              globalOutputDir,
+                              workflowOutputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,
-                              l2WorkflowItem);
+                              workflowSequence);
     }
 
 
@@ -216,8 +223,15 @@ public class L2PlusProductionType extends HadoopProductionType {
 
     private HadoopWorkflowItem createProcessingItem(String productionId, String productionName,
                                                     List<DateRange> dateRanges, ProductionRequest productionRequest,
-                                                    ProcessorProductionRequest processorProductionRequest) throws
-                                                                                                           ProductionException {
+                                                    ProcessorProductionRequest processorProductionRequest) throws ProductionException {
+        return createProcessingItem(productionId, productionName, dateRanges, productionRequest, processorProductionRequest,
+                                    L2Mapper.class, SimpleOutputFormat.class);
+    }
+
+    private HadoopWorkflowItem createProcessingItem(String productionId, String productionName,
+                                                    List<DateRange> dateRanges, ProductionRequest productionRequest,
+                                                    ProcessorProductionRequest processorProductionRequest,
+                                                    Class mapperClass, Class outputFormatClass) throws ProductionException {
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
@@ -245,7 +259,7 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                L2ProductionType.getResultingBandNames(processorDesc));
 
         HadoopWorkflowItem l2Item = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                                                       productionName, l2JobConfig);
+                                                       productionName, l2JobConfig, mapperClass, outputFormatClass);
         l2Item.addWorkflowStatusListener(new ProductSetSaver(l2Item, productSet, outputDir));
         return l2Item;
     }
