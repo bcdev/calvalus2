@@ -192,5 +192,44 @@ cp -r /home/cvop/calbfg-patch/* webapps/calbfg
 rm -rf webapps/calbfg/staging/
 mv temp/staging webapps/calbfg/
 
+===========================================================================
+GeoServer - Calvalus production
+-------------------------------
+Calvalus supports the automated publishing of both regular GeoTIFF (geotiff imageType) and Cloud
+Optimized GeoTIFF (cog imageType) images to GeoServer using the existing quicklooks production feature.
+
+The GeoServer data store name used by the upload service is automatically generated using the product
+name. Any existing data store with this product name within the workspace is replaced. Likewise,
+the GeoServer layer name used by the upload service is also generated using the same product name. Any
+existing layer with this name within the workspace is also replaced. The upload service uses the
+default GeoServer raster style. Once data is published to GeoServer, the data product is automatically
+accessible from GeoServer via Web Mapping Service (WMS).
+
+The Calvalus administrator needs to configure these GeoServer quicklooks settings in calvalus.properties
+to enable GeoServer - Calvalus production support:
+
+# Quicklooks upload handler. Note: only geoserver supported. Mandatory.
+calvalus.ql.upload.handler = geoserver
+
+# Quicklooks upload URL. Mandatory. Example:
+calvalus.ql.upload.URL = http://localhost:8080/geoserver/rest/
+
+# Username and password for the GeoServer upload URL service. Optional. Example:
+calvalus.ql.upload.username = admin
+calvalus.ql.upload.password = geoserver
+
+# GeoServer workspace to use. Mandatory. Example:
+calvalus.ql.upload.workspace = calmar
+
+===========================================================================
+GeoServer - Calvalus portal support
+-----------------------------------
+Once GeoServer is enabled in the Calvalus production system, it is also possible to configure a
+quicklooks WMS checkbox in the portal user interface. To enable this WMS checkbox please set the
+following configuration option, this is an example:
+
+# Quicklooks WMS checkbox - access control and visual configuration
+calvalus.portal.ql.wms = calvalus bc bg coastcolour calwps
+
 
 
