@@ -279,22 +279,23 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 LOG.info("skipping non-existing period " + path);
                 continue;
             }
-            path = fileStatuses[0].getPath();
-            LOG.info("aggregating period " + weekFileName);
-
-            Product product = readProduct(conf, fs, path);
-            if (isOlci) {
-                product = sdrToSr(product);
-            }
-            final MultiLevelImage[] bandImage = new MultiLevelImage[numSourceBands];
-            for (int b = 0; b < numSourceBands; ++b) {
-                if (week == start)  {
-                    LOG.info("source band " + product.getBandAt(sourceBandIndex[b]).getName() + " index " + sourceBandIndex[b]);
+            for (int numProds = 0 ; numProds < fileStatuses.length; numProds++) {
+                path = fileStatuses[numProds].getPath();
+                LOG.info("aggregating period " + weekFileName);
+                Product product = readProduct(conf, fs, path);
+                if (isOlci) {
+                    product = sdrToSr(product);
                 }
-                bandImage[b] = product.getBandAt(sourceBandIndex[b]).getGeophysicalImage();
+                final MultiLevelImage[] bandImage = new MultiLevelImage[numSourceBands];
+                for (int b = 0; b < numSourceBands; ++b) {
+                    if (week == start) {
+                        LOG.info("source band " + product.getBandAt(sourceBandIndex[b]).getName() + " index " + sourceBandIndex[b]);
+                    }
+                    bandImage[b] = product.getBandAt(sourceBandIndex[b]).getGeophysicalImage();
+                }
+                bandImages.add(bandImage);
+                products.add(product);
             }
-            bandImages.add(bandImage);
-            products.add(product);
             pm.worked(2);
         }
     }
