@@ -27,6 +27,7 @@ import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.runtime.internal.DirScanner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -343,7 +344,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
     }
 
-    public void saveProcessedProductFiles(String[] outputFilesNames, ProgressMonitor pm) throws IOException {
+    public void saveProcessedProductFiles(String[] outputFilenames, ProgressMonitor pm) throws IOException {
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
@@ -374,7 +375,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
-        velocityContext.put("outputFileNames", outputFilesNames);
+        velocityContext.put("outputFileNames", outputFilenames);
         Path outputPath = getOutputDirectoryPath();
         velocityContext.put("outputPath", outputPath);
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
@@ -385,10 +386,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
-            getLogger().info("finalize: " + executable + " " + Arrays.toString(outputFilesNames) + " " + outputPath.toString());
-            String[] cmdArray = new String[outputFilesNames.length + 2];
+            getLogger().info("finalize: " + executable + " " + Arrays.toString(outputFilenames) + " " + outputPath.toString());
+            String[] cmdArray = new String[outputFilenames.length + 2];
             cmdArray[0] = "./finalize";
-            System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
+            System.arraycopy(outputFilenames, 0, cmdArray, 1, outputFilenames.length);
             cmdArray[cmdArray.length - 1] = outputPath.toString();
             String user = conf.get("mapreduce.job.user.name");
             String[] env = new String[] { "HADOOP_USER_NAME=" + user };
@@ -405,12 +406,29 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         } else {
             pm.beginTask("saving", 1);
             MapContext mapContext = getMapContext();
-            for (String outputFileName : outputFilesNames) {
-                InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
-                Path workPath = new Path(getWorkOutputDirectoryPath(),
-                                         tableOutputFilename != null ? tableOutputFilename : outputFileName);
-                OutputStream os = workPath.getFileSystem(conf).create(workPath);
-                ProductFormatter.copyAndClose(is, os, mapContext);
+            final String outputCompression = conf.get(JobConfigNames.OUTPUT_COMPRESSION);
+            if ("zip".equals(outputCompression) && outputFilenames.length == 1) {
+                LOG.info("Creating ZIP archive on HDFS.");
+                OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFilenames[0] + ".zip");
+                ProductFormatter.zip(new File(outputFilenames[0]), outputStream, mapContext);
+            } else if ("dir2".equals(outputCompression) && outputFilenames.length == 1) {
+                LOG.info("Copying content of output dir to HDFS.");
+                DirScanner dirScanner = new DirScanner(new File(outputFilenames[0]), true, true);
+                String[] entryPaths = dirScanner.scan();
+                for (String entryPath : entryPaths) {
+                    File sourceFile = new File(new File(outputFilenames[0]).getAbsolutePath() + File.separator + entryPath);
+                    InputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile));
+                    OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, entryPath);
+                    ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
+                }
+            } else {
+                for (String outputFileName : outputFilenames) {
+                    InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                    Path workPath = new Path(getWorkOutputDirectoryPath(),
+                                             tableOutputFilename != null ? tableOutputFilename : outputFileName);
+                    OutputStream os = workPath.getFileSystem(conf).create(workPath);
+                    ProductFormatter.copyAndClose(is, os, mapContext);
+                }
             }
             pm.done();
         }
