@@ -16,12 +16,14 @@
 
 package com.bc.calvalus.processing.executable;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.runtime.internal.DirScanner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -39,6 +41,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * A processor adapter that uses a Python command line to process an input product.
@@ -183,7 +186,8 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
     }
 
     protected void saveProcessedProductFiles(String[] outputFilesNames, ProgressMonitor pm) throws IOException {
-        Configuration conf = getConfiguration();
+        final Configuration conf = getConfiguration();
+        final String outputCompression = conf.get(JobConfigNames.OUTPUT_COMPRESSION);
         String tableOutputFilename = null;
         if (getInputParameters().length > 0) {
             for (int i=0; i<getInputParameters().length; i+=2) {
@@ -194,12 +198,28 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
         }
         pm.beginTask("saving", 1);
         MapContext mapContext = getMapContext();
-        for (String outputFileName : outputFilesNames) {
-            InputStream is = new BufferedInputStream(new FileInputStream(new File(".", outputFileName)));
-            Path workPath = new Path(getWorkOutputDirectoryPath(),
-                                     tableOutputFilename != null ? tableOutputFilename : outputFileName);
-            OutputStream os = workPath.getFileSystem(conf).create(workPath);
-            ProductFormatter.copyAndClose(is, os, mapContext);
+        if ("zip".equals(outputCompression) && outputFilenames.length == 1) {
+            LOG.info("Creating ZIP archive on HDFS.");
+            OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFilenames[0] + ".zip");
+            ProductFormatter.zip(new File(outputFilenames[0]), outputStream, mapContext);
+        } else if ("dir2".equals(outputCompression) && outputFilenames.length == 1) {
+            LOG.info("Copying content of output dir to HDFS.");
+            DirScanner dirScanner = new DirScanner(new File(outputFilenames[0]), true, true);
+            String[] entryPaths = dirScanner.scan();
+            for (String entryPath : entryPaths) {
+                File sourceFile = new File(new File(outputFilenames[0]).getAbsolutePath() + File.separator + entryPath);
+                InputStream inputStream = new BufferedInputStream(new FileInputStream(sourceFile));
+                OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, entryPath);
+                ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
+            }
+        } else {
+            for (String outputFileName : outputFilesNames) {
+                InputStream is = new BufferedInputStream(new FileInputStream(new File(".", outputFileName)));
+                Path workPath = new Path(getWorkOutputDirectoryPath(),
+                                         tableOutputFilename != null ? tableOutputFilename : outputFileName);
+                OutputStream os = workPath.getFileSystem(conf).create(workPath);
+                ProductFormatter.copyAndClose(is, os, mapContext);
+            }
         }
         pm.done();
     }

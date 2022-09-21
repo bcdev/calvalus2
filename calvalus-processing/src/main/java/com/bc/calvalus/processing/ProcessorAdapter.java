@@ -94,7 +94,7 @@ public abstract class ProcessorAdapter {
 
     public enum MODE {TARGET, EXECUTE}
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
+    protected static final Logger LOG = CalvalusLogger.getLogger();
     public static final String[] EMPTY_PARAMETERS = new String[0];
 
     private final MapContext mapContext;
