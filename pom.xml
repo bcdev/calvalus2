@@ -19,7 +19,7 @@
         <s2tbx.version>8.0.6.1cv</s2tbx.version>
         <s3tbx.version>8.0.5.2cv</s3tbx.version>
         <seadas.reader.version>1.9.4</seadas.reader.version>
-        <probav.reader.version>2.2.0</probav.reader.version>
+        <probav.reader.version>2.1.0cv</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
         <geotools.version>20.0</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
