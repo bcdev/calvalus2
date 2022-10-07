@@ -20,6 +20,7 @@
         <s3tbx.version>8.0.5.2cv</s3tbx.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
+        <seadas.reader.version>1.9.4</seadas.reader.version>
     </properties>
 
     <dependencies>
@@ -286,12 +287,12 @@
         <dependency>
             <groupId>org.esa.snap.seadas</groupId>
             <artifactId>seadas-reader</artifactId>
-            <version>1.8</version>
+            <version>${seadas.reader.version}</version>
         </dependency>
         <dependency>
             <groupId>org.vito.probavbox</groupId>
             <artifactId>probavbox-reader</artifactId>
-            <version>2.1.0</version>
+            <version>2.2.0</version>
         </dependency>
 
         <dependency>
@@ -485,11 +486,13 @@
                         <artifactId>jhdfobj</artifactId>
                         <version>${ncsaj.version}</version>
                     </dependency>
+                    <!--
                     <dependency>
                         <groupId>ncsa.hdf</groupId>
                         <artifactId>jhdf5obj</artifactId>
                         <version>${ncsaj.version}</version>
                     </dependency>
+                    -->
                 </dependencies>
             </plugin>
 
