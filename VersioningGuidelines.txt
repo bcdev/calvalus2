@@ -15,6 +15,8 @@ Calvalus branches and versions
  o To cope with incompatible SNAP version upgrades a third version level is introduced.
    Calvalus 2.19.x on the 2.19 branch is maintained for SNAP 7.x.
    Calvalus 2.20-SNAPSHOT on the master branch starts the SNAP-8 versions.
+ o Branch 2.24.x.snap8 is the maintenance branch for SNAP-8 based Calvalus versions.
+   Calvalus 2.25-SNAPSHOT on the master branch starts the SNAP-9 versions.
  o We aim at a new minor version about every 2-3 months, usually aligned with the start of operations
    for some project.
 
