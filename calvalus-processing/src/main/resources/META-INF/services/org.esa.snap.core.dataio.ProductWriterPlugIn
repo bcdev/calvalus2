@@ -1,3 +1,4 @@
 com.bc.calvalus.processing.beam.StreamingProductPlugin
 com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4WriterPlugIn
 com.bc.calvalus.processing.mosaic.firecci.FireL3Nc4WriterPlugIn
+com.bc.calvalus.processing.fire.FrpL3ProductWriterPlugIn
