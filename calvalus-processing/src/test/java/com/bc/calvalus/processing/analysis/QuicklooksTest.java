@@ -23,13 +23,7 @@ import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TaskAttemptContext;
 import org.apache.hadoop.mapred.TaskAttemptID;
-import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.InputFormat;
-import org.apache.hadoop.mapreduce.JobID;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.OutputFormat;
-import org.apache.hadoop.mapreduce.Partitioner;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.*;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.util.Progressable;
@@ -46,7 +40,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Marco Peters
@@ -54,7 +48,7 @@ import static org.junit.Assert.*;
 public class QuicklooksTest {
 
     @Test
-    public void testReadSingleConfig() throws Exception {
+    public void testReadSingleConfig() {
         StringBuilder sb = new StringBuilder();
         sb.append("<quicklooks>\n");
         sb.append("<configs>\n");
@@ -80,8 +74,8 @@ public class QuicklooksTest {
         String[] rgbaExpressions = qlConfig.getRGBAExpressions();
         assertEquals(4, rgbaExpressions.length);
         assertEquals("var2 + log(var3)", rgbaExpressions[0]);
-        assertEquals(" complicated expression", rgbaExpressions[1]);
-        assertEquals(" 1-3 + 5", rgbaExpressions[2]);
+        assertEquals("complicated expression", rgbaExpressions[1]);
+        assertEquals("1-3 + 5", rgbaExpressions[2]);
         assertEquals("constant", rgbaExpressions[3]);
         double[] v1Values = qlConfig.getRGBAMinSamples();
         assertEquals(4, v1Values.length);
@@ -110,7 +104,7 @@ public class QuicklooksTest {
     }
 
     @Test
-    public void testReadSeveralConfigs() throws Exception {
+    public void testReadSeveralConfigs() {
         StringBuilder sb = new StringBuilder();
         sb.append("<quicklooks>\n");
         sb.append("<configs>\n");
