@@ -146,7 +146,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(33.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
         assertEquals(42.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3b_night_water");
+        variable = netcdfFile.findVariable("s3b_night_FRP_related_surface_conditions_flag");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF._FILLVALUE).getNumericValue());
         data = variable.read();
@@ -203,7 +203,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(19, data.getInt(index.set(0, 1, 6)));
         assertEquals(28, data.getInt(index.set(0, 2, 7)));
 
-        variable = netcdfFile.findVariable("s3a_night_water");
+        variable = netcdfFile.findVariable("s3a_night_FRP_related_surface_conditions_flag");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
@@ -221,7 +221,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(32.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
         assertEquals(9.f, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3a_night_cloud_fraction");
+        variable = netcdfFile.findVariable("s3a_night_related_atmospheric_condition_fraction");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF._FILLVALUE).getNumericValue());
         data = variable.read();
@@ -440,7 +440,7 @@ public class FrpProductWriterIntegrationTest {
 
         attribute = globalAttributes.get(7);
         assertEquals("summary", attribute.getShortName());
-        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution, and also provide some adjustments for cloud cover variation since clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
+        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution, and also provide some adjustments for unsuitable atmospheric condition since e.g clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
                 attribute.getStringValue());
 
         attribute = globalAttributes.get(12);
@@ -497,7 +497,7 @@ public class FrpProductWriterIntegrationTest {
 
     private void ensureDimension(NetcdfFile netcdfFile, String dimName, int expectedLength) {
         final Dimension dimension = netcdfFile.findDimension(dimName);
-        assertNotNull(dimName);
+        assertNotNull(dimension);
         assertEquals(expectedLength, dimension.getLength());
     }
 }

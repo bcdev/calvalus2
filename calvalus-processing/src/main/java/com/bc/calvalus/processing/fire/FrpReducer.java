@@ -57,8 +57,6 @@ public class FrpReducer extends L3Reducer {
     private static final int CLASSIFICATION_IDX = 12;
     private static final int CONF_IDX = 13;
     private static final int SAT_ZENITH_IDX = 14;
-    private static final int CONF_FLAGS_IN_IDX = 15;
-    private static final int CONF_FLAGS_FN_IDX = 16;
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static long THIRTY_YEARS;
@@ -161,9 +159,7 @@ public class FrpReducer extends L3Reducer {
                 out.write(String.format("%s", platformNumber == 1 ? "S3A" : platformNumber == 2 ? "S3B" : "unknown"));
                 out.write('\t');
 
-                final int confFlags_in = (int) bin.getFeatureValues()[CONF_FLAGS_IN_IDX];
-                final int confFlags_fn = (int) bin.getFeatureValues()[CONF_FLAGS_FN_IDX];
-                out.write(String.format(Locale.ENGLISH, "%d", isWater(flags, confFlags_in, confFlags_fn) ? 0 : 1));
+                out.write(String.format(Locale.ENGLISH, "%d", isWater(flags) ? 0 : 1));
                 out.write('\t');
 
                 out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[CLASSIFICATION_IDX]));

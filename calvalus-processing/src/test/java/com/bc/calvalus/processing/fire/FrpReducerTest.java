@@ -118,8 +118,6 @@ public class FrpReducerTest {
         featureValues[12] = 14.f; // classification
         featureValues[13] = 15.f; // confidence
         featureValues[14] = 16.f; // sat_zenith
-        featureValues[15] = 17.f; // confidence_flags_in
-        featureValues[16] = 18.f; // confidence_flags_fn
         spatialBin.setNumObs(1);
 
         final ArrayList<L3SpatialBin> binList = new ArrayList<>();
@@ -130,7 +128,7 @@ public class FrpReducerTest {
         FrpReducer.writeL2CSV(context, createCalendar(), out);
 
         assertEquals("Column\tRow\tDate\tTime\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tConfidence\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n" +
-                        "6\t5\t20200923\t040520\t3.00000\t4.00000\t16.00000\t7.000000\t8.000000\t9.000000\t10.000000\t15.000000\t13\t1\t11.000000\tS3B\t0\t14\n",
+                        "6\t5\t20200923\t040520\t3.00000\t4.00000\t16.00000\t7.000000\t8.000000\t9.000000\t10.000000\t15.000000\t13\t1\t11.000000\tS3B\t1\t14\n",
                 out.toString());
     }
 }

@@ -199,13 +199,15 @@ public class FrpMapperTest {
 
     @Test
     public void testIsCloud() {
-        assertEquals(1, FrpMapper.isCloud(CONF_SUMMARY_CLOUD, 0));
-        assertEquals(1, FrpMapper.isCloud(0, CONF_SUMMARY_CLOUD));
-        assertEquals(1, FrpMapper.isCloud(CONF_SUMMARY_CLOUD, CONF_SUMMARY_CLOUD));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, 0, 0));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, CONF_SUMMARY_CLOUD, 0));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, 0, CONF_SUMMARY_CLOUD));
+        assertEquals(1, FrpMapper.isCloud(FRP_CLOUD, CONF_SUMMARY_CLOUD, CONF_SUMMARY_CLOUD));
 
-        assertEquals(0, FrpMapper.isCloud(0, 0));
-        assertEquals(0, FrpMapper.isCloud(CONF_SUMMARY_CLOUD | CONF_UNFILLED, 0));
-        assertEquals(0, FrpMapper.isCloud(0, CONF_SUMMARY_CLOUD | CONF_UNFILLED));
+        assertEquals(0, FrpMapper.isCloud(0, 0, 0));
+        assertEquals(0, FrpMapper.isCloud(FRP_WATER, 0, 0));
+        assertEquals(0, FrpMapper.isCloud(FRP_CLOUD, CONF_UNFILLED, 0));
+        assertEquals(0, FrpMapper.isCloud(FRP_CLOUD, 0, CONF_UNFILLED));
     }
 
     @Test
@@ -219,17 +221,12 @@ public class FrpMapperTest {
 
     @Test
     public void testIsWater() {
-        assertTrue(FrpMapper.isWater(FRP_WATER, 0, 0));
-        assertTrue(FrpMapper.isWater(0, CONF_INLAND_WATER, 0));
-        assertTrue(FrpMapper.isWater(0, 0, CONF_INLAND_WATER));
-        assertTrue(FrpMapper.isWater(L1B_WATER, 0, 0));
+        assertTrue(FrpMapper.isWater(FRP_WATER));
+        assertTrue(FrpMapper.isWater(L1B_WATER));
 
-        assertFalse(FrpMapper.isWater(0, 0, 0));
-        assertFalse(FrpMapper.isWater(CONF_UNFILLED, 0, 0));
-        assertFalse(FrpMapper.isWater(0, CONF_LAND, 0));
-        assertFalse(FrpMapper.isWater(0, 0, CONF_LAND));
-        assertTrue(FrpMapper.isWater(L1B_WATER, CONF_LAND, 0));
-        assertTrue(FrpMapper.isWater(L1B_WATER, 0, CONF_LAND));
+        assertFalse(FrpMapper.isWater(0));
+        assertFalse(FrpMapper.isWater(CONF_UNFILLED));
+        assertFalse(FrpMapper.isWater(CONF_LAND));
     }
 
     @Test

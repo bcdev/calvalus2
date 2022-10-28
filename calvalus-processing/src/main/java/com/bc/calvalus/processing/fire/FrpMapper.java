@@ -224,21 +224,15 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         }
     }
 
-    static int isCloud(int flags_in, int flags_fn) {
+    static int isCloud(int flags, int flags_in, int flags_fn) {
         if ((flags_in & CONF_UNFILLED) != 0) {
             return 0;
         }
         if ((flags_fn & CONF_UNFILLED) != 0) {
             return 0;
         }
-        if ((flags_in & CONF_SUMMARY_CLOUD) != 0) {
-            return 1;
-        }
-        if ((flags_fn & CONF_SUMMARY_CLOUD) != 0) {
-            return 1;
-        }
 
-        return 0 ;
+        return (flags & (FRP_CLOUD)) != 0 ? 1 : 0;
     }
 
     static boolean isUnfilled(int confFlags) {
@@ -246,23 +240,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     }
 
     // package access for testing only tb 2020-12-16
-    static boolean isWater(int flags, int flags_in, int flags_fn) {
-        if ((flags & FRP_WATER) != 0) {
-            return true;
-        }
-        if ((flags_in & CONF_INLAND_WATER) != 0) {
-            return true;
-        }
-        if ((flags_fn & CONF_INLAND_WATER) != 0) {
-            return true;
-        }
-        if ((flags & L1B_WATER) != 0) {
-            if ((flags_in & CONF_LAND) == 0) {
-                return true;
-            }
-            return (flags_fn & CONF_LAND) == 0;
-        }
-        return false;
+    static boolean isWater(int flags) {
+        return (flags & (FRP_WATER | L1B_WATER)) != 0;
     }
 
     // package access for testing only tb 2020-12-17
@@ -361,7 +340,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
                 float frpMwir = Float.NaN;
                 float frpMwirUnc = Float.NaN;
-                final boolean water = isWater(flags, confFlags_in, confFlags_fn);
+                final boolean water = isWater(flags);
                 if (!(water && onlyLand)) {
                     // we do not skip the water measurements, instead just set FRP and uncertainty to NaN. This because
                     // we need to have cloud flags also in the ocean to have a correct windowing process at the
@@ -386,7 +365,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 float[] values = new float[12];
                 final boolean isFire = !Float.isNaN(frpMwir);
                 values[variableIndex[variableOffset + 0]] = 1; // total measurement count
-                values[variableIndex[variableOffset + 1]] = isFire ? 0 : isCloud(confFlags_in, confFlags_fn); // cloud count
+                values[variableIndex[variableOffset + 1]] = isFire ? 0 : isCloud(flags, confFlags_in, confFlags_fn); // cloud count
                 values[variableIndex[variableOffset + 2]] = water ? 1 : 0; // water count
                 values[variableIndex[variableOffset + 3]] = isFire ? 1 : 0;  // valid fire count
                 values[variableIndex[variableOffset + 4]] = frpMwir;
@@ -490,7 +469,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(flagsIdx);
             final int confFlags_in = confidenceFlags_in.getInt(confIdx);
             final int confFlags_fn = confidenceFlags_fn.getInt(confIdx);
-            if (isWater(flags, confFlags_in, confFlags_fn) && onlyLand) {
+            if (isWater(flags) && onlyLand) {
                 continue;
             }
             if (isDay(flags) && onlyNight) {
