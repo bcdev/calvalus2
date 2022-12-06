@@ -414,7 +414,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         int numFires = -1;
         try (NetcdfFile frpNetcdf = NetcdfFileOpener.open(frpFile.getPath())) {
             for (FRP_VARIABLES v : FRP_VARIABLES.values()) {
-                frpArrays[v.ordinal()] = frpNetcdf.findVariable(v.name()).read();
+                final Variable variable = frpNetcdf.findVariable(v.name());
+                frpArrays[v.ordinal()] = (variable != null) ? variable.read() : null;
             }
             numFires = frpNetcdf.findDimension("fires").getLength();
         }
@@ -440,6 +441,15 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
     private Array readSatelliteZenith(File[] inputFiles) throws IOException {
         return readVariable(inputFiles, "geometry_tn.nc", "sat_zenith_tn");
+    }
+
+    private double getArrayValue(Array[] frpArrays, FRP_VARIABLES v, int fire_i) {
+        Array a = frpArrays[v.ordinal()];
+        if (a != null) {
+            return a.getDouble(fire_i);
+        } else {
+            return Double.NaN;
+        }
     }
 
     private int writeL2MonthlyBin(Context context, float platformNumber, Array[] frpArrays, Array confidenceFlags_in, Array confidenceFlags_fn, TiePointGrid satZenithGrid, int numFires) throws IOException, InterruptedException {
@@ -495,12 +505,13 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
             final double latitude = frpArrays[FRP_VARIABLES.latitude.ordinal()].getDouble(i);
             final double longitude = frpArrays[FRP_VARIABLES.longitude.ordinal()].getDouble(i);
-            final double frpSwir = frpArrays[FRP_VARIABLES.FRP_SWIR.ordinal()].getDouble(i);
+            final double frpSwir = getArrayValue(frpArrays, FRP_VARIABLES.FRP_SWIR, i);
             final double frpMwirUnc = frpArrays[FRP_VARIABLES.FRP_uncertainty_MWIR.ordinal()].getDouble(i);
-            final double frpSwirUnc = frpArrays[FRP_VARIABLES.FRP_uncertainty_SWIR.ordinal()].getDouble(i);
+            final double frpSwirUnc = getArrayValue(frpArrays, FRP_VARIABLES.FRP_uncertainty_SWIR, i);
             final int used_channel = frpArrays[FRP_VARIABLES.used_channel.ordinal()].getInt(i);
             final int classification = frpArrays[FRP_VARIABLES.classification.ordinal()].getInt(i);
-            final double confidence = frpArrays[FRP_VARIABLES.confidence.ordinal()].getDouble(i);
+            final double bt_mir = getArrayValue(frpArrays, FRP_VARIABLES.BT_MIR, i);
+            final double bt_window = getArrayValue(frpArrays, FRP_VARIABLES.BT_window, i);
 
             ++count;
             //
@@ -522,7 +533,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             featureValues[FRP_VARIABLES.flags.ordinal()] = (float) flags;
             featureValues[FRP_VARIABLES.used_channel.ordinal()] = (float) used_channel;
             featureValues[FRP_VARIABLES.classification.ordinal()] = (float) classification;
-            featureValues[FRP_VARIABLES.confidence.ordinal()] = (float) confidence;
+            featureValues[FRP_VARIABLES.BT_MIR.ordinal()] = (float) bt_mir;
+            featureValues[FRP_VARIABLES.BT_window.ordinal()] = (float) bt_window;
             featureValues[FRP_VARIABLES.values().length] = satZenith[0];
             featureValues[FRP_VARIABLES.values().length + 1] = confFlags_in;
             featureValues[FRP_VARIABLES.values().length + 2] = confFlags_fn;
@@ -555,7 +567,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         flags,
         used_channel,
         classification,
-        confidence
+        BT_MIR,
+        BT_window
     }
 
     enum GEODETIC_VARIABLES {

@@ -55,8 +55,9 @@ public class FrpReducer extends L3Reducer {
     private static final int FLAGS_IDX = 10;
     private static final int F1_FLAG_IDX = 11;
     private static final int CLASSIFICATION_IDX = 12;
-    private static final int CONF_IDX = 13;
-    private static final int SAT_ZENITH_IDX = 14;
+    private static final int BT_MIR_IDX = 13;
+    private static final int BT_WINDOW_IDX = 14;
+    private static final int SAT_ZENITH_IDX = 15;
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private static long THIRTY_YEARS;
@@ -87,18 +88,31 @@ public class FrpReducer extends L3Reducer {
         return result;
     }
 
+    static double solarTimeOf(Date date, Calendar calendar, float longitude) {
+        calendar.setTime(date);
+        final int doy = calendar.get(GregorianCalendar.DAY_OF_YEAR);
+        final double b = 2 * Math.PI * (doy - 81) / 365.0;
+        final double tiltOffset = (9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b)) / 60.0;
+        final double longitudeOffset = longitude / 15.0f;
+        final double gmtTime = calendar.get(GregorianCalendar.HOUR_OF_DAY) + calendar.get(Calendar.MINUTE) / 60.0f + calendar.get(Calendar.SECOND) / 3600.0f;
+        final double solarTime = (gmtTime + longitudeOffset + tiltOffset) % 24.0;
+        return solarTime;
+    }
+
     static void writeL2CSV(Context context, GregorianCalendar utcCalendar, Writer out) throws IOException, InterruptedException {
-        out.write("Column\tRow\tDate\tTime\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tConfidence\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+        out.write("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
         while (context.nextKey()) {
             final LongWritable binIndex = context.getCurrentKey();
             for (L3SpatialBin bin : context.getValues()) {
                 final Date date = new Date(binIndex.get() / 1000 + THIRTY_YEARS);
+                final double solarTime = solarTimeOf(date, utcCalendar, bin.getFeatureValues()[LON_IDX]);
                 final int flags = (int) bin.getFeatureValues()[FLAGS_IDX];
 
                 // Column
                 // Row
                 // Date
                 // Time
+                // Local Solar Time
                 // Latitude
                 // Longitude
                 // sat_zenith
@@ -106,7 +120,8 @@ public class FrpReducer extends L3Reducer {
                 // FRP_MWIR_uncertainty
                 // FRP_SWIR
                 // FRP_SWIR_uncertainty
-                // Confidence
+                // BT_MIR
+                // BT_window
                 // F1_flag
                 // Day_flag
                 // Area
@@ -124,6 +139,8 @@ public class FrpReducer extends L3Reducer {
                 out.write('\t');
                 out.write(dateTime[1]);
                 out.write('\t');
+                out.write(String.format(Locale.ENGLISH, "%05.2f", solarTime));
+                out.write('\t');
 
                 out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LAT_IDX]));
                 out.write('\t');
@@ -138,12 +155,22 @@ public class FrpReducer extends L3Reducer {
                 out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_UNC_IDX]));
                 out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_IDX]));
+                if (!Float.isNaN(bin.getFeatureValues()[FRP_SWIR_IDX])) {
+                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_IDX]));
+                }
                 out.write('\t');
-                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_UNC_IDX]));
+                if (!Float.isNaN(bin.getFeatureValues()[FRP_SWIR_UNC_IDX])) {
+                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_UNC_IDX]));
+                }
                 out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[CONF_IDX]));
+                if (!Float.isNaN(bin.getFeatureValues()[BT_MIR_IDX])) {
+                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[BT_MIR_IDX]));
+                }
+                out.write('\t');
+                if (!Float.isNaN(bin.getFeatureValues()[BT_WINDOW_IDX])) {
+                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[BT_WINDOW_IDX]));
+                }
                 out.write('\t');
 
                 out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[F1_FLAG_IDX]));
