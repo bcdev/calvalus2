@@ -13,14 +13,14 @@
     </description>
 
     <properties>
-        <snap.bundle.version>8.7cv</snap.bundle.version>
-        <snap.version>8.0.9.2cv</snap.version>
-        <s1tbx.version>8.0.6.1cv</s1tbx.version>
-        <s2tbx.version>8.0.6.1cv</s2tbx.version>
-        <s3tbx.version>8.0.5.2cv</s3tbx.version>
+        <snap.bundle.version>9.0cv</snap.bundle.version>
+        <snap.version>9.0.3.1cv</snap.version>
+        <s1tbx.version>9.0.1.1cv</s1tbx.version>
+        <s2tbx.version>9.0.1.1cv</s2tbx.version>
+        <s3tbx.version>9.0.4.1cv</s3tbx.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
-        <seadas.reader.version>1.9.4</seadas.reader.version>
+        <seadas.reader.version>1.10.0</seadas.reader.version>
     </properties>
 
     <dependencies>
