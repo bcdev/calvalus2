@@ -85,25 +85,21 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             "s3b_night_water",
             "s3b_night_fire",
             "s3b_night_frp",
-            "s3b_night_frp_unc"
+            "s3b_night_frp_unc",
+            "s3a_day_pixel",
+            "s3a_day_cloud",
+            "s3a_day_water",
+            "s3a_day_fire",
+            "s3a_day_frp",
+            "s3a_day_frp_unc",
+            "s3b_day_pixel",
+            "s3b_day_cloud",
+            "s3b_day_water",
+            "s3b_day_fire",
+            "s3b_day_frp",
+            "s3b_day_frp_unc"
     };
 
-    static String[] VARIABLE_NAMES_MONTHLY = {
-            "s3a_fire_land_pixel",
-            "s3a_fire_water_pixel",
-            "s3a_frp_mir_land",
-            "s3a_frp_mir_land_unc",
-            "s3a_cloud_land_pixel",
-            "s3a_water_pixel",
-            "s3a_slstr_pixel",
-            "s3b_fire_land_pixel",
-            "s3b_fire_water_pixel",
-            "s3b_frp_mir_land",
-            "s3b_frp_mir_land_unc",
-            "s3b_cloud_land_pixel",
-            "s3b_water_pixel",
-            "s3b_slstr_pixel",
-    };
     private static long YEAR2k_MILLIS = Long.MIN_VALUE;
 
     static {
@@ -278,7 +274,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final long[] timeRange = getTimeRange(dateRanges);
 
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", true);
-        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", true);
+        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
 
         final Array[] geodeticArrays = new Array[GEODETIC_VARIABLES.values().length];
         final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
@@ -360,22 +356,21 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                     }
                 }
 
-                int emptyOffset = 6 - variableOffset;
                 // aggregate contributions based on flags and platform
-                float[] values = new float[12];
+                // offset  0: s3a nighttime
+                // offset  6: s3b nighttime
+                // offset 12: s3a daytime
+                // offset 18: s3b daytime
+                final int platformDaytimeOffset = variableOffset + ((isDay(flags)) ? 12 : 0);
+                final float[] values = new float[24];
+                Arrays.fill(values, Float.NaN);
                 final boolean isFire = !Float.isNaN(frpMwir);
-                values[variableIndex[variableOffset + 0]] = 1; // total measurement count
-                values[variableIndex[variableOffset + 1]] = isFire ? 0 : isCloud(flags, confFlags_in, confFlags_fn); // cloud count
-                values[variableIndex[variableOffset + 2]] = water ? 1 : 0; // water count
-                values[variableIndex[variableOffset + 3]] = isFire ? 1 : 0;  // valid fire count
-                values[variableIndex[variableOffset + 4]] = frpMwir;
-                values[variableIndex[variableOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
-                values[variableIndex[emptyOffset + 0]] = Float.NaN;
-                values[variableIndex[emptyOffset + 1]] = Float.NaN;
-                values[variableIndex[emptyOffset + 2]] = Float.NaN;
-                values[variableIndex[emptyOffset + 3]] = Float.NaN;
-                values[variableIndex[emptyOffset + 4]] = Float.NaN;
-                values[variableIndex[emptyOffset + 5]] = Float.NaN;
+                values[variableIndex[platformDaytimeOffset + 0]] = 1; // total measurement count
+                values[variableIndex[platformDaytimeOffset + 1]] = isFire ? 0 : isCloud(flags, confFlags_in, confFlags_fn); // cloud count
+                values[variableIndex[platformDaytimeOffset + 2]] = water ? 1 : 0; // water count
+                values[variableIndex[platformDaytimeOffset + 3]] = isFire ? 1 : 0;  // valid fire count
+                values[variableIndex[platformDaytimeOffset + 4]] = frpMwir;
+                values[variableIndex[platformDaytimeOffset + 5]] = frpMwirUnc * frpMwirUnc;   // squared uncertainty
                 observations.add(new ObservationImpl(lat, lon, mjd, values));
             }
             spatialBinner.processObservationSlice(observations);

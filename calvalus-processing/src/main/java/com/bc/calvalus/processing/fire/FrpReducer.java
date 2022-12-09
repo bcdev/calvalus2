@@ -95,7 +95,7 @@ public class FrpReducer extends L3Reducer {
         final double tiltOffset = (9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b)) / 60.0;
         final double longitudeOffset = longitude / 15.0f;
         final double gmtTime = calendar.get(GregorianCalendar.HOUR_OF_DAY) + calendar.get(Calendar.MINUTE) / 60.0f + calendar.get(Calendar.SECOND) / 3600.0f;
-        final double solarTime = (gmtTime + longitudeOffset + tiltOffset) % 24.0;
+        final double solarTime = (gmtTime + longitudeOffset + tiltOffset + 24.0) % 24.0;
         return solarTime;
     }
 
@@ -179,7 +179,7 @@ public class FrpReducer extends L3Reducer {
                 out.write(String.format(Locale.ENGLISH, "%d", isDay(flags) ? 1 : 0));
                 out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[AREA_IDX]));
+                out.write(String.format(Locale.ENGLISH, "%3.1f", bin.getFeatureValues()[AREA_IDX]));
                 out.write('\t');
 
                 final int platformNumber = (int) bin.getFeatureValues()[PLATFORM_IDX];

@@ -10,23 +10,25 @@ import org.esa.snap.dataio.netcdf.util.Constants;
 import java.io.File;
 import java.util.Locale;
 
-public class FrpL3ProductWriterPlugIn implements ProductWriterPlugIn {
+public class FrpL3ProductFileWriterPlugIn implements ProductWriterPlugIn {
 
     @Override
     public EncodeQualification getEncodeQualification(Product product) { return EncodeQualification.FULL; }
 
     @Override
     public Class[] getOutputTypes() {
-        return new Class[] { String.class, File.class} ;
+        return new Class[]{String.class, File.class};
     }
 
     @Override
     public ProductWriter createWriterInstance() {
-        return new FrpL3ProductWriter(this);
+        return new FrpL3ProductFileWriter(this);
     }
 
     @Override
-    public String[] getFormatNames() { return new String[] { "NetCDF4-FRP-L3" }; }
+    public String[] getFormatNames() {
+        return new String[] { "NetCDF4-FRP-L3-File" };
+    }
 
     @Override
     public String[] getDefaultFileExtensions() {
@@ -35,7 +37,7 @@ public class FrpL3ProductWriterPlugIn implements ProductWriterPlugIn {
 
     @Override
     public String getDescription(Locale locale) {
-        return "C3S FRP Level 3 products";
+        return "C3S FRP Level 3 product file";
     }
 
     @Override

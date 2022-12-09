@@ -95,8 +95,8 @@ public class FrpMapperTest {
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
-        final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES_MONTHLY);
-        assertEquals(2*7, variableIndex.length);
+        final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES);
+        assertEquals(4*6, variableIndex.length);
         assertEquals(4, variableIndex[1]);
         assertEquals(1, variableIndex[4]);
 
