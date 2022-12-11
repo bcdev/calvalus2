@@ -220,6 +220,15 @@ public class FrpReducer extends L3Reducer {
                 }
             }
         } else {
+            // pass parameters to the writer
+            final String platformFilter = context.getConfiguration().get("calvalus.filterPlatform", null);
+            if (platformFilter != null) {
+                System.setProperty("calvalus.filterPlatform", platformFilter);
+            }
+            final String nightOrDayFilter = context.getConfiguration().get("calvalus.filterNightOrDay", null);
+            if (nightOrDayFilter != null) {
+                System.setProperty("calvalus.filterNightOrDay", nightOrDayFilter);
+            }
             super.run(context);
         }
     }

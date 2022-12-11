@@ -157,6 +157,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             return 1;
         } else if (fileName.startsWith("S3B")) {
             return 2;
+        } else if (fileName.startsWith("S3C")) {
+            return 3;
         }
 
         throw new IllegalArgumentException("Unknown Sentinel platform");
@@ -248,9 +250,14 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
-        final String targetFormat = conf.get("calvalus.targetFormat", "l2monthly");  // one of l2monthly, l3daily, l3cycle, l3monthly
 
+        final String targetFormat = conf.get("calvalus.targetFormat", "l2monthly");  // one of l2monthly, l3daily, l3cycle, l3monthly
         final Path inputPath = ((FileSplit) context.getInputSplit()).getPath();
+        final String platformFilter = conf.get("calvalus.filterPlatform", null);
+        if (platformFilter != null && !inputPath.getName().startsWith(platformFilter)) {
+            LOG.info("skipping " + inputPath.getName() + " for platform filter " + platformFilter);
+            return;
+        }
         final File[] inputFiles = CalvalusProductIO.uncompressArchiveToCWD(inputPath, conf);
         final int platformNumber = getPlatformNumber(inputPath);
 
@@ -270,11 +277,12 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             return;
         }
 
+        final boolean withNighttime = conf.get("calvalus.filterNightOrDay", "night").startsWith("night");
+        final boolean withDaytime = conf.get("calvalus.filterNightOrDay", "day").startsWith("day");
+        final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", true);
+
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
         final long[] timeRange = getTimeRange(dateRanges);
-
-        final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", true);
-        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
 
         final Array[] geodeticArrays = new Array[GEODETIC_VARIABLES.values().length];
         final int[] rowCol = readGeodeticVariables(inputFiles, geodeticArrays);
@@ -320,9 +328,10 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
 
                 // apply flags
                 final int flags = frpArrays[FRP_VARIABLES.flags.ordinal()].getInt(index);
-                if (isDay(flags) && onlyNight) {
+                if (isDay(flags) ? !withDaytime : !withNighttime) {
                     continue;
                 }
+                // TODO check whether confidence is still a criterion
                 final int confFlags_in = confidenceFlags_in.getInt(index);
                 if (isUnfilled(confFlags_in)) {
                     continue;
@@ -451,8 +460,9 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final Configuration conf = context.getConfiguration();
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
         final long[] timeRange = getTimeRange(dateRanges);
+        final boolean withNighttime = conf.get("calvalus.filterNightOrDay", "night").startsWith("night");
+        final boolean withDaytime = conf.get("calvalus.filterNightOrDay", "day").startsWith("day");
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", false);
-        final boolean onlyNight = conf.getBoolean("calvalus.onlyNight", false);
 
         final float[] satZenith = new float[1];
         int count = 0;
@@ -477,7 +487,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             if (isWater(flags) && onlyLand) {
                 continue;
             }
-            if (isDay(flags) && onlyNight) {
+            if (isDay(flags) ? !withDaytime : !withNighttime) {
                 continue;
             }
 
