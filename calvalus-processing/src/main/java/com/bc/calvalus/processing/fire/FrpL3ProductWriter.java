@@ -101,7 +101,7 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         product.setStartTime(getSourceProduct().getStartTime());
         product.setEndTime(getSourceProduct().getEndTime());
         product.setPreferredTileSize(product.getSceneRasterWidth() / 12, product.getSceneRasterHeight() / 16);
-        File file = new File(parent, name + ".nc");
+        File file = new File(parent, name);
         writer.writeProductNodes(product, file);
         return product;
     }
