@@ -356,12 +356,13 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                         final double area = frpArrays[areaIndex].getDouble(fireIdx);
                         if (area > 0.0) {
                             frpMwir = (float) frpArrays[mwirIndex].getDouble(fireIdx);
+                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fireIdx);
                             if (frpMwir <= 0.0) {
                                 frpMwir = Float.NaN;
+                                frpMwirUnc = Float.NaN;
                             } else {
                                 ++count;
                             }
-                            frpMwirUnc = (float) frpArrays[mwirUncIndex].getDouble(fireIdx);
                         }
                     }
                 }
