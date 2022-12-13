@@ -65,17 +65,17 @@ public class FrpMapperTest {
         when(variableContext.getVariableIndex("s3b_night_fire")).thenReturn(3);
         when(variableContext.getVariableIndex("s3b_night_frp")).thenReturn(4);
         when(variableContext.getVariableIndex("s3b_night_frp_unc")).thenReturn(5);
-        when(variableContext.getVariableCount()).thenReturn(12);
+        when(variableContext.getVariableCount()).thenReturn(24);
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
         final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES);
-        assertEquals(12, variableIndex.length);
+        assertEquals(24, variableIndex.length);
         assertEquals(11, variableIndex[5]);
         assertEquals(5, variableIndex[11]);
 
         verify(binningContext, times(1)).getVariableContext();
-        verify(variableContext, times(12)).getVariableIndex(anyString());
+        verify(variableContext, times(24)).getVariableIndex(anyString());
         verify(variableContext, times(1)).getVariableCount();
         verifyNoMoreInteractions(binningContext, variableContext);
     }
@@ -84,24 +84,23 @@ public class FrpMapperTest {
     public void testCreateVariableIndex_monthly() {
         final BinningContext binningContext = mock(BinningContext.class);
         final VariableContext variableContext = mock(VariableContext.class);
-        when(variableContext.getVariableIndex("s3a_fire_land_pixel")).thenReturn(7);
-        when(variableContext.getVariableIndex("s3a_frp_mir_land_mean")).thenReturn(5);
-        when(variableContext.getVariableIndex("s3a_frp_mir_land_unc")).thenReturn(8);
-        when(variableContext.getVariableIndex("s3a_fire_water_pixel")).thenReturn(4);
-        when(variableContext.getVariableIndex("s3a_pixel")).thenReturn(3);
-        when(variableContext.getVariableIndex("s3a_water_pixel")).thenReturn(2);
-        when(variableContext.getVariableIndex("s3a_cloud_land_pixel")).thenReturn(1);
-        when(variableContext.getVariableCount()).thenReturn(2*7);
+        when(variableContext.getVariableIndex("s3a_night_frp")).thenReturn(5);
+        when(variableContext.getVariableIndex("s3a_night_frp_unc")).thenReturn(6);
+        when(variableContext.getVariableIndex("s3a_night_water")).thenReturn(4);
+        when(variableContext.getVariableIndex("s3a_night_pixel")).thenReturn(1);
+        when(variableContext.getVariableIndex("s3a_night_water")).thenReturn(3);
+        when(variableContext.getVariableIndex("s3a_night_cloud")).thenReturn(2);
+        when(variableContext.getVariableCount()).thenReturn(4*6);
 
         when(binningContext.getVariableContext()).thenReturn(variableContext);
 
         final int[] variableIndex = FrpMapper.createVariableIndex(binningContext, VARIABLE_NAMES);
         assertEquals(4*6, variableIndex.length);
-        assertEquals(4, variableIndex[1]);
-        assertEquals(1, variableIndex[4]);
+        assertEquals(2, variableIndex[1]);
+        assertEquals(5, variableIndex[4]);
 
         verify(binningContext, times(1)).getVariableContext();
-        verify(variableContext, times(2*7)).getVariableIndex(anyString());
+        verify(variableContext, times(4*6)).getVariableIndex(anyString());
         verify(variableContext, times(1)).getVariableCount();
         verifyNoMoreInteractions(binningContext, variableContext);
     }
@@ -194,7 +193,7 @@ public class FrpMapperTest {
         final long[] range = FrpMapper.getTimeRange("[2020-07-01:2020-07-31]");
         assertEquals(2, range.length);
         assertEquals(646876800000000L, range[0]);
-        assertEquals(649555199999000L, range[1]);
+        assertEquals(649555200000000L, range[1]);
     }
 
     @Test

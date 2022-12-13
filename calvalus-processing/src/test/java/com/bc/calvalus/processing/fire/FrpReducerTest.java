@@ -88,7 +88,7 @@ public class FrpReducerTest {
         FrpReducer.writeL2CSV(context, createCalendar(), out);
 
         assertEquals("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n" +
-                        "5\t4\t20200923\t040520\t04.44\t2.00000\t3.00000\t16.00000\t6.000000\t7.000000\t8.000000\t9.000000\t14.000000\t15.000000\t12\t0\t10.000000\tS3A\t0\t13\n",
+                        "5\t4\t20200923\t040520\t04.44\t2.00000\t3.00000\t16.00000\t6.000000\t7.000000\t8.000000\t9.000000\t14.000000\t15.000000\t12\t0\t10.0\tS3A\t0\t13\n",
                 out.toString());
     }
 
@@ -130,7 +130,7 @@ public class FrpReducerTest {
         FrpReducer.writeL2CSV(context, createCalendar(), out);
 
         assertEquals("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n" +
-                        "6\t5\t20200923\t040520\t04.50\t3.00000\t4.00000\t16.00000\t7.000000\t8.000000\t9.000000\t10.000000\t\t\t13\t1\t11.000000\tS3B\t1\t14\n",
+                        "6\t5\t20200923\t040520\t04.50\t3.00000\t4.00000\t16.00000\t7.000000\t8.000000\t9.000000\t10.000000\t\t\t13\t1\t11.0\tS3B\t1\t14\n",
                 out.toString());
     }
 }

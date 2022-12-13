@@ -30,7 +30,7 @@ public class FrpProductWriterIntegrationTest {
 
     @Before
     public void setUp() throws IOException {
-        targetFile = File.createTempFile("frp", ".nc");
+        targetFile = File.createTempFile("frp_S3A_nighttime", ".nc");
     }
 
     @After
@@ -75,7 +75,7 @@ public class FrpProductWriterIntegrationTest {
     @Test
     public void testWriteProductNodes_monthly() throws IOException, ParseException {
         final Product product = createTestProduct_monthly();
-
+        System.setProperty("calvalus.filterNightOrDay", "night");
         final ProductWriter productWriter = new FrpL3ProductWriterPlugIn().createWriterInstance();
 
         try {
@@ -103,29 +103,17 @@ public class FrpProductWriterIntegrationTest {
     }
 
     private void ensureWeightedFireVariables(NetcdfFile netcdfFile) throws IOException {
-        Variable variable = netcdfFile.findVariable("s3a_night_fire_weighted");
+        Variable variable = netcdfFile.findVariable("fire_weighted_pixels");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         Array data = variable.read();
         Index index = data.getIndex();
         assertEquals(18.f, data.getFloat(index.set(0, 1, 2)), 1e-8);
         assertEquals(27.f, data.getFloat(index.set(0, 2, 3)), 1e-8);
-
-        variable = netcdfFile.findVariable("s3b_night_fire_weighted");
-        int[] shape = variable.getShape();
-        assertEquals(3, shape.length);
-        assertEquals(1, shape[0]);
-        assertEquals(4, shape[1]);
-        assertEquals(8, shape[2]);
-        assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
-        data = variable.read();
-        index = data.getIndex();
-        assertEquals(24.f, data.getFloat(index.set(0, 0, 6)), 1e-8);
-        assertEquals(33.f, data.getFloat(index.set(0, 1, 7)), 1e-8);
     }
 
     private void ensureVariables_daily(NetcdfFile netcdfFile) throws IOException {
-        Variable variable = netcdfFile.findVariable("s3a_night_fire");
+        Variable variable = netcdfFile.findVariable("fire_pixels");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         Array data = variable.read();
@@ -133,9 +121,9 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(36, data.getInt(index.set(0, 3, 4)));
         assertEquals(13, data.getInt(index.set(0, 0, 5)));
 
-        variable = netcdfFile.findVariable("s3b_night_frp");
+        variable = netcdfFile.findVariable("frp");
         assertEquals(DataType.FLOAT, variable.getDataType());
-        assertEquals("Mean Fire Radiative Power measured by S3B during nighttime", variable.findAttribute(CF.LONG_NAME).getStringValue());
+        assertEquals("Mean Fire Radiative Power measured by S3A during nighttime", variable.findAttribute(CF.LONG_NAME).getStringValue());
         int[] shape = variable.getShape();
         assertEquals(3, shape.length);
         assertEquals(1, shape[0]);
@@ -143,38 +131,30 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(8, shape[2]);
         data = variable.read();
         index = data.getIndex();
-        assertEquals(33.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
-        assertEquals(42.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
+        assertEquals(23.f, data.getFloat(index.set(0, 1, 6)), 1e-8);
+        assertEquals(32.f, data.getFloat(index.set(0, 2, 7)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3b_night_FRP_related_surface_conditions_flag");
+        variable = netcdfFile.findVariable("surface_conditions_flag_pixels");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF._FILLVALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
-        assertEquals(41, data.getInt(index.set(0, 3, 0)));
-        assertEquals(18, data.getInt(index.set(0, 0, 1)));
+        assertEquals(31, data.getInt(index.set(0, 3, 0)));
+        assertEquals(8, data.getInt(index.set(0, 0, 1)));
     }
 
     private void ensureUncertainties_daily(NetcdfFile netcdfFile) throws IOException {
-        Variable variable = netcdfFile.findVariable("s3a_night_frp_unc");
+        Variable variable = netcdfFile.findVariable("frp_unc");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
         Array data = variable.read();
         Index index = data.getIndex();
         assertEquals(0.30932024121284485, data.getFloat(index.set(0, 1, 2)), 1e-8);
         assertEquals(0.23424279689788818, data.getFloat(index.set(0, 2, 3)), 1e-8);
-
-        variable = netcdfFile.findVariable("s3b_night_frp_unc");
-        assertEquals(DataType.FLOAT, variable.getDataType());
-        assertEquals("Mean Fire Radiative Power uncertainty measured by S3B during nighttime", variable.findAttribute(CF.LONG_NAME).getStringValue());
-        data = variable.read();
-        index = data.getIndex();
-        assertEquals(0.23006533086299896, data.getFloat(index.set(0, 0, 5)), 1e-8);
-        assertEquals(0.190086334943771360, data.getFloat(index.set(0, 1, 6)), 1e-8);
     }
 
     private void ensureVariables_monthly(NetcdfFile netcdfFile) throws IOException {
-        Variable variable = netcdfFile.findVariable("s3a_night_fire");
+        Variable variable = netcdfFile.findVariable("fire_pixels");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals(-1, variable.findAttribute(CF._FILLVALUE).getNumericValue());
         int[] shape = variable.getShape();
@@ -187,7 +167,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(18, data.getInt(index.set(0, 1, 2)));
         assertEquals(27, data.getInt(index.set(0, 2, 3)));
 
-        variable = netcdfFile.findVariable("s3a_night_frp");
+        variable = netcdfFile.findVariable("frp");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals("MW", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
@@ -195,7 +175,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(37.f, data.getFloat(index.set(0, 3, 4)), 1e-8);
         assertEquals(14.f, data.getFloat(index.set(0, 0, 5)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3a_night_pixel");
+        variable = netcdfFile.findVariable("total_pixels");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
@@ -203,7 +183,7 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(19, data.getInt(index.set(0, 1, 6)));
         assertEquals(28, data.getInt(index.set(0, 2, 7)));
 
-        variable = netcdfFile.findVariable("s3a_night_FRP_related_surface_conditions_flag");
+        variable = netcdfFile.findVariable("surface_conditions_flag_pixels");
         assertEquals(DataType.UINT, variable.getDataType());
         assertEquals("1", variable.findAttribute(CF.UNITS).getStringValue());
         data = variable.read();
@@ -213,7 +193,7 @@ public class FrpProductWriterIntegrationTest {
     }
 
     private void ensureWindowedVariables(NetcdfFile netcdfFile) throws IOException {
-        Variable variable = netcdfFile.findVariable("s3a_night_fire_weighted");
+        Variable variable = netcdfFile.findVariable("fire_weighted_pixels");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF._FILLVALUE).getNumericValue());
         Array data = variable.read();
@@ -221,21 +201,13 @@ public class FrpProductWriterIntegrationTest {
         assertEquals(32.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
         assertEquals(9.f, data.getFloat(index.set(0, 0, 1)), 1e-8);
 
-        variable = netcdfFile.findVariable("s3a_night_related_atmospheric_condition_fraction");
+        variable = netcdfFile.findVariable("atmospheric_condition_fraction");
         assertEquals(DataType.FLOAT, variable.getDataType());
         assertEquals(Float.NaN, variable.findAttribute(CF._FILLVALUE).getNumericValue());
         data = variable.read();
         index = data.getIndex();
         assertEquals(0.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
         assertEquals(0.f, data.getFloat(index.set(0, 0, 1)), 1e-8);
-
-        variable = netcdfFile.findVariable("s3b_night_fire_weighted");
-        assertEquals(DataType.FLOAT, variable.getDataType());
-        assertEquals(Float.NaN, variable.findAttribute(CF._FILLVALUE).getNumericValue());
-        data = variable.read();
-        index = data.getIndex();
-        assertEquals(42.f, data.getFloat(index.set(0, 3, 0)), 1e-8);
-        assertEquals(35.f, data.getFloat(index.set(0, 2, 1)), 1e-8);
     }
 
     private void ensureTempVariablesDropped(NetcdfFile netcdfFile) {
@@ -433,14 +405,14 @@ public class FrpProductWriterIntegrationTest {
 
     private void ensureGlobalAttributes_daily(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(40, globalAttributes.size());
+        assertEquals(41, globalAttributes.size());
         Attribute attribute = globalAttributes.get(0);
         assertEquals("title", attribute.getShortName());
         assertEquals("ECMWF C3S Gridded OLCI Fire Radiative Power product", attribute.getStringValue());
 
         attribute = globalAttributes.get(7);
         assertEquals("summary", attribute.getShortName());
-        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution, and also provide some adjustments for unsuitable atmospheric condition since e.g clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation.",
+        assertEquals("The Copernicus Climate Change Service issues three Level 3 Fire Radiative Power (FRP) Products, each generated from Level 2 Sentinel-3 Active Fire Detection and FRP Products issued in NTC mode, which themselves are based on Sentinel 3 SLSTR data. The global Level 3 Daily FRP Products synthesise global data from the Level 2 AF Detection and FRP Product granules at 0.1 degree spatial and at 1-day temporal resolution, and also provide some adjustments for unsuitable atmospheric condition since e.g clouds can mask actively burning fires from view. These products are primarily designed for ease of use of the key information coming from individual granule-based Level 2 Products, for example in global modelling, trend analysis and model evaluation. Each product is available in separate files per platform (S3A, S3B, ...) and per nighttime and daytime observations.",
                 attribute.getStringValue());
 
         attribute = globalAttributes.get(12);
@@ -459,14 +431,14 @@ public class FrpProductWriterIntegrationTest {
         assertEquals("license", attribute.getShortName());
         assertEquals("EC C3S FRP Data Policy", attribute.getStringValue());
 
-        attribute = globalAttributes.get(35);
+        attribute = globalAttributes.get(36);
         assertEquals("geospatial_lon_units", attribute.getShortName());
         assertEquals("degrees_east", attribute.getStringValue());
     }
 
     private void ensureGlobalAttributes_monthly(NetcdfFile netcdfFile) {
         final List<Attribute> globalAttributes = netcdfFile.getGlobalAttributes();
-        assertEquals(40, globalAttributes.size());
+        assertEquals(41, globalAttributes.size());
         Attribute attribute = globalAttributes.get(1);
         assertEquals("institution", attribute.getShortName());
         assertEquals("King's College London, Brockmann Consult GmbH", attribute.getStringValue());
@@ -481,9 +453,9 @@ public class FrpProductWriterIntegrationTest {
 
         attribute = globalAttributes.get(32);
         assertEquals("platform", attribute.getShortName());
-        assertEquals("Sentinel-3", attribute.getStringValue());
+        assertEquals("S3A", attribute.getStringValue());
 
-        attribute = globalAttributes.get(36);
+        attribute = globalAttributes.get(37);
         assertEquals("geospatial_lat_units", attribute.getShortName());
         assertEquals("degrees_north", attribute.getStringValue());
     }

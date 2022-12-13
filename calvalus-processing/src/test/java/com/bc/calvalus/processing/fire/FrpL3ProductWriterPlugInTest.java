@@ -38,7 +38,7 @@ public class FrpL3ProductWriterPlugInTest {
     public void testCreateWriterInstance() {
         final ProductWriter writer = plugIn.createWriterInstance();
         assertNotNull(writer);
-        assertTrue(writer instanceof FrpL3ProductFileWriter);
+        assertTrue(writer instanceof FrpL3ProductWriter);
         assertSame(plugIn, writer.getWriterPlugIn());
     }
 
