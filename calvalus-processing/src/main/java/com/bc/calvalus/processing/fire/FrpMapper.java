@@ -277,8 +277,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             return;
         }
 
-        final boolean withNighttime = conf.get("calvalus.filterNightOrDay", "night").startsWith("night");
-        final boolean withDaytime = conf.get("calvalus.filterNightOrDay", "day").startsWith("day");
+        final boolean withNighttime = conf.get("calvalus.filterNightOrDay", "night").contains("night");
+        final boolean withDaytime = conf.get("calvalus.filterNightOrDay", "day").contains("day");
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", true);
 
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
@@ -460,8 +460,8 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         final Configuration conf = context.getConfiguration();
         final String dateRanges = conf.get("calvalus.input.dateRanges", null);
         final long[] timeRange = getTimeRange(dateRanges);
-        final boolean withNighttime = conf.get("calvalus.filterNightOrDay", "night").startsWith("night");
-        final boolean withDaytime = conf.get("calvalus.filterNightOrDay", "day").startsWith("day");
+        final boolean withNighttime = conf.get("calvalus.filterNightOrDay", "night").contains("night");
+        final boolean withDaytime = conf.get("calvalus.filterNightOrDay", "day").contains("day");
         final boolean onlyLand = conf.getBoolean("calvalus.onlyLand", false);
 
         final float[] satZenith = new float[1];

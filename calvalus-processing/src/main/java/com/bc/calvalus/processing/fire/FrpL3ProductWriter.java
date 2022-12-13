@@ -35,8 +35,8 @@ public class FrpL3ProductWriter extends AbstractProductWriter {
         final String platformFilter = System.getProperty("calvalus.filterPlatform", null);
         withS3a = platformFilter == null || "S3A".equalsIgnoreCase(platformFilter);
         withS3b = platformFilter == null || "S3B".equalsIgnoreCase(platformFilter);
-        withNighttime = System.getProperty("calvalus.filterNightOrDay", "night").startsWith("night");
-        withDaytime = System.getProperty("calvalus.filterNightOrDay", "day").startsWith("day");
+        withNighttime = System.getProperty("calvalus.filterNightOrDay", "night").contains("night");
+        withDaytime = System.getProperty("calvalus.filterNightOrDay", "day").contains("day");
         if (withNighttime && withS3a) {
             s3aNightWriter = plugin.createWriterInstance();
         }
