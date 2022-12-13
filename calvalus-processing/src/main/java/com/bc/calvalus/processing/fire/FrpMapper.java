@@ -208,10 +208,11 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
             final ProductData.UTC maxDate = ProductData.UTC.parse(tokens[1], "yyyy-MM-dd");
             final Calendar minCalendar = minDate.getAsCalendar();
             final Calendar maxCalendar = maxDate.getAsCalendar();
-            maxCalendar.set(Calendar.HOUR_OF_DAY, 23);
-            maxCalendar.set(Calendar.MINUTE, 59);
-            maxCalendar.set(Calendar.SECOND, 59);
-            maxCalendar.set(Calendar.MILLISECOND, 999);
+            //maxCalendar.set(Calendar.HOUR_OF_DAY, 23);
+            //maxCalendar.set(Calendar.MINUTE, 59);
+            //maxCalendar.set(Calendar.SECOND, 59);
+            //maxCalendar.set(Calendar.MILLISECOND, 999);
+            maxCalendar.add(Calendar.DAY_OF_MONTH, 1);
 
             final long minMicros = (minCalendar.getTimeInMillis() - YEAR2k_MILLIS) * 1000L;
             final long maxMicros = (maxCalendar.getTimeInMillis() - YEAR2k_MILLIS) * 1000L;
@@ -321,7 +322,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
                 final Integer fireIdx = fireIndex.get(getFireIndex(columns, row, col));
                 if (fireIdx != null) {
                     final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(fireIdx);
-                    if (time < timeRange[0] || time > timeRange[1]) {
+                    if (time < timeRange[0] || time >= timeRange[1]) {
                         continue;
                     }
                 }
@@ -471,7 +472,7 @@ public class FrpMapper extends Mapper<NullWritable, NullWritable, LongWritable, 
         for (int i = 0; i < numFires; ++i) {
             // filter time
             final long time = frpArrays[FRP_VARIABLES.time.ordinal()].getLong(i);
-            if (time < timeRange[0] || time > timeRange[1]) {
+            if (time < timeRange[0] || time >= timeRange[1]) {
                 continue;
             }
 
