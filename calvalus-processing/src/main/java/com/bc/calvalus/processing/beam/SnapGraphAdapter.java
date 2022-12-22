@@ -491,6 +491,43 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             return new Path(pathString);
         }
 
+        // /calvalus/eodata/OLCI_FR_L1/v2/2022/08/02/S3A_OL_1_EFR____20220802T184833_20220802T185133_20220804T001343_0179_088_170_1440_MAR_O_NT_002.SEN3.zip
+        // /calvalus/eodata/SLSTR_L1/v3/2022/08/02/S3A_SL_1_RBT____20220802T184833_20220802T185133_20220804T022841_0179_088_170_1440_PS1_O_NT_004.zip
+        public Path findCorrespondingSlstr(String master, String archiveRoot, FileSystem fileSysten) {
+            Path result = null;
+            try {
+                final String[] pathElements = master.split("/");
+                final int numElements = pathElements.length;
+                final String olciName = pathElements[numElements-1];
+                // check for matching start time
+                String slstrPattern = String.format("S3%s_SL_1_RBT____%s*.zip",
+                        olciName.substring(2,3), olciName.substring(16, 31));
+                Path slstrPathPattern =
+                        new Path(new Path(new Path(new Path(archiveRoot, pathElements[numElements-4]),
+                            pathElements[numElements-3]), pathElements[numElements-2]), slstrPattern);
+                FileStatus[] fileStatuses = fileSysten.globStatus(slstrPathPattern);
+                if (fileStatuses.length > 0) {
+                    logger.info("corresponding SLSTR " + fileStatuses[0].getPath().getName() + " found");
+                    return fileStatuses[0].getPath();
+                }
+                // check for matching stop time
+                slstrPattern = String.format("S3%s_SL_1_RBT____????????T??????_%s*.zip",
+                        olciName.substring(2,3), olciName.substring(32, 47));
+                slstrPathPattern =
+                        new Path(new Path(new Path(new Path(archiveRoot, pathElements[numElements-4]),
+                            pathElements[numElements-3]), pathElements[numElements-2]), slstrPattern);
+                fileStatuses = fileSysten.globStatus(slstrPathPattern);
+                if (fileStatuses.length > 0) {
+                    logger.info("corresponding SLSTR " + fileStatuses[0].getPath().getName() + " found");
+                    return fileStatuses[0].getPath();
+                }
+                logger.info("no corresponding SLSTR found for " + master);
+                return null;
+            } catch (IOException e) {
+                throw new RuntimeException("failed to read dirs below " + archiveRoot, e);
+            }
+        }
+
         // MER_RR__1PRACR20030601_092632_000026422016_00480_06546_0000.N1
         public Path findCoveringN1(String master, String archiveRoot, FileSystem fileSystem) {
             Path result = null;
