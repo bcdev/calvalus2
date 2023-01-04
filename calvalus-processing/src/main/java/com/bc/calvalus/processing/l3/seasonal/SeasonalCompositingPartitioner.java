@@ -9,6 +9,7 @@ import org.apache.hadoop.mapreduce.Partitioner;
 public class SeasonalCompositingPartitioner extends Partitioner<IntWritable, BandTileWritable> {
     @Override
     public int getPartition(IntWritable bandAndTileNumber, BandTileWritable tile, int numPartitions) {
-        return (bandAndTileNumber.get() >>> 22) & 0x1f;
+        //return (bandAndTileNumber.get() >>> 22) & 0x1f;
+        return (bandAndTileNumber.get() >>> 21) & 0x1f;
     }
 }

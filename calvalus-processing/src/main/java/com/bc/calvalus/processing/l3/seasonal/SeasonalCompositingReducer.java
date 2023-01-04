@@ -55,6 +55,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         System.getProperties().put("snap.dataio.bigtiff.tiling.width", "256");
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "256");
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
+        System.getProperties().put("snap.dataio.bigtiff.support.pushprocessing", "true");
     }
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
@@ -135,6 +136,32 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             "sr_10_mean",
             "vegetation_index_mean"
     };
+    public static String[] SYN_BANDS = {
+            "status",
+            "status_count",
+            "obs_count",
+            "sr_oa01_mean",
+            "sr_oa02_mean",
+            "sr_oa03_mean",
+            "sr_oa04_mean",
+            "sr_oa05_mean",
+            "sr_oa06_mean",
+            "sr_oa07_mean",
+            "sr_oa08_mean",
+            "sr_oa09_mean",
+            "sr_oa10_mean",
+            "sr_oa12_mean",
+            "sr_oa16_mean",
+            "sr_oa17_mean",
+            "sr_oa18_mean",
+            "sr_oa21_mean",
+            "sr_sl01_mean",
+            "sr_sl02_mean",
+            "sr_sl03_mean",
+            "sr_sl05_mean",
+            "sr_sl06_mean",
+            "vegetation_index_mean"
+    };
 
     private final List<float[]> usedTiles = new ArrayList<>();
 
@@ -151,10 +178,13 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         Engine.start();  // required here!  we do not use a ProcessorAdapter
         CalvalusLogger.restoreCalvalusLogFormatter();
 
-        final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
-        final int numberOfBands = context.getCurrentKey().get() >>> 27;
+        //final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
+        //final int numberOfBands = context.getCurrentKey().get() >>> 27;
+        final int bandNumber = (context.getCurrentKey().get() >>> 21) & 0x1f;
+        final int numberOfBands = context.getCurrentKey().get() >>> 26;
         final String sensor =
                 "OLCI".equals(conf.get("calvalus.lc.sensor", "unknown")) ? "OLCI" :
+                "SYN".equals(conf.get("calvalus.lc.sensor", "unknown")) ? "SYN" :
                         numberOfBands == 13 + 1 ? "MERIS" :
                                 numberOfBands == 5 + 1 ? "AVHRR" :
                                         numberOfBands == 4 + 1 ? "PROBAV" :
@@ -164,7 +194,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                 "AVHRR".equals(sensor) ? AVHRR_BANDS[bandNumber] :
                         "VEGETATION".equals(sensor) ? PROBA_BANDS[bandNumber] :
                                 "PROBAV".equals(sensor) ? PROBA_BANDS[bandNumber] :
-                                        "MSI".equals(sensor) ? MSI_BANDS[bandNumber] : AGRI_BANDS[bandNumber];
+                                        "MSI".equals(sensor) ? MSI_BANDS[bandNumber] :
+                                                "SYN".equals(sensor) ? SYN_BANDS[bandNumber] : AGRI_BANDS[bandNumber];
 
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
@@ -253,12 +284,14 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         boolean moreTilesAvailable = true;
         final float[][] tiles = new float[numTileColumns][];
         // loop over micro tile rows, e.g. up to 36 for OLCI
-        for (int tileRow = (context.getCurrentKey().get() >>> 11) & 0x7FF; tileRow < numTileRows && moreTilesAvailable; ++tileRow) {
+        //for (int tileRow = (context.getCurrentKey().get() >>> 11) & 0x7FF; tileRow < numTileRows && moreTilesAvailable; ++tileRow) {
+        for (int tileRow = (context.getCurrentKey().get() >>> 11) & 0x3FF; tileRow < numTileRows && moreTilesAvailable; ++tileRow) {
 
             //LOG.info("processing tile row " + tileRow);
             // sort tiles of tile row into tile columns
             int count = 0;
-            while (moreTilesAvailable && ((context.getCurrentKey().get() >>> 11) & 0x7FF) == tileRow) {
+            //while (moreTilesAvailable && ((context.getCurrentKey().get() >>> 11) & 0x7FF) == tileRow) {
+            while (moreTilesAvailable && ((context.getCurrentKey().get() >>> 11) & 0x3FF) == tileRow) {
                 final int tileColumn = context.getCurrentKey().get() & 0x7FF;
                 //LOG.info("looking at tile " + context.getCurrentKey().get() + " tile row " + tileRow + " column " + tileColumn);
                 tiles[tileColumn] = copyOf(context.getValues().iterator().next().getTileData());

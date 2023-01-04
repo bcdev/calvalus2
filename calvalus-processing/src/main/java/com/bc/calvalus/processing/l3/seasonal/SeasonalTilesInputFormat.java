@@ -39,8 +39,9 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
 
     // ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20090108-v2.0.nc
     // OLCI-L3-P1D-h21v06-20180729-1.7.3.nc
+    // SYN-L3-P1D-h35v13-20210601-S3B-1.12.0.nc
     static final Pattern SR_FILENAME_PATTERN =
-            Pattern.compile("(?:ESACCI-LC-L3-SR-[^-]*-[^-]*|OLCI-L3)-[^-]*-(h[0-9]*v[0-9]*)-........-[^-]*.nc");
+            Pattern.compile("(?:ESACCI-LC-L3-SR-[^-]*-[^-]*|OLCI-L3|SYN-L3)-[^-]*-(h[0-9]*v[0-9]*)-........-.*.nc");
 
     protected RemoteIterator<LocatedFileStatus> getFileStatuses(HdfsFileSystemService fileSystemService,
                                                                 List<String> inputPatterns,
