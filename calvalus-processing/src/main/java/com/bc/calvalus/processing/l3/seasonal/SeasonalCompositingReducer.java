@@ -55,7 +55,6 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         System.getProperties().put("snap.dataio.bigtiff.tiling.width", "256");
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "256");
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
-        System.getProperties().put("snap.dataio.bigtiff.support.pushprocessing", "true");
     }
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
@@ -355,7 +354,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final Product dimapInput = ProductIO.readProduct(dimapFileName);
         final ProductWriter geotiffWriter = ProductIO.getProductWriter("GeoTIFF-BigTIFF");
         geotiffWriter.writeProductNodes(dimapInput, targetFileName + ".tif");
-        geotiffWriter.writeBandRasterData(dimapInput.getBandAt(0), 0, 0, 0, 0, null, null);
+        geotiffWriter.writeBandRasterData(dimapInput.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
         dimapInput.closeIO();
         geotiffWriter.close();
 
