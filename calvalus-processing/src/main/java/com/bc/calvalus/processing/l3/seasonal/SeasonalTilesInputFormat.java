@@ -82,8 +82,10 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
                 continue;
             }
             LOG.info("tile " + fileName + " represents " + tileNameOf(fileName));
-            BlockLocation[] blocks = locatedFileStatus.getPath().getFileSystem(conf).getFileBlockLocations(locatedFileStatus.getPath(), 0, locatedFileStatus.getLen());
-            ((LazilyLocatedFileStatus) locatedFileStatus).locate(blocks);
+            if (locatedFileStatus.getBlockLocations() == null) {
+                BlockLocation[] blocks = locatedFileStatus.getPath().getFileSystem(conf).getFileBlockLocations(locatedFileStatus.getPath(), 0, locatedFileStatus.getLen());
+                ((LazilyLocatedFileStatus) locatedFileStatus).locate(blocks);
+            }
             InputSplit split = createSplit(productInventory, conf, locatedFileStatus, withDirs);
             if (split != null) {
                 splits.add(split);

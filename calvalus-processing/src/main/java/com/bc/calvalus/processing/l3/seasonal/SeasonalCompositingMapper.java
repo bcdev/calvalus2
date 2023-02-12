@@ -89,6 +89,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     float[] ndxiSdev;
     float[][] accu;
 
+    float srThreshold = Float.parseFloat(System.getProperty("calvalus.compositing.srthreshold", "NaN"));
+
     ProgressSplitProgressMonitor pm;
 
     @Override
@@ -123,8 +125,12 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             withMaxNdvi = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "ON_MAX_SET".equals(binningConfig.getAggregatorConfigs()[0].getName());
             withBestPixels = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "PERCENTILE".equals(binningConfig.getAggregatorConfigs()[0].getName());
             LOG.info("compositing by " + (withMaxNdvi ? "maximum NDVI" : withBestPixels ? "best pixels" : "averaging"));
+            //srThreshold = Float.parseFloat(System.getProperty("calvalus.compositing.srthreshold", "NaN"));
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Cannot parse value of calvalus.compositing.srthreshold '" +
+                                               System.getProperty("calvalus.compositing.srthreshold") + "' as a number: " + e);
         }
 
         final FileSystem fs = someTilePath.getFileSystem(conf);
@@ -216,7 +222,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                     timestamp3 = System.currentTimeMillis();
                     LOG.info("max ndvi aggregated in " + (timestamp3-timestamp1) + " millis");
                 } else {
-                    aggregateByStatusRank(bandImages, microTileArea, numSourceBands, numTargetBands,
+                    aggregateByStatusRank(bandImages, microTileArea, ndviBandIndex, numSourceBands, numTargetBands,
                                           accu);
                     divideByCount(microTileArea, numTargetBands, accu);
                     timestamp3 = System.currentTimeMillis();
@@ -312,6 +318,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
+    boolean isNaN(float f) {
+        return Float.isNaN(f) || f < srThreshold;
+    }
+
     private void determineMajorityStatus(List<MultiLevelImage[]> bandImages, Rectangle microTileArea,
                                          int b3BandIndex, int b11BandIndex, int ndviBandIndex,
                                          float[] ndxiMean, float[] ndxiSdev, float[][] accu) {
@@ -326,7 +336,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 if (index >= 0) {
                     statusCount[index][i]++;
                 }
-                if (index >= 0 && ! Float.isNaN(bandDataF[ndviBandIndex][i]) && ! Float.isNaN(bandDataF[b3BandIndex][i]) && ! Float.isNaN(bandDataF[b11BandIndex][i])) {
+                if (index >= 0 && ! Float.isNaN(bandDataF[ndviBandIndex][i]) && ! isNaN(bandDataF[b3BandIndex][i]) && ! isNaN(bandDataF[b11BandIndex][i])) {
                     switch (state) {
                         case 1:
                         case 15:
@@ -380,7 +390,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 final int state = (int) bandDataB[0][i];
                 if (state > 0) {
                     accu[2][i] += count(bandDataS, i);
-                    if (state == accu[0][i] && ! containsNan(bandDataF, numTargetBands, i)) {
+                    if (state == accu[0][i] && ! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
                         switch (state) {
                             case 1:
                             case 15:
@@ -435,7 +445,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             for (int i = 0; i < microTileArea.height * microTileArea.width; ++i) {
                 // aggregate pixel-wise using aggregation rules
                 final int state = (int) bandDataB[0][i];
-                if (state > 0 && ! containsNan(bandDataF, numTargetBands, i)) {
+                if (state > 0 && ! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
                     if (state == accu[0][i]) {
                         // same state as before, aggregate ...
                         final int stateCount = count(state, bandDataS, i);
@@ -463,14 +473,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     }
 
     private void aggregateByStatusRank(List<MultiLevelImage[]> bandImages, Rectangle microTileArea,
-                                       int numSourceBands, int numTargetBands,
+                                       int ndviBandIndex, int numSourceBands, int numTargetBands,
                                        float[][] accu) {
         for (MultiLevelImage[] bandImage : bandImages) {
             readSourceBands(bandImage, microTileArea, numSourceBands, bandDataB, bandDataS, bandDataF);
             // pixel loop
             for (int i = 0; i < microTileArea.height * microTileArea.width; ++i) {
                 final int state = (int) bandDataB[0][i];
-                if (state > 0 && ! containsNan(bandDataF, numTargetBands, i)) {
+                if (state > 0 && ! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
                     if (state == accu[0][i]) {
                         // same state as before, aggregate ...
                         final int stateCount = count(state, bandDataS, i);
@@ -553,9 +563,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         bandDataF[ndviBandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[ndviBandIndex].getData(microTileArea).getDataBuffer());
     }
 
-    private static boolean containsNan(float[][] bandDataF, int numTargetBands, int i) {
+    private boolean containsNan(float[][] bandDataF, int numTargetBands, int ndviBandIndex, int i) {
         for (int b = 3; b < numTargetBands; ++b) {
-            if (Float.isNaN(bandDataF[b + 3][i])) {
+            if (b+3 == ndviBandIndex ? Float.isNaN(bandDataF[b + 3][i]) : isNaN(bandDataF[b + 3][i])) {
                 return true;
             }
         }

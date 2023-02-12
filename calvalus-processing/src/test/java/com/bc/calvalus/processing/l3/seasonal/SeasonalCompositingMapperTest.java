@@ -20,6 +20,18 @@ public class SeasonalCompositingMapperTest {
 
     private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
+    @Test public void testNan() {
+        SeasonalCompositingMapper m = new SeasonalCompositingMapper();
+        m.srThreshold = -0.5f;
+        assert(m.isNaN(Float.NaN));
+        assert(m.isNaN(-0.6f));
+        assert(!m.isNaN(-0.4f));
+        m.srThreshold = Float.NaN;
+        assert(m.isNaN(Float.NaN));
+        assert(!m.isNaN(-0.6f));
+        assert(!m.isNaN(-0.4f));
+    }
+
     @Test
     public void testNextWeek() throws Exception {
         Date d = DATE_FORMAT.parse("2012-01-01");
