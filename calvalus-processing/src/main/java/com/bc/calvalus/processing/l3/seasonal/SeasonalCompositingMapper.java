@@ -89,7 +89,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     float[] ndxiSdev;
     float[][] accu;
 
-    float srThreshold = Float.parseFloat(System.getProperty("calvalus.compositing.srthreshold", "NaN"));
+    float srThreshold;
 
     ProgressSplitProgressMonitor pm;
 
@@ -125,7 +125,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             withMaxNdvi = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "ON_MAX_SET".equals(binningConfig.getAggregatorConfigs()[0].getName());
             withBestPixels = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "PERCENTILE".equals(binningConfig.getAggregatorConfigs()[0].getName());
             LOG.info("compositing by " + (withMaxNdvi ? "maximum NDVI" : withBestPixels ? "best pixels" : "averaging"));
-            //srThreshold = Float.parseFloat(System.getProperty("calvalus.compositing.srthreshold", "NaN"));
+            srThreshold = Float.parseFloat(System.getProperty("calvalus.compositing.srthreshold", "NaN"));
+            LOG.info("using sr threshold " + srThreshold + " (numbers lower than that are considered NaN, switched off if NaN itself");
+            LOG.info("testing isNaN: " + isNaN(-0.6f) + " " + isNaN(-0.4f) + " " + isNaN(Float.NaN));
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         } catch (NumberFormatException e) {
