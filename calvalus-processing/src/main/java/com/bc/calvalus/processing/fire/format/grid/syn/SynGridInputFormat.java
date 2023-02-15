@@ -126,8 +126,8 @@ public class SynGridInputFormat extends InputFormat {
 
     public static void createDummyTiles(String targetDir) throws IOException, FactoryException, TransformException {
 
-        for (int year = 2019; year <= 2019; year++) {
-            for (int month = 1; month <= 12; month++) {
+        for (int year = 2021; year <= 2021; year++) {
+            for (int month = 1; month <= 2; month++) {
                 for (String tile : NORTHERN_TILES) {
                     double easting = Integer.parseInt(tile.substring(1, 3)) * 10 - 180;
 
