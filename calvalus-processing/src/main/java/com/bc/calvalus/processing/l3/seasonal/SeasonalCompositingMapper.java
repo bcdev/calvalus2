@@ -85,8 +85,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     float[][] ndxiSqrSum;
     int[][] ndxiCount;
     int[][] statusCount;
-    float[] ndxiMean;
-    float[] ndxiSdev;
+    float[][] ndxiMean;
+    float[][] ndxiSdev;
     float[][] accu;
 
     float srThreshold;
@@ -164,9 +164,11 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
             }
         }
-        final int b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : isSyn ? 6-1+16 : 6 - 1 + 4;    // green 560 nm
-        final int b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : isSyn ? 6-1+19: 6 - 1 + 3;  // swir-1 1610 nm
+        // for SYN the OLCI NDWI is computed from Oa17 and Oa08
+        final int b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : isSyn ? 6-1+8 : 6 - 1 + 4;    // green 560 nm
+        final int b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : isSyn ? 6-1+13: 6 - 1 + 3;  // swir-1 1610 nm
         final int ndviBandIndex = numSourceBands - 1;
+        final int sl01BandIndex = isSyn ? 6-1+16 : -1;
 
         // 2 for opening a product, 1 for majority status per time step, 5 for aggregation per time step, 4 for streaming
         final int numTimeSteps = (int) ((stop.getTime() - start.getTime()) / 86400 / 1000 / daysPerWeek);
@@ -187,14 +189,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         bandDataS = new short[numSourceBands][];
         bandDataF = new float[numSourceBands][];
         if (withBestPixels) {
-            ndxiSum = new float[NUM_INDEXES][microTileSize*microTileSize];
-            ndxiSqrSum = new float[NUM_INDEXES][microTileSize*microTileSize];
-            ndxiCount = new int[NUM_INDEXES][microTileSize*microTileSize];
             statusCount = new int[NUM_INDEXES][microTileSize*microTileSize];
-            ndxiMean = new float[microTileSize*microTileSize];
-            ndxiSdev = new float[microTileSize*microTileSize];
+            ndxiSum = new float[(isSyn ? 3 : 1) * NUM_INDEXES][microTileSize*microTileSize];
+            ndxiSqrSum = new float[(isSyn ? 3 : 1) * NUM_INDEXES][microTileSize*microTileSize];
+            ndxiCount = new int[(isSyn ? 3 : 1) * NUM_INDEXES][microTileSize*microTileSize];
+            ndxiMean = new float[(isSyn ? 3 : 1)][microTileSize*microTileSize];
+            ndxiSdev = new float[(isSyn ? 3 : 1)][microTileSize*microTileSize];
         }
-        accu = new float[numTargetBands][microTileSize * microTileSize];
+        accu = new float[isSyn ? numTargetBands + 2 : numTargetBands][microTileSize * microTileSize];
 
         // micro tile loop
         LOG.info("processing " + (numMicroTiles*numMicroTiles) + " micro tiles ...");
@@ -203,19 +205,19 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 long timestamp1 = System.currentTimeMillis();
                 long timestamp3;
                 final Rectangle microTileArea = new Rectangle(microTileX * microTileSize, microTileY * microTileSize, microTileSize, microTileSize);
-                clearAccu(numTargetBands, accu);
+                clearAccu(isSyn ? numTargetBands + 2 : numTargetBands, accu);
                 if (withBestPixels) {
-
-                    determineMajorityStatus(bandImages, microTileArea,
-                                            b3BandIndex, b11BandIndex, ndviBandIndex,
+                    clearNdxi(isSyn ? 3 : 1);
+                    determineMajorityStatus(bandImages, microTileArea, isSyn,
+                                            sl01BandIndex, b3BandIndex, b11BandIndex, ndviBandIndex,
                                             ndxiMean, ndxiSdev, accu);
                     long timestamp2 = System.currentTimeMillis();
                     LOG.info("majority status determined in " + (timestamp2-timestamp1) + " millis");
-                    aggregateBestPixels(bandImages, microTileArea,
+                    aggregateBestPixels(bandImages, microTileArea, isSyn,
                                         b3BandIndex, b11BandIndex, ndviBandIndex,
-                                        numSourceBands, numTargetBands,
+                                        sl01BandIndex, numSourceBands, numTargetBands,
                                         accu);
-                    divideByCount(microTileArea, numTargetBands, accu);
+                    divideByCount(microTileArea, numTargetBands, isSyn, sl01BandIndex, accu);
                     timestamp3 = System.currentTimeMillis();
                     LOG.info("best pixels aggregated in " + (timestamp3-timestamp2) + " millis");
                 } else if (withMaxNdvi) {
@@ -226,7 +228,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 } else {
                     aggregateByStatusRank(bandImages, microTileArea, ndviBandIndex, numSourceBands, numTargetBands,
                                           accu);
-                    divideByCount(microTileArea, numTargetBands, accu);
+                    divideByCount(microTileArea, numTargetBands, false, sl01BandIndex, accu);
                     timestamp3 = System.currentTimeMillis();
                     LOG.info("average aggregated in " + (timestamp3-timestamp1) + " millis");
                 }
@@ -324,13 +326,12 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         return Float.isNaN(f) || f < srThreshold;
     }
 
-    private void determineMajorityStatus(List<MultiLevelImage[]> bandImages, Rectangle microTileArea,
-                                         int b3BandIndex, int b11BandIndex, int ndviBandIndex,
-                                         float[] ndxiMean, float[] ndxiSdev, float[][] accu) {
-        clearNdxi();
+    private void determineMajorityStatus(List<MultiLevelImage[]> bandImages, Rectangle microTileArea, boolean isSyn,
+                                         int sl01BandIndex, int b3BandIndex, int b11BandIndex, int ndviBandIndex,
+                                         float[][] ndxiMean, float[][] ndxiSdev, float[][] accu) {
         for (MultiLevelImage[] bandImage : bandImages) {
             readStatusBand(bandImage, microTileArea, bandDataB);
-            readNdviNdwiBands(bandImage, b3BandIndex, b11BandIndex, ndviBandIndex, microTileArea, bandDataF);
+            readNdviNdwiBands(bandImage, b3BandIndex, b11BandIndex, ndviBandIndex, isSyn, sl01BandIndex, microTileArea, bandDataF);
             // pixel loop
             for (int i = 0; i < microTileArea.height * microTileArea.width; ++i) {
                 final int state = (int) bandDataB[0][i];
@@ -338,24 +339,53 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 if (index >= 0) {
                     statusCount[index][i]++;
                 }
-                if (index >= 0 && ! Float.isNaN(bandDataF[ndviBandIndex][i]) && ! isNaN(bandDataF[b3BandIndex][i]) && ! isNaN(bandDataF[b11BandIndex][i])) {
+                if (index >= 0) {
                     switch (state) {
                         case 1:
                         case 15:
                         case 12:
                         case 11:
                         case 5:
-                            float ndvi = bandDataF[ndviBandIndex][i];
-                            ndxiSum[index][i] += ndvi;
-                            ndxiSqrSum[index][i] += ndvi * ndvi;
-                            ndxiCount[index][i]++;
+                            if (! Float.isNaN(bandDataF[ndviBandIndex][i])) {
+                                float ndvi = bandDataF[ndviBandIndex][i];
+                                ndxiSum[index][i] += ndvi;
+                                ndxiSqrSum[index][i] += ndvi * ndvi;
+                                ndxiCount[index][i]++;
+                            }
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+1][i]) && isNaN(bandDataF[sl01BandIndex+2][i])) {
+                                float ndxi = (bandDataF[sl01BandIndex+2][i] - bandDataF[sl01BandIndex+1][i]) / (bandDataF[sl01BandIndex+2][i] + bandDataF[sl01BandIndex+1][i]);
+                                ndxiSum[NUM_INDEXES + index][i] += ndxi;
+                                ndxiSqrSum[NUM_INDEXES + index][i] += ndxi * ndxi;
+                                ndxiCount[NUM_INDEXES + index][i]++;
+                            }
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+3][i]) && isNaN(bandDataF[sl01BandIndex+4][i])) {
+                                float ndxi = (bandDataF[sl01BandIndex+4][i] - bandDataF[sl01BandIndex+3][i]) / (bandDataF[sl01BandIndex+4][i] + bandDataF[sl01BandIndex+3][i]);
+                                ndxiSum[2 * NUM_INDEXES + index][i] += ndxi;
+                                ndxiSqrSum[2 * NUM_INDEXES + index][i] += ndxi * ndxi;
+                                ndxiCount[2 * NUM_INDEXES + index][i]++;
+                            }
                             break;
                         case 2:
                         case 3:  // TODO TBC whether to use water index for snow as well
-                            float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
-                            ndxiSum[index][i] += ndwi;
-                            ndxiSqrSum[index][i] += ndwi * ndwi;
-                            ndxiCount[index][i]++;
+                            if (! isNaN(bandDataF[b3BandIndex][i]) && ! isNaN(bandDataF[b11BandIndex][i])) {
+                                float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
+                                ndxiSum[index][i] += ndwi;
+                                ndxiSqrSum[index][i] += ndwi * ndwi;
+                                ndxiCount[index][i]++;
+                            }
+                            // we use the same normalised measures as for land as we do not have proper NDWI in one of the SLSTR groups
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+1][i]) && isNaN(bandDataF[sl01BandIndex+2][i])) {
+                                float ndxi = (bandDataF[sl01BandIndex+2][i] - bandDataF[sl01BandIndex+1][i]) / (bandDataF[sl01BandIndex+2][i] + bandDataF[sl01BandIndex+1][i]);
+                                ndxiSum[NUM_INDEXES + index][i] += ndxi;
+                                ndxiSqrSum[NUM_INDEXES + index][i] += ndxi * ndxi;
+                                ndxiCount[NUM_INDEXES + index][i]++;
+                            }
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+3][i]) && isNaN(bandDataF[sl01BandIndex+4][i])) {
+                                float ndxi = (bandDataF[sl01BandIndex+4][i] - bandDataF[sl01BandIndex+3][i]) / (bandDataF[sl01BandIndex+4][i] + bandDataF[sl01BandIndex+3][i]);
+                                ndxiSum[2 * NUM_INDEXES + index][i] += ndxi;
+                                ndxiSqrSum[2 * NUM_INDEXES + index][i] += ndxi * ndxi;
+                                ndxiCount[2 * NUM_INDEXES + index][i]++;
+                            }
                             break;
                     }
                 }
@@ -369,19 +399,46 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             if (index >= 0) {
                 accu[0][i] = state;
             }
-            if (index >= 0 && index < 7 && ndxiCount[index][i] > 0) {
-                ndxiMean[i] = ndxiSum[index][i] / ndxiCount[index][i];
-                ndxiSdev[i] = (float) Math.sqrt(ndxiSqrSum[index][i] / ndxiCount[index][i] - ndxiMean[i] * ndxiMean[i]);
+            if (index >= 0 && index < 7) {
+                if (ndxiCount[index][i] > 0) {
+                    ndxiMean[0][i] = ndxiSum[index][i] / ndxiCount[index][i];
+                    ndxiSdev[0][i] = (float) Math.sqrt(ndxiSqrSum[index][i] / ndxiCount[index][i] - ndxiMean[0][i] * ndxiMean[0][i]);
+                } else {
+                    ndxiMean[0][i] = Float.NaN;
+                    ndxiSdev[0][i] = Float.NaN;
+                }
+                if (isSyn) {
+                    if (ndxiCount[NUM_INDEXES + index][i] > 0) {
+                        ndxiMean[1][i] = ndxiSum[NUM_INDEXES + index][i] / ndxiCount[NUM_INDEXES + index][i];
+                        ndxiSdev[1][i] = (float) Math.sqrt(ndxiSqrSum[NUM_INDEXES + index][i] / ndxiCount[NUM_INDEXES + index][i] - ndxiMean[1][i] * ndxiMean[1][i]);
+                    } else {
+                        ndxiMean[1][i] = Float.NaN;
+                        ndxiSdev[1][i] = Float.NaN;
+                    }
+                    if (ndxiCount[2 * NUM_INDEXES + index][i] > 0) {
+                        ndxiMean[2][i] = ndxiSum[2 * NUM_INDEXES + index][i] / ndxiCount[2 * NUM_INDEXES + index][i];
+                        ndxiSdev[2][i] = (float) Math.sqrt(ndxiSqrSum[2 * NUM_INDEXES + index][i] / ndxiCount[2 * NUM_INDEXES + index][i] - ndxiMean[2][i] * ndxiMean[2][i]);
+                    } else {
+                        ndxiMean[2][i] = Float.NaN;
+                        ndxiSdev[2][i] = Float.NaN;
+                    }
+                }
             } else {  // invalid or cloud or temporal cloud
-                ndxiMean[i] = Float.NaN;
-                ndxiSdev[i] = Float.NaN;
+                ndxiMean[0][i] = Float.NaN;
+                ndxiSdev[0][i] = Float.NaN;
+                if (isSyn) {
+                    ndxiMean[1][i] = Float.NaN;
+                    ndxiSdev[1][i] = Float.NaN;
+                    ndxiMean[2][i] = Float.NaN;
+                    ndxiSdev[2][i] = Float.NaN;
+                }
             }
             //traceMajoState(state, index, i, ndxiCount, ndxiMean, ndxiSdev, microTileArea);
         }
     }
 
-    private void aggregateBestPixels(List<MultiLevelImage[]> bandImages, Rectangle microTileArea,
-                                     int b3BandIndex, int b11BandIndex, int ndviBandIndex,
+    private void aggregateBestPixels(List<MultiLevelImage[]> bandImages, Rectangle microTileArea, boolean isSyn,
+                                     int b3BandIndex, int b11BandIndex, int ndviBandIndex, int sl01BandIndex,
                                      int numSourceBands, int numTargetBands,
                                      float[][] accu) {
         // product loop
@@ -392,41 +449,144 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 final int state = (int) bandDataB[0][i];
                 if (state > 0) {
                     accu[2][i] += count(bandDataS, i);
-                    if (state == accu[0][i] && ! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                    if (state == accu[0][i]) {
                         switch (state) {
                             case 1:
                             case 15:
                             case 12:
                             case 11:
                             case 5:
-                                float ndvi = bandDataF[ndviBandIndex][i];
-                                if (ndvi >= ndxiMean[i] - ndxiSdev[i] - EPS && ndvi <= ndxiMean[i] + ndxiSdev[i] + EPS) {
-                                    final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
-                                    accu[1][i] += stateCount;
-                                    for (int b = 3; b < numTargetBands; ++b) {
-                                        accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                if (isSyn) {
+                                    if (! containsNan(bandDataF, 6, sl01BandIndex, ndviBandIndex, i)) {
+                                        float ndvi = bandDataF[ndviBandIndex][i];
+                                        if (within1Sigma(ndvi, ndxiMean[0][i], ndxiSdev[0][i])) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            accu[1][i] += stateCount;
+                                            for (int b = 3; b < numTargetBands; ++b) {
+                                                if (b + 3 < sl01BandIndex || b + 3 > sl01BandIndex + 4) {
+                                                    accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                                }
+                                            }
+                                        }
                                     }
-                                    //traceAggregation(state, i, stateCount, ndvi, bandDataF, microTileArea);
+                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+                                        float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i], bandDataF[sl01BandIndex + 1][i]);
+                                        if (within1Sigma(ndxi123, ndxiMean[1][i], ndxiSdev[1][i])) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            accu[numTargetBands][i] += stateCount;
+                                            for (int b = sl01BandIndex - 3; b < sl01BandIndex + 3 - 3; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                        }
+                                    }
+                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+                                        float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i], bandDataF[sl01BandIndex + 3][i]);
+                                        if (within1Sigma(ndxi56, ndxiMean[2][i], ndxiSdev[2][i])) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            accu[numTargetBands + 1][i] += stateCount;
+                                            for (int b = sl01BandIndex + 3 - 3; b < sl01BandIndex + 5 - 3; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                                        float ndvi = bandDataF[ndviBandIndex][i];
+                                        if (within1Sigma(ndvi, ndxiMean[0][i], ndxiSdev[0][i])) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            accu[1][i] += stateCount;
+                                            for (int b = 3; b < numTargetBands; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                            //traceAggregation(state, i, stateCount, ndvi, bandDataF, microTileArea);
+                                        }
+                                    }
                                 }
                                 break;
                             case 2:
                             case 3:  // TODO TBC whether to use water index for snow as well
-                                float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
-                                if (ndwi >= ndxiMean[i] - ndxiSdev[i] - EPS && ndwi <= ndxiMean[i] + ndxiSdev[i] + EPS) {
-                                    final int stateCount = count(state, bandDataS, i);
-                                    accu[1][i] += stateCount;
-                                    for (int b = 3; b < numTargetBands; ++b) {
-                                        accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                if (isSyn) {
+                                    if (! containsNan(bandDataF, 6, sl01BandIndex, ndviBandIndex, i)) {
+                                        float ndwi = ndxiOf(bandDataF[b11BandIndex][i], bandDataF[b3BandIndex][i]);
+                                        if (within1Sigma(ndwi, ndxiMean[0][i], ndxiSdev[0][i])) {
+                                            final int stateCount = count(state, bandDataS, i);
+                                            accu[1][i] += stateCount;
+                                            for (int b = 3; b < numTargetBands; ++b) {
+                                                if (b + 3 < sl01BandIndex || b + 3 > sl01BandIndex + 4) {
+                                                    accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                                }
+                                            }
+                                            //traceAggregation(state, i, stateCount, ndwi, bandDataF, microTileArea);
+                                        }
                                     }
-                                    //traceAggregation(state, i, stateCount, ndwi, bandDataF, microTileArea);
+                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+                                        float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i], bandDataF[sl01BandIndex + 1][i]);
+                                        if (within1Sigma(ndxi123, ndxiMean[1][i], ndxiSdev[1][i])) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            accu[numTargetBands][i] += stateCount;
+                                            for (int b = sl01BandIndex - 3; b < sl01BandIndex + 3 - 3; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                        }
+                                    }
+                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+                                        float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i], bandDataF[sl01BandIndex + 3][i]);
+                                        if (within1Sigma(ndxi56, ndxiMean[2][i], ndxiSdev[2][i])) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            accu[numTargetBands + 1][i] += stateCount;
+                                            for (int b = sl01BandIndex + 3 - 3; b < sl01BandIndex + 5 - 3; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                                        float ndwi = ndxiOf(bandDataF[b11BandIndex][i], bandDataF[b3BandIndex][i]);
+                                        if (within1Sigma(ndwi, ndxiMean[0][i], ndxiSdev[0][i])) {
+                                            final int stateCount = count(state, bandDataS, i);
+                                            accu[1][i] += stateCount;
+                                            for (int b = 3; b < numTargetBands; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                            //traceAggregation(state, i, stateCount, ndwi, bandDataF, microTileArea);
+                                        }
+                                    }
                                 }
                                 break;
                             case 4:
                             case 14:
-                                final int stateCount = count(state, bandDataS, i);
-                                accu[1][i] += stateCount;
-                                for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
+                                if (isSyn) {
+                                    if (! containsNan(bandDataF, 6, sl01BandIndex, ndviBandIndex, i)) {
+                                        final int stateCount = count(state, bandDataS, i);
+                                        accu[1][i] += stateCount;
+                                        for (int b = 3; b < numTargetBands; ++b) {
+                                            if (b + 3 < sl01BandIndex || b + 3 > sl01BandIndex + 4) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
+                                            }
+                                        }
+                                    }
+                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+                                        final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                        accu[numTargetBands][i] += stateCount;
+                                        for (int b = sl01BandIndex - 3; b < sl01BandIndex + 3 - 3; ++b) {
+                                            accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                        }
+                                    }
+                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+                                        final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                        accu[numTargetBands + 1][i] += stateCount;
+                                        for (int b = sl01BandIndex + 3 - 3; b < sl01BandIndex + 5 - 3; ++b) {
+                                            accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                        }
+                                    }
+                                } else {
+                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                                        final int stateCount = count(state, bandDataS, i);
+                                        accu[1][i] += stateCount;
+                                        for (int b = 3; b < numTargetBands; ++b) {
+                                            accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
+                                        }
+                                    }
                                 }
                                 //traceAggregation(state, i, stateCount, bandDataF[10+3][i], bandDataF, microTileArea);
                                 break;
@@ -507,16 +667,45 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
-    private void divideByCount(Rectangle microTileArea, int numTargetBands, float[][] accu) {
+    private void divideByCount(Rectangle microTileArea, int numTargetBands, boolean isSyn, int sl01BandIndex, float[][] accu) {
         for (int i = 0; i < microTileArea.height * microTileArea.width; ++i) {
-            final float stateCount = accu[1][i];
-            for (int b = 3; b < numTargetBands; ++b) {
-                if (stateCount > 0) {
-                    accu[b][i] /= stateCount;
-                } else {
-                    accu[b][i] = Float.NaN;
+            if (isSyn) {
+                final float stateCount = accu[1][i];
+                for (int b = 3; b < numTargetBands; ++b) {
+                    if (b + 3 < sl01BandIndex || b + 3 > sl01BandIndex + 4) {
+                        if (stateCount > 0) {
+                            accu[b][i] /= stateCount;
+                        } else {
+                            accu[b][i] = Float.NaN;
+                        }
+                    }
                 }
-                //traceValue(i, stateCount, b, accu, microTileArea);
+                final float stateCount2 = accu[numTargetBands][i];
+                for (int b = sl01BandIndex - 3; b < sl01BandIndex + 3 - 3; ++b) {
+                    if (stateCount > 0) {
+                        accu[b][i] /= stateCount;
+                    } else {
+                        accu[b][i] = Float.NaN;
+                    }
+                }
+                final float stateCount3 = accu[numTargetBands + 1][i];
+                for (int b = sl01BandIndex + 3 - 3; b < sl01BandIndex + 5 - 3; ++b) {
+                    if (stateCount > 0) {
+                        accu[b][i] /= stateCount;
+                    } else {
+                        accu[b][i] = Float.NaN;
+                    }
+                }
+            } else {
+                final float stateCount = accu[1][i];
+                for (int b = 3; b < numTargetBands; ++b) {
+                    if (stateCount > 0) {
+                        accu[b][i] /= stateCount;
+                    } else {
+                        accu[b][i] = Float.NaN;
+                    }
+                    //traceValue(i, stateCount, b, accu, microTileArea);
+                }
             }
         }
     }
@@ -528,11 +717,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
-    private void clearNdxi() {
-        for (int j=0; j<NUM_INDEXES; ++j) {
+    private void clearNdxi(int numBandGroups) {
+        for (int j=0; j<numBandGroups * NUM_INDEXES; ++j) {
             Arrays.fill(ndxiSum[j], 0.0f);
             Arrays.fill(ndxiSqrSum[j], 0.0f);
             Arrays.fill(ndxiCount[j], 0);
+        }
+        for (int j=0; j<NUM_INDEXES; ++j) {
             Arrays.fill(statusCount[j], 0);
         }
     }
@@ -559,10 +750,16 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         bandDataB[0] = (short[]) ImageUtils.getPrimitiveArray(bandImage[0].getData(microTileArea).getDataBuffer());
     }
 
-    private void readNdviNdwiBands(MultiLevelImage[] bandImage, int b3BandIndex, int b11BandIndex, int ndviBandIndex, Rectangle microTileArea, float[][] bandDataF) {
+    private void readNdviNdwiBands(MultiLevelImage[] bandImage, int b3BandIndex, int b11BandIndex, int ndviBandIndex, boolean isSyn, int sl01BandIndex, Rectangle microTileArea, float[][] bandDataF) {
         bandDataF[b3BandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b3BandIndex].getData(microTileArea).getDataBuffer());
         bandDataF[b11BandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b11BandIndex].getData(microTileArea).getDataBuffer());
         bandDataF[ndviBandIndex] = (float[]) ImageUtils.getPrimitiveArray(bandImage[ndviBandIndex].getData(microTileArea).getDataBuffer());
+        if (isSyn) {
+            bandDataF[sl01BandIndex + 1] = (float[]) ImageUtils.getPrimitiveArray(bandImage[sl01BandIndex + 1].getData(microTileArea).getDataBuffer());
+            bandDataF[sl01BandIndex + 2] = (float[]) ImageUtils.getPrimitiveArray(bandImage[sl01BandIndex + 2].getData(microTileArea).getDataBuffer());
+            bandDataF[sl01BandIndex + 3] = (float[]) ImageUtils.getPrimitiveArray(bandImage[sl01BandIndex + 3].getData(microTileArea).getDataBuffer());
+            bandDataF[sl01BandIndex + 4] = (float[]) ImageUtils.getPrimitiveArray(bandImage[sl01BandIndex + 4].getData(microTileArea).getDataBuffer());
+        }
     }
 
     private boolean containsNan(float[][] bandDataF, int numTargetBands, int ndviBandIndex, int i) {
@@ -572,6 +769,23 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             }
         }
         return false;
+    }
+
+    private boolean containsNan(float[][] bandDataF, int startIndex, int stopIndex, int ndviBandIndex, int i) {
+        for (int b = startIndex; b < stopIndex; ++b) {
+            if (b == ndviBandIndex ? Float.isNaN(bandDataF[b][i]) : isNaN(bandDataF[b][i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean within1Sigma(float value, float mean, float sdev) {
+        return value >= mean - sdev - EPS && value <= mean + sdev + EPS;
+    }
+
+    private static float ndxiOf(float nir, float red) {
+        return (nir - red) / (nir + red);
     }
 
     private Product sdrToSr(Product product) {
