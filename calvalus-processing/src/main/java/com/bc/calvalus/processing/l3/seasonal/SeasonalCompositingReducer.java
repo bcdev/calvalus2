@@ -139,6 +139,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             "status",
             "status_count",
             "obs_count",
+            "sl123_count",
+            "sl56_count",
             "sr_oa01_mean",
             "sr_oa02_mean",
             "sr_oa03_mean",
@@ -264,7 +266,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             band = dimapOutput.addBand(bandName, ProductData.TYPE_INT8);
             byteBuffer = new byte[pixelArea.width];
             dimapData = ProductData.createInstance(byteBuffer);
-        } else if (bandNumber < 3) {
+        } else if ("SYN".equals(sensor) ? bandNumber < 5 : bandNumber < 3) {
             band = dimapOutput.addBand(bandName, ProductData.TYPE_INT16);
             shortBuffer = new short[pixelArea.width];
             dimapData = ProductData.createInstance(shortBuffer);
@@ -311,9 +313,9 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                             for (int c = 0; c < tileSize; c++) {
                                 final int iSrc = r * tileSize + c;
                                 final int iDst = (tileColumn - tileArea.x) * tileSize + c;
-                                if (bandNumber == 0) {
+                                if (band.getDataType() == ProductData.TYPE_INT8) {
                                     byteBuffer[iDst] = (byte) tiles[tileColumn][iSrc];
-                                } else if (bandNumber < 3) {
+                                } else if (band.getDataType() == ProductData.TYPE_INT16) {
                                     shortBuffer[iDst] = (short) tiles[tileColumn][iSrc];
                                 } else {
                                     floatBuffer[iDst] = tiles[tileColumn][iSrc];
@@ -322,9 +324,9 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                         } else {
                             for (int c = 0; c < tileSize; c++) {
                                 final int iDst = (tileColumn - tileArea.x) * tileSize + c;
-                                if (bandNumber == 0) {
+                                if (band.getDataType() == ProductData.TYPE_INT8) {
                                     byteBuffer[iDst] = 0;
-                                } else if (bandNumber < 3) {
+                                } else if (band.getDataType() == ProductData.TYPE_INT16) {
                                     shortBuffer[iDst] = 0;
                                 } else {
                                     floatBuffer[iDst] = Float.NaN;
