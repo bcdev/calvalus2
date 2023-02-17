@@ -352,14 +352,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                 ndxiSqrSum[index][i] += ndvi * ndvi;
                                 ndxiCount[index][i]++;
                             }
-                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+1][i]) && isNaN(bandDataF[sl01BandIndex+2][i])) {
-                                float ndxi = (bandDataF[sl01BandIndex+2][i] - bandDataF[sl01BandIndex+1][i]) / (bandDataF[sl01BandIndex+2][i] + bandDataF[sl01BandIndex+1][i]);
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+1][i]) && ! isNaN(bandDataF[sl01BandIndex+2][i])) {
+                                float ndxi = ndxiOf(bandDataF[sl01BandIndex+2][i], bandDataF[sl01BandIndex+1][i]);
                                 ndxiSum[NUM_INDEXES + index][i] += ndxi;
                                 ndxiSqrSum[NUM_INDEXES + index][i] += ndxi * ndxi;
                                 ndxiCount[NUM_INDEXES + index][i]++;
                             }
-                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+3][i]) && isNaN(bandDataF[sl01BandIndex+4][i])) {
-                                float ndxi = (bandDataF[sl01BandIndex+4][i] - bandDataF[sl01BandIndex+3][i]) / (bandDataF[sl01BandIndex+4][i] + bandDataF[sl01BandIndex+3][i]);
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+3][i]) && ! isNaN(bandDataF[sl01BandIndex+4][i])) {
+                                float ndxi = ndxiOf(bandDataF[sl01BandIndex+4][i], bandDataF[sl01BandIndex+3][i]);
                                 ndxiSum[2 * NUM_INDEXES + index][i] += ndxi;
                                 ndxiSqrSum[2 * NUM_INDEXES + index][i] += ndxi * ndxi;
                                 ndxiCount[2 * NUM_INDEXES + index][i]++;
@@ -368,20 +368,20 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         case 2:
                         case 3:  // TODO TBC whether to use water index for snow as well
                             if (! isNaN(bandDataF[b3BandIndex][i]) && ! isNaN(bandDataF[b11BandIndex][i])) {
-                                float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
+                                float ndwi = ndxiOf(bandDataF[b11BandIndex][i], bandDataF[b3BandIndex][i]);
                                 ndxiSum[index][i] += ndwi;
                                 ndxiSqrSum[index][i] += ndwi * ndwi;
                                 ndxiCount[index][i]++;
                             }
                             // we use the same normalised measures as for land as we do not have proper NDWI in one of the SLSTR groups
-                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+1][i]) && isNaN(bandDataF[sl01BandIndex+2][i])) {
-                                float ndxi = (bandDataF[sl01BandIndex+2][i] - bandDataF[sl01BandIndex+1][i]) / (bandDataF[sl01BandIndex+2][i] + bandDataF[sl01BandIndex+1][i]);
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+1][i]) && ! isNaN(bandDataF[sl01BandIndex+2][i])) {
+                                float ndxi = ndxiOf(bandDataF[sl01BandIndex+2][i], bandDataF[sl01BandIndex+1][i]);
                                 ndxiSum[NUM_INDEXES + index][i] += ndxi;
                                 ndxiSqrSum[NUM_INDEXES + index][i] += ndxi * ndxi;
                                 ndxiCount[NUM_INDEXES + index][i]++;
                             }
-                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+3][i]) && isNaN(bandDataF[sl01BandIndex+4][i])) {
-                                float ndxi = (bandDataF[sl01BandIndex+4][i] - bandDataF[sl01BandIndex+3][i]) / (bandDataF[sl01BandIndex+4][i] + bandDataF[sl01BandIndex+3][i]);
+                            if (isSyn && ! isNaN(bandDataF[sl01BandIndex+3][i]) && ! isNaN(bandDataF[sl01BandIndex+4][i])) {
+                                float ndxi = ndxiOf(bandDataF[sl01BandIndex+4][i], bandDataF[sl01BandIndex+3][i]);
                                 ndxiSum[2 * NUM_INDEXES + index][i] += ndxi;
                                 ndxiSqrSum[2 * NUM_INDEXES + index][i] += ndxi * ndxi;
                                 ndxiCount[2 * NUM_INDEXES + index][i]++;
@@ -402,7 +402,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             if (index >= 0 && index < 7) {
                 if (ndxiCount[index][i] > 0) {
                     ndxiMean[0][i] = ndxiSum[index][i] / ndxiCount[index][i];
-                    ndxiSdev[0][i] = (float) Math.sqrt(ndxiSqrSum[index][i] / ndxiCount[index][i] - ndxiMean[0][i] * ndxiMean[0][i]);
+                    ndxiSdev[0][i] = sdevOf(ndxiSqrSum[index][i], ndxiMean[0][i], ndxiCount[index][i]);
                 } else {
                     ndxiMean[0][i] = Float.NaN;
                     ndxiSdev[0][i] = Float.NaN;
@@ -410,14 +410,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 if (isSyn) {
                     if (ndxiCount[NUM_INDEXES + index][i] > 0) {
                         ndxiMean[1][i] = ndxiSum[NUM_INDEXES + index][i] / ndxiCount[NUM_INDEXES + index][i];
-                        ndxiSdev[1][i] = (float) Math.sqrt(ndxiSqrSum[NUM_INDEXES + index][i] / ndxiCount[NUM_INDEXES + index][i] - ndxiMean[1][i] * ndxiMean[1][i]);
+                        ndxiSdev[1][i] = sdevOf(ndxiSqrSum[NUM_INDEXES + index][i], ndxiMean[1][i], ndxiCount[NUM_INDEXES + index][i]);
                     } else {
                         ndxiMean[1][i] = Float.NaN;
                         ndxiSdev[1][i] = Float.NaN;
                     }
                     if (ndxiCount[2 * NUM_INDEXES + index][i] > 0) {
                         ndxiMean[2][i] = ndxiSum[2 * NUM_INDEXES + index][i] / ndxiCount[2 * NUM_INDEXES + index][i];
-                        ndxiSdev[2][i] = (float) Math.sqrt(ndxiSqrSum[2 * NUM_INDEXES + index][i] / ndxiCount[2 * NUM_INDEXES + index][i] - ndxiMean[2][i] * ndxiMean[2][i]);
+                        ndxiSdev[2][i] = sdevOf(ndxiSqrSum[2 * NUM_INDEXES + index][i], ndxiMean[2][i], ndxiCount[2 * NUM_INDEXES + index][i]);
                     } else {
                         ndxiMean[2][i] = Float.NaN;
                         ndxiSdev[2][i] = Float.NaN;
@@ -682,16 +682,16 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 }
                 final float stateCount2 = accu[numTargetBands][i];
                 for (int b = sl01BandIndex - 3; b < sl01BandIndex + 3 - 3; ++b) {
-                    if (stateCount > 0) {
-                        accu[b][i] /= stateCount;
+                    if (stateCount2 > 0) {
+                        accu[b][i] /= stateCount2;
                     } else {
                         accu[b][i] = Float.NaN;
                     }
                 }
                 final float stateCount3 = accu[numTargetBands + 1][i];
                 for (int b = sl01BandIndex + 3 - 3; b < sl01BandIndex + 5 - 3; ++b) {
-                    if (stateCount > 0) {
-                        accu[b][i] /= stateCount;
+                    if (stateCount3 > 0) {
+                        accu[b][i] /= stateCount3;
                     } else {
                         accu[b][i] = Float.NaN;
                     }
@@ -786,6 +786,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
     private static float ndxiOf(float nir, float red) {
         return (nir - red) / (nir + red);
+    }
+
+    private static float sdevOf(float sqrSum, float mean, int count) {
+        return (float) Math.sqrt(sqrSum / count - mean * mean);
     }
 
     private Product sdrToSr(Product product) {
