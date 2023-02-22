@@ -527,7 +527,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                     if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
                                         float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i], bandDataF[sl01BandIndex + 1][i]);
                                         if (within1Sigma(ndxi123, ndxiMean[1][i], ndxiSdev[1][i])) {
-                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            final int stateCount = count(state, bandDataS, i);
                                             accu[3][i] += stateCount;
                                             for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                                                 final int b = bs - 1;
@@ -538,7 +538,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                     if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
                                         float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i], bandDataF[sl01BandIndex + 3][i]);
                                         if (within1Sigma(ndxi56, ndxiMean[2][i], ndxiSdev[2][i])) {
-                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                            final int stateCount = count(state, bandDataS, i);
                                             accu[4][i] += stateCount;
                                             for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                                                 final int b = bs - 1;
@@ -574,7 +574,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                         }
                                     }
                                     if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
-                                        final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                        final int stateCount = count(state, bandDataS, i);
                                         accu[3][i] += stateCount;
                                         for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                                             final int b = bs - 1;
@@ -582,7 +582,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                         }
                                     }
                                     if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
-                                        final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                                        final int stateCount = count(state, bandDataS, i);
                                         accu[4][i] += stateCount;
                                         for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                                             final int b = bs - 1;
