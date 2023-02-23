@@ -150,7 +150,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         // String[] targetBands = targetBandsOf(conf, sensorBands);  numSourceBands must be complete. Else xxxBandIndex may be wrong
         String[] targetBands = sensorBands;
         int[] targetBandIndex = new int[26];  // desired band for the seasonal composite, as index to sensorBands
-        int[] sourceBandIndex = new int[29];  // corresponding required band of the L3 product, as index to product
+        int[] sourceBandIndex = new int[27];  // corresponding required band of the L3 product, as index to product
         int numTargetBands = (isSyn ? 5 : 3);
         int numSourceBands = 6;
         for (int j = 0; j < (isSyn ? 5 : 3); ++j) {
@@ -197,7 +197,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             ndxiMean = new float[(isSyn ? 3 : 1)][microTileSize*microTileSize];
             ndxiSdev = new float[(isSyn ? 3 : 1)][microTileSize*microTileSize];
         }
-        accu = new float[isSyn ? numTargetBands + 2 : numTargetBands][microTileSize * microTileSize];
+        accu = new float[numTargetBands][microTileSize * microTileSize];
 
         // micro tile loop
         LOG.info("processing " + (numMicroTiles*numMicroTiles) + " micro tiles ...");
@@ -291,8 +291,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                           isSyn  ? new Path(new Path(srRootDir.getParent(),
                                                                      srRootDir.getName().replace("s3a", "s3?")
                                                                                         .replace("s3b", "s3?")),
-                                                            String.format("h%02dv%02d", tileColumn, tileRow)) :
-                                                   new Path(srRootDir, YEAR_FORMAT.format(week)),
+                                                            String.format("h%02dv%02d", tileColumn, tileRow))
+                                                 : new Path(srRootDir, YEAR_FORMAT.format(week)),
                                           DATE_FORMAT.format(week)),
                                        weekFileName);
             FileStatus[] fileStatuses = fs.globStatus(path);
@@ -794,7 +794,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     }
 
     private static boolean within1Sigma(float value, float mean, float sdev) {
-        return value >= mean - sdev - EPS && value <= mean + sdev + EPS;
+        // return value >= mean - sdev - EPS && value <= mean + sdev + EPS;
+        return ! (value < mean - sdev - EPS || value > mean + sdev + EPS);
     }
 
     private static float ndxiOf(float nir, float red) {
@@ -802,7 +803,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     }
 
     private static float sdevOf(float sqrSum, float mean, int count) {
-        return (float) Math.sqrt(sqrSum / count - mean * mean);
+        return (float) Math.sqrt(sqrSum / (count - 1) - mean * mean);
     }
 
     private Product sdrToSr(Product product) {
