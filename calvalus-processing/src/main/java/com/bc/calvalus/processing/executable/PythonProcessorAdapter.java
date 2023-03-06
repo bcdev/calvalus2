@@ -83,6 +83,18 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
             }
             setInputFile(inputFile);
         }
+        Path[] additionalInputPaths = getAdditionalInputPaths();
+        if (additionalInputPaths != null) {
+            for (Path additionalInputPath : additionalInputPaths) {
+                if (additionalInputPath.getFileSystem(getConfiguration()).exists(additionalInputPath)) {
+                    if (additionalInputPath.getName().endsWith(".zip")) {
+                        CalvalusProductIO.uncompressArchiveToCWD(additionalInputPath, getConfiguration());
+                    } else {
+                        CalvalusProductIO.copyFileToLocal(additionalInputPath, getConfiguration()).getName();
+                    }
+                }
+            }
+        }
         // bookkeeping of bytes read
         if (getMapContext().getInputSplit() instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
@@ -118,6 +130,7 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
                 String.format("  source %s/bin/activate; export PATH; ", condaenvName) +
                 "fi; " +
                 (inputLocalPath.endsWith(".zip") ? String.format("unzip %s; ", inputLocalPath) : "") +
+                "export PYTHONPATH=.; " +
                 String.format("./%s; ", processorCall) +
                 String.format("for n in $(ls %s); do echo CALVALUS_OUTPUT_PRODUCT $n; done", outputPattern);
         getLogger().info("script=" + script);
