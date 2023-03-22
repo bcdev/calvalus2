@@ -58,7 +58,7 @@ public class AvhrrGridInputFormat extends InputFormat {
         Configuration conf = context.getConfiguration();
         String year = conf.get("calvalus.year");
         String month = conf.get("calvalus.month");
-        if (Integer.parseInt(month) < 10) {
+        if (month.length() < 2) {
             month = "" + Integer.parseInt(month);
         }
         List<InputSplit> splits = new ArrayList<>(1);
