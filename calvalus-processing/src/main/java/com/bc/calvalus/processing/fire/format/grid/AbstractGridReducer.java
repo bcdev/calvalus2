@@ -125,7 +125,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         } else {
             year = context.getConfiguration().get("calvalus.year");
             month = context.getConfiguration().get("calvalus.month");
-            if (Integer.parseInt(month) < 10) {
+            if (month.length() < 2) {
                 month = "0" + month;
             }
             lastDayOfMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).atEndOfMonth().getDayOfMonth();
