@@ -259,7 +259,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             }
         }
         for (Product product : products) {
+            final File productFile = product.getFileLocation();
             product.dispose();
+            try {
+                productFile.delete();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

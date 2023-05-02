@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.25-SNAPSHOT</version>
+    <version>2.26-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,12 +12,12 @@
 
     <properties>
         <hadoop.version>3.2.1-BC</hadoop.version>
-        <calvalus.version>2.25-SNAPSHOT</calvalus.version>
+        <calvalus.version>2.26-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>9.0.3.1cv</snap.version>
-        <s1tbx.version>9.0.1.1cv</s1tbx.version>
-        <s2tbx.version>9.0.1.1cv</s2tbx.version>
-        <s3tbx.version>9.0.4.1cv</s3tbx.version>
+        <snap.version>9.0.6.1cv</snap.version>
+        <s1tbx.version>9.0.4.1cv</s1tbx.version>
+        <s2tbx.version>9.0.2.1cv</s2tbx.version>
+        <s3tbx.version>9.0.4.2cv</s3tbx.version>
         <seadas.reader.version>1.10.0</seadas.reader.version>
         <probav.reader.version>2.3.0.1cv</probav.reader.version>
         <geo-inventory-version>0.6.1</geo-inventory-version>
@@ -333,7 +333,7 @@
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-sta-adapters-help</artifactId><version>${s2tbx.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-radiometric-indices</artifactId><version>${s2tbx.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-reflectance-to-radiance</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>lib-gdal</artifactId><version>${s2tbx.version}</version></dependency>
+            <dependency><groupId>org.esa.snap</groupId><artifactId>lib-gdal</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-gdal-reader</artifactId><version>${s2tbx.version}</version></dependency>
             <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-grm</artifactId><version>${s2tbx.version}</version></dependency>
 

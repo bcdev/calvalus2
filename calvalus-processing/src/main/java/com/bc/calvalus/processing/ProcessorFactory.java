@@ -19,9 +19,11 @@ package com.bc.calvalus.processing;
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
+import com.bc.calvalus.processing.beam.TemporalAggregationAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.PythonProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.beam.TemporalAggregator;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -49,7 +51,7 @@ public class ProcessorFactory {
     public static final String CALVALUS_L2_PROCESSOR_FILES = "calvalus.l2.scriptFiles";
     private static final Logger logger = Logger.getLogger("com.bc.calvalus");
 
-    enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE, PYTHON}
+    enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE, PYTHON, TEMPAGG}
 
     public static ProcessorAdapter createAdapter(MapContext mapContext) throws IOException {
         String processorTypeString = mapContext.getConfiguration().get(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE, "NONE");
@@ -65,6 +67,8 @@ public class ProcessorFactory {
                 return new SubsetProcessorAdapter(mapContext);
             case PYTHON:
                 return new PythonProcessorAdapter(mapContext);
+            case TEMPAGG:
+                return new TemporalAggregationAdapter(mapContext);
 
         }
         throw new IllegalArgumentException("Unknown processor type.");
@@ -157,6 +161,11 @@ public class ProcessorFactory {
         if (pythonFiles.length == 1) {
             return ProcessorType.PYTHON;
         }
+        try {
+            if (TemporalAggregator.class.isAssignableFrom(Class.forName(executable))) {
+                return ProcessorType.TEMPAGG;
+            }
+        } catch (ClassNotFoundException _) {}
         return ProcessorType.OPERATOR;
     }
 

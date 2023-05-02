@@ -44,7 +44,7 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
 
     private static final int DEFAULT_TILE_HEIGHT = 64;
 
-    private Product subsetProduct;
+    protected Product targetProduct;
 
     public SubsetProcessorAdapter(MapContext mapContext) {
         super(mapContext);
@@ -61,26 +61,26 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("L2 Subset");
 
-        subsetProduct = createSubsetFromInput(getInputProduct());
-        if (subsetProduct == null ||
-                subsetProduct.getSceneRasterWidth() == 0 ||
-                subsetProduct.getSceneRasterHeight() == 0) {
+        targetProduct = createSubsetFromInput(getInputProduct());
+        if (targetProduct == null ||
+                targetProduct.getSceneRasterWidth() == 0 ||
+                targetProduct.getSceneRasterHeight() == 0) {
             return false;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
-                subsetProduct.getSceneRasterWidth(),
-                subsetProduct.getSceneRasterHeight()));
+                targetProduct.getSceneRasterWidth(),
+                targetProduct.getSceneRasterHeight()));
         return true;
     }
 
     @Override
     public Product openProcessedProduct() {
-        return subsetProduct;
+        return targetProduct;
     }
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
-        saveTargetProduct(subsetProduct, pm);
+        saveTargetProduct(targetProduct, pm);
     }
 
     @Override
@@ -96,9 +96,9 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     @Override
     public void dispose() {
         super.dispose();
-        if (subsetProduct != null) {
-            subsetProduct.dispose();
-            subsetProduct = null;
+        if (targetProduct != null) {
+            targetProduct.dispose();
+            targetProduct = null;
         }
     }
 

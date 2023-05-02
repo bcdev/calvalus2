@@ -79,7 +79,6 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     private static final DateFormat YMD_DIR_FORMAT = DateUtils.createDateFormat("yyyy/MM/dd");
 
     private GraphContext graphContext;
-    private Product targetProduct;
     private boolean shallSaveTarget;
 
     public SnapGraphAdapter(MapContext mapContext) {

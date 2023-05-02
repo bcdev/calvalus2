@@ -64,6 +64,7 @@ public interface JobConfigNames {
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
     String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
+    String CALVALUS_L2_PROCESSOR_IMPL = "calvalus.l2.implementation";
     String CALVALUS_L2_PROCESSOR_DESCRIPTION = "calvalus.l2.processorDescription";
 
     String CALVALUS_BUNDLES = "calvalus.bundles";

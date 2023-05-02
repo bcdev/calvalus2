@@ -47,8 +47,6 @@ import java.util.Map;
  */
 public class SnapOperatorAdapter extends SubsetProcessorAdapter {
 
-    private Product targetProduct;
-
     public SnapOperatorAdapter(MapContext mapContext) {
         super(mapContext);
 
