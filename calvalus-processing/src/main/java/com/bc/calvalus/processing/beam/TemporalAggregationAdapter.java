@@ -57,6 +57,7 @@ public class TemporalAggregationAdapter extends SubsetProcessorAdapter {
         File inputFile = getInputFile();
         Path[] additionalInputPaths = getAdditionalInputPaths();
         File inputData;
+        pm.beginTask("temporal aggregation", additionalInputPaths.length + 1);
 
         try {
             // retrieve first input, unpack, if zipped, TODO handle tar as well
@@ -104,6 +105,7 @@ public class TemporalAggregationAdapter extends SubsetProcessorAdapter {
             } else {
                 inputData.delete();
             }
+            pm.worked(1);
 
             // aggregate the time series one by one
             if (additionalInputPaths != null) {
@@ -154,6 +156,7 @@ public class TemporalAggregationAdapter extends SubsetProcessorAdapter {
                         } else {
                             inputData.delete();
                         }
+                        pm.worked(1);
                     }
                 }
             }

@@ -311,22 +311,29 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
             }
         }
         final Band statusBand = primajorityStatusProduct.addBand("status", ProductData.TYPE_INT8);
-        statusBand.setData(new ProductData.Byte(status));
+        statusBand.setRasterData(new ProductData.Byte(status));
+        statusBand.getSourceImage();
+        statusBand.getSourceImage();
         final Band ndviMeanBand = primajorityStatusProduct.addBand("ndviMean", ProductData.TYPE_FLOAT32);
-        ndviMeanBand.setData(new ProductData.Float(ndviMean));
+        ndviMeanBand.setRasterData(new ProductData.Float(ndviMean));
+        ndviMeanBand.getSourceImage();
         final Band ndviSdevBand = primajorityStatusProduct.addBand("ndviSdev", ProductData.TYPE_FLOAT32);
-        ndviSdevBand.setData(new ProductData.Float(ndviSdev));
+        ndviSdevBand.setRasterData(new ProductData.Float(ndviSdev));
+        ndviSdevBand.getSourceImage();
         if (isSyn) {
             final Band sl32MeanBand = primajorityStatusProduct.addBand("sl32Mean", ProductData.TYPE_FLOAT32);
-            sl32MeanBand.setData(new ProductData.Float(sl32Mean));
+            sl32MeanBand.setRasterData(new ProductData.Float(sl32Mean));
+            sl32MeanBand.getSourceImage();
             final Band sl32SdevBand = primajorityStatusProduct.addBand("sl32Sdev", ProductData.TYPE_FLOAT32);
-            sl32SdevBand.setData(new ProductData.Float(sl32Sdev));
+            sl32SdevBand.setRasterData(new ProductData.Float(sl32Sdev));
+            sl32SdevBand.getSourceImage();
             final Band sl65MeanBand = primajorityStatusProduct.addBand("sl65Mean", ProductData.TYPE_FLOAT32);
-            sl65MeanBand.setData(new ProductData.Float(sl65Mean));
+            sl65MeanBand.setRasterData(new ProductData.Float(sl65Mean));
+            sl65MeanBand.getSourceImage();
             final Band sl65SdevBand = primajorityStatusProduct.addBand("sl65Sdev", ProductData.TYPE_FLOAT32);
-            sl65SdevBand.setData(new ProductData.Float(sl65Sdev));
+            sl65SdevBand.setRasterData(new ProductData.Float(sl65Sdev));
+            sl65SdevBand.getSourceImage();
         }
-        primajorityStatusProduct.setModified(false);
         return primajorityStatusProduct;
     }
 
