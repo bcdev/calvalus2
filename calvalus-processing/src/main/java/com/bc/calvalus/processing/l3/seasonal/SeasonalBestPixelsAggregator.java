@@ -11,6 +11,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.ImageUtils;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
@@ -253,18 +254,28 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
 
     /** aggregate is called once per input. The first input is provided to init and to aggregate. */
     public void aggregate(Product contribution) throws IOException {
-        Band[] sourceBands = new Band[numSourceBands];
+        final Band[] sourceBands = new Band[numSourceBands];
+        final float[][] bandDataB = new float[numSourceBands][];
+        final int[][] bandDataS = new int[numSourceBands][];
+        final float[][] bandDataF = new float[numSourceBands][];
         for (int b = 0; b < numSourceBands; ++b) {
             sourceBands[b] = contribution.getBand(this.sourceBands[b]);
-            sourceBands[b].readRasterDataFully();
+            //sourceBands[b].readRasterDataFully();
+            if (b < 1) {
+                bandDataB[b] = (float[]) ImageUtils.getPrimitiveArray(sourceBands[b].getSourceImage().getData().getDataBuffer());
+            } else if (b < (isSyn ? 2 : 6)) {
+                bandDataS[b] = (int[]) ImageUtils.getPrimitiveArray(sourceBands[b].getSourceImage().getData().getDataBuffer());
+            } else {
+                bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(sourceBands[b].getSourceImage().getData().getDataBuffer());
+            }
         }
         for (int row = 0; row < sceneRasterHeight; ++row) {
             for (int col = 0; col < sceneRasterWidth; ++col) {
                 final int i = row * sceneRasterWidth + col;
-                final byte state = (byte) sourceBands[0].getSampleInt(col, row);
+                final byte state = (byte) bandDataB[0][i];
                 if (state > 0) {
                     // obs_count
-                    accu[2][i] += isSyn ? sourceBands[1].getSampleInt(col, row) : count(sourceBands, row, col);
+                    accu[2][i] += isSyn ? bandDataS[1][i] : count(bandDataS, i);
                     if (state == accu[0][i]) {
                         switch (state) {
                             case 1:
@@ -274,51 +285,51 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 5:
                                 if (isSyn) {
                                     final int stateCount = 1;
-                                    if (! containsNan(sourceBands, 2, sl01BandIndex, ndviBandIndex, row, col)) {
-                                        float ndvi = sourceBands[ndviBandIndex].getSampleFloat(col, row);
+                                    if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
+                                        float ndvi = bandDataF[ndviBandIndex][i];
                                         if (within1Sigma(ndvi, ndviMean[row][col], ndviSdev[row][col])) {
                                             // status_count
                                             accu[1][i] += stateCount;
                                             for (int b = 5; b < numTargetBands; ++b) {
                                                 final int bs = b - 3;  // sr_1 is b=5 and bs=2
                                                 if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
-                                                    accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                                    accu[b][i] += stateCount * bandDataF[bs][i];
                                                 }
                                             }
                                         }
                                     }
-                                    if (! containsNan(sourceBands, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, row, col)) {
-                                        float ndxi123 = ndxiOf(sourceBands[sl01BandIndex + 2].getSampleFloat(col, row),
-                                                               sourceBands[sl01BandIndex + 1].getSampleFloat(col, row));
+                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+                                        float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i],
+                                                               bandDataF[sl01BandIndex + 1][i]);
                                         if (within1Sigma(ndxi123, sl32Mean[row][col], sl32Sdev[row][col])) {
                                             // sl123_count
                                             accu[3][i] += stateCount;
                                             for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                                                 final int b = bs + 3;
-                                                accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                                accu[b][i] += stateCount * bandDataF[bs][i];
                                             }
                                         }
                                     }
-                                    if (! containsNan(sourceBands, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, row, col)) {
-                                        float ndxi56 = ndxiOf(sourceBands[sl01BandIndex + 4].getSampleFloat(col, row),
-                                                              sourceBands[sl01BandIndex + 3].getSampleFloat(col, row));
+                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+                                        float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i],
+                                                              bandDataF[sl01BandIndex + 3][i]);
                                         if (within1Sigma(ndxi56, sl65Mean[row][col], sl65Sdev[row][col])) {
                                             // sl56_count
                                             accu[4][i] += stateCount;
                                             for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                                                 final int b = bs + 3;
-                                                accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                                accu[b][i] += stateCount * bandDataF[bs][i];
                                             }
                                         }
                                     }
                                 } else {
-                                    if (! containsNan(sourceBands, numTargetBands, ndviBandIndex, row, col)) {
-                                        float ndvi = sourceBands[ndviBandIndex].getSampleFloat(col, row);
+                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                                        float ndvi = bandDataF[ndviBandIndex][i];
                                         if (within1Sigma(ndvi, ndviMean[row][col], ndviSdev[row][col])) {
-                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, sourceBands, row, col);  // cloud shadow count abused for dark, bright, haze
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
                                             accu[1][i] += stateCount;
                                             for (int b = 3; b < numTargetBands; ++b) {
-                                                accu[b][i] += stateCount * sourceBands[b + 3].getSampleFloat(col, row);
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
                                             }
                                         }
                                     }
@@ -328,9 +339,9 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 3:  // TODO TBC whether to use water index for snow as well
                                 if (isSyn) {
                                     final int stateCount = 1;
-                                    if (! containsNan(sourceBands, 2, sl01BandIndex, ndviBandIndex, row, col)) {
-                                        float ndwi = ndxiOf(sourceBands[b11BandIndex].getSampleFloat(col, row),
-                                                            sourceBands[b3BandIndex].getSampleFloat(col, row));
+                                    if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
+                                        float ndwi = ndxiOf(bandDataF[b11BandIndex][i],
+                                                            bandDataF[b3BandIndex][i]);
 
                                         if (within1Sigma(ndwi, ndviMean[row][col], ndviSdev[row][col])) {
                                             // status_count
@@ -338,42 +349,42 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                                             for (int b = 5; b < numTargetBands; ++b) {
                                                 final int bs = b - 3;  // sr_1 is b=5 and bs=2
                                                 if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
-                                                    accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                                    accu[b][i] += stateCount * bandDataF[bs][i];
                                                 }
                                             }
                                         }
                                     }
-                                    if (! containsNan(sourceBands, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, row, col)) {
-                                        float ndxi123 = ndxiOf(sourceBands[sl01BandIndex + 2].getSampleFloat(col, row),
-                                                               sourceBands[sl01BandIndex + 1].getSampleFloat(col, row));
+                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+                                        float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i],
+                                                               bandDataF[sl01BandIndex + 1][i]);
                                         if (within1Sigma(ndxi123, sl32Mean[row][col], sl32Sdev[row][col])) {
                                             accu[3][i] += stateCount;
                                             for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                                                 final int b = bs + 3;
-                                                accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                                accu[b][i] += stateCount * bandDataF[bs][i];
                                             }
                                         }
                                     }
-                                    if (! containsNan(sourceBands, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, row, col)) {
-                                        float ndxi56 = ndxiOf(sourceBands[sl01BandIndex + 4].getSampleFloat(col, row),
-                                                              sourceBands[sl01BandIndex + 3].getSampleFloat(col, row));
+                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+                                        float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i],
+                                                              bandDataF[sl01BandIndex + 3][i]);
                                         if (within1Sigma(ndxi56, sl65Mean[row][col], sl65Sdev[row][col])) {
                                             accu[4][i] += stateCount;
                                             for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                                                 final int b = bs + 3;
-                                                accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                                accu[b][i] += stateCount * bandDataF[bs][i];
                                             }
                                         }
                                     }
                                 } else {
-                                    if (! containsNan(sourceBands, numTargetBands, ndviBandIndex, row, col)) {
-                                        float ndwi = ndxiOf(sourceBands[b11BandIndex].getSampleFloat(col, row),
-                                                            sourceBands[b3BandIndex].getSampleFloat(col, row));
+                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                                        float ndwi = ndxiOf(bandDataF[b11BandIndex][i],
+                                                            bandDataF[b3BandIndex][i]);
                                         if (within1Sigma(ndwi, ndviMean[row][col], ndviSdev[row][col])) {
-                                            final int stateCount = count(state, sourceBands, row, col);
+                                            final int stateCount = count(state, bandDataS, i);
                                             accu[1][i] += stateCount;
                                             for (int b = 3; b < numTargetBands; ++b) {
-                                                accu[b][i] += stateCount * sourceBands[b + 3].getSampleFloat(col, row);
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
                                             }
                                         }
                                     }
@@ -383,35 +394,35 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 14:
                                 if (isSyn) {
                                     final int stateCount = 1;
-                                    if (! containsNan(sourceBands, 2, sl01BandIndex, ndviBandIndex, row, col)) {
+                                    if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
                                         accu[1][i] += stateCount;
                                         for (int b = 5; b < numTargetBands; ++b) {
                                             final int bs = b - 3;
                                             if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
-                                                accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);  // we may have processed under clouds
+                                                accu[b][i] += stateCount * bandDataF[bs][i];  // we may have processed under clouds
                                             }
                                         }
                                     }
-                                    if (! containsNan(sourceBands, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, row, col)) {
+                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
                                         accu[3][i] += stateCount;
                                         for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                                             final int b = bs + 3;
-                                            accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                            accu[b][i] += stateCount * bandDataF[bs][i];
                                         }
                                     }
-                                    if (! containsNan(sourceBands, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, row, col)) {
+                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
                                         accu[4][i] += stateCount;
                                         for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                                             final int b = bs + 3;
-                                            accu[b][i] += stateCount * sourceBands[bs].getSampleFloat(col, row);
+                                            accu[b][i] += stateCount * bandDataF[bs][i];
                                         }
                                     }
                                 } else {
-                                    if (! containsNan(sourceBands, numTargetBands, ndviBandIndex, row, col)) {
-                                        final int stateCount = count(state, sourceBands, row, col);
+                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+                                        final int stateCount = count(state, bandDataS, i);
                                         accu[1][i] += stateCount;
                                         for (int b = 3; b < numTargetBands; ++b) {
-                                            accu[b][i] += stateCount * sourceBands[b + 3].getSampleFloat(col, row);  // we may have processed under clouds
+                                            accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
                                         }
                                     }
                                 }
@@ -498,44 +509,44 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
         return bestPixelProduct;
     }
 
-    static int count(Band[] sourceBands, int row, int col) {
-        return sourceBands[1].getSampleInt(col, row)
-                + sourceBands[2].getSampleInt(col, row)
-                + sourceBands[3].getSampleInt(col, row)
-                + sourceBands[4].getSampleInt(col, row)
-                + sourceBands[5].getSampleInt(col, row);
+    static int count(int[][] bandDataS, int i) {
+        return bandDataS[1][i]
+                + bandDataS[2][i]
+                + bandDataS[3][i]
+                + bandDataS[4][i]
+                + bandDataS[5][i];
     }
 
-    static int count(int state, Band[] sourceBands, int row, int col) {
+    static int count(int state, int[][] bandDataS, int i) {
         switch (state) {
-            case 1: return sourceBands[1].getSampleInt(col, row);
-            case 2: return sourceBands[2].getSampleInt(col, row);
-            case 3: return sourceBands[3].getSampleInt(col, row);
-            case 4: return sourceBands[4].getSampleInt(col, row);
+            case 1: return bandDataS[1][i];
+            case 2: return bandDataS[2][i];
+            case 3: return bandDataS[3][i];
+            case 4: return bandDataS[4][i];
             case 5:
             case 12:
             case 11:
-            case 15: return sourceBands[5].getSampleInt(col, row);
+            case 15: return bandDataS[5][i];
             default: return 0;
         }
     }
 
-    private boolean containsNan(Band[] sourceBands, int numTargetBands, int ndviBandIndex, int row, int col) {
+    private boolean containsNan(float[][] bandDataF, int numTargetBands, int ndviBandIndex, int i) {
         for (int b = 3; b < numTargetBands; ++b) {
             if (b+3 == ndviBandIndex ?
-                    Float.isNaN(sourceBands[b + 3].getSampleFloat(col, row)) :
-                    isNaN(sourceBands[b + 3].getSampleFloat(col, row))) {
+                    Float.isNaN(bandDataF[b + 3][i]) :
+                    isNaN(bandDataF[b + 3][i])) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean containsNan(Band[] sourceBands, int startIndex, int stopIndex, int ndviBandIndex, int row, int col) {
+    private boolean containsNan(float[][] bandDataF, int startIndex, int stopIndex, int ndviBandIndex, int i) {
         for (int bs = startIndex; bs < stopIndex; ++bs) {
             if (bs == ndviBandIndex ?
-                    Float.isNaN(sourceBands[bs].getSampleFloat(col, row)) :
-                    isNaN(sourceBands[bs].getSampleFloat(col, row))) {
+                    Float.isNaN(bandDataF[bs][i]) :
+                    isNaN(bandDataF[bs][i])) {
                 return true;
             }
         }
