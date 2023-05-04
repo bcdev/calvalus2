@@ -158,21 +158,21 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
         numTargetBands = targetBands.length;
         numSourceBands = sourceBands.length;
         // for SYN the OLCI NDWI is computed from Oa17 and Oa08
-        b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : isSyn ? 1+8 : 6 - 1 + 4;    // green 560 nm
-        b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : isSyn ? 1+13: 6 - 1 + 3;  // swir-1 1610 nm
+        b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : isSyn ? 2+7 : 6 - 1 + 4;    // green 560 nm
+        b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : isSyn ? 2+12: 6 - 1 + 3;  // swir-1 1610 nm
         ndviBandIndex = numSourceBands - 1;
-        sl01BandIndex = isSyn ? 1+15 : -1;
+        sl01BandIndex = isSyn ? 2+15 : -1;
 
         accu = new float[numTargetBands][sceneRasterHeight * sceneRasterWidth];
 
         statusBandName = sourceBands[0];
         ndviBandName = sourceBands[sourceBands.length-1];
-        greenBandName = sourceBands[isSyn ? 1+8 : isOlci ? 5+5 : isMsi ? 5+2 : 5+4];
-        swirBandName = sourceBands[isSyn ? 1+13 : isOlci ? 5+13 : isMsi ? 5+9 : 5+3];
-        sl02BandName = isSyn ? sourceBands[1+16] : null;
-        sl03BandName = isSyn ? sourceBands[1+17] : null;
-        sl05BandName = isSyn ? sourceBands[1+18] : null;
-        sl06BandName = isSyn ? sourceBands[1+19] : null;
+        greenBandName = sourceBands[isSyn ? 2+7 : isOlci ? 5+5 : isMsi ? 5+2 : 5+4];
+        swirBandName = sourceBands[isSyn ? 2+12 : isOlci ? 5+13 : isMsi ? 5+9 : 5+3];
+        sl02BandName = isSyn ? sourceBands[2+15+1] : null;
+        sl03BandName = isSyn ? sourceBands[2+15+2] : null;
+        sl05BandName = isSyn ? sourceBands[2+15+3] : null;
+        sl06BandName = isSyn ? sourceBands[2+15+4] : null;
 
         try {
             readStatus(conf);
@@ -273,7 +273,7 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 11:
                             case 5:
                                 if (isSyn) {
-                                    final int stateCount = sourceBands[1].getSampleInt(col, row);
+                                    final int stateCount = 1;
                                     if (! containsNan(sourceBands, 2, sl01BandIndex, ndviBandIndex, row, col)) {
                                         float ndvi = sourceBands[ndviBandIndex].getSampleFloat(col, row);
                                         if (within1Sigma(ndvi, ndviMean[row][col], ndviSdev[row][col])) {
@@ -327,7 +327,7 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 2:
                             case 3:  // TODO TBC whether to use water index for snow as well
                                 if (isSyn) {
-                                    final int stateCount = sourceBands[1].getSampleInt(col, row);
+                                    final int stateCount = 1;
                                     if (! containsNan(sourceBands, 2, sl01BandIndex, ndviBandIndex, row, col)) {
                                         float ndwi = ndxiOf(sourceBands[b11BandIndex].getSampleFloat(col, row),
                                                             sourceBands[b3BandIndex].getSampleFloat(col, row));
@@ -382,8 +382,8 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 4:
                             case 14:
                                 if (isSyn) {
+                                    final int stateCount = 1;
                                     if (! containsNan(sourceBands, 2, sl01BandIndex, ndviBandIndex, row, col)) {
-                                        final int stateCount = sourceBands[1].getSampleInt(col, row);
                                         accu[1][i] += stateCount;
                                         for (int b = 5; b < numTargetBands; ++b) {
                                             final int bs = b - 3;
@@ -393,7 +393,6 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                                         }
                                     }
                                     if (! containsNan(sourceBands, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, row, col)) {
-                                        final int stateCount = count(state, sourceBands, row, col);
                                         accu[3][i] += stateCount;
                                         for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                                             final int b = bs + 3;
@@ -401,7 +400,6 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                                         }
                                     }
                                     if (! containsNan(sourceBands, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, row, col)) {
-                                        final int stateCount = count(state, sourceBands, row, col);
                                         accu[4][i] += stateCount;
                                         for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                                             final int b = bs + 3;
@@ -431,7 +429,7 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
             for (int col = 0; col < sceneRasterWidth; ++col) {
                 int i = row * sceneRasterWidth + col;
                 if (isSyn) {
-                    final float stateCount1 = accu[1][i];
+                    final int stateCount1 = (int)accu[1][i];
                     for (int b = 5; b < numTargetBands; ++b) {
                         final int bs = b - 3;
                         if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
@@ -442,7 +440,7 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             }
                         }
                     }
-                    final float stateCount2 = accu[3][i];
+                    final int stateCount2 = (int)accu[3][i];
                     for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
                         final int b = bs + 3;
                         if (stateCount2 > 0) {
@@ -451,7 +449,7 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             accu[b][i] = Float.NaN;
                         }
                     }
-                    final float stateCount3 = accu[4][i];
+                    final int stateCount3 = (int) accu[4][i];
                     for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
                         final int b = bs + 3;
                         if (stateCount3 > 0) {
@@ -461,7 +459,7 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                         }
                     }
                 } else {
-                    final float stateCount = accu[1][i];
+                    final int stateCount = (int)accu[1][i];
                     for (int b = 3; b < numTargetBands; ++b) {
                         if (stateCount > 0) {
                             accu[b][i] /= stateCount;

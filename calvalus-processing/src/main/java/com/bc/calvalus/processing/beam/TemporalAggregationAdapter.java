@@ -56,6 +56,7 @@ public class TemporalAggregationAdapter extends SubsetProcessorAdapter {
         Path inputPath = getInputPath();
         File inputFile = getInputFile();
         Path[] additionalInputPaths = getAdditionalInputPaths();
+        if (additionalInputPaths == null) { additionalInputPaths = new Path[0]; }
         File inputData;
         pm.beginTask("temporal aggregation", additionalInputPaths.length + 1);
 
@@ -108,56 +109,54 @@ public class TemporalAggregationAdapter extends SubsetProcessorAdapter {
             pm.worked(1);
 
             // aggregate the time series one by one
-            if (additionalInputPaths != null) {
-                int count = 1;
-                for (Path additionalInputPath : additionalInputPaths) {
-                    if (additionalInputPath.getFileSystem(getConfiguration()).exists(additionalInputPath)) {
-                        // staging input
-                        if (additionalInputPath.getName().endsWith(".zip")) {
-                            for (File entry : CalvalusProductIO.uncompressArchiveToCWD(additionalInputPath, getConfiguration())) {
-                                if ("xfdumanifest.xml".equals(entry.getName()) || entry.getName().endsWith("MTD.xml") || entry.getName().endsWith(".dim")) {
-                                    inputFile = entry;
-                                    break;
-                                }
+            int count = 1;
+            for (Path additionalInputPath : additionalInputPaths) {
+                if (additionalInputPath.getFileSystem(getConfiguration()).exists(additionalInputPath)) {
+                    // staging input
+                    if (additionalInputPath.getName().endsWith(".zip")) {
+                        for (File entry : CalvalusProductIO.uncompressArchiveToCWD(additionalInputPath, getConfiguration())) {
+                            if ("xfdumanifest.xml".equals(entry.getName()) || entry.getName().endsWith("MTD.xml") || entry.getName().endsWith(".dim")) {
+                                inputFile = entry;
+                                break;
                             }
-                            if (inputFile == null) {
-                                inputFile = new File(additionalInputPath.getName().substring(0, additionalInputPath.getName().length()-4));
-                            }
-                            inputData = new File(additionalInputPath.getName().substring(0, additionalInputPath.getName().length()-4));
-                        } else {
-                            inputFile = CalvalusProductIO.copyFileToLocal(additionalInputPath, getConfiguration());
-                            inputData = new File(additionalInputPath.getName());
                         }
-                        // opening input, create subset if requested
-                        setInputFile(inputFile);
-                        final Product nextInputProduct = getInputProduct();
-                        if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
-                            inputProduct = createSubsetFromInput(nextInputProduct);
-                        } else {
-                            inputProduct = nextInputProduct;
+                        if (inputFile == null) {
+                            inputFile = new File(additionalInputPath.getName().substring(0, additionalInputPath.getName().length() - 4));
                         }
-                        // aggregating input
-                        LOG.info("aggregating " + (++count) + "/" + (additionalInputPaths.length + 1) + " " + inputFile.getName());
-                        aggregator.aggregate(inputProduct);
-                        if (nextInputProduct.getStartTime().getMJD() < startTime.getMJD()) {
-                            startTime = nextInputProduct.getStartTime();
-                        }
-                        if (nextInputProduct.getEndTime().getMJD() > stopTime.getMJD()) {
-                            stopTime = nextInputProduct.getEndTime();
-                        }
-                        // closing input, delete files in working dir
-                        LOG.info("closing " + inputData.getName());
-                        if (inputProduct != nextInputProduct) {
-                            nextInputProduct.dispose();
-                        }
-                        dispose();
-                        if (inputData.isDirectory()) {
-                            FileUtils.deleteDirectory(inputData);
-                        } else {
-                            inputData.delete();
-                        }
-                        pm.worked(1);
+                        inputData = new File(additionalInputPath.getName().substring(0, additionalInputPath.getName().length() - 4));
+                    } else {
+                        inputFile = CalvalusProductIO.copyFileToLocal(additionalInputPath, getConfiguration());
+                        inputData = new File(additionalInputPath.getName());
                     }
+                    // opening input, create subset if requested
+                    setInputFile(inputFile);
+                    final Product nextInputProduct = getInputProduct();
+                    if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
+                        inputProduct = createSubsetFromInput(nextInputProduct);
+                    } else {
+                        inputProduct = nextInputProduct;
+                    }
+                    // aggregating input
+                    LOG.info("aggregating " + (++count) + "/" + (additionalInputPaths.length + 1) + " " + inputFile.getName());
+                    aggregator.aggregate(inputProduct);
+                    if (nextInputProduct.getStartTime().getMJD() < startTime.getMJD()) {
+                        startTime = nextInputProduct.getStartTime();
+                    }
+                    if (nextInputProduct.getEndTime().getMJD() > stopTime.getMJD()) {
+                        stopTime = nextInputProduct.getEndTime();
+                    }
+                    // closing input, delete files in working dir
+                    LOG.info("closing " + inputData.getName());
+                    if (inputProduct != nextInputProduct) {
+                        nextInputProduct.dispose();
+                    }
+                    dispose();
+                    if (inputData.isDirectory()) {
+                        FileUtils.deleteDirectory(inputData);
+                    } else {
+                        inputData.delete();
+                    }
+                    pm.worked(1);
                 }
             }
 
