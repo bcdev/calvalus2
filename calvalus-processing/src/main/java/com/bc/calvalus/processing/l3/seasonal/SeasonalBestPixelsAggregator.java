@@ -102,12 +102,12 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
     int sceneRasterHeight;
     int sceneRasterWidth;
 
-    float[][] ndviMean;
-    float[][] ndviSdev;
-    float[][] sl32Mean;
-    float[][] sl32Sdev;
-    float[][] sl65Mean;
-    float[][] sl65Sdev;
+    float[] ndviMean;
+    float[] ndviSdev;
+    float[] sl32Mean;
+    float[] sl32Sdev;
+    float[] sl65Mean;
+    float[] sl65Sdev;
 
     int tileColumn;
     int tileRow;
@@ -158,9 +158,9 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
         targetBands = sensorBandsOf(sensorAndResolution);
         numTargetBands = targetBands.length;
         numSourceBands = sourceBands.length;
-        // for SYN the OLCI NDWI is computed from Oa17 and Oa08
-        b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : isSyn ? 2+7 : 6 - 1 + 4;    // green 560 nm
-        b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : isSyn ? 2+12: 6 - 1 + 3;  // swir-1 1610 nm
+        // NDWI for SYN is (Oa06 - Oa18) / (Oa06 + Oa18), i.e. Oa18 is "green"
+        b3BandIndex = isMsi ? 6 - 1 + 2 : isOlci ? 6-1+5 : isSyn ? 2+13 : 6 - 1 + 4;    // green 560 nm
+        b11BandIndex = isMsi ? 6 - 1 + 9 : isOlci ? 6-1+13 : isSyn ? 2+5: 6 - 1 + 3;  // swir-1 1610 nm
         ndviBandIndex = numSourceBands - 1;
         sl01BandIndex = isSyn ? 2+15 : -1;
 
@@ -196,86 +196,53 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
         final Path statusPath = new Path(statusUrl);
         File inputFile = CalvalusProductIO.copyFileToLocal(statusPath, conf);
         LOG.info("reading primajority status from " + inputFile.getName());
-        ndviMean = new float[sceneRasterHeight][sceneRasterWidth];
-        ndviSdev = new float[sceneRasterHeight][sceneRasterWidth];
+        Product product = ProductIO.readProduct(inputFile);
+        final byte[] status = getByteArray(product.getBand("status"));
+        for (int i=0; i<status.length; ++i) {
+            accu[0][i] = (float) status[i];
+        }
+        ndviMean = getFloatArray(product.getBand("ndviMean"));
+        ndviSdev = getFloatArray(product.getBand("ndviSdev"));
         if (isSyn) {
-            sl32Mean = new float[sceneRasterHeight][sceneRasterWidth];
-            sl32Sdev = new float[sceneRasterHeight][sceneRasterWidth];
-            sl65Mean = new float[sceneRasterHeight][sceneRasterWidth];
-            sl65Sdev = new float[sceneRasterHeight][sceneRasterWidth];
-        } else {
+            sl32Mean = getFloatArray(product.getBand("sl32Mean"));
+            sl32Sdev = getFloatArray(product.getBand("sl32Sdev"));
+            sl65Mean = getFloatArray(product.getBand("sl65Mean"));
+            sl65Sdev = getFloatArray(product.getBand("sl65Sdev"));
+        } else {  
             sl32Mean = null;
             sl32Sdev = null;
             sl65Mean = null;
             sl65Sdev = null;
         }
-        Product product = ProductIO.readProduct(inputFile);
-        Band statusBand = product.getBand("status");
-        Band ndviMeanBand = product.getBand("ndviMean");
-        Band ndviSdevBand = product.getBand("ndviSdev");
-        statusBand.readRasterDataFully();
-        ndviMeanBand.readRasterDataFully();
-        ndviSdevBand.readRasterDataFully();
-        Band sl32MeanBand;
-        Band sl32SdevBand;
-        Band sl65MeanBand;
-        Band sl65SdevBand;
-        if (isSyn) {
-            sl32MeanBand = product.getBand("sl32Mean");
-            sl32SdevBand = product.getBand("sl32Sdev");
-            sl65MeanBand = product.getBand("sl65Mean");
-            sl65SdevBand = product.getBand("sl65Sdev");
-            sl32MeanBand.readRasterDataFully();
-            sl32SdevBand.readRasterDataFully();
-            sl65MeanBand.readRasterDataFully();
-            sl65SdevBand.readRasterDataFully();
-        } else {
-            sl32MeanBand = null;
-            sl32SdevBand = null;
-            sl65MeanBand = null;
-            sl65SdevBand = null;
-        }
-        for (int row = 0; row < sceneRasterHeight; ++row) {
-            for (int col = 0; col < sceneRasterWidth; ++col) {
-                final int i = row * sceneRasterWidth + col;
-                // status
-                accu[0][i] = statusBand.getSampleInt(col, row);
-                ndviMean[row][col] = ndviMeanBand.getSampleFloat(col, row);
-                ndviSdev[row][col] = ndviSdevBand.getSampleFloat(col, row);
-                if (isSyn) {
-                    sl32Mean[row][col] = sl32MeanBand.getSampleFloat(col, row);
-                    sl32Sdev[row][col] = sl32SdevBand.getSampleFloat(col, row);
-                    sl65Mean[row][col] = sl65MeanBand.getSampleFloat(col, row);
-                    sl65Sdev[row][col] = sl65SdevBand.getSampleFloat(col, row);
-                }
-            }
-        }
     }
-
+    
     /** aggregate is called once per input. The first input is provided to init and to aggregate. */
     public void aggregate(Product contribution) throws IOException {
+        // read band data
         final Band[] sourceBands = new Band[numSourceBands];
         final float[][] bandDataB = new float[numSourceBands][];
         final int[][] bandDataS = new int[numSourceBands][];
         final float[][] bandDataF = new float[numSourceBands][];
         for (int b = 0; b < numSourceBands; ++b) {
             sourceBands[b] = contribution.getBand(this.sourceBands[b]);
-            //sourceBands[b].readRasterDataFully();
             if (b < 1) {
-                bandDataB[b] = (float[]) ImageUtils.getPrimitiveArray(sourceBands[b].getSourceImage().getData().getDataBuffer());
+                bandDataB[b] = getFloatArray(sourceBands[b]);
             } else if (b < (isSyn ? 2 : 6)) {
-                bandDataS[b] = (int[]) ImageUtils.getPrimitiveArray(sourceBands[b].getSourceImage().getData().getDataBuffer());
+                bandDataS[b] = getIntArray(sourceBands[b]);
             } else {
-                bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(sourceBands[b].getSourceImage().getData().getDataBuffer());
+                bandDataF[b] = getFloatArray(sourceBands[b]);
             }
         }
+        // aggregation pixel loop
         for (int row = 0; row < sceneRasterHeight; ++row) {
             for (int col = 0; col < sceneRasterWidth; ++col) {
                 final int i = row * sceneRasterWidth + col;
+                // consider valid observations
                 final byte state = (byte) bandDataB[0][i];
                 if (state > 0) {
                     // obs_count
                     accu[2][i] += isSyn ? bandDataS[1][i] : count(bandDataS, i);
+                    // consider observations with primajority status
                     if (state == accu[0][i]) {
                         switch (state) {
                             case 1:
@@ -285,146 +252,47 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                             case 5:
                                 if (isSyn) {
                                     final int stateCount = 1;
-                                    if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
-                                        float ndvi = bandDataF[ndviBandIndex][i];
-                                        if (within1Sigma(ndvi, ndviMean[row][col], ndviSdev[row][col])) {
-                                            // status_count
-                                            accu[1][i] += stateCount;
-                                            for (int b = 5; b < numTargetBands; ++b) {
-                                                final int bs = b - 3;  // sr_1 is b=5 and bs=2
-                                                if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
-                                                    accu[b][i] += stateCount * bandDataF[bs][i];
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
-                                        float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i],
-                                                               bandDataF[sl01BandIndex + 1][i]);
-                                        if (within1Sigma(ndxi123, sl32Mean[row][col], sl32Sdev[row][col])) {
-                                            // sl123_count
-                                            accu[3][i] += stateCount;
-                                            for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
-                                                final int b = bs + 3;
-                                                accu[b][i] += stateCount * bandDataF[bs][i];
-                                            }
-                                        }
-                                    }
-                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
-                                        float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i],
-                                                              bandDataF[sl01BandIndex + 3][i]);
-                                        if (within1Sigma(ndxi56, sl65Mean[row][col], sl65Sdev[row][col])) {
-                                            // sl56_count
-                                            accu[4][i] += stateCount;
-                                            for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
-                                                final int b = bs + 3;
-                                                accu[b][i] += stateCount * bandDataF[bs][i];
-                                            }
-                                        }
-                                    }
+                                    float ndvi = bandDataF[ndviBandIndex][i];
+                                    aggregateSynOlciSpectrum(bandDataF, i, stateCount, ndvi);
+                                    float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i],
+                                                           bandDataF[sl01BandIndex + 1][i]);
+                                    aggregateSyn123Spectrum(bandDataF, i, stateCount, ndxi123);
+                                    float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i],
+                                                          bandDataF[sl01BandIndex + 3][i]);
+                                    aggregateSyn56Spectrum(bandDataF, i, stateCount, ndxi56);
                                 } else {
-                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
-                                        float ndvi = bandDataF[ndviBandIndex][i];
-                                        if (within1Sigma(ndvi, ndviMean[row][col], ndviSdev[row][col])) {
-                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
-                                            accu[1][i] += stateCount;
-                                            for (int b = 3; b < numTargetBands; ++b) {
-                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
-                                            }
-                                        }
-                                    }
+                                    float ndvi = bandDataF[ndviBandIndex][i];
+                                    aggregateSpectrum(bandDataS, bandDataF, i, state, ndvi);
                                 }
                                 break;
                             case 2:
                             case 3:  // TODO TBC whether to use water index for snow as well
                                 if (isSyn) {
                                     final int stateCount = 1;
-                                    if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
-                                        float ndwi = ndxiOf(bandDataF[b11BandIndex][i],
-                                                            bandDataF[b3BandIndex][i]);
-
-                                        if (within1Sigma(ndwi, ndviMean[row][col], ndviSdev[row][col])) {
-                                            // status_count
-                                            accu[1][i] += stateCount;
-                                            for (int b = 5; b < numTargetBands; ++b) {
-                                                final int bs = b - 3;  // sr_1 is b=5 and bs=2
-                                                if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
-                                                    accu[b][i] += stateCount * bandDataF[bs][i];
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
-                                        float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i],
-                                                               bandDataF[sl01BandIndex + 1][i]);
-                                        if (within1Sigma(ndxi123, sl32Mean[row][col], sl32Sdev[row][col])) {
-                                            accu[3][i] += stateCount;
-                                            for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
-                                                final int b = bs + 3;
-                                                accu[b][i] += stateCount * bandDataF[bs][i];
-                                            }
-                                        }
-                                    }
-                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
-                                        float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i],
-                                                              bandDataF[sl01BandIndex + 3][i]);
-                                        if (within1Sigma(ndxi56, sl65Mean[row][col], sl65Sdev[row][col])) {
-                                            accu[4][i] += stateCount;
-                                            for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
-                                                final int b = bs + 3;
-                                                accu[b][i] += stateCount * bandDataF[bs][i];
-                                            }
-                                        }
-                                    }
+                                    float ndwi = ndxiOf(bandDataF[b11BandIndex][i],
+                                                        bandDataF[b3BandIndex][i]);
+                                    aggregateSynOlciSpectrum(bandDataF, i, stateCount, ndwi);
+                                    float ndxi123 = ndxiOf(bandDataF[sl01BandIndex + 2][i],
+                                                           bandDataF[sl01BandIndex + 1][i]);
+                                    aggregateSyn123Spectrum(bandDataF, i, stateCount, ndxi123);
+                                    float ndxi56 = ndxiOf(bandDataF[sl01BandIndex + 4][i],
+                                                          bandDataF[sl01BandIndex + 3][i]);
+                                    aggregateSyn56Spectrum(bandDataF, i, stateCount, ndxi56);
                                 } else {
-                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
-                                        float ndwi = ndxiOf(bandDataF[b11BandIndex][i],
-                                                            bandDataF[b3BandIndex][i]);
-                                        if (within1Sigma(ndwi, ndviMean[row][col], ndviSdev[row][col])) {
-                                            final int stateCount = count(state, bandDataS, i);
-                                            accu[1][i] += stateCount;
-                                            for (int b = 3; b < numTargetBands; ++b) {
-                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
-                                            }
-                                        }
-                                    }
+                                    float ndwi = ndxiOf(bandDataF[b11BandIndex][i],
+                                                        bandDataF[b3BandIndex][i]);
+                                    aggregateSpectrum(bandDataS, bandDataF, i, state, ndwi);
                                 }
                                 break;
                             case 4:
                             case 14:
                                 if (isSyn) {
                                     final int stateCount = 1;
-                                    if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
-                                        accu[1][i] += stateCount;
-                                        for (int b = 5; b < numTargetBands; ++b) {
-                                            final int bs = b - 3;
-                                            if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
-                                                accu[b][i] += stateCount * bandDataF[bs][i];  // we may have processed under clouds
-                                            }
-                                        }
-                                    }
-                                    if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
-                                        accu[3][i] += stateCount;
-                                        for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
-                                            final int b = bs + 3;
-                                            accu[b][i] += stateCount * bandDataF[bs][i];
-                                        }
-                                    }
-                                    if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
-                                        accu[4][i] += stateCount;
-                                        for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
-                                            final int b = bs + 3;
-                                            accu[b][i] += stateCount * bandDataF[bs][i];
-                                        }
-                                    }
+                                    aggregateSynOlciSpectrumNoSigma(bandDataF, i, stateCount);
+                                    aggregateSyn123SpectrumNoSigma(bandDataF, i, stateCount);
+                                    aggregateSyn56SpectrumNoSigma(bandDataF, i, stateCount);
                                 } else {
-                                    if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
-                                        final int stateCount = count(state, bandDataS, i);
-                                        accu[1][i] += stateCount;
-                                        for (int b = 3; b < numTargetBands; ++b) {
-                                            accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
-                                        }
-                                    }
+                                    aggregateSpectrumNoSigma(bandDataS, bandDataF, i, state);
                                 }
                                 break;
                         }
@@ -432,6 +300,111 @@ public class SeasonalBestPixelsAggregator implements TemporalAggregator {
                 }
             }
         }
+    }
+
+    private void aggregateSpectrum(int[][] bandDataS, float[][] bandDataF, int i, byte state, float ndvi) {
+        if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+            if (within1Sigma(ndvi, ndviMean[i], ndviSdev[i])) {
+                final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
+                accu[1][i] += stateCount;
+                for (int b = 3; b < numTargetBands; ++b) {
+                    accu[b][i] += stateCount * bandDataF[b + 3][i];
+                }
+            }
+        }
+    }
+
+    private void aggregateSynOlciSpectrum(float[][] bandDataF, int i, int stateCount, float ndvi) {
+        if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
+            if (within1Sigma(ndvi, ndviMean[i], ndviSdev[i])) {
+                // status_count
+                accu[1][i] += stateCount;
+                for (int b = 5; b < numTargetBands; ++b) {
+                    final int bs = b - 3;  // sr_1 is b=5 and bs=2
+                    if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
+                        accu[b][i] += stateCount * bandDataF[bs][i];
+                    }
+                }
+            }
+        }
+    }
+
+    private void aggregateSyn123Spectrum(float[][] bandDataF, int i, int stateCount, float ndxi123) {
+        if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+            if (within1Sigma(ndxi123, sl32Mean[i], sl32Sdev[i])) {
+                // sl123_count
+                accu[3][i] += stateCount;
+                for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
+                    final int b = bs + 3;
+                    accu[b][i] += stateCount * bandDataF[bs][i];
+                }
+            }
+        }
+    }
+
+    private void aggregateSyn56Spectrum(float[][] bandDataF, int i, int stateCount, float ndxi56) {
+        if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+            if (within1Sigma(ndxi56, sl65Mean[i], sl65Sdev[i])) {
+                // sl56_count
+                accu[4][i] += stateCount;
+                for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
+                    final int b = bs + 3;
+                    accu[b][i] += stateCount * bandDataF[bs][i];
+                }
+            }
+        }
+    }
+
+    private void aggregateSpectrumNoSigma(int[][] bandDataS, float[][] bandDataF, int i, byte state) {
+        if (! containsNan(bandDataF, numTargetBands, ndviBandIndex, i)) {
+            final int stateCount = count(state, bandDataS, i);
+            accu[1][i] += stateCount;
+            for (int b = 3; b < numTargetBands; ++b) {
+                accu[b][i] += stateCount * bandDataF[b + 3][i];  // we may have processed under clouds
+            }
+        }
+    }
+
+    private void aggregateSynOlciSpectrumNoSigma(float[][] bandDataF, int i, int stateCount) {
+        if (! containsNan(bandDataF, 2, sl01BandIndex, ndviBandIndex, i)) {
+            accu[1][i] += stateCount;
+            for (int b = 5; b < numTargetBands; ++b) {
+                final int bs = b - 3;
+                if (bs < sl01BandIndex || bs > sl01BandIndex + 4) {
+                    accu[b][i] += stateCount * bandDataF[bs][i];  // we may have processed under clouds
+                }
+            }
+        }
+    }
+
+    private void aggregateSyn123SpectrumNoSigma(float[][] bandDataF, int i, int stateCount) {
+        if (! containsNan(bandDataF, sl01BandIndex, sl01BandIndex+3, ndviBandIndex, i)) {
+            accu[3][i] += stateCount;
+            for (int bs = sl01BandIndex; bs < sl01BandIndex + 3; ++bs) {
+                final int b = bs + 3;
+                accu[b][i] += stateCount * bandDataF[bs][i];
+            }
+        }
+    }
+
+    private void aggregateSyn56SpectrumNoSigma(float[][] bandDataF, int i, int stateCount) {
+        if (! containsNan(bandDataF, sl01BandIndex+3, sl01BandIndex+5, ndviBandIndex, i)) {
+            accu[4][i] += stateCount;
+            for (int bs = sl01BandIndex + 3; bs < sl01BandIndex + 5; ++bs) {
+                final int b = bs + 3;
+                accu[b][i] += stateCount * bandDataF[bs][i];
+            }
+        }
+    }
+
+    private float[] getFloatArray(Band band) {
+        return (float[]) ImageUtils.getPrimitiveArray(band.getSourceImage().getData().getDataBuffer());
+    }
+    private int[] getIntArray(Band band) {
+        return (int[]) ImageUtils.getPrimitiveArray(band.getSourceImage().getData().getDataBuffer());
+    }
+    private byte[] getByteArray(Band band) {
+        return (byte[]) ImageUtils.getPrimitiveArray(band.getSourceImage().getData().getDataBuffer());
     }
 
     /** complete is called after the last input. It shall return the aggregated product. */

@@ -8,6 +8,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.ImageUtils;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
@@ -39,8 +40,8 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
     static String[] SYN_BAND_NAMES = {
             "current_pixel_state",
             "ndvi_max",
-            "sdr_Oa06",
             "sdr_Oa18",
+            "sdr_Oa06",
             "sdr_Sl02",
             "sdr_Sl03",
             "sdr_Sl05",
@@ -50,8 +51,8 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
     static String[] OLCI_BAND_NAMES = {
             "current_pixel_state",
             "ndvi_max",
-            "sdr_Oa06_mean",
-            "sdr_Oa18_mean"
+            "sdr_Oa18_mean",
+            "sdr_Oa06_mean"
     };
     public static String[] MSI_BAND_NAMES = {
             "current_pixel_state",
@@ -120,7 +121,7 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
         final String[] bandNames = isSyn ? SYN_BAND_NAMES : isOlci ? OLCI_BAND_NAMES : isMsi ? MSI_BAND_NAMES : null;
         statusBandName = bandNames[0];
         ndviBandName = bandNames[1];
-        greenBandName = bandNames[2];
+        greenBandName = bandNames[2];  // NDWI for SYN is (Oa06 - Oa18) / (Oa06 + Oa18), i.e. Oa18 is "green"
         swirBandName = bandNames[3];
         sl02BandName = isSyn ? bandNames[4] : null;
         sl03BandName = isSyn ? bandNames[5] : null;
@@ -144,100 +145,62 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
 
     /** aggregate is called once per input. The first input is provided to init and to aggregate. */
     public void aggregate(Product contribution) throws IOException {
-        final Band statusBand = contribution.getBand(statusBandName);
-        statusBand.readRasterDataFully();
-        final Band greenBand = contribution.getBand(greenBandName);
-        greenBand.readRasterDataFully();
-        final Band swirBand = contribution.getBand(swirBandName);
-        swirBand.readRasterDataFully();
-        final Band ndviBand = contribution.getBand(ndviBandName);
-        ndviBand.readRasterDataFully();
-        final Band sl02Band;
-        final Band sl03Band;
-        final Band sl05Band;
-        final Band sl06Band;
+        final float[] statusData = getDataArray(contribution.getBand(statusBandName));
+        final float[] ndviData = getDataArray(contribution.getBand(ndviBandName));
+        final float[] greenData = getDataArray(contribution.getBand(greenBandName));
+        final float[] swirData = getDataArray(contribution.getBand(swirBandName));
+        final float[] sl02Data;
+        final float[] sl03Data;
+        final float[] sl05Data;
+        final float[] sl06Data;
         if (isSyn) {
-            sl02Band = contribution.getBand(sl02BandName);
-            sl02Band.readRasterDataFully();
-            sl03Band = contribution.getBand(sl03BandName);
-            sl03Band.readRasterDataFully();
-            sl05Band = contribution.getBand(sl05BandName);
-            sl05Band.readRasterDataFully();
-            sl06Band = contribution.getBand(sl06BandName);
-            sl06Band.readRasterDataFully();
+            sl02Data = getDataArray(contribution.getBand(sl02BandName));
+            sl03Data = getDataArray(contribution.getBand(sl03BandName));
+            sl05Data = getDataArray(contribution.getBand(sl05BandName));
+            sl06Data = getDataArray(contribution.getBand(sl06BandName));
         } else {
-            sl02Band = null;
-            sl03Band = null;
-            sl05Band = null;
-            sl06Band = null;
+            sl02Data = null;
+            sl03Data = null;
+            sl05Data = null;
+            sl06Data = null;
         }
         for (int row = 0; row < sceneRasterHeight; ++row) {
             for (int col = 0; col < sceneRasterWidth; ++col) {
-                final byte state = (byte) statusBand.getSampleInt(col, row);
+                final int i = row * sceneRasterWidth + col;
+                // count status
+                final byte state = (byte) statusData[i];
                 final int index = index(state);
                 if (index >= 0) {
                     statusCount[index][row][col]++;
                 }
                 if (index >= 0) {
                     switch (state) {
+                        // collect land ndvi for mean and stddev
                         case 1:
                         case 15:
                         case 12:
                         case 11:
                         case 5:
-                            final float ndvi = ndviBand.getSampleFloat(col, row);
-                            if (!Float.isNaN(ndvi)) {
-                                ndxiSum[index][row][col] += ndvi;
-                                ndxiSqrSum[index][row][col] += ndvi * ndvi;
-                                ndxiCount[index][row][col]++;
-                            }
+                            final float ndvi = ndviData[i];
+                            aggregateNdxi(row, col, index, ndvi);
                             if (isSyn) {
-                                final float sl02 = sl02Band.getSampleFloat(col, row);
-                                final float sl03 = sl03Band.getSampleFloat(col, row);
-                                final float sl05 = sl05Band.getSampleFloat(col, row);
-                                final float sl06 = sl06Band.getSampleFloat(col, row);
-                                if (!isNaN(sl03) && !isNaN(sl02)) {
-                                    final float ndxi = ndxiOf(sl03, sl02);
-                                    ndxiSum[NUM_INDEXES + index][row][col] += ndxi;
-                                    ndxiSqrSum[NUM_INDEXES + index][row][col] += ndxi * ndxi;
-                                    ndxiCount[NUM_INDEXES + index][row][col]++;
-                                }
-                                if (!isNaN(sl06) && !isNaN(sl05)) {
-                                    final float ndxi = ndxiOf(sl06, sl05);
-                                    ndxiSum[2 * NUM_INDEXES + index][row][col] += ndxi;
-                                    ndxiSqrSum[2 * NUM_INDEXES + index][row][col] += ndxi * ndxi;
-                                    ndxiCount[2 * NUM_INDEXES + index][row][col]++;
-                                }
+                                final float ndxi32 = ndxiOf(sl03Data[i], sl02Data[i]);
+                                aggregateNdxi(row, col, NUM_INDEXES + index, ndxi32);
+                                final float ndxi65 = ndxiOf(sl06Data[i], sl05Data[i]);
+                                aggregateNdxi(row, col, NUM_INDEXES * 2 + index, ndxi65);
                             }
                             break;
+                        // collect water (and snow) ndwi for mean and stddev
                         case 2:
                         case 3:  // TODO TBC whether to use water index for snow as well
-                            final float swir = swirBand.getSampleFloat(col, row);
-                            final float green = greenBand.getSampleFloat(col, row);
-                            if (!isNaN(swir) && !isNaN(green)) {
-                                float ndwi = ndxiOf(swir, green);
-                                ndxiSum[index][row][col] += ndwi;
-                                ndxiSqrSum[index][row][col] += ndwi * ndwi;
-                                ndxiCount[index][row][col]++;
-                            }
+                            float ndwi = ndxiOf(swirData[i], greenData[i]);
+                            aggregateNdxi(row, col, index, ndwi);
                             // we use the same normalised measures as for land as we do not have proper NDWI in one of the SLSTR groups
                             if (isSyn) {
-                                final float sl02 = sl02Band.getSampleFloat(col, row);
-                                final float sl03 = sl03Band.getSampleFloat(col, row);
-                                final float sl05 = sl05Band.getSampleFloat(col, row);
-                                final float sl06 = sl06Band.getSampleFloat(col, row);
-                                if (!isNaN(sl03) && !isNaN(sl02)) {
-                                    final float ndxi = ndxiOf(sl03, sl02);
-                                    ndxiSum[NUM_INDEXES + index][row][col] += ndxi;
-                                    ndxiSqrSum[NUM_INDEXES + index][row][col] += ndxi * ndxi;
-                                    ndxiCount[NUM_INDEXES + index][row][col]++;
-                                }
-                                if (!isNaN(sl06) && !isNaN(sl05)) {
-                                    final float ndxi = ndxiOf(sl06, sl05);
-                                    ndxiSum[2 * NUM_INDEXES + index][row][col] += ndxi;
-                                    ndxiSqrSum[2 * NUM_INDEXES + index][row][col] += ndxi * ndxi;
-                                    ndxiCount[2 * NUM_INDEXES + index][row][col]++;
-                                }
+                                final float ndxi32 = ndxiOf(sl03Data[i], sl02Data[i]);
+                                aggregateNdxi(row, col, NUM_INDEXES + index, ndxi32);
+                                final float ndxi65 = ndxiOf(sl06Data[i], sl05Data[i]);
+                                aggregateNdxi(row, col, NUM_INDEXES * 2 + index, ndxi65);
                             }
                             break;
                     }
@@ -248,6 +211,7 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
 
     /** complete is called after the last input. It shall return the aggregated product. */
     public Product complete() {
+        // calculate mean and stddev from collected sums, squares, and counts
         final byte[] status = new byte[sceneRasterHeight * sceneRasterWidth];
         final float[] ndviMean = new float[sceneRasterHeight * sceneRasterWidth];
         final float[] ndviSdev = new float[sceneRasterHeight * sceneRasterWidth];
@@ -310,10 +274,10 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
                 }
             }
         }
+        // create output product with status, mean and stddev of ndvi
         final Band statusBand = primajorityStatusProduct.addBand("status", ProductData.TYPE_INT8);
         statusBand.setRasterData(new ProductData.Byte(status));
-        statusBand.getSourceImage();
-        statusBand.getSourceImage();
+        statusBand.getSourceImage();   // needed to make raster data be used by writer
         final Band ndviMeanBand = primajorityStatusProduct.addBand("ndviMean", ProductData.TYPE_FLOAT32);
         ndviMeanBand.setRasterData(new ProductData.Float(ndviMean));
         ndviMeanBand.getSourceImage();
@@ -360,6 +324,7 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
                 return -1;
         }
     }
+
     private byte majorityPriorityStatusOf(int[][][] statusCount, int row, int col) {
         return (statusCount[1][row][col] > 0 && statusCount[1][row][col] >= statusCount[0][row][col] && statusCount[1][row][col] >= statusCount[2][row][col]) ? (byte)2 :  // more water than land or snow
                (statusCount[0][row][col] > 0 && statusCount[0][row][col] >= statusCount[2][row][col]) ? (byte)1 :  // more land than snow
@@ -370,6 +335,26 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
                statusCount[6][row][col] > 0 ? (byte)5 :   // shadow
                statusCount[7][row][col] > 0 ? (byte)4 :   // cloud
                        (byte)0;                    // invalid
+    }
+
+    private static float ndxiOf(float nir, float red) {
+        return (nir - red) / (nir + red);
+    }
+
+    private static float sdevOf(float sqrSum, float mean, int count) {
+        return count > 1 ? (float) Math.sqrt(sqrSum / (count - 1) - mean * mean) : 0.0f;
+    }
+
+    private void aggregateNdxi(int row, int col, int index, float ndvi) {
+        if (!Float.isNaN(ndvi)) {
+            ndxiSum[index][row][col] += ndvi;
+            ndxiSqrSum[index][row][col] += ndvi * ndvi;
+            ndxiCount[index][row][col]++;
+        }
+    }
+
+    private float[] getDataArray(Band band) {
+        return (float[]) ImageUtils.getPrimitiveArray(band.getSourceImage().getData().getDataBuffer());
     }
 
     boolean isNaN(float f) {
@@ -383,13 +368,5 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
             throw new IllegalArgumentException("parameter " + parameterName + " value " + conf.get(parameterName) +
                                                " does not match pattern " + DATE_FORMAT.toPattern() + ": " + e.getMessage(), e);
         }
-    }
-
-    private static float ndxiOf(float nir, float red) {
-        return (nir - red) / (nir + red);
-    }
-
-    private static float sdevOf(float sqrSum, float mean, int count) {
-        return count > 1 ? (float) Math.sqrt(sqrSum / (count - 1) - mean * mean) : 0.0f;
     }
 }
