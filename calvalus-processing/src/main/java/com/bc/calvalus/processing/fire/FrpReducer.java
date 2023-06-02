@@ -99,123 +99,143 @@ public class FrpReducer extends L3Reducer {
         return solarTime;
     }
 
-    static void writeL2CSV(Context context, GregorianCalendar utcCalendar, Writer out) throws IOException, InterruptedException {
-        out.write("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
-        while (context.nextKey()) {
-            final LongWritable binIndex = context.getCurrentKey();
-            for (L3SpatialBin bin : context.getValues()) {
-                final Date date = new Date(binIndex.get() / 1000 + THIRTY_YEARS);
-                final double solarTime = solarTimeOf(date, utcCalendar, bin.getFeatureValues()[LON_IDX]);
-                final int flags = (int) bin.getFeatureValues()[FLAGS_IDX];
+    static void writeL2CSVLine(Writer out,
+                               L3SpatialBin bin,
+                               GregorianCalendar utcCalendar,
+                               Date date,
+                               double solarTime,
+                               int flags) throws IOException, InterruptedException {
+        // Column
+        // Row
+        // Date
+        // Time
+        // Local Solar Time
+        // Latitude
+        // Longitude
+        // sat_zenith
+        // FRP_MWIR
+        // FRP_MWIR_uncertainty
+        // FRP_SWIR
+        // FRP_SWIR_uncertainty
+        // BT_MIR
+        // BT_window
+        // F1_flag
+        // Day_flag
+        // Area
+        // Platform
+        // Land/Ocean
+        // Hotspot_class
 
-                // Column
-                // Row
-                // Date
-                // Time
-                // Local Solar Time
-                // Latitude
-                // Longitude
-                // sat_zenith
-                // FRP_MWIR
-                // FRP_MWIR_uncertainty
-                // FRP_SWIR
-                // FRP_SWIR_uncertainty
-                // BT_MIR
-                // BT_window
-                // F1_flag
-                // Day_flag
-                // Area
-                // Platform
-                // Land/Ocean
-                // Hotspot_class
+        out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[COL_IDX]));
+        out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[ROW_IDX]));
+        out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[COL_IDX]));
-                out.write('\t');
-                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[ROW_IDX]));
-                out.write('\t');
+        final String[] dateTime = getDateTime(date, utcCalendar);
+        out.write(dateTime[0]);
+        out.write('\t');
+        out.write(dateTime[1]);
+        out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%05.2f", solarTime));
+        out.write('\t');
 
-                final String[] dateTime = getDateTime(date, utcCalendar);
-                out.write(dateTime[0]);
-                out.write('\t');
-                out.write(dateTime[1]);
-                out.write('\t');
-                out.write(String.format(Locale.ENGLISH, "%05.2f", solarTime));
-                out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LAT_IDX]));
+        out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LON_IDX]));
+        out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LAT_IDX]));
-                out.write('\t');
-                out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[LON_IDX]));
-                out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[SAT_ZENITH_IDX]));
+        out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%3.5f", bin.getFeatureValues()[SAT_ZENITH_IDX]));
-                out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_IDX]));
+        out.write('\t');
+        out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_UNC_IDX]));
+        out.write('\t');
 
-                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_IDX]));
-                out.write('\t');
-                out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_MIR_UNC_IDX]));
-                out.write('\t');
-
-                if (!Float.isNaN(bin.getFeatureValues()[FRP_SWIR_IDX])) {
-                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_IDX]));
-                }
-                out.write('\t');
-                if (!Float.isNaN(bin.getFeatureValues()[FRP_SWIR_UNC_IDX])) {
-                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_UNC_IDX]));
-                }
-                out.write('\t');
-
-                if (!Float.isNaN(bin.getFeatureValues()[BT_MIR_IDX])) {
-                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[BT_MIR_IDX]));
-                }
-                out.write('\t');
-                if (!Float.isNaN(bin.getFeatureValues()[BT_WINDOW_IDX])) {
-                    out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[BT_WINDOW_IDX]));
-                }
-                out.write('\t');
-
-                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[F1_FLAG_IDX]));
-                out.write('\t');
-
-                out.write(String.format(Locale.ENGLISH, "%d", isDay(flags) ? 1 : 0));
-                out.write('\t');
-
-                out.write(String.format(Locale.ENGLISH, "%3.1f", bin.getFeatureValues()[AREA_IDX]));
-                out.write('\t');
-
-                final int platformNumber = (int) bin.getFeatureValues()[PLATFORM_IDX];
-                out.write(String.format("%s", platformNumber == 1 ? "S3A" : platformNumber == 2 ? "S3B" : "unknown"));
-                out.write('\t');
-
-                out.write(String.format(Locale.ENGLISH, "%d", isWater(flags) ? 0 : 1));
-                out.write('\t');
-
-                out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[CLASSIFICATION_IDX]));
-
-                out.write('\n');
-            }
+        if (!Float.isNaN(bin.getFeatureValues()[FRP_SWIR_IDX])) {
+            out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_IDX]));
         }
+        out.write('\t');
+        if (!Float.isNaN(bin.getFeatureValues()[FRP_SWIR_UNC_IDX])) {
+            out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[FRP_SWIR_UNC_IDX]));
+        }
+        out.write('\t');
+
+        if (!Float.isNaN(bin.getFeatureValues()[BT_MIR_IDX])) {
+            out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[BT_MIR_IDX]));
+        }
+        out.write('\t');
+        if (!Float.isNaN(bin.getFeatureValues()[BT_WINDOW_IDX])) {
+            out.write(String.format(Locale.ENGLISH, "%f", bin.getFeatureValues()[BT_WINDOW_IDX]));
+        }
+        out.write('\t');
+
+        out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[F1_FLAG_IDX]));
+        out.write('\t');
+
+        out.write(String.format(Locale.ENGLISH, "%d", isDay(flags) ? 1 : 0));
+        out.write('\t');
+
+        out.write(String.format(Locale.ENGLISH, "%3.1f", bin.getFeatureValues()[AREA_IDX]));
+        out.write('\t');
+
+        final int platformNumber = (int) bin.getFeatureValues()[PLATFORM_IDX];
+        out.write(String.format("%s", platformNumber == 1 ? "S3A" : platformNumber == 2 ? "S3B" : "unknown"));
+        out.write('\t');
+
+        out.write(String.format(Locale.ENGLISH, "%d", isWater(flags) ? 0 : 1));
+        out.write('\t');
+
+        out.write(String.format(Locale.ENGLISH, "%d", (int) bin.getFeatureValues()[CLASSIFICATION_IDX]));
+
+        out.write('\n');
     }
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         if ("l2monthly".equals(context.getConfiguration().get("calvalus.targetFormat", "l2monthly"))) {
             final GregorianCalendar utcCalendar = createCalendar();
-            // 20200801-C3S-L2-FRP-SLSTR-P1M-fv0.4.csv
+            // 20200801-C3S-L2-FRP-SLSTR-P1M-S3A-nighttime-fv0.4.csv
             final String minDate = context.getConfiguration().get("calvalus.minDate");
             final String version = context.getConfiguration().get("calvalus.output.version");
-            final String fileName = String.format("%s%s%s-C3S-L2-FRP-SLSTR-P1M-fv%s.csv", minDate.substring(0,4), minDate.substring(5,7), minDate.substring(8,10), version);
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(new File(fileName)))) {
-                writeL2CSV(context, utcCalendar, out);
+            // lazily open writers for night A B C D, day A B C D
+            final BufferedWriter[] out = new BufferedWriter[8];
+            final String[] outFilename = new String[8];
+            while (context.nextKey()) {
+                final LongWritable binIndex = context.getCurrentKey();
+                for (L3SpatialBin bin : context.getValues()) {
+                    final Date date = new Date(binIndex.get() / 1000 + THIRTY_YEARS);
+                    final double solarTime = solarTimeOf(date, utcCalendar, bin.getFeatureValues()[LON_IDX]);
+                    final int flags = (int) bin.getFeatureValues()[FLAGS_IDX];
+                    final int oneIsDay = isDay(flags) ? 1 : 0;
+                    final int oneIsB = (int) bin.getFeatureValues()[PLATFORM_IDX] - 1;
+                    if (out[oneIsDay * 4 + oneIsB] == null) {
+                        outFilename[oneIsDay * 4 + oneIsB] =
+                                String.format("%s%s%s-C3S-L2-FRP-SLSTR-P1M-S3%s-%stime-fv%s.csv",
+                                                              minDate.substring(0, 4), minDate.substring(5, 7), minDate.substring(8, 10),
+                                                              oneIsB == 0 ? 'A' : oneIsB == 1 ? 'B' : oneIsB == 2 ? 'C' : 'D',
+                                                              oneIsDay == 1 ? "day" : "night",
+                                                              version);
+                        out[oneIsDay * 4 + oneIsB] = new BufferedWriter(new FileWriter(new File(outFilename[oneIsDay * 4 + oneIsB])));
+                        out[oneIsDay * 4 + oneIsB].write("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+                    }
+                    writeL2CSVLine(out[oneIsDay * 4 + oneIsB], bin, utcCalendar, date, solarTime, flags);
+                }
             }
-            LOG.info("Copying file to HDFS");
-            final Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
-            try (InputStream inputStream = new BufferedInputStream(new FileInputStream(new File(fileName)))) {
-                try (OutputStream outputStream = workPath.getFileSystem(context.getConfiguration()).create(workPath)) {
-                    byte[] buffer = new byte[64 * 1024];
-                    while (true) {
-                        int n = inputStream.read(buffer);
-                        if (n <= 0) break;
-                        outputStream.write(buffer, 0, n);
+            LOG.info("Copying files to HDFS");
+            for (int i=0; i<8; ++i) {
+                if (out[i] != null) {
+                    out[i].close();
+                    final Path workPath = new Path(FileOutputFormat.getWorkOutputPath(context), outFilename[i]);
+                    try (InputStream inputStream = new BufferedInputStream(new FileInputStream(new File(outFilename[i])))) {
+                        try (OutputStream outputStream = workPath.getFileSystem(context.getConfiguration()).create(workPath)) {
+                            byte[] buffer = new byte[64 * 1024];
+                            while (true) {
+                                int n = inputStream.read(buffer);
+                                if (n <= 0) break;
+                                outputStream.write(buffer, 0, n);
+                            }
+                        }
                     }
                 }
             }
