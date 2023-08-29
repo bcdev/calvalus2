@@ -116,8 +116,8 @@
                 <include>org.esa.s2tbx:s2tbx-radiometric-indices</include>
                 <include>org.esa.s2tbx:s2tbx-reflectance-to-radiance</include>
                 <!-- <include>org.esa.s2tbx:s2tbx-rapideye-reader</include> -->
-                <!-- <include>org.esa.s2tbx:lib-gdal</include> -->
-                <!-- <include>org.esa.s2tbx:s2tbx-gdal-reader</include>  -->
+                <!-- <include>org.esa.snap:lib-gdal</include> -->
+                <include>org.esa.s2tbx:s2tbx-gdal-reader</include>
                 <include>org.esa.s2tbx:s2tbx-grm</include>
 
                 <include>org.esa.s1tbx:s1tbx-commons</include>

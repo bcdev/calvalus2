@@ -14,6 +14,7 @@ import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -321,7 +322,7 @@ public class PatternBasedInputFormat extends InputFormat {
                             throw new IOException(e);
                         }
                     } else if (searchJPath != null) {
-                        List<String> paths = JsonPath.read(response, searchJPath);
+                        List<String> paths = JsonPath.parse(response).read(searchJPath, List.class);
                         int count = 0;
                         for (String path : paths) {
                             String productArchivePath = path;
