@@ -5,10 +5,14 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.junit.Test;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import static com.bc.calvalus.commons.DateUtils.createCalendar;
 import static org.junit.Assert.assertEquals;
@@ -39,7 +43,20 @@ public class FrpReducerTest {
         when(context.nextKey()).thenReturn(false);
 
         final StringWriter out = new StringWriter();
-        FrpReducer.writeL2CSV(context, createCalendar(), out);
+        //FrpReducer.writeL2CSV(context, createCalendar(), out);
+        out.write("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+
+        final GregorianCalendar utcCalendar = createCalendar();
+        while (context.nextKey()) {
+            final LongWritable binIndex = (LongWritable) context.getCurrentKey();
+            for (Object bin1 : context.getValues()) {
+                L3SpatialBin bin = (L3SpatialBin) bin1;
+                final Date date = new Date(binIndex.get() / 1000 + FrpReducer.THIRTY_YEARS);
+                final double solarTime = FrpReducer.solarTimeOf(date, utcCalendar, bin.getFeatureValues()[FrpReducer.LON_IDX]);
+                final int flags = (int) bin.getFeatureValues()[FrpReducer.FLAGS_IDX];
+                FrpReducer.writeL2CSVLine(out, bin, utcCalendar, date, solarTime, flags);
+            }
+        }
 
         assertEquals("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n",
                 out.toString());
@@ -85,7 +102,17 @@ public class FrpReducerTest {
         when(context.getValues()).thenReturn(binList);
 
         final StringWriter out = new StringWriter();
-        FrpReducer.writeL2CSV(context, createCalendar(), out);
+        //FrpReducer.writeL2CSV(context, createCalendar(), out);
+        out.write("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+
+        final GregorianCalendar utcCalendar = createCalendar();
+        for (Object bin1 : context.getValues()) {
+            L3SpatialBin bin = (L3SpatialBin) bin1;
+            final Date date = new Date(binIndex.get() / 1000 + FrpReducer.THIRTY_YEARS);
+            final double solarTime = FrpReducer.solarTimeOf(date, utcCalendar, bin.getFeatureValues()[FrpReducer.LON_IDX]);
+            final int flags = (int) bin.getFeatureValues()[FrpReducer.FLAGS_IDX];
+            FrpReducer.writeL2CSVLine(out, bin, utcCalendar, date, solarTime, flags);
+        }
 
         assertEquals("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n" +
                         "5\t4\t20200923\t040520\t04.44\t2.00000\t3.00000\t16.00000\t6.000000\t7.000000\t8.000000\t9.000000\t14.000000\t15.000000\t12\t0\t10.0\tS3A\t0\t13\n",
@@ -127,7 +154,17 @@ public class FrpReducerTest {
         when(context.getValues()).thenReturn(binList);
 
         final StringWriter out = new StringWriter();
-        FrpReducer.writeL2CSV(context, createCalendar(), out);
+        //FrpReducer.writeL2CSV(context, createCalendar(), out);
+        out.write("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n");
+
+        final GregorianCalendar utcCalendar = createCalendar();
+        for (Object bin1 : context.getValues()) {
+            L3SpatialBin bin = (L3SpatialBin) bin1;
+            final Date date = new Date(binIndex.get() / 1000 + FrpReducer.THIRTY_YEARS);
+            final double solarTime = FrpReducer.solarTimeOf(date, utcCalendar, bin.getFeatureValues()[FrpReducer.LON_IDX]);
+            final int flags = (int) bin.getFeatureValues()[FrpReducer.FLAGS_IDX];
+            FrpReducer.writeL2CSVLine(out, bin, utcCalendar, date, solarTime, flags);
+        }
 
         assertEquals("Column\tRow\tDate\tTime\tSolar_time\tLatitude\tLongitude\tsat_zenith\tFRP_MWIR\tFRP_MWIR_uncertainty\tFRP_SWIR\tFRP_SWIR_uncertainty\tBT_MIR\tBT_window\tF1_flag\tDay_flag\tArea\tPlatform\tLand/Ocean\tHotspot_class\n" +
                         "6\t5\t20200923\t040520\t04.50\t3.00000\t4.00000\t16.00000\t7.000000\t8.000000\t9.000000\t10.000000\t\t\t13\t1\t11.0\tS3B\t1\t14\n",

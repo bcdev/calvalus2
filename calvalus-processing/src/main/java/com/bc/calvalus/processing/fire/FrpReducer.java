@@ -42,9 +42,9 @@ public class FrpReducer extends L3Reducer {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private static final int PLATFORM_IDX = 0;
+    static final int PLATFORM_IDX = 0;
     private static final int LAT_IDX = 1;
-    private static final int LON_IDX = 2;
+    static final int LON_IDX = 2;
     private static final int ROW_IDX = 3;
     private static final int COL_IDX = 4;
     private static final int FRP_MIR_IDX = 5;
@@ -52,7 +52,7 @@ public class FrpReducer extends L3Reducer {
     private static final int FRP_SWIR_IDX = 7;
     private static final int FRP_SWIR_UNC_IDX = 8;
     private static final int AREA_IDX = 9;
-    private static final int FLAGS_IDX = 10;
+    static final int FLAGS_IDX = 10;
     private static final int F1_FLAG_IDX = 11;
     private static final int CLASSIFICATION_IDX = 12;
     private static final int BT_MIR_IDX = 13;
@@ -60,7 +60,7 @@ public class FrpReducer extends L3Reducer {
     private static final int SAT_ZENITH_IDX = 15;
 
     private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    private static long THIRTY_YEARS;
+    static long THIRTY_YEARS;
 
 
     static {
