@@ -41,7 +41,8 @@ public class SynNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getDoi() {
-        return "10.5285/3aaaaf94813e48f18f2b83242a8dacbe";
+        //return "10.5285/3aaaaf94813e48f18f2b83242a8dacbe";
+        return "10.5285/da8e669a74334c82a56e0b470bc4ef04";
     }
 
     @Override
