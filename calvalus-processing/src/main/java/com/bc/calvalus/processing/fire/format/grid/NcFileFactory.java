@@ -118,7 +118,7 @@ public abstract class NcFileFactory {
     }
 
     private void addGroupAttributes(String filename, String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration, int numRowsGlobal) {
-        ncFile.addGroupAttribute(null, new Attribute("title", getTitle()));
+        ncFile.addGroupAttribute(null, new Attribute("title", getTitle().replace("1.0", version)));
         ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("source", getSource()));
         ncFile.addGroupAttribute(null, new Attribute("history", "Created on " + createNiceTimeString(Instant.now())));
