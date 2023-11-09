@@ -118,6 +118,68 @@
     font-size: 14px;
 }
 
+/**************************
+* Quicklook Panel styling *
+***************************/
+.quicklookPanel {
+    margin: 0px 15px 50px 15px;
+    width: 62em;
+}
+
+.quicklookRadioPanel {
+    padding: 5px 0px 5px 0px;
+}
+
+.quicklookRadioButton {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    padding-right: 10px;
+}
+
+.quicklookParametersPanel {
+    display: flex;
+}
+
+.quicklookParametersPanelIndent {
+    display: flex;
+    border-left: 3px solid white;
+    padding: 4px 0px 4px 8px;
+    margin-left: 6px;
+}
+
+.quicklookParametersTable {
+    width: 100%;
+}
+
+.quicklookParametersTableHeader {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+    text-align: left;
+    background-color: #cddaee;
+    padding: 2px;
+    border-radius: 5px;
+}
+
+.quicklookParametersTableRowPadding {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+    width: 185px;
+    padding-top: 8px;
+}
+
+.quicklookInputLabelCell {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+    width: 185px;
+}
+
+.quicklookInputCell {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-size: 14px;
+}
+
 /**********************
 * Input files styling *
 ***********************/
