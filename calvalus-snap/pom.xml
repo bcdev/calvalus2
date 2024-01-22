@@ -300,10 +300,22 @@
             <artifactId>s2tbx-cache</artifactId>
             <version>${s2tbx.version}</version>
         </dependency>
+        <!-- must be separate jars to use context class loader
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-s2msi-reader</artifactId>
             <version>${s2tbx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>lib-gdal</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s2tbx</groupId>

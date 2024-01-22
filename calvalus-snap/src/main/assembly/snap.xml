@@ -103,7 +103,8 @@
                 <include>org.vito.probavbox:probavbox-reader</include>
 
                 <include>org.esa.s2tbx:s2tbx-cache</include>
-                <include>org.esa.s2tbx:s2tbx-s2msi-reader</include>
+                <!-- include>org.esa.s2tbx:s2tbx-s2msi-reader</include -->
+                <!-- must be separate jar with manifest org.esa.snap:lib-gdal -->
                 <include>org.esa.s2tbx:s2tbx-s2msi-resampler</include>
                 <include>org.esa.snap:lib-openjpeg</include>
                 <include>org.esa.s2tbx:snap-jp2-reader</include>
@@ -116,9 +117,11 @@
                 <include>org.esa.s2tbx:s2tbx-radiometric-indices</include>
                 <include>org.esa.s2tbx:s2tbx-reflectance-to-radiance</include>
                 <!-- <include>org.esa.s2tbx:s2tbx-rapideye-reader</include> -->
-                <!-- <include>org.esa.snap:lib-gdal</include> -->
-                <include>org.esa.s2tbx:s2tbx-gdal-reader</include>
+                <!-- must be loaded with context class loader from separate jar -->
+                <!-- include>org.esa.snap:lib-gdal</include -->
+                <!-- include>org.esa.s2tbx:s2tbx-gdal-reader</include -->
                 <include>org.esa.s2tbx:s2tbx-grm</include>
+                <include>commons-lang:commons-lang</include>
 
                 <include>org.esa.s1tbx:s1tbx-commons</include>
                 <include>org.esa.s1tbx:s1tbx-io</include>
