@@ -73,6 +73,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         String lcPath = configuration.get(KEY_LC_PATH);
         String version = configuration.get(KEY_VERSION);
         String areaString = configuration.get(KEY_AREA_STRING); // <nicename>;<left>;<top>;<right>;<bottom>
+        String doi = configuration.get("DOI", "");
 
         ProductSplit inputSplit = (ProductSplit) context.getInputSplit();
 
@@ -164,7 +165,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         LOG.info("...done. Creating metadata...");
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
         if (!fileSystem.exists(xmlPath)) {
-            String metadata = createMetadata(template, year, month, version, areaString);
+            String metadata = createMetadata(template, year, month, version, areaString, doi);
             try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
                 fw.write(metadata);
             }
@@ -1157,7 +1158,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
-    protected static String createMetadata(String template, String year, String month, String version, String areaString) throws IOException {
+    protected static String createMetadata(String template, String year, String month, String version, String areaString, String doi) throws IOException {
         String area = areaString.split(";")[0];
         String nicename = areaString.split(";")[1];
         String left = areaString.split(";")[2];
@@ -1179,6 +1180,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
         velocityContext.put("southLat", 90 - Integer.parseInt(bottom));
         velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
         velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
+        velocityContext.put("doi", doi);
 
         StringWriter stringWriter = new StringWriter();
         velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", template.replace("${REPLACE_WITH_VERSION}", version));

@@ -15,12 +15,15 @@ import java.nio.file.Paths;
 public class SynMetadataGenerator extends PixelFinaliseMapper {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.out.println("Arguments: outputDir year_(YYYY)");
+        if (args.length != 3) {
+            System.out.println("Arguments: outputDir year doi publicationDate");
+            System.out.println("e.g.     : . 2022  doi publicationDate");
             System.exit(-1);
         }
         String outputDir = args[0];
         String year = args[1];
+        String doi = args[2];
+        String publicationDate = args[3];
 
         for (int a = 1; a <= 6; a++) {
             String areaKey = "AREA_" + a;
@@ -30,7 +33,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                 String filename = String.format("%s%s01-ESACCI-L3S_FIRE-BA-SYN-%s-fv1.0.xml", year, month, areaKey);
                 Path xmlPath = Paths.get(outputDir, filename);
                 if (!Files.exists(xmlPath)) {
-                    String metadata = createMetadata(template, year, month, "1.0", area);
+                    String metadata = createMetadata(template, year, month, "1.0", area, doi);
                     try (FileWriter fw = new FileWriter(new File(outputDir, filename))) {
                         fw.write(metadata);
                     }
@@ -194,7 +197,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                    <gmd:identifier>" +
                     "                        <gmd:MD_Identifier>" +
                     "                            <gmd:code>" +
-                    "                                <gco:CharacterString>10.5285/c98515f1934a4db68d2007b47c5a8d04</gco:CharacterString>" +
+                    "                                <gco:CharacterString>${doi}</gco:CharacterString>" +
                     "                            </gmd:code>" +
                     "                        </gmd:MD_Identifier>" +
                     "                    </gmd:identifier>" +
