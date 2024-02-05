@@ -66,8 +66,13 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
+            if (pathConfig.getPath().toString().startsWith("file://")
+                    && ! filename.endsWith(".zip")) {
+                return DecodeQualification.UNABLE;
+            }
             for (String pattern : FILENAME_PATTERNS) {
-                if (filename.matches(pattern)) {
+                if (filename.matches(pattern)
+                    && ! filename.endsWith(".nc") && ! filename.endsWith(".tif") && ! filename.endsWith(".dim")) {
                     return DecodeQualification.INTENDED;
                 }
             }
