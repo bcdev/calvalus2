@@ -60,11 +60,15 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         for (int i = 0; i < currentGridCells.ba.length; i++) {
             burnedAreaFloat[i] = (float) currentGridCells.ba[i];
         }
+        float[] patchNumber = currentGridCells.patchNumber;
 
         try {
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "burned_area", burnedAreaFloat);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "standard_error", currentGridCells.errors);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "fraction_of_observed_area", currentGridCells.coverage);
+            if (addNumPatches()) {
+                writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFile, "number_of_patches", patchNumber);
+            }
 
             for (int i = 0; i < currentGridCells.baInLc.size(); i++) {
                 double[] baInClass = currentGridCells.baInLc.get(i);
@@ -95,6 +99,10 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         } else {
             LOG.warning(String.format("output file %s not archived in %s, file exists", outputFilename, outputDir));
         }
+    }
+
+    protected boolean addNumPatches() {
+        return false;
     }
 
     protected abstract int getTargetWidth();
@@ -153,6 +161,9 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
             prepareFloatVariable("burned_area", ncFile);
             prepareFloatVariable("standard_error", ncFile);
+            if (addNumPatches()) {
+                prepareFloatVariable("number_of_patches", ncFile);
+            }
 
             prepareAreas("burned_area_in_vegetation_class", numLcClasses, ncFile);
         } catch (InvalidRangeException e) {
@@ -189,8 +200,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     protected abstract void writeVegetationClasses(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException;
 
-    private static void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
-        Variable timeBnds = ncFile.findVariable("time_bounds");
+    private void writeTimeBnds(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
+        Variable timeBnds = ncFile.findVariable(getTimeBoundsName());
         double firstDayAsJD = getFirstDayAsJD(year, month);
         int lengthOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth();
         float[] array = new float[]{
@@ -198,6 +209,10 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
                 (float) (firstDayAsJD + lengthOfMonth - 1)};
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 2}, array);
         ncFile.write(timeBnds, values);
+    }
+
+    protected String getTimeBoundsName() {
+        return "time_bounds";
     }
 
     private static void writeTime(NetcdfFileWriter ncFile, String year, String month) throws IOException, InvalidRangeException {
@@ -214,7 +229,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         return ChronoUnit.DAYS.between(epoch, current);
     }
 
-    private void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lonBnds = ncFile.findVariable("lon_bounds");
         double[] array = new double[numRowsGlobal * 2 * 2];
         for (int x = 0; x < numRowsGlobal * 2; x++) {
@@ -225,7 +240,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(lonBnds, values);
     }
 
-    private void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable latBnds = ncFile.findVariable("lat_bounds");
         double[] array = new double[numRowsGlobal * 2];
         for (int y = 0; y < numRowsGlobal; y++) {
@@ -236,7 +251,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(latBnds, values);
     }
 
-    private void writeLat(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void writeLat(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lat = ncFile.findVariable("lat");
         double[] array = new double[numRowsGlobal];
         for (int x = 0; x < numRowsGlobal; x++) {
@@ -246,7 +261,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(lat, values);
     }
 
-    private void writeLon(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void writeLon(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable lon = ncFile.findVariable("lon");
         double[] array = new double[numRowsGlobal * 2];
         for (int x = 0; x < numRowsGlobal * 2; x++) {

@@ -43,6 +43,53 @@ public class ModisGridReducer extends AbstractGridReducer {
         ncFile.write(vegetationClass, values);
     }
 
+    protected String getTimeBoundsName() {
+        return "time_bnds";
+    }
+
+    protected void writeLonBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Variable lonBnds = ncFile.findVariable("lon_bnds");
+        float[] array = new float[numRowsGlobal * 2 * 2];
+        for (int x = 0; x < numRowsGlobal * 2; x++) {
+            array[2 * x] = (float) (-180.0 + 180.0 * x / numRowsGlobal);
+            array[2 * x + 1] = (float) (-180.0 + 180.0 * (x + 1) / numRowsGlobal);
+        }
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal * 2, 2}, array);
+        ncFile.write(lonBnds, values);
+    }
+
+    protected void writeLatBnds(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Variable latBnds = ncFile.findVariable("lat_bnds");
+        float[] array = new float[numRowsGlobal * 2];
+        for (int y = 0; y < numRowsGlobal; y++) {
+            array[2 * y] = (float) (90.0 - 180.0 * y / numRowsGlobal);
+            array[2 * y + 1] = (float) (90.0 - 180.0 * (y + 1) / numRowsGlobal);
+        }
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal, 2}, array);
+        ncFile.write(latBnds, values);
+    }
+
+    protected void writeLat(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Variable lat = ncFile.findVariable("lat");
+        float[] array = new float[numRowsGlobal];
+        for (int x = 0; x < numRowsGlobal; x++) {
+            array[x] = (float) (90.0 - 180.0 / numRowsGlobal / 2 - 180.0 * x / numRowsGlobal);
+        }
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal}, array);
+        ncFile.write(lat, values);
+    }
+
+    protected void writeLon(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Variable lon = ncFile.findVariable("lon");
+        float[] array = new float[numRowsGlobal * 2];
+        for (int x = 0; x < numRowsGlobal * 2; x++) {
+            array[x] = (float) (-180.0 + 180.0 / numRowsGlobal / 2 + 180.0 * x / numRowsGlobal);
+        }
+        Array values = Array.factory(DataType.FLOAT, new int[]{numRowsGlobal * 2}, array);
+        ncFile.write(lon, values);
+    }
+
+
     @Override
     protected void writeVegetationClassNames(NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable vegetationClass = ncFile.findVariable("vegetation_class_name");
@@ -90,7 +137,7 @@ public class ModisGridReducer extends AbstractGridReducer {
     protected void cleanup(Context context) throws IOException, InterruptedException {
         super.cleanup(context);
 
-        createQuicklook(context, new File("./" + outputFilename));
+//        createQuicklook(context, new File("./" + outputFilename));
     }
 
     private static void createQuicklook(Context context, File fileLocation) throws IOException {
@@ -129,6 +176,10 @@ public class ModisGridReducer extends AbstractGridReducer {
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
         return modisNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, 18, numRowsGlobal);
+    }
+
+    protected boolean addNumPatches() {
+        return true;
     }
 
     @Override
