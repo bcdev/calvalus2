@@ -88,10 +88,11 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     public void run(Context context) throws IOException, InterruptedException {
         setup(context);
         try {
-            int numReducers = conf.getInt(JobContext.NUM_REDUCES, 8);
+            int numReducers = conf.getInt(JobContext.NUM_REDUCES, conf.getInt("calvalus.mosaic.maxReducers", 8));
             final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
             String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
             if ((numReducers == 1 || "org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())) && format != null) {
+                CalvalusLogger.getLogger().info("single reducer, may integrate formatting");
                 // if only one reducer and output format parameter set, format directly
 
                 // handle metadata
@@ -136,6 +137,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
                                   regionName, regionWKT,
                                   productName);
             } else {
+                CalvalusLogger.getLogger().info("several reducers, writing part files");
                 while (context.nextKey()) {
                     reduce(context.getCurrentKey(), context.getValues(), context);
                 }
