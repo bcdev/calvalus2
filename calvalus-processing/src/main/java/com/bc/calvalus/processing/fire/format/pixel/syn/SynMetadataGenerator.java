@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 public class SynMetadataGenerator extends PixelFinaliseMapper {
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
+        if (args.length != 4) {
             System.out.println("Arguments: outputDir year doi publicationDate");
             System.out.println("e.g.     : . 2022  doi publicationDate");
             System.exit(-1);
@@ -30,10 +30,10 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
             String area = getArea(areaKey);
             for (int i = 1; i <= 12; i++) {
                 String month = String.format("%02d", i);
-                String filename = String.format("%s%s01-ESACCI-L3S_FIRE-BA-SYN-%s-fv1.0.xml", year, month, areaKey);
+                String filename = String.format("%s%s01-ESACCI-L3S_FIRE-BA-SYN-%s-fv1.1.xml", year, month, areaKey);
                 Path xmlPath = Paths.get(outputDir, filename);
                 if (!Files.exists(xmlPath)) {
-                    String metadata = createMetadata(template, year, month, "1.0", area, doi);
+                    String metadata = createMetadata(template, year, month, "1.1", area, doi, publicationDate);
                     try (FileWriter fw = new FileWriter(new File(outputDir, filename))) {
                         fw.write(metadata);
                     }
@@ -183,7 +183,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     "                        <!-- publication date-->" +
                     "                        <gmd:CI_Date>" +
                     "                            <gmd:date>" +
-                    "                                <gco:Date>28/02/2022</gco:Date>" +
+                    "                                <gco:Date>${publicationDate}</gco:Date>" +
                     "                            </gmd:date>" +
                     "                            <gmd:dateType>" +
                     "                                <gmd:CI_DateTypeCode" +
@@ -227,7 +227,7 @@ public class SynMetadataGenerator extends PixelFinaliseMapper {
                     " described in the Product User Guide. ${File Version} is the File version number in the form" +
                     " n{1,}[.n{1,}] (That is 1 or more digits followed by optional . and another 1 or more digits.)." +
                     " ${layer} is the code for the layer represented in each file, being: JD: layer 1, CL: layer 2," +
-                    " and LC: layer 3. An example is: 20190301-ESACCI-L3S_FIRE-BA-SYN-AREA_5-fv1.0-JD.tif.]]#" +
+                    " and LC: layer 3. An example is: 20190301-ESACCI-L3S_FIRE-BA-SYN-AREA_5-fv1.1-JD.tif.]]#" +
                     "</gco:CharacterString>" +
                     "<gco:CharacterString>For further information on the product, please consult the Product User Guide." +
                     "</gco:CharacterString>" +

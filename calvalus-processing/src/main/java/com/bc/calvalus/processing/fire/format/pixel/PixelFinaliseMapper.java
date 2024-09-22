@@ -1159,6 +1159,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "</gmi:MI_Metadata>";
 
     protected static String createMetadata(String template, String year, String month, String version, String areaString, String doi) throws IOException {
+        return createMetadata(template, year, month, version, areaString, doi);
+    }
+    protected static String createMetadata(String template, String year, String month, String version, String areaString, String doi, String publicationDate) throws IOException {
         String area = areaString.split(";")[0];
         String nicename = areaString.split(";")[1];
         String left = areaString.split(";")[2];
@@ -1181,6 +1184,9 @@ public abstract class PixelFinaliseMapper extends Mapper {
         velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
         velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
         velocityContext.put("doi", doi);
+        if (publicationDate != null) {
+            velocityContext.put("publicationDate", publicationDate);
+        }
 
         StringWriter stringWriter = new StringWriter();
         velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", template.replace("${REPLACE_WITH_VERSION}", version));
