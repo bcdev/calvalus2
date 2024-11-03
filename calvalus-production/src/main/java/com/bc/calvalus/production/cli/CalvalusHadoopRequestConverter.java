@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.production.Production;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.cli.CommandLine;
@@ -99,7 +100,14 @@ public class CalvalusHadoopRequestConverter {
         count = 0;
         for (Map.Entry<String, Object> entry : productionTypeDef.entrySet()) {
             if (!entry.getKey().startsWith("_")) {
-                translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+                if (entry.getValue() instanceof Map) {
+                    XmlMapper xmlMapper = new XmlMapper();
+                    final String xml = xmlMapper.writeValueAsString(entry.getValue());
+                    final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
+                    translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
+                } else {
+                    translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+                }
                 ++count;
             }
         }
@@ -108,7 +116,14 @@ public class CalvalusHadoopRequestConverter {
 
         // add parameters of request, maybe translate and apply function
         for (Map.Entry<String, Object> entry : request.entrySet()) {
-            translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+            if (entry.getValue() instanceof Map) {
+                XmlMapper xmlMapper = new XmlMapper();
+                final String xml = xmlMapper.writeValueAsString(entry.getValue());
+                final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
+                translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
+            } else {
+                translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+            }
         }
 
         // add parameters of command line, maybe translate and apply function
@@ -129,7 +144,14 @@ public class CalvalusHadoopRequestConverter {
 
         // overwrite with parameters of request, maybe translate and apply function
         for (Map.Entry<String, Object> entry : request.entrySet()) {
-            translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+            if (entry.getValue() instanceof Map) {
+                XmlMapper xmlMapper = new XmlMapper();
+                final String xml = xmlMapper.writeValueAsString(entry.getValue());
+                final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
+                translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
+            } else {
+                translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+            }
         }
 
         // overwrite with parameters of command line, maybe translate and apply function
@@ -225,7 +247,7 @@ public class CalvalusHadoopRequestConverter {
      * Read request or production type definition
      */
 
-    private static Map<String, Object> parseIntoMap(String path) throws IOException {
+    static Map<String, Object> parseIntoMap(String path) throws IOException {
         switch (FileUtils.getExtension(path)) {
             case ".json":
                 ObjectMapper jsonParser = new ObjectMapper();
