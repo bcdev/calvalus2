@@ -112,6 +112,10 @@ public class CalvalusHadoopTool {
             } else {
 
                 String requestPath = String.valueOf(commandLine.getArgList().get(0));
+                if (commandLine.hasOption("convert")) {
+                    System.out.println(CalvalusHadoopRequestConverter.jsonifyRequest(requestPath));
+                    System.exit(0);
+                }
                 boolean overwriteOutput = commandLine.hasOption("overwrite");
                 Map<String, String> commandLineParameters = CalvalusHadoopRequestConverter.collectCommandLineParameters(commandLine);
                 final CalvalusHadoopTool calvalusHadoopTool = new CalvalusHadoopTool(userName, commandLine.getOptionValue("format", "json"));
@@ -349,6 +353,11 @@ public class CalvalusHadoopTool {
                                   .withDescription(
                                           "Status output format. One of json, csv.")
                                   .create("f"));
+        options.addOption(OptionBuilder
+                                  .withLongOpt("convert")
+                                  .withDescription(
+                                          "Converts a request into the actual format.")
+                                  .create("n"));
         return options;
     }
 }

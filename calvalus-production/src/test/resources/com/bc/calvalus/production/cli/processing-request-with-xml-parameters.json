@@ -1,0 +1,18 @@
+{
+    "productionType" : "combinations",
+    "productionName" : "ditches 2022",
+
+    "combinations"   : "<parameters><variables>                                                                                             <variable><name>YEARS</name>         <values>2022</values><loopLocation>job</loopLocation></variable>                                       <variable><name>TILE_ROWS</name>     <values>1,2,3,4,5</values><loopLocation>job</loopLocation></variable>                                  <variable><name>TILE_COLS</name>     <values>1,2,3,4,5</values><loopLocation>job</loopLocation></variable>                                  <variable><name>NUM_TILE_ROWS</name> <values>5</values><loopLocation>script</loopLocation></variable>                                       <variable><name>NUM_TILE_COLS</name> <values>5</values><loopLocation>script</loopLocation></variable>                                       <variable><name>DEM_PATTERN</name>   <values>raw_dtm_%s.tif</values><loopLocation>script</loopLocation></variable>                          <variable><name>DEM_DIR</name>       <values>/data5/auxiliary/ditches/dem</values><loopLocation>script</loopLocation></variable>            <variable><name>INFRA_DIR</name>     <values>/data5/auxiliary/ditches/infrastructure</values><loopLocation>script</loopLocation></variable>                         </variables><formatName>lines_zs_%s_%s_%s.gpkg</formatName></parameters>",
+    "processorName"   : "ditches",
+    "outputDir"       : "/calvalus/home/cvop/test-ditches",
+
+    "queue"           : "test",
+    "attempts"        : "1",
+    "timeout"         : "14400",
+    "processingMemory": "12192",
+
+    "processorBundles": "ditches-1.0",
+    "calvalusBundle"  : "calvalus-2.26",
+    "snapBundle"      : "snap-9.4cv"
+}
+

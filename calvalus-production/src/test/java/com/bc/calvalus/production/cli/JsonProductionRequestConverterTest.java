@@ -1,10 +1,7 @@
 package com.bc.calvalus.production.cli;
 
-import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Map;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -26,5 +23,13 @@ public class JsonProductionRequestConverterTest {
                 assertEquals("<parameters>", xmlValue.substring(0, "<parameters>".length()));
             }
         }
+    }
+
+    @Test
+    public void testConvertJsonRequestWithXml() throws Exception {
+        String requestPath = getClass().getResource("processing-request-with-xml-parameters.json").getPath();
+        final String jsonRequest = CalvalusHadoopRequestConverter.jsonifyRequest(requestPath);
+        assertTrue(jsonRequest.contains("<parameters>"));
+        assertTrue(jsonRequest.contains("NUM_TILE_ROWS"));
     }
 }

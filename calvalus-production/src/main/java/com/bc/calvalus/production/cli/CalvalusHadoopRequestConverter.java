@@ -6,8 +6,10 @@ import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.production.Production;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -35,6 +37,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -178,6 +181,22 @@ public class CalvalusHadoopRequestConverter {
         }
         LOG.fine("job has " + jobConf.size() + " parameters");
         return jobConf;
+    }
+
+    public static String jsonifyRequest(String requestPath) throws IOException {
+        Map<String, Object> request = parseIntoMap(requestPath);
+        for (Map.Entry<String, Object> entry : request.entrySet()) {
+            if (entry.getValue() instanceof String && ((String) entry.getValue()).startsWith("<parameters>")) {
+                SimpleModule module = new SimpleModule().addDeserializer(Object.class, Issue205FixedUntypedObjectDeserializer.getInstance());
+                XmlMapper xmlMapper = (XmlMapper) new XmlMapper().registerModule(module);
+                Map<String, Object> content = (Map<String, Object>) xmlMapper.readValue(((String) entry.getValue()), Object.class);
+                Map<String, Object> parameters = new LinkedHashMap<>();
+                parameters.put("parameters", content);
+                request.put(entry.getKey(), parameters);
+            }
+        }
+        ObjectMapper jsonPrinter = new ObjectMapper();
+        return jsonPrinter.writerWithDefaultPrettyPrinter().writeValueAsString(request);
     }
 
     public Configuration createHadoopConf(Map<String, String> commandLineParameters, Properties configParameters) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
