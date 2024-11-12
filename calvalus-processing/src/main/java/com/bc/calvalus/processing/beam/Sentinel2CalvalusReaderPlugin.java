@@ -152,8 +152,16 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     LOG.info("time for s3/swift input retrieval [ms]: " + (System.currentTimeMillis() - t0));
                     // TODO: restricted to S2 MSIL1C; support L2A as well, maybe support other Sentinel products and other products
                     // should be done by a ProductIO
-                    localFile = new File(dst, "MTD_MSIL1C.xml");
-                    snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                    if (pathConfig.getPath().getName().contains("MSIL1C")) {
+                        localFile = new File(dst, "MTD_MSIL1C.xml");
+                        snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                    } else if (pathConfig.getPath().getName().contains("MSIL2A")) {
+                        localFile = new File(dst, "MTD_MSIL2A.xml");
+                        snapFormatName = "SENTINEL-2-MSI-MultiRes";
+                    } else {
+                        localFile = new File(dst, "xfdumanifest.xml");
+                        snapFormatName = "";
+                    }
                 } else {
                     long t0 = System.currentTimeMillis();
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
