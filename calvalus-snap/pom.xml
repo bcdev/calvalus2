@@ -21,6 +21,7 @@
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
         <seadas.reader.version>1.10.0</seadas.reader.version>
+        <probav.reader.version>2.3.0.3cv</probav.reader.version>
     </properties>
 
     <dependencies>
@@ -292,7 +293,7 @@
         <dependency>
             <groupId>org.vito.probavbox</groupId>
             <artifactId>probavbox-reader</artifactId>
-            <version>2.2.0</version>
+            <version>${probav.reader.version}</version>
         </dependency>
 
         <dependency>
