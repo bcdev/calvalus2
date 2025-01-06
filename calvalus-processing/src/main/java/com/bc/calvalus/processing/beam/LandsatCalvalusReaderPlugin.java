@@ -138,17 +138,20 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
                         throw new IllegalFileFormatException("input has no MTL file.");
                     }
                 }
-
+                final char platform = pathConfig.getPath().getName().charAt(2);
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_30M);
-                System.out.println("inputFormat = " + inputFormat);
+                System.out.println("inputFormat = " + inputFormat + " platform = " + platform);
 
+                String referenceBand;
                 switch (inputFormat) {
                     case FORMAT_15M:
-                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF15m");
-                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF15m"), "panchromatic");
+                        referenceBand = (platform == '7') ? "radiance_7" : "panchromatic";
+                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF15m and reference band " + referenceBand);
+                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF15m"), referenceBand);
                     case FORMAT_30M:
-                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF30m");
-                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF30m"), "red");
+                        referenceBand = (platform == '7') ? "radiance_3" : "red";
+                        CalvalusLogger.getLogger().info("reading with format Landsat8GeoTIFF30m and reference band " + referenceBand);
+                        return resample(ProductIO.readProduct(localFile, "Landsat8GeoTIFF30m"), referenceBand);
                     default:
                         CalvalusLogger.getLogger().info("reading with automatic format (inputFormat=" + inputFormat + ")");
                         return ProductIO.readProduct(localFile);
