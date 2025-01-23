@@ -16,7 +16,7 @@
         <bc-wps.version>1.2</bc-wps.version>
         <snap.version>9.0.6.1cv</snap.version>
         <s1tbx.version>9.0.4.1cv</s1tbx.version>
-        <s2tbx.version>9.0.2.1cv</s2tbx.version>
+        <s2tbx.version>9.0.2.2cv</s2tbx.version>
         <s3tbx.version>9.0.4.2cv</s3tbx.version>
         <seadas.reader.version>1.10.0</seadas.reader.version>
         <probav.reader.version>2.3.0.3cv</probav.reader.version>
