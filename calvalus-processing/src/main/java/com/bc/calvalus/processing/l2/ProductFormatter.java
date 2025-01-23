@@ -70,6 +70,13 @@ public class ProductFormatter {
             } else {
                 outputCompression = "dir2";
             }
+        } else if (outputFormat.equalsIgnoreCase("xcube-levels")) {
+            outputExtension = ".levels";
+            if ("zip".equals(desiredOutputCompression)) {
+                outputCompression = "zip";
+            } else {
+                outputCompression = "dir2";
+            }
         } else if (outputFormat.equals("NetCDF4-LC")) {
             outputExtension = ".nc";
             outputCompression = ""; // no further compression required
