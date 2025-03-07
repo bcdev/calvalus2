@@ -77,6 +77,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     private static final DateFormat N1_TIME_FORMAT = DateUtils.createDateFormat("yyyyMMdd_HHmmss");
     private static final DateFormat YMD_DIR_FORMAT = DateUtils.createDateFormat("yyyy/MM/dd");
+    private static final DateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd'T'HHmmss");
 
     private GraphContext graphContext;
     private boolean shallSaveTarget;
@@ -520,10 +521,48 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                     logger.info("corresponding SLSTR " + fileStatuses[0].getPath().getName() + " found");
                     return fileStatuses[0].getPath();
                 }
+                // check for matching start time without seconds
+                slstrPattern = String.format("S3%s_SL_1_RBT____%s*.zip",
+                        olciName.substring(2,3), olciName.substring(16, 27));
+                slstrPathPattern =
+                        new Path(new Path(new Path(new Path(archiveRoot, pathElements[numElements-4]),
+                            pathElements[numElements-3]), pathElements[numElements-2]), slstrPattern);
+                fileStatuses = fileSysten.globStatus(slstrPathPattern);
+                for (FileStatus fileStatus : fileStatuses) {
+                    if (deltaT90(fileStatus.getPath().getName().substring(16, 31),
+                                 olciName.substring(16, 31))) {
+                        logger.info("loosely corresponding SLSTR " + fileStatus.getPath().getName() + " found");
+                        return fileStatus.getPath();
+                    }
+                }
+                // check for matching stop time without seconds
+                slstrPattern = String.format("S3%s_SL_1_RBT____????????T??????_%s*.zip",
+                        olciName.substring(2,3), olciName.substring(32, 43));
+                slstrPathPattern =
+                        new Path(new Path(new Path(new Path(archiveRoot, pathElements[numElements-4]),
+                            pathElements[numElements-3]), pathElements[numElements-2]), slstrPattern);
+                fileStatuses = fileSysten.globStatus(slstrPathPattern);
+                for (FileStatus fileStatus : fileStatuses) {
+                    if (deltaT90(fileStatus.getPath().getName().substring(32, 47),
+                                 olciName.substring(32, 47))) {
+                        logger.info("loosely corresponding SLSTR " + fileStatus.getPath().getName() + " found");
+                        return fileStatus.getPath();
+                    }
+                }
                 logger.info("no corresponding SLSTR found for " + master);
                 return null;
             } catch (IOException e) {
                 throw new RuntimeException("failed to read dirs below " + archiveRoot, e);
+            }
+        }
+
+        private boolean deltaT90(String date1, String date2) {
+            try {
+                final long time1 = DATE_FORMAT.parse(date1).getTime();
+                final long time2 = DATE_FORMAT.parse(date2).getTime();
+                return (Math.abs(time1 - time2) < 90000);
+            } catch (ParseException ex) {
+                throw new RuntimeException("cannot parse datetime " + date1 + " or " + date2, ex);
             }
         }
 
