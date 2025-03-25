@@ -13,6 +13,7 @@ import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
+import ucar.nc2.write.Nc4Chunking;
 
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
@@ -25,8 +26,25 @@ public abstract class NcFileFactory {
 
     private static final float MAX_GRID = 769314629F;
 
+    /**
+     * Create Writer with default chunking.
+     *
+     * @param filename
+     * @param version
+     * @param timeCoverageStart
+     * @param timeCoverageEnd
+     * @param numberOfDays
+     * @param lcClassesCount
+     * @param numRowsGlobal
+     * @return
+     * @throws IOException
+     */
     public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int lcClassesCount, int numRowsGlobal) throws IOException {
-        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename);
+        return createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays, lcClassesCount, numRowsGlobal, null);
+    }
+
+    public NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays, int lcClassesCount, int numRowsGlobal, Nc4Chunking chunking) throws IOException {
+        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename, chunking);
 
         ncFile.addDimension(null, "vegetation_class", lcClassesCount);
         ncFile.addDimension(null, "lat", numRowsGlobal);
