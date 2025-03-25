@@ -20,6 +20,7 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -130,6 +131,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             year = timeCoverageStart.substring(0,4);
             month = timeCoverageStart.substring(5,7);
             lastDayOfMonth = Integer.parseInt(timeCoverageEnd.substring(8,10));
+            LOG.info(String.format("timeCoverageStart: %s", timeCoverageStart));
+            LOG.info(String.format("timeCoverageEnd: %s", timeCoverageEnd));
         } else {
             year = context.getConfiguration().get("calvalus.year");
             month = context.getConfiguration().get("calvalus.month");
@@ -139,9 +142,10 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             lastDayOfMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).atEndOfMonth().getDayOfMonth();
         }
 
-        outputFilename = getFilename(year, month, version);
+        String lastDayOfMonthFormatted = String.format((Locale) null, "%02d", lastDayOfMonth);
 
-        ncFile = createNcFile(outputFilename, version, year + "-" + month + "-" + "01", year + "-" + month + "-" + lastDayOfMonth, lastDayOfMonth);
+        outputFilename = getFilename(year, month, version);
+        ncFile = createNcFile(outputFilename, version, year + "-" + month + "-" + "01", year + "-" + month + "-" + lastDayOfMonthFormatted, lastDayOfMonth - 1);
 
         try {
             writeLon(ncFile);
