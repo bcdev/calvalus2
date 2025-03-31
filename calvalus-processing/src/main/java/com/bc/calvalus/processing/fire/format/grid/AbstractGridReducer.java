@@ -47,6 +47,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         numRowsGlobal = context.getConfiguration().getInt("numRowsGlobal", DEFAULT_SCENE_RASTER_HEIGHT);
+        numLcClasses = getNumLcClasses();
+        LOG.info("Setup with numLCClasses: " + numLcClasses);
         prepareTargetProducts(context);
         this.targetWidth = getTargetWidth();
         this.targetHeight = getTargetHeight();
@@ -109,6 +111,10 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     protected abstract int getTargetWidth();
 
     protected abstract int getTargetHeight();
+
+    protected int getNumLcClasses() {
+        return numLcClasses;
+    };
 
     protected abstract String getFilename(String year, String month, String version);
 
