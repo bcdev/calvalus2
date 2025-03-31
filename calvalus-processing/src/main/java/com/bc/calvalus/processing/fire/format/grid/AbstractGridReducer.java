@@ -292,12 +292,6 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     private void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
-        LOG.info("preparing " + varName + " with shape");
-        for (int entry : variable.getShape()) {
-            LOG.info("  " + entry);
-        }
-        LOG.info("Array size: " + numRowsGlobal * numRowsGlobal * 2);
-        LOG.info("Variable size: " + variable.getSize());
         float[] array = new float[numRowsGlobal * numRowsGlobal * 2];
         //Arrays.fill(array, 0.0F);
         //Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, numRowsGlobal * 2}, array);
