@@ -154,31 +154,40 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile = createNcFile(outputFilename, version, year + "-" + month + "-" + "01", year + "-" + month + "-" + lastDayOfMonthFormatted, lastDayOfMonth - 1);
 
         try {
+            LOG.info("Writing lat/lon");
             writeLon(ncFile);
             writeLat(ncFile);
 
+            LOG.info("Writing lat/lon bounds");
             writeLonBnds(ncFile);
             writeLatBnds(ncFile);
 
+            LOG.info("Writing time");
             writeTime(ncFile, year, month);
             writeTimeBnds(ncFile, year, month);
 
+            LOG.info("Writing vegetation classes");
             writeVegetationClasses(ncFile);
             writeVegetationClassNames(ncFile);
 
+            LOG.info("Preparing (empty) fraction of burnable area");
             prepareFloatVariable("fraction_of_burnable_area", ncFile);
             prepareFloatVariable("fraction_of_observed_area", ncFile);
 
+            LOG.info("Preparing (empty) burned area and error");
             prepareFloatVariable("burned_area", ncFile);
             prepareFloatVariable("standard_error", ncFile);
             if (addNumPatches()) {
+                LOG.info("Preparing (empty) number of patches");
                 prepareFloatVariable("number_of_patches", ncFile);
             }
 
+            LOG.info("Preparing (empty) areas");
             prepareAreas("burned_area_in_vegetation_class", numLcClasses, ncFile);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
+        LOG.info("Done preparing target products");
     }
 
     protected GridCells getCurrentGridCells() {
@@ -292,6 +301,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     }
 
     private void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        LOG.info("preparing areas (" + varName + ")  for " + lcClassCount + " classes ");
         Variable variable = ncFile.findVariable(varName);
         float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
