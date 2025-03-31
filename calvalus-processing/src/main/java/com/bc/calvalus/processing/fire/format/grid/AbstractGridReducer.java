@@ -292,24 +292,36 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     private void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
-        float[] array = new float[numRowsGlobal * 2];
-        Arrays.fill(array, 0.0F);
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, numRowsGlobal * 2}, array);
-        for (int y = 0; y < numRowsGlobal; y++) {
-            ncFile.write(variable, new int[]{0, y, 0}, values);
+        LOG.info("preparing " + varName + " with shape");
+        for (int entry : variable.getShape()) {
+            LOG.info("  " + entry);
         }
+        LOG.info("Array size: " + numRowsGlobal * numRowsGlobal * 2);
+        LOG.info("Variable size: " + variable.getSize());
+        float[] array = new float[numRowsGlobal * numRowsGlobal * 2];
+        //Arrays.fill(array, 0.0F);
+        //Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, numRowsGlobal * 2}, array);
+        //for (int y = 0; y < numRowsGlobal; y++) {
+            //ncFile.write(variable, new int[]{0, y, 0}, values);
+        //}
+        // TODO decide if the array becomes too big
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, numRowsGlobal, numRowsGlobal * 2}, array);
+        ncFile.write(variable, values);
     }
 
     private void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         LOG.info("preparing areas (" + varName + ")  for " + lcClassCount + " classes ");
         Variable variable = ncFile.findVariable(varName);
-        float[] array = new float[numRowsGlobal * 2];
-        Arrays.fill(array, 0.0F);
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 1, numRowsGlobal * 2}, array);
+        //float[] array = new float[numRowsGlobal * 2];
+        //Arrays.fill(array, 0.0F);
+        //Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 1, numRowsGlobal * 2}, array);
+        float[] array = new float[numRowsGlobal * numRowsGlobal * 2];
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, numRowsGlobal, numRowsGlobal * 2}, array);
         for (int c = 0; c < lcClassCount; ++c) {
-            for (int y = 0; y < numRowsGlobal; y++) {
-                ncFile.write(variable, new int[]{0, c, y, 0}, values);
-            }
+            //for (int y = 0; y < numRowsGlobal; y++) {
+                //ncFile.write(variable, new int[]{0, c, y, 0}, values);
+            //}
+            ncFile.write(variable, new int[]{0, c, 0, 0}, values);
         }
     }
 
