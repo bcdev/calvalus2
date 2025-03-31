@@ -278,7 +278,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
                 if (i == 0) {
                     firstChar = string.charAt(pos);
                 } else if (string.charAt(pos) != firstChar) {
-                    return stripAfterLastSlash(string, pos);
+                    return stripAfterLastSlash(string, pos-1);
                 }
             }
         }
