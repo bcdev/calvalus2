@@ -290,7 +290,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(lon, values);
     }
 
-    private void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
         float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
@@ -300,8 +300,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         }
     }
 
-    private void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
-        LOG.info("preparing areas (" + varName + ")  for " + lcClassCount + " classes ");
+    protected void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
         float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
