@@ -20,6 +20,7 @@ import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,6 +47,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         numRowsGlobal = context.getConfiguration().getInt("numRowsGlobal", DEFAULT_SCENE_RASTER_HEIGHT);
+        numLcClasses = getNumLcClasses();
+        LOG.info("Setup with numLCClasses: " + numLcClasses);
         prepareTargetProducts(context);
         this.targetWidth = getTargetWidth();
         this.targetHeight = getTargetHeight();
@@ -109,6 +112,10 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
 
     protected abstract int getTargetHeight();
 
+    protected int getNumLcClasses() {
+        return numLcClasses;
+    };
+
     protected abstract String getFilename(String year, String month, String version);
 
     protected abstract NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException;
@@ -130,6 +137,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             year = timeCoverageStart.substring(0,4);
             month = timeCoverageStart.substring(5,7);
             lastDayOfMonth = Integer.parseInt(timeCoverageEnd.substring(8,10));
+            LOG.info(String.format("timeCoverageStart: %s", timeCoverageStart));
+            LOG.info(String.format("timeCoverageEnd: %s", timeCoverageEnd));
         } else {
             year = context.getConfiguration().get("calvalus.year");
             month = context.getConfiguration().get("calvalus.month");
@@ -139,36 +148,46 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
             lastDayOfMonth = YearMonth.of(Integer.parseInt(year), Integer.parseInt(month)).atEndOfMonth().getDayOfMonth();
         }
 
-        outputFilename = getFilename(year, month, version);
+        String lastDayOfMonthFormatted = String.format((Locale) null, "%02d", lastDayOfMonth);
 
-        ncFile = createNcFile(outputFilename, version, year + "-" + month + "-" + "01", year + "-" + month + "-" + lastDayOfMonth, lastDayOfMonth);
+        outputFilename = getFilename(year, month, version);
+        ncFile = createNcFile(outputFilename, version, year + "-" + month + "-" + "01", year + "-" + month + "-" + lastDayOfMonthFormatted, lastDayOfMonth - 1);
 
         try {
+            LOG.info("Writing lat/lon");
             writeLon(ncFile);
             writeLat(ncFile);
 
+            LOG.info("Writing lat/lon bounds");
             writeLonBnds(ncFile);
             writeLatBnds(ncFile);
 
+            LOG.info("Writing time");
             writeTime(ncFile, year, month);
             writeTimeBnds(ncFile, year, month);
 
+            LOG.info("Writing vegetation classes");
             writeVegetationClasses(ncFile);
             writeVegetationClassNames(ncFile);
 
+            LOG.info("Preparing (empty) fraction of burnable area");
             prepareFloatVariable("fraction_of_burnable_area", ncFile);
             prepareFloatVariable("fraction_of_observed_area", ncFile);
 
+            LOG.info("Preparing (empty) burned area and error");
             prepareFloatVariable("burned_area", ncFile);
             prepareFloatVariable("standard_error", ncFile);
             if (addNumPatches()) {
+                LOG.info("Preparing (empty) number of patches");
                 prepareFloatVariable("number_of_patches", ncFile);
             }
 
+            LOG.info("Preparing (empty) areas");
             prepareAreas("burned_area_in_vegetation_class", numLcClasses, ncFile);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
+        LOG.info("Done preparing target products");
     }
 
     protected GridCells getCurrentGridCells() {
@@ -271,7 +290,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(lon, values);
     }
 
-    private void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void prepareFloatVariable(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
         float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
@@ -281,7 +300,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         }
     }
 
-    private void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+    protected void prepareAreas(String varName, int lcClassCount, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
         Variable variable = ncFile.findVariable(varName);
         float[] array = new float[numRowsGlobal * 2];
         Arrays.fill(array, 0.0F);
