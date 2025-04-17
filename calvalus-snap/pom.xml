@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-snap</artifactId>
-    <version>2.26-SNAPSHOT</version>
+    <version>2.27-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus Distribution SNAP</name>
@@ -21,7 +21,7 @@
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
         <seadas.reader.version>1.10.0</seadas.reader.version>
-        <probav.reader.version>2.3.0.3cv</probav.reader.version>
+        <probav.reader.version>2.3.0.2cv</probav.reader.version>
     </properties>
 
     <dependencies>
@@ -600,5 +600,12 @@
             <url>http://download.osgeo.org/webdav/geotools/</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>https://nexus.snap-ci.ovh/repository/snap-maven-public/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>
