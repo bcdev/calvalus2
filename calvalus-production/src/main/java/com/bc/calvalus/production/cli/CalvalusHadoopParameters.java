@@ -2,6 +2,7 @@ package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.processing.ra.RAConfig;
 import com.bc.calvalus.processing.ra.RARegions;
+import com.bc.calvalus.production.util.DateRangeCalculator;
 import com.bc.ceres.binding.BindingException;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.operation.union.CascadedPolygonUnion;
@@ -168,27 +169,31 @@ public class CalvalusHadoopParameters extends Configuration {
     }
 
     private String computePeriodialDateRanges(String period, String compositingPeriod, String min, String max) {
-        StringBuilder accu = new StringBuilder();
-        Calendar cursor = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        cursor.setTime(dateOf(min));
-        Calendar end = new GregorianCalendar();
-        end.setTime(dateOf(max));
-        int periodDays = Integer.parseInt(period);
-        int compositingDays = Integer.parseInt(compositingPeriod);
-        while (! cursor.after(end)) {
-            if (accu.length() > 0) {
-                accu.append(",");
-            }
-            accu.append('[');
-            accu.append(dateStringOf(cursor.getTime()));
-            accu.append(":");
-            cursor.add(Calendar.DATE, compositingDays - 1);
-            accu.append(dateStringOf(cursor.getTime()));
-            accu.append("]");
-            cursor.add(Calendar.DATE, periodDays - compositingDays + 1);
-        }
-        return accu.toString();
+        return DateRangeCalculator.periodicalDateRanges(min, max, period, compositingPeriod);
     }
+
+//    private String computePeriodialDateRanges1(String period, String compositingPeriod, String min, String max) {
+//        StringBuilder accu = new StringBuilder();
+//        Calendar cursor = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+//        cursor.setTime(dateOf(min));
+//        Calendar end = new GregorianCalendar();
+//        end.setTime(dateOf(max));
+//        int periodDays = Integer.parseInt(period);
+//        int compositingDays = Integer.parseInt(compositingPeriod);
+//        while (! cursor.after(end)) {
+//            if (accu.length() > 0) {
+//                accu.append(",");
+//            }
+//            accu.append('[');
+//            accu.append(dateStringOf(cursor.getTime()));
+//            accu.append(":");
+//            cursor.add(Calendar.DATE, compositingDays - 1);
+//            accu.append(dateStringOf(cursor.getTime()));
+//            accu.append("]");
+//            cursor.add(Calendar.DATE, periodDays - compositingDays + 1);
+//        }
+//        return accu.toString();
+//    }
 
     /**
      * Function for use in production type translation rules.
