@@ -33,6 +33,26 @@ public interface BackendService extends RemoteService {
     void storeRegions(DtoRegion[] regions) throws BackendServiceException;
 
     /**
+     * Gets all known color palettes.
+     *
+     * @param filter A filter expression (not yet used).
+     *
+     * @return The array of color palettes.
+     *
+     * @throws BackendServiceException If a server error occurred.
+     */
+    DtoColorPalette[] loadColorPalettes(String filter) throws BackendServiceException;
+
+    /**
+     * Persists the provided color palettes.
+     *
+     * @param colorPalettes The color palettes to persist.
+     *
+     * @throws BackendServiceException If a server error occurred.
+     */
+    void storeColorPalettes(DtoColorPalette[] colorPalettes) throws BackendServiceException;
+
+    /**
      * Gets all known product sets.
      *
      * @param filter A filter expression (not yet used).

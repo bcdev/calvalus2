@@ -24,19 +24,49 @@ import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.FileUtils;
+import org.gdal.gdal.Band;
+import org.gdal.gdal.Dataset;
+import org.gdal.gdal.Driver;
+import org.gdal.gdal.gdal;
+import org.gdal.osr.SpatialReference;
+import org.gdal.gdalconst.gdalconst;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
+//import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
+import org.geotools.gce.geotiff.GeoTiffFormat;
+import org.geotools.gce.geotiff.GeoTiffWriteParams;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.coverage.grid.GridCoverageWriter;
+import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.parameter.ParameterValueGroup;
 
 import javax.imageio.ImageIO;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 /**
@@ -61,18 +91,38 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                 final String productName = FileUtils.getFilenameWithoutExtension(inputFileName);
                 final Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
                 for (Quicklooks.QLConfig config : configs) {
-                    final String imageFileName;
+                    final String imageBaseName;
                     if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
                             && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
                         if (configs.length == 1) {
-                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
+                            imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
                         } else {
-                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
+                            imageBaseName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
                         }
                     } else {
-                        imageFileName = productName + "_" + config.getBandName();
+                        imageBaseName = productName + "_" + config.getBandName();
                     }
-                    createQuicklook(product, imageFileName, context, config);
+                    createQuicklook(product, imageBaseName, context, config);
+                    final String qlUploadHandler = context.getConfiguration().get(JobConfigNames.CALVALUS_QUICKLOOK_UPLOAD_HANDLER);
+
+                    if (config.isWmsEnabled()) {
+                        if (qlUploadHandler == null || qlUploadHandler.isEmpty()) {
+                            LOGGER.warning("No quicklook upload handler configured");
+                        } else if (qlUploadHandler.equalsIgnoreCase("geoserver")) {
+                            if (isGeoTiff(config) || isCloudOptimizedGeoTIFF(config)) {
+                                // upload geoTiff to GeoServer
+                                LOGGER.info(String.format("Quicklook upload handler: %s", qlUploadHandler));
+                                GeoServer geoserver = new GeoServer(context);
+                                String imageFilename = QLMapper.getImageFileName(imageBaseName, config);
+                                InputStream inputStream = QLMapper.createInputStream(context, imageFilename);
+                                geoserver.uploadImage(inputStream, imageBaseName);
+                            } else {
+                                LOGGER.warning(String.format("Quicklook image format '%s' not supported for GeoServer upload. Please use am image format such as GeoTIFF or COG instead.", config.getImageType()));
+                            }
+                        } else {
+                            LOGGER.warning(String.format("Unknown quicklook upload handler: %s", qlUploadHandler));
+                        }
+                    }
                 }
             }
         } finally {
@@ -81,31 +131,188 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         }
     }
 
-    public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
+    public static void createQuicklook(Product product, String imageBaseName, Mapper.Context context,
                                        Quicklooks.QLConfig config) throws IOException, InterruptedException {
 //        try {
-            RenderedImage quicklookImage = new QuicklookGenerator(context, product, config).createImage();
+        RenderedImage quicklookImage = null;
+        String imageFileName = getImageFileName(imageBaseName, config);
+        if (isGeoTiff(config) || isCloudOptimizedGeoTIFF(config)) {
+            // for geoTiff and Cloud Optimized GeoTIFF images, we will force EPSG:4326 projection
+            // then render the image after re-projection
+            Map<String, Object> reprojParams = new HashMap<String, Object>();
+            reprojParams.put("crs", "EPSG:4326");
+            //reprojParams.put("noDataValue", 0d);
+            product = GPF.createProduct("Reproject", reprojParams, product);
+            quicklookImage = new QuicklookGenerator(context, product, config).createImage();
             if (quicklookImage != null) {
-                OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
+                final int datasetWidth = product.getSceneRasterWidth();
+                final int datasetHeight = product.getSceneRasterHeight();
+                final GeoCoding geoCoding = product.getSceneGeoCoding();
+                final PixelPos posA = new org.esa.snap.core.datamodel.PixelPos(0, 0);
+                final GeoPos geoPosA = geoCoding.getGeoPos(posA, null);
+                final PixelPos posB = new org.esa.snap.core.datamodel.PixelPos(datasetWidth, datasetHeight);
+                final GeoPos geoPosB = geoCoding.getGeoPos(posB, null);
+
+                if (isCloudOptimizedGeoTIFF(config)) {
+                    // use GDAL Java bindings API to create a Cloud Optimized GeoTIFF (COG)
+                    gdal.AllRegister();
+                    Driver driverMemory = gdal.GetDriverByName("MEM");
+                    if (driverMemory == null) {
+                        throw new RuntimeException("Could not load GDAL MEM driver required for Cloud Optimized GeoTIFF (COG)");
+                    }
+                    Driver driverCOG = gdal.GetDriverByName("COG");
+                    if (driverCOG == null) {
+                        throw new RuntimeException("Could not load GDAL COG driver required for Cloud Optimized GeoTIFF (COG)");
+                    }
+                    Raster quicklookRaster = quicklookImage.getData();
+                    int quicklookImageWidth = quicklookRaster.getWidth();
+                    int quicklookImageHeight = quicklookRaster.getHeight();
+                    int quicklookImageNumBands = quicklookRaster.getNumBands();
+                    String tmpImageFileName = getTmpImageFileName(imageBaseName, config);
+
+                    Dataset memoryDataset = driverMemory.Create(tmpImageFileName, quicklookImageWidth, quicklookImageHeight, quicklookImageNumBands, gdalconst.GDT_Byte);
+
+                    // add SRS to the GDAL dataset object
+                    SpatialReference srs = new SpatialReference();
+                    srs.ImportFromEPSG(4326);
+                    memoryDataset.SetSpatialRef(srs);
+
+                    // add Geotransform (north up image) to the GDAL dataset object
+                    // assumes longitude is between -90 and 90, and latitude between -180 and 180
+                    double pixelSizeX = Math.abs(geoPosA.getLon() - geoPosB.getLon()) / (double) quicklookImageWidth;
+                    double pixelSizeY = Math.abs(geoPosA.getLat() - geoPosB.getLat()) / (double) quicklookImageHeight;
+                    double[] geotransform = new double[6];
+                    geotransform[0] = geoPosA.getLon();     // longitude value for the top left pixel of the raster
+                    geotransform[1] = pixelSizeX;           // pixel width
+                    geotransform[2] = 0;                    // 0
+                    geotransform[3] = geoPosA.getLat();     // latitude value for the top left pixel of the raster
+                    geotransform[4] = 0;                    // 0
+                    geotransform[5] = -pixelSizeY;          // pixel height (negative value)
+                    memoryDataset.SetGeoTransform(geotransform);
+
+                    // add image data to the GDAL dataset object, for each image band
+                    int[] band = new int[(quicklookImageHeight * quicklookImageWidth)];
+                    for (int i = 0; i < quicklookImageNumBands; i++) {
+                        quicklookRaster.getSamples(0, 0, quicklookImageWidth, quicklookImageHeight, i, band);
+                        Band outBand = memoryDataset.GetRasterBand(i + 1);
+                        outBand.WriteRaster(0, 0, quicklookImageWidth, quicklookImageHeight, gdalconst.GDT_Int32, band);
+                        outBand.FlushCache();
+                    }
+                    memoryDataset.FlushCache();
+
+                    // create and copy COG image file using the in-memory dataset
+                    // add GDAL specific format parameters for the COG
+                    final Vector<String> formatParameters = new Vector<>(1);
+                    //formatParameters.add("COMPRESS=NONE");
+                    formatParameters.add("COMPRESS=LZW");
+                    Dataset cogDataset = driverCOG.CreateCopy(imageFileName, memoryDataset, formatParameters);
+
+                    // flush header and data to disk and then delete the objects
+                    // from past testing the COG image became corrupt without this now
+                    cogDataset.FlushCache();
+                    cogDataset.delete();
+                    memoryDataset.delete();
+
+                    // copy local Cloud Optimized GeoTIFF file to the HDFS filesystem
+                    FileSystem localFilesystem = FileSystem.getLocal(context.getConfiguration());
+                    FileSystem hdfsFilesystem = FileSystem.get(context.getConfiguration());
+                    Path path = getWorkOutputFilePath(context, imageFileName);
+                    FileUtil.copy(localFilesystem, new Path(imageFileName), hdfsFilesystem, path, false, context.getConfiguration());
+                } else if (isGeoTiff(config)) {
+                    // use GeoTools to create a simple GeoTIFF
+                    final GeoTiffFormat format = new GeoTiffFormat();
+                    final GeoTiffWriteParams wp = new GeoTiffWriteParams();
+                    //wp.setCompressionMode(GeoTiffWriteParams.MODE_EXPLICIT);
+                    //wp.setCompressionType("LZW");
+                    //wp.setCompressionQuality(1.0F);
+                    //wp.setTilingMode(GeoToolsWriteParams.MODE_EXPLICIT);
+                    //wp.setTiling(256, 256);
+                    final ParameterValueGroup params = format.getWriteParameters();
+                    params.parameter(AbstractGridFormat.GEOTOOLS_WRITE_PARAMS.getName().toString()).setValue(wp);
+
+                    OutputStream outputStream = createOutputStream(context, imageFileName);
+                    LOGGER.info("outputStream: " + outputStream.toString());
+                    OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
+                    try {
+                        ReferencedEnvelope envelope =
+                                new ReferencedEnvelope(
+                                        geoPosA.getLon(), geoPosB.getLon(),
+                                        geoPosA.getLat(), geoPosB.getLat(),
+                                        DefaultGeographicCRS.WGS84
+                                );
+                        GridCoverageFactory factory = new GridCoverageFactory();
+                        GridCoverage2D gridCoverage2D = factory.create(imageFileName, quicklookImage, envelope);
+                        GridCoverageWriter writer = format.getWriter(new BufferedOutputStream(pmOutputStream));
+                        writer.write(gridCoverage2D, params.values().toArray(new GeneralParameterValue[1]));
+                        writer.dispose();
+                    } finally {
+                        outputStream.close();
+                    }
+                }
+            }
+        } else {
+            // for non geoTiff and Cloud Optimized GeoTIFF images, we will not force EPSG:4326 projection,
+            // instead just render the image as it is
+            quicklookImage = new QuicklookGenerator(context, product, config).createImage();
+            if (quicklookImage != null) {
+                OutputStream outputStream = createOutputStream(context, imageFileName);
+                LOGGER.info("outputStream: " + outputStream.toString());
                 OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
                 try {
                     ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);
                 } finally {
                     outputStream.close();
                 }
+
             }
+        }
 //        } catch (Exception e) {
 //            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
 //            LOGGER.log(Level.WARNING, msg, e);
 //        }
     }
 
+    public static String getImageFileName(String imageBaseName, Quicklooks.QLConfig qlConfig) {
+        if (isGeoTiff(qlConfig) || isCloudOptimizedGeoTIFF(qlConfig)) {
+            return imageBaseName + ".tiff";
+        } else {
+            return imageBaseName + "." + qlConfig.getImageType();
+        }
+    }
+
+    public static String getTmpImageFileName(String imageBaseName, Quicklooks.QLConfig qlConfig) {
+        if (isGeoTiff(qlConfig) || isCloudOptimizedGeoTIFF(qlConfig)) {
+            return imageBaseName + "_tmp.tiff";
+        } else {
+            return imageBaseName + "_tmp." + qlConfig.getImageType();
+        }
+    }
+
+    public static Path getWorkOutputFilePath(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        return new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+    }
+
+    private static boolean isGeoTiff(Quicklooks.QLConfig qlConfig) {
+        return "geotiff".equalsIgnoreCase(qlConfig.getImageType());
+    }
+
+    private static boolean isCloudOptimizedGeoTIFF(Quicklooks.QLConfig qlConfig) {
+        return "cog".equalsIgnoreCase(qlConfig.getImageType());
+    }
+
     private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
-        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+        Path path = getWorkOutputFilePath(context, fileName);
+        LOGGER.info("createOutputStream: path = " + path);
         final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
         return new BufferedOutputStream(fsDataOutputStream);
     }
 
+    public static InputStream createInputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
+        Path path = getWorkOutputFilePath(context, fileName);
+        LOGGER.info("createInputStream: path = " + path);
+        final FSDataInputStream fsDataInputStream = path.getFileSystem(context.getConfiguration()).open(path);
+        return new BufferedInputStream(fsDataInputStream);
+    }
 
     private static class BytesCountingOutputStream extends OutputStream {
 

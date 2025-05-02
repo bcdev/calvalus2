@@ -1,0 +1,401 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css"/>
+
+    <g:FlowPanel styleName="{style.quicklookPanel}">
+
+        <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+            <g:InlineLabel styleName="{style.panelTitleText}">Quicklook</g:InlineLabel>
+        </g:HTMLPanel>
+
+        <!-- Panel for selecting the main quicklook options: none, single-band, multi-band -->
+        <g:HorizontalPanel styleName="{style.quicklookRadioPanel}">
+            <g:RadioButton ui:field="quicklookNone"
+                           name="quicklookSelection"
+                           text="No quicklook"
+                           styleName="{style.quicklookRadioButton}"
+            />
+            <g:RadioButton ui:field="quicklookSingleBand"
+                           name="quicklookSelection"
+                           text="Single-band"
+                           styleName="{style.quicklookRadioButton}"
+            />
+            <g:RadioButton ui:field="quicklookMultiBand"
+                           name="quicklookSelection"
+                           text="Multiple-band"
+                           styleName="{style.quicklookRadioButton}"
+            />
+        </g:HorizontalPanel>
+
+        <!-- Panel for single-band fields, which will be always be visible when single-band selected -->
+        <g:HTMLPanel ui:field="singleBandPanelBasics" styleName="{style.quicklookParametersPanelIndent}">
+            <table class="{style.quicklookParametersTable}">
+                <tr>
+                    <th colspan="2" class="{style.quicklookParametersTableHeader}">Single-band configuration</th>
+                </tr>
+                <tr>
+                    <td colspan="2" class="{style.quicklookParametersTableRowPadding}"/>
+                </tr>
+                <!-- Band name (with list box support, if populated) -->
+                <tr id="bandNameListBoxRow">
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Band name:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:ListBox ui:field="bandNameListBox" multipleSelect="false" visibleItemCount="1"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label ui:field='bandNameRowLabel'></g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='bandName' width="30em" styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="100%">
+                            The name of a band which will be used for the image.
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+
+        <!-- Panel for multi-band fields, which will be always be visible when multi-band selected -->
+        <g:HTMLPanel ui:field="multiBandPanelBasics" styleName="{style.quicklookParametersPanelIndent}">
+            <table class="{style.quicklookParametersTable}">
+                <tr>
+                    <th colspan="2" class="{style.quicklookParametersTableHeader}">Multi-band configuration</th>
+                </tr>
+                <tr>
+                    <td colspan="2" class="{style.quicklookParametersTableRowPadding}"/>
+                </tr>
+                <!-- Red, Greem, Blue, and Alpha band expressions -->
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Red band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell">
+                        <g:TextBox ui:field='rgbaExpressionsRedBand' width="95%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Green band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsGreenBand' width="95%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Blue band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsBlueBand' width="95%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="{style.quicklookInputLabelCell}">
+                        <g:Label>Alpha band expression:</g:Label>
+                    </td>
+                    <td class="{style.quicklookInputCell}">
+                        <g:TextBox ui:field='rgbaExpressionsAlphaBand' width="95%"
+                                   styleName="{style.textBox}"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;&nbsp;</td>
+                    <td>
+                        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="100%">
+                            Add a list of 3 or 4 band names from which an RGB or RGBA colourised image will be
+                            generated.
+                        </g:HTML>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+
+        <!-- Panel for advanced single-band/multi-band fields.
+             Panel discloses the content when a user clicks on the panel header -->
+        <g:DisclosurePanel ui:field="advancedOptionsPanel" animationEnabled="true" open="false">
+            <g:header>Advanced options</g:header>
+            <g:HTMLPanel>
+
+                <!-- Panel for single-band fields only -->
+                <g:HTMLPanel ui:field="singleBandPanelAdvanced" styleName="{style.quicklookParametersPanel}">
+                    <table class="{style.quicklookParametersTable}">
+                        <tr>
+                            <th colspan="2" class="{style.quicklookParametersTableHeader}">Single-band configuration -
+                                more options
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="{style.quicklookParametersTableRowPadding}"/>
+                        </tr>
+                        <!-- Colour table -->
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Colour table:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:ListBox ui:field='colorPalette' multipleSelect="false" visibleItemCount="1"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="100%">
+                                    The colour table which will be applied to the chosen band.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                    </table>
+                </g:HTMLPanel>
+
+                <!-- Panel for multi-band fields only -->
+                <g:HTMLPanel ui:field="multiBandPanelAdvanced" styleName="{style.quicklookParametersPanel}">
+                    <table class="{style.quicklookParametersTable}">
+                        <tr>
+                            <th colspan="2" class="{style.quicklookParametersTableHeader}">Multi-band configuration -
+                                more options
+                            </th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="{style.quicklookParametersTableRowPadding}"/>
+                        </tr>
+                        <!-- Minimum and Maximum samples -->
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Minimum samples:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:TextBox ui:field="rgbaMinSamples" width="50%"
+                                           styleName="{style.textBox}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Maximum samples:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:TextBox ui:field="rgbaMaxSamples" width="50%"
+                                           styleName="{style.textBox}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="50%">
+                                    Add a list of 3 or 4 values that set minimal and maximal values for the displayed
+                                    samples.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                    </table>
+                </g:HTMLPanel>
+
+                <g:HTML>
+                    <br/>
+                </g:HTML>
+
+                <!-- Panel for shared single-band/multi-band fields -->
+                <g:HTMLPanel styleName="{style.quicklookParametersPanel}">
+                    <table class="{style.quicklookParametersTable}">
+                        <tr>
+                            <th colspan="2" class="{style.quicklookParametersTableHeader}">General options</th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="{style.quicklookParametersTableRowPadding}"/>
+                        </tr>
+                        <!-- Image type -->
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Image type:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:ListBox ui:field="imageType" multipleSelect="false" visibleItemCount="1"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                                    The type of the generated image.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <!-- Background Colour -->
+                        <tr>
+                            <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Background Colour:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:TextBox ui:field='backgroundColor' styleName="{style.textBox}" width="50%"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="50%">
+                                    The background colour of the generated image.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <!-- Overlay URL -->
+                        <tr>
+                            <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Overlay URL:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:TextBox ui:field='overlayURL' styleName="{style.textBox}" width="95%"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                                    A URL to a file containing a image that will be rendered above the image from the
+                                    product.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <!-- Mask overlays -->
+                        <tr>
+                            <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Mask overlays:</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:TextBox ui:field='maskOverlays' width="30em" styleName="{style.textBox}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                                    Defines which product mask should be drawn on top of
+                                    the actual band or RGB image. The product must contain
+                                    the specified masks.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <!-- Sub sampling - X and Y -->
+                        <tr>
+                            <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Sub sampling (X):</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:IntegerBox ui:field='subSamplingX' visibleLength="6"
+                                              styleName="{style.textBox}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Sub sampling (Y):</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:IntegerBox ui:field='subSamplingY' visibleLength="6"
+                                              styleName="{style.textBox}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                                    Sub sampling can be used to reduce the size of the resulting image.
+                                    The default size of the image is identical to the size of the product.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <!-- Legend -->
+                        <tr>
+                            <td colspan="2">&nbsp;&nbsp;&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>Legend</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:CheckBox ui:field="legendEnabled"
+                                            checked="false"
+                                            addStyleNames="{style.checkBox} {style.noteLabel}"
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                                    When set, an image legend will be drawn into the bottom-right corner of the image.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                    </table>
+                </g:HTMLPanel>
+
+                <g:HTML>
+                    <br/>
+                </g:HTML>
+
+                <!-- Panel for an optional WMS checkBox field -->
+                <g:HTMLPanel ui:field="wmsPanel" styleName="{style.quicklookParametersPanel}">
+                    <table class="{style.quicklookParametersTable}">
+                        <tr>
+                            <th colspan="2" class="{style.quicklookParametersTableHeader}">Web Map Service</th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="{style.quicklookParametersTableRowPadding}"/>
+                        </tr>
+                        <!-- WMS -->
+                        <tr>
+                            <td class="{style.quicklookInputLabelCell}">
+                                <g:Label>WMS</g:Label>
+                            </td>
+                            <td class="{style.quicklookInputCell}">
+                                <g:CheckBox ui:field="wmsEnabled"
+                                            checked="false"
+                                            addStyleNames="{style.checkBox} {style.noteLabel}"
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;&nbsp;&nbsp;</td>
+                            <td>
+                                <g:HTML wordWrap="true" styleName="{style.noteLabel}" width="100%">
+                                    When set, the generated quicklook image is uploaded to a WMS server.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                    </table>
+                </g:HTMLPanel>
+
+            </g:HTMLPanel>
+        </g:DisclosurePanel>
+
+        <g:HTML>
+            <br/>
+        </g:HTML>
+
+    </g:FlowPanel>
+
+</ui:UiBinder>
