@@ -242,7 +242,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCells, NullW
         ncFile.write(time, values);
     }
 
-    private static double getFirstDayAsJD(String year, String month) {
+    static double getFirstDayAsJD(String year, String month) {
         LocalDate current = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1);
         LocalDate epoch = Year.of(1970).atMonth(1).atDay(1);
         return ChronoUnit.DAYS.between(epoch, current);
