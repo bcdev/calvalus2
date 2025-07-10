@@ -381,4 +381,13 @@ public class DateRangeCalculatorTest {
         period.next(cal);
         assertEquals("2016-03-11", DATE_FORMAT.format(cal.getTime()));
     }
+
+    @Test
+    public void testPeriodicalDateRanges() throws ParseException {
+        String result = DateRangeCalculator.periodicalDateRanges("2020-01-01", "2020-12-31", "1m", "1w");
+        assertEquals("[2020-01-01:2020-01-07],[2020-02-01:2020-02-07],[2020-03-01:2020-03-07]," +
+                             "[2020-04-01:2020-04-07],[2020-05-01:2020-05-07],[2020-06-01:2020-06-07]," +
+                             "[2020-07-01:2020-07-07],[2020-08-01:2020-08-07],[2020-09-01:2020-09-07]," +
+                             "[2020-10-01:2020-10-07],[2020-11-01:2020-11-07],[2020-12-01:2020-12-07]", result);
+    }
 }

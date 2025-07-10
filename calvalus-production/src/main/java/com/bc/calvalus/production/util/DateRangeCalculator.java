@@ -19,11 +19,14 @@ package com.bc.calvalus.production.util;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.DateUtils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +49,23 @@ public class DateRangeCalculator {
         return dateRangeList;
     }
 
+    private static final SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    static {
+        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
+
+    private static String dateStringOf(Date date) {
+        return ISO_DATE_FORMAT.format(date);
+    }
+
+    private static Date dateOf(String date) {
+        try {
+            return ISO_DATE_FORMAT.parse(date);
+        } catch (ParseException e) {
+            throw new RuntimeException("failed to parse " + date, e);
+        }
+    }
+
     /**
      * By default the stepping and compositing periods are given in full days.
      * Additional the periods can be specified in weeks (using "w" as suffix),
@@ -56,8 +76,58 @@ public class DateRangeCalculator {
      * The week containing the 30 Dec is 8 days long to include the 31 Dec, too.
      * In leap years the week containing the 28 Feb is 8 days long
      * to include the 29 Feb, too.
-     * If you dont't want this behaviour you can specify 7 days as period instead.
+     * If you don't want this behaviour you can specify 7 days as period instead.
      * 
+     */
+    public static String periodicalDateRanges(String min, String max, String steppingPeriodLength, String compositingPeriodLength) {
+        StringBuilder accu = new StringBuilder();
+        GregorianCalendar cursor = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        cursor.setTime(dateOf(min));
+        GregorianCalendar end = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        end.setTime(dateOf(max));
+        end.add(Calendar.DAY_OF_MONTH, 1);
+
+        Period steppingPeriod = parsePeriod(steppingPeriodLength);
+        Period compositingPeriod = parsePeriod(compositingPeriodLength);
+
+        while (true) {
+
+            // determine start and end of period
+            final Date periodStart = cursor.getTime();
+            compositingPeriod.next(cursor);
+            cursor.add(Calendar.SECOND, -1);
+            final Date periodEnd = cursor.getTime();
+            // check whether end of period exceeds end of overall interval
+            if (cursor.after(end)) {
+                break;
+            }
+            if (accu.length() > 0) {
+                accu.append(",");
+            }
+            accu.append('[');
+            accu.append(dateStringOf(periodStart));
+            accu.append(":");
+            accu.append(dateStringOf(cursor.getTime()));
+            accu.append("]");
+            // proceed by one period length
+            cursor.setTime(periodStart);
+            steppingPeriod.next(cursor);
+        }
+        return accu.toString();
+    }
+
+    /**
+     * By default the stepping and compositing periods are given in full days.
+     * Additional the periods can be specified in weeks (using "w" as suffix),
+     * month (using "m" as suffix) or years (using "y" as suffix).
+     * <p>
+     * The weekly option extends 2 weeks of the year to being 8 days long to
+     * get a continuous stepping over multiple years.
+     * The week containing the 30 Dec is 8 days long to include the 31 Dec, too.
+     * In leap years the week containing the 28 Feb is 8 days long
+     * to include the 29 Feb, too.
+     * If you don't want this behaviour you can specify 7 days as period instead.
+     *
      */
     public static List<DateRange> fromMinMax(Date minDate, Date maxDate, String steppingPeriodLength, String compositingPeriodLength) {
         List<DateRange> dateRangeList = new ArrayList<>();
