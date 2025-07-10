@@ -18,7 +18,7 @@ import java.awt.geom.Rectangle2D;
  *
  * @author Marco Peters
  */
-public class AreaCalculator {
+public class AreaCalculator implements AreaCalculationStrategy{
 
     private final GeoCoding gc;
     private double earthRadius;
