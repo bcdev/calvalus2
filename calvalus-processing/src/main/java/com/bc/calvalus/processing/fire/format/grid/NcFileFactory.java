@@ -230,14 +230,14 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("license", getLicense()));
         ncFile.addGroupAttribute(null, new Attribute("platform", getPlatformGlobalAttribute()));
         ncFile.addGroupAttribute(null, new Attribute("sensor", getSensorGlobalAttribute()));
-        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25 degrees"));
+        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", getSpatialResolutionDegrees(numRowsGlobal) + " degrees"));
         if (addKeyVariables()) {
             ncFile.addGroupAttribute(null, new Attribute("key_variables", "burned_area"));
         }
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_units", "degrees_east"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", "0.25"));
-        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", getSpatialResolutionDegrees(numRowsGlobal)));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", getSpatialResolutionDegrees(numRowsGlobal)));
     }
 
     protected boolean addKeyVariables() {
@@ -286,6 +286,10 @@ public abstract class NcFileFactory {
 
     protected String getReference() {
         return "See www.esa-fire-cci.org";
+    }
+
+    protected String getSpatialResolutionDegrees(int numRowsGlobal) {
+        return Float.toString(180.0F / numRowsGlobal);
     }
 
     protected abstract String getSummary();
