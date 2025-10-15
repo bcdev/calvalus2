@@ -7,6 +7,7 @@ import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.utils.DateLineOps;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
+import org.apache.commons.lang.NotImplementedException;
 import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -139,6 +140,7 @@ public class L3MapperTest {
                                                                binManager,
                                                                binningConfig.getCompositingType(),
                                                                superSampling != null ? superSampling : 1,
+                                                               binningConfig.getMaxDistanceOnEarth(),
                                                                dataPeriod,
                                                                regionGeometry);
         MosaickingGrid planetaryGrid = (MosaickingGrid) binningContext.getPlanetaryGrid();
@@ -198,7 +200,12 @@ public class L3MapperTest {
         assertEquals("lon", 28.689203148615423, geoPos.lon, epsDegFor1m);
 
         MapProjection.SKIP_SANITY_CHECKS = true;
-        CrsGrid grid = new CrsGrid(60.0, "EPSG:32636");
+        //CrsGrid grid = new CrsGrid(60.0, "EPSG:32636");
+        if (true) {
+            throw new NotImplementedException("CrsGrid needs to be extended to support double as first parameter for metric distance");
+        }
+
+        CrsGrid grid = new CrsGrid((int) 60.0, "EPSG:32636");
         long binIndex = grid.getBinIndex(geoPos.lat, geoPos.lon);
         assertEquals("bin", 784687239, binIndex);
 

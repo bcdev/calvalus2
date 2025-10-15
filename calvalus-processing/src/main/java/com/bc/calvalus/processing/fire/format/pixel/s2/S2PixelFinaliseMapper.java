@@ -11,8 +11,8 @@ public class S2PixelFinaliseMapper extends PixelFinaliseMapper {
     @Override
     public Product collocateWithSource(Product lcProduct, Product source) {
         CollocateOp collocateOp = new CollocateOp();
-        collocateOp.setMasterProduct(source);
-        collocateOp.setSlaveProduct(lcProduct);
+        collocateOp.setReferenceProduct(source);
+        collocateOp.setSourceProduct(lcProduct);
         collocateOp.setResamplingType(ResamplingType.NEAREST_NEIGHBOUR);
 
         return collocateOp.getTargetProduct();

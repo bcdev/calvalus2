@@ -37,8 +37,8 @@ public class LcSubsetterMapper extends Mapper<NullWritable, NullWritable, NullWr
         Product s2Product = ProductIO.readProduct(localFile);
 
         CollocateOp collocateOp = new CollocateOp();
-        collocateOp.setMasterProduct(s2Product);
-        collocateOp.setSlaveProduct(lcProduct);
+        collocateOp.setReferenceProduct(s2Product);
+        collocateOp.setSourceProduct(lcProduct);
         collocateOp.setResamplingType(ResamplingType.NEAREST_NEIGHBOUR);
 
         Product targetProduct = collocateOp.getTargetProduct();

@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import eu.esa.snap.core.datamodel.group.BandGroup;
 import org.esa.snap.collocation.ResamplingType;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.FlagCoding;
@@ -578,7 +579,7 @@ public class CollocationOp extends Operator {
         targetProduct.setAutoGrouping(String.join(":", paths));
     }
 
-    private void collectAutoGrouping(List<String> paths, Product.AutoGrouping autoGrouping, String componentPattern) {
+    private void collectAutoGrouping(List<String> paths, BandGroup autoGrouping, String componentPattern) {
         if (autoGrouping == null) {
             return;
         }

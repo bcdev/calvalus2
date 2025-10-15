@@ -6,11 +6,14 @@ import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.task.MapContextImpl;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -227,18 +230,18 @@ public class HadoopLaunchHandler {
     }
 
     int retrieveNoOfRunningTasks() throws IOException, ParserConfigurationException, SAXException, XPathExpressionException {
-        final HttpClient httpClient = new HttpClient();
+        final HttpClient httpClient = HttpClients.createDefault();
         final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         final XPathFactory xPathfactory = XPathFactory.newInstance();
         String masterHost = configuration.get("yarn.resourcemanager.hostname", "cdt1");
         final String searchUrl = "http://" + masterHost + ":8088/ws/v1/cluster/metrics";
-        final GetMethod metricsRequest = new GetMethod(searchUrl);
-        metricsRequest.setRequestHeader("Accept", "application/xml");
-        final int statusCode = httpClient.executeMethod(metricsRequest);
-        if (statusCode > 299) {
-            throw new IOException("search error: " + metricsRequest.getResponseBodyAsString() + " query: " + metricsRequest.getQueryString());
+        final HttpGet metricsRequest = new HttpGet(searchUrl);
+        metricsRequest.addHeader("Accept", "application/xml");
+        final HttpResponse statusCode = httpClient.execute(metricsRequest);
+        if (statusCode.getStatusLine().getStatusCode() > 299) {
+            throw new IOException("search error: " + EntityUtils.toString(statusCode.getEntity()) + " query: " + metricsRequest.toString());
         }
-        InputStream response = metricsRequest.getResponseBodyAsStream();
+        InputStream response = statusCode.getEntity().getContent();
         DocumentBuilder builder = docFactory.newDocumentBuilder();
         Document doc = builder.parse(response);
         XPath xpath = xPathfactory.newXPath();

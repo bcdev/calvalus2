@@ -71,7 +71,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.jasig.cas.client.validation.AssertionImpl;
-import org.jdom.JDOMException;
+import org.jdom2.JDOMException;
 import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
 import org.jdom2.output.DOMOutputter;

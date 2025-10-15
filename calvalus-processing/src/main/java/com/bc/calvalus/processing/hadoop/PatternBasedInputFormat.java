@@ -16,8 +16,9 @@ import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -33,6 +34,8 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.esa.snap.core.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -262,7 +265,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 searchParameters.put("polygon", "POLYGON((-180 -90,-180 90,180 90,180 -90,-180 -90))");
             }
 
-            final HttpClient httpClient = new HttpClient();
+            final HttpClient httpClient = HttpClients.createDefault();
             final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             docFactory.setNamespaceAware(true);
             docFactory.setValidating(false);
@@ -288,9 +291,9 @@ public class PatternBasedInputFormat extends InputFormat {
                     if (offset == 0) {
                         LOG.info(searchUrl);
                     }
-                    final GetMethod catalogueRequest = new GetMethod(searchUrl);
+                    final HttpGet catalogueRequest = new HttpGet(searchUrl);
                     if (searchCredentials != null) {
-                        catalogueRequest.setRequestHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(searchCredentials.getBytes(StandardCharsets.UTF_8)));
+                        catalogueRequest.addHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString(searchCredentials.getBytes(StandardCharsets.UTF_8)));
                     }
                     final InputStream response = inquireCatalogue(httpClient, catalogueRequest);
                     ++numQueries;
@@ -434,13 +437,13 @@ public class PatternBasedInputFormat extends InputFormat {
                 replaceAll(">", "%3E");
     }
 
-    private InputStream inquireCatalogue(HttpClient httpClient, GetMethod getMethod) throws IOException {
-        int statusCode = httpClient.executeMethod(getMethod);
-        if (statusCode > 299) {
-            String message = getMethod.getResponseBodyAsString();
-            throw new IOException("search error: " + message + " query: " + getMethod.getQueryString());
+    private InputStream inquireCatalogue(HttpClient httpClient, HttpGet getMethod) throws IOException {
+        HttpResponse statusCode = httpClient.execute(getMethod);
+        if (statusCode.getStatusLine().getStatusCode() > 299) {
+            String message = EntityUtils.toString(statusCode.getEntity());
+            throw new IOException("search error: " + message + " query: " + getMethod.toString());
         }
-        return getMethod.getResponseBodyAsStream();
+        return statusCode.getEntity().getContent();
     }
 
     private NodeList parseCatalogueResponse(DocumentBuilderFactory factory, XPathFactory xPathfactory, InputStream response, String searchXPath) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {

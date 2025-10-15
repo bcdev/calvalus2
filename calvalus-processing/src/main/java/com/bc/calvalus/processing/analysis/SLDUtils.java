@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.analysis;
 
 import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.styling.SLDParser;
+import org.geotools.xml.styling.SLDParser;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyleFactory;
 

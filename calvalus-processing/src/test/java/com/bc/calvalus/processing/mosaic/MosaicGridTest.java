@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.mosaic;
 
 
 import com.bc.calvalus.processing.utils.GeometryUtils;
+import org.esa.snap.core.util.GeoUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -359,7 +360,7 @@ public class MosaicGridTest {
     @Ignore
     public void testGetBounds() throws IOException {
         Product product = ProductIO.readProduct("/home/boe/tmp/sen2agri/S2A_MSIL2A_20170216T170351_N0204_R069_T14QNF_20170216T171642.SAFE/S2A_OPER_SSC_L2VALD_14QNF____20170216.HDR");
-        final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
+        final GeneralPath[] paths = GeoUtils.createGeoBoundaryPaths(product);
         final org.locationtech.jts.geom.Polygon[] polygons = new org.locationtech.jts.geom.Polygon[paths.length];
 
         for (int i = 0; i < paths.length; i++) {

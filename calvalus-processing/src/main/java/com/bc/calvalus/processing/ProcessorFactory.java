@@ -165,7 +165,7 @@ public class ProcessorFactory {
             if (TemporalAggregator.class.isAssignableFrom(Class.forName(executable))) {
                 return ProcessorType.TEMPAGG;
             }
-        } catch (ClassNotFoundException _) {}
+        } catch (ClassNotFoundException _ex) {}
         return ProcessorType.OPERATOR;
     }
 

@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.utils.GeometryUtils;
+import org.esa.snap.core.util.GeoUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -32,7 +33,6 @@ import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.util.ProductUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -265,7 +265,7 @@ public class MosaicGrid {
 
     public Geometry computeProductGeometry(Product product) {
         try {
-            final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
+            final GeneralPath[] paths = GeoUtils.createGeoBoundaryPaths(product);
             final Polygon[] polygons = new Polygon[paths.length];
 
             for (int i = 0; i < paths.length; i++) {

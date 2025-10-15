@@ -4,22 +4,21 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.27-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
     <description>Calvalus root module</description>
 
     <properties>
-        <hadoop.version>3.2.1-BC</hadoop.version>
-        <calvalus.version>2.27-SNAPSHOT</calvalus.version>
+        <hadoop.version>3.4.1-BC</hadoop.version>
+        <calvalus.version>3.0-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>9.0.6.1cv</snap.version>
-        <s1tbx.version>9.0.4.1cv</s1tbx.version>
-        <s2tbx.version>9.0.2.2cv</s2tbx.version>
-        <s3tbx.version>9.0.4.2cv</s3tbx.version>
-        <seadas.reader.version>1.10.0</seadas.reader.version>
-        <probav.reader.version>2.3.0.2cv</probav.reader.version>
+        <snap.version>14.0.0-SNAPSHOT</snap.version>
+        <opttbx.version>14.0.0-SNAPSHOT</opttbx.version>
+        <microwavetbx.version>14.0.0-SNAPSHOT</microwavetbx.version>
+        <seadas.reader.version>1.10.2</seadas.reader.version>
+        <probav.reader.version>14.0.0-SNAPSHOT</probav.reader.version>
         <geo-inventory-version>0.6.2</geo-inventory-version>
         <geotools.version>20.0</geotools.version>
         <slf4j.version>1.6.6</slf4j.version>
@@ -27,6 +26,9 @@
         <ncsaj.version>2.7</ncsaj.version>
         <netcdf.version>5.3.1</netcdf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javahelp.version>2.0.05</javahelp.version>
+        <brandingToken>none</brandingToken>
+        <buildDate>today</buildDate>
     </properties>
 
     <modules>
@@ -46,19 +48,6 @@
 
     <repositories>
         <repository>
-            <id>bc-nexus-repo</id>
-            <name>Public Nexus Repository for BC</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
-        <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
             <url>https://nexus.snap-ci.ovh/repository/snap-maven-public/</url>
@@ -71,10 +60,10 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
+
         <repository>
             <id>osgeo</id>
-            <name>Open Source Geospatial Foundation Repository</name>
-            <url>http://download.osgeo.org/webdav/geotools/</url>
+            <url>https://repo.osgeo.org/repository/geotools-releases/</url>
         </repository>
     </repositories>
 
@@ -83,72 +72,392 @@
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
             <url>https://nexus.snap-ci.ovh/repository/snap-maven-public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
         </pluginRepository>
     </pluginRepositories>
 
     <distributionManagement>
         <repository>
-            <id>bc-nexus-repo</id>
-            <name>Public Nexus Repository for BC</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/releases/</url>
-            <uniqueVersion>true</uniqueVersion>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>https://nexus.snap-ci.ovh/repository/snap-maven-releases/</url>
+            <uniqueVersion>false</uniqueVersion>
         </repository>
         <snapshotRepository>
-            <id>bc-nexus-repo</id>
-            <name>Public Nexus Repository for BC</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/snapshots/</url>
+            <id>snap-repo-public</id>
+            <name>Public Maven Snapshot Repository for SNAP</name>
+            <url>https://nexus.snap-ci.ovh/repository/snap-maven-snapshot/</url>
             <uniqueVersion>false</uniqueVersion>
         </snapshotRepository>
     </distributionManagement>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>1.19</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.11.0</version>
+                    <configuration>
+                        <source>21</source>
+                        <target>21</target>
+                        <debug>true</debug>
+                        <encoding>UTF-8</encoding>
+                        <excludes>
+                            <exclude>.gitignore</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.7.1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.4.0</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>test-jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <executions>
+                        <execution>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <!-- Source JARs are used in IDEs only, we don't need resources -->
+                        <excludeResources>true</excludeResources>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                    <configuration>
+                        <!--
+                             If enabled some assertions in GeoTools fail.
+                             Disabling helps to have a successful build.
+                             But it might indicate some problem.
+                        -->
+                        <enableAssertions>false</enableAssertions>
+                        <!--<skip>true</skip>-->
+                        <printSummary>true</printSummary>
+                        <useFile>false</useFile>
+                        <includes>
+                            <include>**/*Test.java</include>
+                            <include>**/*Test*.java</include>
+                            <include>**/*TestCase.java</include>
+                        </includes>
+                        <systemPropertyVariables>
+                            <org.esa.snap.testdata.out>target/test-data</org.esa.snap.testdata.out>
+                            <jna.debug_load>true</jna.debug_load>
+                            <jna.debug_load.jna>true</jna.debug_load.jna>
+                        </systemPropertyVariables>
+                        <argLine>
+                            -Xmx1024M -Dfile.encoding=UTF-8
+                            --add-exports java.desktop/sun.awt=ALL-UNNAMED
+                            --add-exports java.desktop/sun.awt.image=ALL-UNNAMED
+                            --add-opens=java.desktop/sun.awt.shell=ALL-UNNAMED
+                            --add-opens java.base/java.net=ALL-UNNAMED
+                            --add-opens java.desktop/javax.swing=ALL-UNNAMED
+                            --add-opens java.base/java.security=ALL-UNNAMED
+                            --add-exports java.desktop/com.sun.imageio.plugins.jpeg=ALL-UNNAMED
+                        </argLine>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.3.1</version>
+                    <configuration>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>file-manifest</id>
+                            <phase>process-sources</phase>
+                            <goals>
+                                <goal>copy-resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/nbm</outputDirectory>
+                                <resources>
+                                    <resource>
+                                        <directory>src/main/nbm</directory>
+                                        <filtering>true</filtering>
+                                        <includes>
+                                            <include>manifest.mf</include>
+                                        </includes>
+                                    </resource>
+                                </resources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.5.0</version>
+                    <configuration>
+                        <subpackages>org.esa.snap.core:com.bc.ceres</subpackages>
+                        <!-- Not possible to exclude packages; it is not considered by the plugin (as of v2.10.3, 18.11.2015) -->
+                        <!-- Maybe this works with v3.5.0 -->
+                        <excludePackageNames>org.esa.snap.core.gpf.internal:*.internal:*.impl:*.experimental
+                        </excludePackageNames>
+                        <!--                        <additionalparam>-exclude-->
+                        <!--                            com.bc.ceres.core.runtime:com.bc.ceres.swing:org.esa.snap.core.param.validators:org.esa.snap.core.param.editors:org.esa.snap.core.param:org.esa.snap.core.draw:org.esa.snap.core.dataop.projection:com.bc.ceres.binio.internal:com.bc.ceres.compiler:com.bc.ceres.swing.binding.internal:com.bc.ceres.core.runtime.internal:com.bc.ceres.jai.js:com.bc.ceres.launcher:com.bc.ceres.launcher.internal:com.bc.ceres.metadata:com.bc.ceres.nbmgen:com.bc.ceres.resource:com.bc.ceres.standalone:org.esa.snap.core.dataop.downloadable:org.esa.snap.core.dataop.maptransf.geotools:org.esa.snap.core.dataop.maptransf:org.esa.snap.core.gpf.doclet:org.esa.snap.core.gpf.internal:org.esa.snap.core.gpf.experimental:org.esa.snap.core.gpf.operators.tooladapter:org.esa.snap.core.jexp.impl-->
+                        <!--                        </additionalparam>-->
+                        <maxmemory>512M</maxmemory>
+                        <doctitle>SNAP Engine API</doctitle>
+                        <windowtitle>SNAP Engine API</windowtitle>
+                        <quiet>true</quiet> <!-- show only warnings and errors -->
+                        <failOnError>false</failOnError> <!-- Actually we should fix the errors -->
+                        <author>false</author>
+                        <detectJavaApiLink>true</detectJavaApiLink>
+                        <detectLinks>true</detectLinks>
+                        <groups>
+                            <group>
+                                <title>Most important API</title>
+                                <packages>
+                                    org.esa.snap.core.datamodel:org.esa.snap.core.dataio:org.esa.snap.core.gpf:org.esa.snap.core.gpf.pointop:org.esa.snap.core.gpf.annotations
+                                </packages>
+                            </group>
+                            <group>
+                                <title>Frequently used API</title>
+                                <packages>
+                                    org.esa.snap.core.util:org.esa.snap.core.image:org.esa.snap.core.layer:org.esa.snap.core.jexp:org.esa.snap.python:org.esa.snap.python.gpf
+                                </packages>
+                            </group>
+                            <group>
+                                <title>Low-Level API</title>
+                                <packages>com.bc.ceres*:com.bc.ceres.*</packages>
+                            </group>
+                        </groups>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-report-plugin</artifactId>
+                    <version>3.0.0-M3</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.3.2</version>
+                </plugin>
+
+                <plugin>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.6.1</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.13</version>
+                    <executions>
+                        <execution>
+                            <id>default-deploy</id>
+                            <phase>deploy</phase>
+                            <goals>
+                                <goal>deploy</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <serverId>snap-repo-public</serverId>
+                        <nexusUrl>https://nexus.snap-ci.ovh/repository/snap-maven-public/</nexusUrl>
+                        <skipStaging>true</skipStaging>
+                    </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.netbeans.utilities</groupId>
+                    <artifactId>nbm-maven-plugin</artifactId>
+                    <version>14.0</version>
+                    <extensions>true</extensions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>javax.help</groupId>
+                            <artifactId>javahelp</artifactId>
+                            <version>${javahelp.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <!-- necessary because of issue described here:
+                        http://mail-archives.apache.org/mod_mbox/netbeans-dev/201906.mbox/%3cCAArD4mAMKOXQtxCwcMdB2tVEXCNirEfKT4+c=0-rUm6YDg8EHg@mail.gmail.com%3e
+                        -->
+                        <verifyRuntime>false</verifyRuntime>
+                        <homePageUrl>https://sentinel.esa.int/web/sentinel/toolboxes</homePageUrl>
+                        <moduleType>normal</moduleType>
+                        <licenseName>GPL 3</licenseName>
+                        <licenseFile>${project.basedir}/../LICENSE.txt</licenseFile>
+                        <cluster>${brandingToken}</cluster>
+                        <defaultCluster>${brandingToken}</defaultCluster>
+                        <brandingToken>${brandingToken}</brandingToken>
+                        <requiresRestart>true</requiresRestart>
+                        <keystore>${project.basedir}/../keystore/snap.ks</keystore>
+                        <keystorealias>snap</keystorealias>
+                        <keystorepassword>snap-123</keystorepassword>
+                        <sourceManifestFile>target/nbm/manifest.mf</sourceManifestFile>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.5.0</version>
+                    <executions>
+                        <execution>
+                            <id>create-nbmSpecVersion</id>
+                            <goals>
+                                <goal>regex-property</goal>
+                            </goals>
+                            <configuration>
+                                <name>snap.nbmSpecVersion</name>
+                                <value>${project.version}</value>
+                                <regex>(-SNAPSHOT)|(-rc[0-9]+)</regex>
+                                <replacement>.0</replacement>
+                                <failIfNoMatch>false</failIfNoMatch>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>create-nbmImplVersion</id>
+                            <goals>
+                                <goal>regex-property</goal>
+                            </goals>
+                            <configuration>
+                                <name>snap.nbmImplVersion</name>
+                                <value>${project.version}</value>
+                                <regex>(-SNAPSHOT)|(-rc[0-9]+)</regex>
+                                <replacement>.${buildDate}</replacement>
+                                <failIfNoMatch>false</failIfNoMatch>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>parse-version</id>
+                            <goals>
+                                <goal>parse-version</goal>
+                            </goals>
+                            <configuration>
+                                <propertyPrefix>snap</propertyPrefix>
+                                <versionString>${snap.version}</versionString>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>build-date</id>
+                            <goals>
+                                <goal>timestamp-property</goal>
+                            </goals>
+                            <configuration>
+                                <name>snap.buildDate</name>
+                                <pattern>yyyy-MM-dd</pattern>
+                                <locale>en,UK</locale>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
         <plugins>
+            <!--
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
             </plugin>
+
             <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.16</version>
-                <configuration>
-                    <systemProperties>
-                        <!--
-                             This property is set in your <user>/.m2/settings.xml file.
-                             Set to 'true', if you have a Hadoop cluster up and running.
-                         -->
-                        <property>
-                            <name>calvalus.testrunner.hadoopAvailable</name>
-                            <value>${calvalus.testrunner.hadoopAvailable}</value>
-                        </property>
-                    </systemProperties>
-                </configuration>
+                <artifactId>maven-source-plugin</artifactId>
             </plugin>
 
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
-                    <links>
-                        <link>http://download.oracle.com/javase/8/docs/api/</link>
-                        <link>http://hadoop.apache.org/docs/r2.6.0/api/</link>
-                        <link>http://step.esa.int/docs/v2.0/apidoc/engine/</link>
-                        <!-- check: really need this? -->
-                        <link>http://google-web-toolkit.googlecode.com/svn/javadoc/1.5/</link>
-                    </links>
-                    <linksource>true</linksource>
-                    <detectLinks>true</detectLinks>
-                    <detectJavaApiLink>true</detectJavaApiLink>
-                    <aggregate>true</aggregate>
-                    <subpackages>com.bc.calvalus</subpackages>
-                    <excludePackageNames>*.internal</excludePackageNames>
-                    <maxmemory>512M</maxmemory>
-                    <quiet>false</quiet>
+                    <filesets>
+                        <fileset>
+                            <directory>modules</directory>
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                        </fileset>
+                    </filesets>
                 </configuration>
+            </plugin>
+            -->
+
+            <plugin>
+                <groupId>org.apache.netbeans.utilities</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <version>14.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.2.5,)</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>21</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
 
@@ -161,15 +470,6 @@
         </extensions>
 
     </build>
-
-    <reporting>
-        <plugins>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-            </plugin>
-        </plugins>
-    </reporting>
 
     <dependencyManagement>
         <dependencies>
@@ -257,6 +557,12 @@
                 </exclusions>
             </dependency>
 
+            <dependency>
+                <groupId>eu.esa.snap</groupId>
+                <artifactId>esa-snappy</artifactId>
+                <version>${snap.version}</version>
+            </dependency>
+
             <!--  SNAP -->
 
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-core</artifactId><version>${snap.version}</version></dependency>
@@ -282,7 +588,7 @@
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-hdf5-writer</artifactId><version>${snap.version}</version></dependency>
             <!-- <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jython</artifactId><version>${snap.version}</version></dependency> -->
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-land-cover</artifactId><version>${snap.version}</version></dependency>
-            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-ndvi</artifactId><version>${snap.version}</version></dependency>
+            <!-- <dependency><groupId>org.esa.snap</groupId><artifactId>snap-ndvi</artifactId><version>${snap.version}</version></dependency> -->
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-netcdf</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pconvert</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-pgx-reader</artifactId><version>${snap.version}</version></dependency>
@@ -293,7 +599,7 @@
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-smart-configurator</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-statistics</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-temporal-percentile</artifactId><version>${snap.version}</version></dependency>
-            <dependency><groupId>org.esa.snap</groupId><artifactId>snap-unmix</artifactId><version>${snap.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-unmix</artifactId><version>${opttbx.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-watermask</artifactId><version>${snap.version}</version></dependency>
             <!--<dependency><groupId>org.esa.snap</groupId><artifactId>blue-marble-worldmap</artifactId></dependency>-->
             <!--<dependency><groupId>org.esa.snap</groupId><artifactId>globcover-worldmap</artifactId></dependency>-->
@@ -305,44 +611,44 @@
             <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId><version>${ncsaj.version}</version></dependency>
 
             <dependency><groupId>edu.ucar</groupId><artifactId>netcdfAll</artifactId><version>${netcdf.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-alos-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-atsr-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-avhrr-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <!-- <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId><version>${s3tbx.version}</version></dependency> -->
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-landsat-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-merisl3-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-modis-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-rad2refl</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-sentinel3-reader</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-slstr-regrid</artifactId><version>${s3tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-spot-vgt-reader</artifactId><version>${s3tbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-alos-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-atsr-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-avhrr-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <!-- <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-chris-reader</artifactId><version>${opttbx.version}</version></dependency> -->
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-landsat-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-merisl3-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-modis-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-rad2refl</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-sentinel3-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-slstr-regrid</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-spot-vgt-reader</artifactId><version>${opttbx.version}</version></dependency>
             <dependency><groupId>org.esa.snap.seadas</groupId><artifactId>seadas-reader</artifactId><version>${seadas.reader.version}</version></dependency>
             <dependency><groupId>org.vito.probavbox</groupId><artifactId>probavbox-reader</artifactId><version>${probav.reader.version}</version></dependency>
 
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-cache</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-reader</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-s2msi-resampler</artifactId><version>${s2tbx.version}</version></dependency>
+            <!-- <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-cache</artifactId><version>${opttbx.version}</version></dependency> -->
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-s2msi-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-s2msi-resampler</artifactId><version>${opttbx.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>lib-openjpeg</artifactId><version>${snap.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>snap-jp2-reader</artifactId><version>${snap.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-jp2-writer</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-commons</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot-reader</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-spot6-reader</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-rapideye-reader</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-deimos-reader</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-sta-adapters-help</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-radiometric-indices</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-reflectance-to-radiance</artifactId><version>${s2tbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-jp2-writer</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-commons</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-spot-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-spot6-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-rapideye-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-deimos-reader</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-sta-adapters-help</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-radiometric-indices</artifactId><version>${opttbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-reflectance-to-radiance</artifactId><version>${opttbx.version}</version></dependency>
             <dependency><groupId>org.esa.snap</groupId><artifactId>lib-gdal</artifactId><version>${snap.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-gdal-reader</artifactId><version>${s2tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s2tbx</groupId><artifactId>s2tbx-grm</artifactId><version>${s2tbx.version}</version></dependency>
+            <!-- <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-gdal-reader</artifactId><version>${opttbx.version}</version></dependency> -->
+            <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-grm</artifactId><version>${opttbx.version}</version></dependency>
 
-            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-commons</artifactId><version>${s1tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-io</artifactId><version>${s1tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1</artifactId><version>${s1tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1-ui</artifactId><version>${s1tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-utilities</artifactId><version>${s1tbx.version}</version></dependency>
-            <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-rcp</artifactId><version>${s1tbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.microwavetbx</groupId><artifactId>sar-commons</artifactId><version>${microwavetbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.microwavetbx</groupId><artifactId>sar-io</artifactId><version>${microwavetbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.microwavetbx</groupId><artifactId>sar-op-sentinel1</artifactId><version>${microwavetbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.microwavetbx</groupId><artifactId>sar-op-sentinel1-ui</artifactId><version>${microwavetbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.microwavetbx</groupId><artifactId>sar-op-utilities</artifactId><version>${microwavetbx.version}</version></dependency>
+            <dependency><groupId>eu.esa.microwavetbx</groupId><artifactId>microwavetbx-rcp</artifactId><version>${microwavetbx.version}</version></dependency>
 
             <dependency>
                 <groupId>org.xeustechnologies</groupId>
@@ -517,6 +823,22 @@
 
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-mapreduce-client-core</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-log4j12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jersey</groupId>
+                        <artifactId>jersey-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-aws</artifactId>
                 <version>${hadoop.version}</version>
             </dependency>
@@ -573,10 +895,17 @@
                 <version>6.1.14</version>
                 <scope>test</scope>
             </dependency>
+            <!--
             <dependency>
                 <groupId>commons-httpclient</groupId>
                 <artifactId>commons-httpclient</artifactId>
                 <version>3.1</version>
+            </dependency>
+            -->
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.5.14</version>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
@@ -618,6 +947,12 @@
                 <groupId>commons-cli</groupId>
                 <artifactId>commons-cli</artifactId>
                 <version>1.3.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jdom</groupId>
+                <artifactId>jdom2</artifactId>
+                <version>2.0.6.1</version>
             </dependency>
 
             <!--  JFreeChart -->

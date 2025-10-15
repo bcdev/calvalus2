@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.27-SNAPSHOT</version>
+        <version>3.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-portal</artifactId>
@@ -17,17 +17,36 @@
     <description>The frontend for Calvalus.</description>
 
     <properties>
-        <gwt.version>2.8.0</gwt.version>
+        <gwt.version>2.12.2</gwt.version>
         <maven.build.timestamp.format>dd-MM-yyyy</maven.build.timestamp.format>
         <timestamp>${maven.build.timestamp}</timestamp>
     </properties>
 
     <dependencies>
         <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-servlet</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>${gwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-dev</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+        <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>
             <version>${gwt.version}</version>
-            <scope>runtime</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.gwt</groupId>
@@ -41,11 +60,13 @@
             <version>${gwt.version}</version>
             <scope>provided</scope>
         </dependency>
+        -->
         <!-- GWT Maps API V3 -->
         <dependency>
             <groupId>com.github.branflake2267</groupId>
             <artifactId>gwt-maps-api</artifactId>
-            <version>3.10.0-alpha-2</version>
+            <!-- <version>3.10.0-alpha-2</version> -->
+            <version>3.10.0-alpha-7</version>
         </dependency>
         <!-- Other GWT Maps Dependency from Google -->
         <dependency>

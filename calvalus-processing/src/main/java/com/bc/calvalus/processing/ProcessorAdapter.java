@@ -450,7 +450,7 @@ public abstract class ProcessorAdapter {
             };
             try {
                 inputRectangle = calculator.computeRect(regionBufferPixels);
-            } catch (IOException _) {}
+            } catch (IOException _ex) {}
             LOG.info("getInputRectangle: calculated inputRectangle = " + inputRectangle);
         }
         return inputRectangle;

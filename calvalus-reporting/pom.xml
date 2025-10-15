@@ -5,7 +5,7 @@
     <parent>
         <artifactId>calvalus</artifactId>
         <groupId>com.bc.calvalus</groupId>
-        <version>2.27-SNAPSHOT</version>
+        <version>3.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,15 +15,15 @@
     <packaging>war</packaging>
 
     <properties>
-        <gwtVersion>2.8.0</gwtVersion>
+        <gwt.version>2.12.2</gwt.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.google.gwt</groupId>
+                <groupId>org.gwtproject</groupId>
                 <artifactId>gwt</artifactId>
-                <version>${gwtVersion}</version>
+                <version>${gwt.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -82,6 +82,26 @@
         </dependency>
 
         <!-- GWT -->
+
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-servlet</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-user</artifactId>
+            <version>${gwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.gwtproject</groupId>
+            <artifactId>gwt-dev</artifactId>
+            <version>${gwt.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>
@@ -97,7 +117,7 @@
             <artifactId>gwt-dev</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        -->
         <!-- Apache commons libraries -->
         <dependency>
             <groupId>commons-io</groupId>

@@ -27,13 +27,14 @@ import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.dataio.dimap.DimapProductHelpers;
+import org.esa.snap.core.dataio.geocoding.GeoCodingFactory;
 import org.esa.snap.core.datamodel.*;
 import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.image.ResolutionLevel;
 import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.core.util.ImageUtils;
 import org.esa.snap.core.util.math.MathUtils;
-import org.jdom.Document;
+import org.jdom2.Document;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
@@ -146,7 +147,7 @@ public class StreamingProductReader extends AbstractProductReader {
         }
     }
 
-    private void initGeoCodings(Document dom, Product product) {
+    private void initGeoCodings(Document dom, Product product) throws IOException {
         final GeoCoding[] geoCodings = DimapProductHelpers.createGeoCoding(dom, product);
         if (geoCodings != null) {
             if (geoCodings.length == 1) {
@@ -160,7 +161,7 @@ public class StreamingProductReader extends AbstractProductReader {
             final Band lonBand = product.getBand("longitude");
             final Band latBand = product.getBand("latitude");
             if (latBand != null && lonBand != null) {
-                product.setSceneGeoCoding(GeoCodingFactory.createPixelGeoCoding(latBand, lonBand, null, 6));
+                product.setSceneGeoCoding(GeoCodingFactory.createPixelGeoCoding(latBand, lonBand));
             }
         }
     }

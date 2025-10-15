@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-snap</artifactId>
-    <version>2.27-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus Distribution SNAP</name>
@@ -14,14 +14,13 @@
 
     <properties>
         <snap.bundle.version>9.1cv</snap.bundle.version>
-        <snap.version>9.0.6.1cv</snap.version>
-        <s1tbx.version>9.0.4.1cv</s1tbx.version>
-        <s2tbx.version>9.0.2.2cv</s2tbx.version>
-        <s3tbx.version>9.0.4.2cv</s3tbx.version>
+        <snap.version>14.0.0-SNAPSHOT</snap.version>
+        <opttbx.version>14.0.0-SNAPSHOT</opttbx.version>
+        <microwavetbx.version>14.0.0-SNAPSHOT</microwavetbx.version>
+        <seadas.reader.version>1.10.2</seadas.reader.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
-        <seadas.reader.version>1.10.0</seadas.reader.version>
-        <probav.reader.version>2.3.0.2cv</probav.reader.version>
+        <probav.reader.version>14.0.0-SNAPSHOT</probav.reader.version>
     </properties>
 
     <dependencies>
@@ -141,11 +140,13 @@
             <artifactId>snap-land-cover</artifactId>
             <version>${snap.version}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-ndvi</artifactId>
             <version>${snap.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-netcdf</artifactId>
@@ -167,8 +168,8 @@
             <version>${snap.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-python</artifactId>
+            <groupId>eu.esa.snap</groupId>
+            <artifactId>esa-snappy</artifactId>
             <version>${snap.version}</version>
         </dependency>
         <dependency>
@@ -197,9 +198,9 @@
             <version>${snap.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-unmix</artifactId>
-            <version>${snap.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-unmix</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
@@ -235,77 +236,80 @@
         </dependency>
 
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-alos-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-alos-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-atsr-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-atsr-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-avhrr-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-avhrr-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
-        <!--        <dependency><groupId>org.esa.s3tbx</groupId><artifactId>s3tbx-chris-reader</artifactId></dependency>-->
+        <!--        <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-chris-reader</artifactId></dependency>-->
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-landsat-reader</artifactId>
-            <version>${s3tbx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-merisl3-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-landsat-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-modis-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-merisl3-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-rad2refl</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-modis-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-sentinel3-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-rad2refl</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-slstr-regrid</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-sentinel3-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s3tbx</groupId>
-            <artifactId>s3tbx-spot-vgt-reader</artifactId>
-            <version>${s3tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-slstr-regrid</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.snap.seadas</groupId>
-            <artifactId>seadas-reader</artifactId>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-spot-vgt-reader</artifactId>
+            <version>${opttbx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-seadas-reader</artifactId>
             <version>${seadas.reader.version}</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.vito.probavbox</groupId>
             <artifactId>probavbox-reader</artifactId>
             <version>${probav.reader.version}</version>
         </dependency>
-
+        -->
+        <!--
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-cache</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-cache</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
+        -->
         <!-- must be separate jars to use context class loader
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-s2msi-reader</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-s2msi-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
@@ -319,9 +323,9 @@
             <version>2.6</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-s2msi-resampler</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-s2msi-resampler</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
@@ -329,95 +333,92 @@
             <version>${snap.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-jp2-writer</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-jp2-writer</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-commons</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-commons</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-spot-reader</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-spot-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-spot6-reader</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-spot6-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-rapideye-reader</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-rapideye-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-deimos-reader</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-deimos-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-sta-adapters-help</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-sta-adapters-help</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-radiometric-indices</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-radiometric-indices</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-reflectance-to-radiance</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-reflectance-to-radiance</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>lib-gdal</artifactId>
             <version>${snap.version}</version>
         </dependency>
+        <!--
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-gdal-reader</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-gdal-reader</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
+        -->
         <dependency>
-            <groupId>org.esa.s2tbx</groupId>
-            <artifactId>s2tbx-grm</artifactId>
-            <version>${s2tbx.version}</version>
+            <groupId>eu.esa.opt</groupId>
+            <artifactId>opttbx-grm</artifactId>
+            <version>${opttbx.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.esa.s1tbx</groupId>
-            <artifactId>s1tbx-commons</artifactId>
-            <version>${s1tbx.version}</version>
+            <groupId>eu.esa.microwavetbx</groupId>
+            <artifactId>sar-commons</artifactId>
+            <version>${microwavetbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s1tbx</groupId>
-            <artifactId>s1tbx-io</artifactId>
-            <version>${s1tbx.version}</version>
+            <groupId>eu.esa.microwavetbx</groupId>
+            <artifactId>sar-io</artifactId>
+            <version>${microwavetbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s1tbx</groupId>
-            <artifactId>s1tbx-op-sentinel1</artifactId>
-            <version>${s1tbx.version}</version>
+            <groupId>eu.esa.microwavetbx</groupId>
+            <artifactId>sar-op-sentinel1</artifactId>
+            <version>${microwavetbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s1tbx</groupId>
-            <artifactId>s1tbx-op-sentinel1-ui</artifactId>
-            <version>${s1tbx.version}</version>
+            <groupId>eu.esa.microwavetbx</groupId>
+            <artifactId>sar-op-utilities</artifactId>
+            <version>${microwavetbx.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.s1tbx</groupId>
-            <artifactId>s1tbx-op-utilities</artifactId>
-            <version>${s1tbx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.s1tbx</groupId>
-            <artifactId>s1tbx-rcp</artifactId>
-            <version>${s1tbx.version}</version>
+            <groupId>eu.esa.microwavetbx</groupId>
+            <artifactId>microwavetbx-rcp</artifactId>
+            <version>${microwavetbx.version}</version>
         </dependency>
 
         <dependency>

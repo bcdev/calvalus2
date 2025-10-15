@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.snap.core.util.GeoUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -186,7 +187,7 @@ public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Te
             final boolean usePixelCenter = true;
             final Rectangle region = new Rectangle(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
             final int step = Math.min(region.width, region.height) / 8;
-            final GeoPos[] geoPoints = ProductUtils.createGeoBoundary(product, region, step, usePixelCenter);
+            final GeoPos[] geoPoints = GeoUtils.createGeoBoundary(product, region, step, usePixelCenter);
 
             final Coordinate[] coordinates = new Coordinate[geoPoints.length + 1];
             for (int i = 0; i < geoPoints.length; i++) {

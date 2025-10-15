@@ -152,7 +152,7 @@ public class CalvalusTileComputationEventLogger extends TileComputationObserver 
                 System.out.print("(" + name + ")  ");
                 System.out.println();
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException _ex) {
             System.out.println("*** Cannot print tile cache content due to concurrent modifiations");
         }
     }

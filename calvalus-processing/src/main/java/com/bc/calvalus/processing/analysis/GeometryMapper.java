@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import org.esa.snap.core.util.GeoUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -62,7 +63,7 @@ public class GeometryMapper extends Mapper<NullWritable, NullWritable, Text, Tex
 
     public Geometry computeProductGeometry(Product product) {
         try {
-            final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
+            final GeneralPath[] paths = GeoUtils.createGeoBoundaryPaths(product);
             final Polygon[] polygons = new Polygon[paths.length];
 
             GeometryFactory geometryFactory = new GeometryFactory();

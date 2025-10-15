@@ -46,8 +46,8 @@ public class AvhrrGridInputFormat extends InputFormat {
         subsetOp.setBandNames(new String[]{"lccs_class"});
 
         CollocateOp collocateOp = new CollocateOp();
-        collocateOp.setMasterProduct(reprojectionOp.getTargetProduct());
-        collocateOp.setSlaveProduct(subsetOp.getTargetProduct());
+        collocateOp.setReferenceProduct(reprojectionOp.getTargetProduct());
+        collocateOp.setSourceProduct(subsetOp.getTargetProduct());
         collocateOp.setResamplingType(ResamplingType.NEAREST_NEIGHBOUR);
 
         ProductIO.writeProduct(collocateOp.getTargetProduct(), "c:\\ssd\\ltdr\\lc.nc", "NetCDF4-CF");

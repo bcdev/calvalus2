@@ -49,7 +49,7 @@ public class CalvalusHadoopConnection {
     public JobStatus getJobStatus(JobID id) throws IOException {
         try {
             return jobClient.getJobStatus(id);
-        } catch (NullPointerException _) {  // risky, shall handle case where request got lost
+        } catch (NullPointerException _ex) {  // risky, shall handle case where request got lost
             return null;
         }
     }

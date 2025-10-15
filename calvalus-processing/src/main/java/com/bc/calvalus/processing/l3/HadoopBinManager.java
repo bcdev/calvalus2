@@ -90,6 +90,7 @@ public class HadoopBinManager extends BinManager {
                                       binManager,
                                       binningConfig.getCompositingType(),
                                       superSampling != null ? superSampling : 1,
+                                      binningConfig.getMaxDistanceOnEarth(),
                                       dataPeriod,
                                       regionGeometry);
     }
