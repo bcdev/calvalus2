@@ -88,47 +88,47 @@
                 <include>org.esa.snap:snap-sta</include>
 
 
-                <include>org.esa.s3tbx:s3tbx-alos-reader</include>
-                <include>org.esa.s3tbx:s3tbx-atsr-reader</include>
-                <include>org.esa.s3tbx:s3tbx-avhrr-reader</include>
-                <!-- include>org.esa.s3tbx:s3tbx-chris-reader</include -->
-                <include>org.esa.s3tbx:s3tbx-landsat-reader</include>
-                <include>org.esa.s3tbx:s3tbx-merisl3-reader</include>
-                <include>org.esa.s3tbx:s3tbx-modis-reader</include>
-                <include>org.esa.s3tbx:s3tbx-rad2refl</include>
-                <include>org.esa.s3tbx:s3tbx-sentinel3-reader</include>
-                <include>org.esa.s3tbx:s3tbx-slstr-regrid</include>
-                <include>org.esa.s3tbx:s3tbx-spot-vgt-reader</include>
+                <include>eu.esa.opt:opttbx-alos-reader</include>
+                <include>eu.esa.opt:opttbx-atsr-reader</include>
+                <include>eu.esa.opt:opttbx-avhrr-reader</include>
+                <!-- include>eu.esa.opt:opttbx-chris-reader</include -->
+                <include>eu.esa.opt:opttbx-landsat-reader</include>
+                <include>eu.esa.opt:opttbx-merisl3-reader</include>
+                <include>eu.esa.opt:opttbx-modis-reader</include>
+                <include>eu.esa.opt:opttbx-rad2refl</include>
+                <include>eu.esa.opt:opttbx-sentinel3-reader</include>
+                <include>eu.esa.opt:opttbx-slstr-regrid</include>
+                <include>eu.esa.opt:opttbx-spot-vgt-reader</include>
                 <include>org.esa.snap.seadas:seadas-reader</include>
-                <include>org.vito.probavbox:probavbox-reader</include>
+                <!-- <include>org.vito.probavbox:probavbox-reader</include> -->
 
-                <include>org.esa.s2tbx:s2tbx-cache</include>
+                <include>eu.esa.opt:opttbx-cache</include>
                 <!-- include>org.esa.s2tbx:s2tbx-s2msi-reader</include -->
                 <!-- must be separate jar with manifest org.esa.snap:lib-gdal -->
-                <include>org.esa.s2tbx:s2tbx-s2msi-resampler</include>
+                <include>eu.esa.opt:opttbx-s2msi-resampler</include>
                 <include>org.esa.snap:lib-openjpeg</include>
                 <include>org.esa.s2tbx:snap-jp2-reader</include>
-                <include>org.esa.s2tbx:s2tbx-jp2-writer</include>
-                <include>org.esa.s2tbx:s2tbx-commons</include>
-                <include>org.esa.s2tbx:s2tbx-spot-reader</include>
-                <include>org.esa.s2tbx:s2tbx-spot6-reader</include>
-                <include>org.esa.s2tbx:s2tbx-deimos-reader</include>
-                <include>org.esa.s2tbx:s2tbx-sta-adapters-help</include>
-                <include>org.esa.s2tbx:s2tbx-radiometric-indices</include>
-                <include>org.esa.s2tbx:s2tbx-reflectance-to-radiance</include>
+                <include>eu.esa.opt:opttbx-jp2-writer</include>
+                <include>eu.esa.opt:opttbx-commons</include>
+                <include>eu.esa.opt:opttbx-spot-reader</include>
+                <include>eu.esa.opt:opttbx-spot6-reader</include>
+                <include>eu.esa.opt:opttbx-deimos-reader</include>
+                <include>eu.esa.opt:opttbx-sta-adapters-help</include>
+                <include>eu.esa.opt:opttbx-radiometric-indices</include>
+                <include>eu.esa.opt:opttbx-reflectance-to-radiance</include>
                 <!-- <include>org.esa.s2tbx:s2tbx-rapideye-reader</include> -->
                 <!-- must be loaded with context class loader from separate jar -->
                 <!-- include>org.esa.snap:lib-gdal</include -->
                 <!-- include>org.esa.s2tbx:s2tbx-gdal-reader</include -->
-                <include>org.esa.s2tbx:s2tbx-grm</include>
+                <include>eu.esa.opt:opttbx-grm</include>
                 <include>commons-lang:commons-lang</include>
 
-                <include>org.esa.s1tbx:s1tbx-commons</include>
-                <include>org.esa.s1tbx:s1tbx-io</include>
-                <include>org.esa.s1tbx:s1tbx-op-sentinel1</include>
-                <include>org.esa.s1tbx:s1tbx-op-sentinel1-ui</include>
-                <include>org.esa.s1tbx:s1tbx-op-utilities</include>
-                <include>org.esa.s1tbx:s1tbx-rcp</include>
+                <include>eu.esa.microwavetbx:sar-commons</include>
+                <include>eu.esa.microwavetbx:sar-io</include>
+                <include>eu.esa.microwavetbx:sar-op-sentinel1</include>
+                <include>eu.esa.microwavetbx:sar-op-sentinel1-ui</include>
+                <include>eu.esa.microwavetbx:sar-op-utilities</include>
+                <include>eu.esa.microwavetbx:sar-rcp</include>
 
                 <include>org.xeustechnologies:jtar</include>
                 <include>com.thoughtworks.xstream:xstream</include>

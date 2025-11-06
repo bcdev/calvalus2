@@ -420,7 +420,7 @@
             <artifactId>microwavetbx-rcp</artifactId>
             <version>${microwavetbx.version}</version>
         </dependency>
-
+        
         <dependency>
             <groupId>org.xeustechnologies</groupId>
             <artifactId>jtar</artifactId>
@@ -508,6 +508,11 @@
                         <artifactId>jhdfobj</artifactId>
                         <version>${ncsaj.version}</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.codehaus.plexus</groupId>
+                        <artifactId>plexus-utils</artifactId>
+                        <version>4.0.2</version>
+                    </dependency>
                     <!--
                     <dependency>
                         <groupId>ncsa.hdf</groupId>
@@ -519,8 +524,9 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.7.1</version>
                 <executions>
                     <execution>
                         <id>snap-bundle</id>
