@@ -44,6 +44,7 @@
                 <include>org.geotools:gt-render</include>
                 -->
 
+                <include>com.bc.ceres-jai</include>
                 <include>org.esa.snap:ceres-metadata</include>
 
                 <!-- SNAP System Modules -->
