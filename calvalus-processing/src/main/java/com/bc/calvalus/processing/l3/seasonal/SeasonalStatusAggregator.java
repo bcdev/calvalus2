@@ -89,6 +89,7 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
     Date startDate;
     Date stopDate;
     Product primajorityStatusProduct;
+    private boolean withMajorityStatus;
 
     public void initialize(Configuration conf, Product firstInput) {
         sceneRasterHeight = firstInput.getSceneRasterHeight();
@@ -117,6 +118,7 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
             throw new IllegalArgumentException("Cannot parse value of calvalus.compositing.srthreshold '" +
                                                        System.getProperty("calvalus.compositing.srthreshold") + "' as a number: " + e);
         }
+        withMajorityStatus = Boolean.getBoolean("calvalus.compositing.withmajoritystatus");
 
         final String[] bandNames = isSyn ? SYN_BAND_NAMES : isOlci ? OLCI_BAND_NAMES : isMsi ? MSI_BAND_NAMES : null;
         statusBandName = bandNames[0];
@@ -233,7 +235,7 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
         for (int row = 0; row < sceneRasterHeight; ++row) {
             for (int col = 0; col < sceneRasterWidth; ++col) {
                 int i = row * sceneRasterWidth + col;
-                byte state = majorityPriorityStatusOf(statusCount, row, col);
+                byte state = withMajorityStatus ? majorityPriorityStatusOf(statusCount, row, col) : priorityStatusOf(statusCount, row, col);
                 int index = index(state);
                 if (index >= 0) {
                     status[i] = state;
@@ -335,6 +337,18 @@ public class SeasonalStatusAggregator implements TemporalAggregator {
                statusCount[6][row][col] > 0 ? (byte)5 :   // shadow
                statusCount[7][row][col] > 0 ? (byte)4 :   // cloud
                        (byte)0;                    // invalid
+    }
+
+    private byte priorityStatusOf(int[][][] statusCount, int row, int col) {
+        return statusCount[0][row][col] > 0 ? (byte)1 :  // land
+               statusCount[1][row][col] > 0 ? (byte)2 :  // water
+               statusCount[2][row][col] > 0 ? (byte)3 :  // snow
+               statusCount[3][row][col] > 0 ? (byte)15 :  // dark
+               statusCount[4][row][col] > 0 ? (byte)12 :  // bright
+               statusCount[5][row][col] > 0 ? (byte)11 :  // haze
+               statusCount[6][row][col] > 0 ? (byte)5 :   // shadow
+               statusCount[7][row][col] > 0 ? (byte)4 :   // cloud
+                                              (byte)0;    // invalid
     }
 
     private static float ndxiOf(float nir, float red) {
