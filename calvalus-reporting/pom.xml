@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-all</artifactId>
-            <version>5.9.1</version>
+            <version>5.19.5</version>
         </dependency>
 
         <!-- RestFul-->
