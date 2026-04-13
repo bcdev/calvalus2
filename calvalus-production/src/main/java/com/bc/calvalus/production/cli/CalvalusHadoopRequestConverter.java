@@ -266,7 +266,7 @@ public class CalvalusHadoopRequestConverter {
      * Read request or production type definition
      */
 
-    static Map<String, Object> parseIntoMap(String path) throws IOException {
+    public static Map<String, Object> parseIntoMap(String path) throws IOException {
         switch (FileUtils.getExtension(path)) {
             case ".json":
                 ObjectMapper jsonParser = new ObjectMapper();
@@ -421,7 +421,7 @@ public class CalvalusHadoopRequestConverter {
      * Look up parameter using alternative names
      */
 
-    private static String getParameter(Map<String, Object> request, String... names) {
+    public static String getParameter(Map<String, Object> request, String... names) {
         for (String name : names) {
             if (name != null) {
                 Object value = request.get(name);

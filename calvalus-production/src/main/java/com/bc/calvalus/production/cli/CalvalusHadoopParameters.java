@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.calvalus.production.util.DateRangeCalculator;
 import com.bc.ceres.binding.BindingException;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.operation.union.CascadedPolygonUnion;
 import org.apache.hadoop.conf.Configuration;
 
@@ -202,13 +203,31 @@ public class CalvalusHadoopParameters extends Configuration {
     public String raParameters2Region(String raParameters) {
         try {
             List<Geometry> geometries = new ArrayList<>();
-            RAConfig raConfig = getRaConfig(raParameters, geometries);
+            getRaConfig(raParameters, geometries);
             Geometry union = CascadedPolygonUnion.union(geometries);
             if (union == null) {
                 throw new IllegalArgumentException("Can not build union from given regions");
             }
             Geometry convexHull = union.convexHull();
             return convexHull.toString();
+        } catch (BindingException ex) {
+            throw new IllegalArgumentException(ex);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    /**
+     * Function for use in production type translation rules.
+     * "<parameters> <regionSource>/calvalus/home/martin/region_data/BH.zip</regionSource> <regionSourceAttributeName>HID</regionSourceAttributeName> <goodPixelExpression>pixel_classif_flags.IDEPIX_CLOUD == 0 and pixel_classif_flags.IDEPIX_CLOUD_AMBIGUOUS == 0 and pixel_classif_flags.IDEPIX_CLOUD_BUFFER == 0 and pixel_classif_flags.IDEPIX_CLOUD_SHADOW == 0 and pixel_classif_flags.IDEPIX_SNOW_ICE == 0 and floating_vegetation == 0 and conc_chl &gt; 0.01</goodPixelExpression> <bands> <band> <name>conc_chl</name> <numBins>100</numBins> <min>0</min> <max>100</max> </band> <band> <name>iop_agelb</name> <numBins>15</numBins> <min>0</min> <max>15</max> </band> <band> <name>c2rcc_secchi_depth_3</name> <numBins>15</numBins> <min>0</min> <max>15</max> </band> </bands> <percentiles>90</percentiles> <writePixelValues>true</writePixelValues> <writePerRegion>true</writePerRegion> <writeSeparateHistogram>true</writeSeparateHistogram> </parameters>"
+     */
+    public String raParameters2Bbox(String raParameters) {
+        try {
+            List<Geometry> geometries = new ArrayList<>();
+            getRaConfig(raParameters, geometries);
+            final GeometryCollection collection = new GeometryCollection(geometries.toArray(new Geometry[0]), geometries.get(0).getFactory());
+            final Geometry envelope = collection.getEnvelope();
+            return envelope.toString();
         } catch (BindingException ex) {
             throw new IllegalArgumentException(ex);
         } catch (IOException ex) {
