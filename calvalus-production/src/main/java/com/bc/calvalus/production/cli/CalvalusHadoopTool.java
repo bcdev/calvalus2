@@ -149,8 +149,14 @@ public class CalvalusHadoopTool {
 
         String auth = commandLineParameters.getOrDefault("auth", (String) configParameters.getOrDefault("auth", "unix"));
         HadoopJobHook hook = parameterizeTokenGenerator(auth, configParameters, userName);
+        // read request file, convert into Hadoop parameters, and create Hadoop job
+        Map<String, Object> submittedRequest = CalvalusHadoopRequestConverter.parseIntoMap(requestPath);
+        LOG.info("reading request from " + requestPath + " with " + submittedRequest.size() + " parameters");
 
-        JobConf jobConf = requestConverter.createJob(requestPath, commandLineParameters, configParameters, hook);
+        final CalvalusHadoopParameters hadoopParameters = requestConverter.collectParameters(
+                submittedRequest, commandLineParameters, configParameters
+        );
+        final JobConf jobConf = requestConverter.createJob(hadoopParameters, hook);
 
         if (overwriteOutput || Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
             hadoopConnection.deleteOutputDir(jobConf);

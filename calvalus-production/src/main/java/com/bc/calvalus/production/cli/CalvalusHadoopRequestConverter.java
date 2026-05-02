@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.production.Production;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -46,14 +47,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CalvalusHadoopRequestConverter {
-    
+
     private static final SimpleDateFormat ISO_MILLIS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+
     static {
         ISO_MILLIS_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
-    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
+
+    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {
+    };
     private static Logger LOG = CalvalusLogger.getLogger();
-    
+
     private final CalvalusHadoopConnection hadoopConnection;
     private final String userName;
 
@@ -62,27 +66,32 @@ public class CalvalusHadoopRequestConverter {
         this.userName = userName;
     }
 
+    public Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
+        final ObjectMapper jsonParser = new ObjectMapper();
+        jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+        return jsonParser.readValue(requestString, VALUE_TYPE_REF);
+    }
+
     /**
      * Parameterise Hadoop job from command line, configuration, request, bundle descriptor, production type
      */
 
-    public JobConf createJob(String requestPath, Map<String, String> commandLineParameters, Map<Object, Object> configParameters, HadoopJobHook hook)
-            throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, InterruptedException 
+    public CalvalusHadoopParameters collectParameters(
+            Map<String, Object> submittedRequest,
+            Map<String, String> commandLineParameters,
+            Map<Object, Object> configParameters)
+            throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, InterruptedException
     {
-        // read request and production type definition
-        Map<String, Object> request = parseIntoMap(requestPath);
-        String productionType = getParameter(request, "productionType", "calvalus.productionType");
-        LOG.info("reading request from " + requestPath + " with type " + productionType + " and " + request.size() + " parameters");
+        // read product type definition
+        String productionType = getParameter(submittedRequest, "productionType", "calvalus.productionType");
         Map<String, Object> productionTypeDef = parseIntoMap("etc/" + productionType + "-cht-type.json");
 
-        // create Hadoop job config with Hadoop defaults
+        // set Hadoop default parameters
         CalvalusHadoopParameters hadoopParameters = new CalvalusHadoopParameters();
         setHadoopDefaultParameters(hadoopParameters);
-
-        // set parameters by tool
         final Date now = new Date();
         final String productionId = Production.createId(productionType);
-        hadoopParameters.set("calvalus.output.dir", String.format(userName, productionId));
+        hadoopParameters.set("calvalus.output.dir", String.format("/calvalus/home/%s/%s", userName, productionId));
         hadoopParameters.set("calvalus.user", userName);
         hadoopParameters.set("jobSubmissionDate", ISO_MILLIS_FORMAT.format(now));
         LOG.fine("setting " + hadoopParameters.size() + " default parameters");
@@ -97,7 +106,7 @@ public class CalvalusHadoopRequestConverter {
             translateAndInsert(key, String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
             ++count;
         }
-        LOG.info("reading .calvalus configuration with " + count + " parameters");
+        LOG.info("reading calvalus configuration with " + count + " parameters");
 
         // add parameters of production type, maybe translate and apply function
         count = 0;
@@ -118,7 +127,7 @@ public class CalvalusHadoopRequestConverter {
                          + count + " parameters and " + (productionTypeDef.size() - count) + " rules");
 
         // add parameters of request, maybe translate and apply function
-        for (Map.Entry<String, Object> entry : request.entrySet()) {
+        for (Map.Entry<String, Object> entry : submittedRequest.entrySet()) {
             if (entry.getValue() instanceof Map) {
                 XmlMapper xmlMapper = new XmlMapper();
                 final String xml = xmlMapper.writeValueAsString(entry.getValue());
@@ -129,24 +138,26 @@ public class CalvalusHadoopRequestConverter {
             }
         }
 
-        // add parameters of command line, maybe translate and apply function
-        for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
-            translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
+        if (commandLineParameters != null) {
+            // add parameters of command line, maybe translate and apply function
+            for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
+                translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
+            }
+            LOG.fine("adding " + commandLineParameters.size() + " command line parameters");
         }
-        LOG.fine("adding " + commandLineParameters.size() + " command line parameters");
 
         // create job client for user and for access to file system
         hadoopConnection.createJobClient(hadoopParameters);
 
         // retrieve and add parameters of processor descriptor
-        Map<String, String> processorDescriptorParameters = getProcessorDescriptorParameters(hadoopParameters);
+        Map<String, String> processorDescriptorParameters = getProcessorDescriptorParameters(hadoopConnection, userName, hadoopParameters);
         for (Map.Entry<String, String> entry : processorDescriptorParameters.entrySet()) {
             translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
         }
         LOG.info("reading processor descriptor from bundle with " + processorDescriptorParameters.size() + " parameters");
 
         // overwrite with parameters of request, maybe translate and apply function
-        for (Map.Entry<String, Object> entry : request.entrySet()) {
+        for (Map.Entry<String, Object> entry : submittedRequest.entrySet()) {
             if (entry.getValue() instanceof Map) {
                 XmlMapper xmlMapper = new XmlMapper();
                 final String xml = xmlMapper.writeValueAsString(entry.getValue());
@@ -162,6 +173,10 @@ public class CalvalusHadoopRequestConverter {
             translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
         }
 
+        return hadoopParameters;
+    }
+
+    public JobConf createJob(CalvalusHadoopParameters hadoopParameters, HadoopJobHook hook) throws IOException {
         // install processor bundles and calvalus and snap bundle
         JobConf jobConf = new JobConf(hadoopParameters);
         hadoopConnection.installProcessorBundles(userName, jobConf);
@@ -240,6 +255,15 @@ public class CalvalusHadoopRequestConverter {
         }
         return configParameters;
     }
+
+    public static Properties collectConfigParameters(File calvalusConfigPath) throws IOException {
+        final Properties calvalusConfig = new Properties();
+        try (FileReader reader = new FileReader(calvalusConfigPath)) {
+            calvalusConfig.load(reader);
+        }
+        return calvalusConfig;
+    }
+
 
     /**
      * Convert command line into parameters
@@ -345,7 +369,7 @@ public class CalvalusHadoopRequestConverter {
      * set Calvalus default parameters for Hadoop
      */
 
-    private static void setHadoopDefaultParameters(Configuration hadoopParameters) {
+    public static void setHadoopDefaultParameters(Configuration hadoopParameters) {
         hadoopParameters.set("dfs.client.read.shortcircuit", "true");
         hadoopParameters.set("dfs.domain.socket.path", "/var/lib/hadoop-hdfs/dn_socket");
         hadoopParameters.set("dfs.blocksize", "2147483136");
@@ -377,8 +401,9 @@ public class CalvalusHadoopRequestConverter {
      * read bundle descriptor job parameters
      */
 
-    private Map<String, String> getProcessorDescriptorParameters(Configuration hadoopParameters)
-            throws IOException, InterruptedException {
+    public static Map<String, String> getProcessorDescriptorParameters(
+            CalvalusHadoopConnection hadoopConnection, String userName, Configuration hadoopParameters
+    ) throws IOException, InterruptedException {
         String bundles = hadoopParameters.get("calvalus.bundles");
         String processor = hadoopParameters.get("calvalus.l2.operator");
         if (bundles == null || processor == null) {
@@ -392,7 +417,7 @@ public class CalvalusHadoopRequestConverter {
      * Convert Calvalus parameter key and value to Hadoop parameter key and value according to production type definition
      */
 
-    private void translateAndInsert(String key, String value, Map<String, Object> productionTypeDef, CalvalusHadoopParameters jobConf)
+    public static void translateAndInsert(String key, String value, Map<String, Object> productionTypeDef, CalvalusHadoopParameters jobConf)
             throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         String translationKey = "_translate." + key;
         Object translations = productionTypeDef != null ? productionTypeDef.get(translationKey) : null;
@@ -437,7 +462,7 @@ public class CalvalusHadoopRequestConverter {
      * List all Hadoop job parameters on console
      */
 
-    private static void printParameters(String header, Configuration jobConf) {
+    public static void printParameters(String header, Configuration jobConf) {
         LOG.fine(header);
         LOG.fine(String.valueOf(jobConf));
         Iterator<Map.Entry<String, String>> iterator = jobConf.iterator();
