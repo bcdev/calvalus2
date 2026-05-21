@@ -80,21 +80,24 @@ public class CalvalusHadoopRequestConverter {
             Map<String, Object> submittedRequest,
             Map<String, String> commandLineParameters,
             Map<Object, Object> configParameters)
-            throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, InterruptedException
-    {
-        // read product type definition
-        String productionType = getParameter(submittedRequest, "productionType", "calvalus.productionType");
-        Map<String, Object> productionTypeDef = parseIntoMap("etc/" + productionType + "-cht-type.json");
-
+            throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, InterruptedException {
         // set Hadoop default parameters
         CalvalusHadoopParameters hadoopParameters = new CalvalusHadoopParameters();
         setHadoopDefaultParameters(hadoopParameters);
-        final Date now = new Date();
-        final String productionId = Production.createId(productionType);
-        hadoopParameters.set("calvalus.output.dir", String.format("/calvalus/home/%s/%s", userName, productionId));
-        hadoopParameters.set("calvalus.user", userName);
-        hadoopParameters.set("jobSubmissionDate", ISO_MILLIS_FORMAT.format(now));
         LOG.fine("setting " + hadoopParameters.size() + " default parameters");
+
+        // read product type definition
+        Map<String, Object> productionTypeDef = null;
+        String productionType = null;
+        if (submittedRequest != null) {
+            productionType = getParameter(submittedRequest, "productionType", "calvalus.productionType");
+            productionTypeDef = parseIntoMap("etc/" + productionType + "-cht-type.json");
+            final Date now = new Date();
+            final String productionId = Production.createId(productionType);
+            hadoopParameters.set("calvalus.output.dir", String.format("/calvalus/home/%s/%s", userName, productionId));
+            hadoopParameters.set("calvalus.user", userName);
+            hadoopParameters.set("jobSubmissionDate", ISO_MILLIS_FORMAT.format(now));
+        }
 
         // add parameters of config, maybe translate and apply function
         int count = 0;
@@ -109,9 +112,28 @@ public class CalvalusHadoopRequestConverter {
         LOG.info("reading calvalus configuration with " + count + " parameters");
 
         // add parameters of production type, maybe translate and apply function
-        count = 0;
-        for (Map.Entry<String, Object> entry : productionTypeDef.entrySet()) {
-            if (!entry.getKey().startsWith("_")) {
+        if (productionTypeDef != null) {
+            count = 0;
+            for (Map.Entry<String, Object> entry : productionTypeDef.entrySet()) {
+                if (!entry.getKey().startsWith("_")) {
+                    if (entry.getValue() instanceof Map) {
+                        XmlMapper xmlMapper = new XmlMapper();
+                        final String xml = xmlMapper.writeValueAsString(entry.getValue());
+                        final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
+                        translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
+                    } else {
+                        translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+                    }
+                    ++count;
+                }
+            }
+            LOG.info("reading production type definition from " + "etc/" + productionType + "-cht-type.json with "
+                         + count + " parameters and " + (productionTypeDef.size() - count) + " rules");
+        }
+
+        // add parameters of request, maybe translate and apply function
+        if (submittedRequest != null) {
+            for (Map.Entry<String, Object> entry : submittedRequest.entrySet()) {
                 if (entry.getValue() instanceof Map) {
                     XmlMapper xmlMapper = new XmlMapper();
                     final String xml = xmlMapper.writeValueAsString(entry.getValue());
@@ -120,21 +142,6 @@ public class CalvalusHadoopRequestConverter {
                 } else {
                     translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
                 }
-                ++count;
-            }
-        }
-        LOG.info("reading production type definition from " + "etc/" + productionType + "-cht-type.json with "
-                         + count + " parameters and " + (productionTypeDef.size() - count) + " rules");
-
-        // add parameters of request, maybe translate and apply function
-        for (Map.Entry<String, Object> entry : submittedRequest.entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                XmlMapper xmlMapper = new XmlMapper();
-                final String xml = xmlMapper.writeValueAsString(entry.getValue());
-                final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
-                translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
-            } else {
-                translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
             }
         }
 
@@ -151,26 +158,32 @@ public class CalvalusHadoopRequestConverter {
 
         // retrieve and add parameters of processor descriptor
         Map<String, String> processorDescriptorParameters = getProcessorDescriptorParameters(hadoopConnection, userName, hadoopParameters);
-        for (Map.Entry<String, String> entry : processorDescriptorParameters.entrySet()) {
-            translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
+        if (processorDescriptorParameters != null) {
+            for (Map.Entry<String, String> entry : processorDescriptorParameters.entrySet()) {
+                translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
+            }
+            LOG.info("reading processor descriptor from bundle with " + processorDescriptorParameters.size() + " parameters");
         }
-        LOG.info("reading processor descriptor from bundle with " + processorDescriptorParameters.size() + " parameters");
 
         // overwrite with parameters of request, maybe translate and apply function
-        for (Map.Entry<String, Object> entry : submittedRequest.entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                XmlMapper xmlMapper = new XmlMapper();
-                final String xml = xmlMapper.writeValueAsString(entry.getValue());
-                final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
-                translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
-            } else {
-                translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+        if (submittedRequest != null) {
+            for (Map.Entry<String, Object> entry : submittedRequest.entrySet()) {
+                if (entry.getValue() instanceof Map) {
+                    XmlMapper xmlMapper = new XmlMapper();
+                    final String xml = xmlMapper.writeValueAsString(entry.getValue());
+                    final String xmlValue = xml.substring("<LinkedHashMap>".length(), xml.length() - "</LinkedHashMap>".length());
+                    translateAndInsert(entry.getKey(), xmlValue, productionTypeDef, hadoopParameters);
+                } else {
+                    translateAndInsert(entry.getKey(), String.valueOf(entry.getValue()), productionTypeDef, hadoopParameters);
+                }
             }
         }
 
         // overwrite with parameters of command line, maybe translate and apply function
-        for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
-            translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
+        if (commandLineParameters != null) {
+            for (Map.Entry<String, String> entry : commandLineParameters.entrySet()) {
+                translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
+            }
         }
 
         return hadoopParameters;
@@ -408,7 +421,7 @@ public class CalvalusHadoopRequestConverter {
         String processor = hadoopParameters.get("calvalus.l2.operator");
         if (bundles == null || processor == null) {
             LOG.info("no bundle or no processor requested");
-            return Collections.emptyMap();
+            return null;
         }
         return hadoopConnection.getProcessorDescriptorParameters(bundles, processor, userName);
     }

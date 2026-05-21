@@ -1,8 +1,10 @@
 package com.bc.calvalus.production.cli;
 
 import org.apache.hadoop.mapred.JobStatus;
+import org.apache.hadoop.mapred.RunningJob;
 
 import java.io.IOException;
+import java.util.Map;
 
 public abstract class CalvalusHadoopStatusConverter {
 
@@ -59,10 +61,18 @@ public abstract class CalvalusHadoopStatusConverter {
         }
     }
 
+    public void accumulateJob(String id, RunningJob job, StringBuilder accu) throws IOException {
+        separateJobStatus(accu);
+        accu.append(job.getJobFile());
+        //accumulateJobConfiguration(id, job.getConfiguration(), accu);
+    }
+
     /**
      * Compose formatted string for status
      */
     public abstract void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu);
+
+    public abstract void accumulateJobConfiguration(String id, Iterable<Map.Entry<String, String>> configuration, StringBuilder accu);
 
     public abstract void initialiseJobStatus(StringBuilder accu);
 

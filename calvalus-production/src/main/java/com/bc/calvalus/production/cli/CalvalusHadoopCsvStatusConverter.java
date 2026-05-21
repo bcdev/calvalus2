@@ -1,5 +1,7 @@
 package com.bc.calvalus.production.cli;
 
+import java.util.Map;
+
 /**
  * TODO add API doc
  *
@@ -23,6 +25,19 @@ public class CalvalusHadoopCsvStatusConverter extends CalvalusHadoopStatusConver
             accu.append(message);
         }
         accu.append("\n");
+    }
+
+    public void accumulateJobConfiguration(String id, Iterable<Map.Entry<String, String>> configuration, StringBuilder accu) {
+        accu.append("id");
+        accu.append(",");
+        accu.append(id);
+        accu.append("\n");
+        for (Map.Entry<String, String> entry : configuration) {
+            accu.append(entry.getKey());
+            accu.append(",");
+            accu.append(entry.getValue());
+            accu.append("\n");
+        }
     }
 
     @Override
