@@ -14,9 +14,9 @@
         <hadoop.version>3.4.2-BC</hadoop.version>
         <calvalus.version>3.0-SNAPSHOT</calvalus.version>
         <bc-wps.version>1.2</bc-wps.version>
-        <snap.version>13.0.0-SNAPSHOT</snap.version>
-        <opttbx.version>13.0.0-SNAPSHOT</opttbx.version>
-        <microwavetbx.version>13.0.0-SNAPSHOT</microwavetbx.version>
+        <snap.version>13.0.2-SNAPSHOT</snap.version>
+        <opttbx.version>13.0.2-SNAPSHOT</opttbx.version>
+        <microwavetbx.version>13.0.2-SNAPSHOT</microwavetbx.version>
         <seadas.reader.version>1.10.2</seadas.reader.version>
         <probav.reader.version>13.0.0-SNAPSHOT</probav.reader.version>
         <geo-inventory-version>0.6.2</geo-inventory-version>
@@ -24,7 +24,7 @@
         <slf4j.version>1.6.6</slf4j.version>
         <ncsa.version>2.7.1</ncsa.version>
         <ncsaj.version>2.7</ncsaj.version>
-        <netcdf.version>5.3.1</netcdf.version>
+        <netcdf.version>5.9.1</netcdf.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javahelp.version>2.0.05</javahelp.version>
         <brandingToken>none</brandingToken>
@@ -610,7 +610,11 @@
             <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf4obj</artifactId><version>${ncsaj.version}</version></dependency>
             <dependency><groupId>ncsa.hdf</groupId><artifactId>jhdf5obj</artifactId><version>${ncsaj.version}</version></dependency>
 
-            <dependency><groupId>edu.ucar</groupId><artifactId>netcdfAll</artifactId><version>${netcdf.version}</version></dependency>
+            <dependency><groupId>edu.ucar</groupId><artifactId>cdm-core</artifactId><version>${netcdf.version}</version></dependency>
+            <dependency><groupId>edu.ucar</groupId><artifactId>cdm-image</artifactId><version>${netcdf.version}</version></dependency>
+            <dependency><groupId>edu.ucar</groupId><artifactId>grib</artifactId><version>${netcdf.version}</version></dependency>
+            <dependency><groupId>edu.ucar</groupId><artifactId>netcdf4</artifactId><version>${netcdf.version}</version></dependency>
+            <dependency><groupId>edu.ucar</groupId><artifactId>udunits</artifactId><version>${netcdf.version}</version></dependency>
             <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-alos-reader</artifactId><version>${opttbx.version}</version></dependency>
             <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-atsr-reader</artifactId><version>${opttbx.version}</version></dependency>
             <dependency><groupId>eu.esa.opt</groupId><artifactId>opttbx-avhrr-reader</artifactId><version>${opttbx.version}</version></dependency>

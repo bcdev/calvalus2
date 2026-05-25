@@ -21,11 +21,12 @@
 
     <dependencySets>
         <dependencySet>
-            <!--
             <excludes>
-                <exclude>edu.ucar:netcdfAll</exclude>
+                <!--
+                    <exclude>edu.ucar:netcdfAll</exclude>
+                -->
+                <exclude>com.google.protobuf:protobuf-java</exclude>
             </excludes>
-            -->
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <includes>
                 <!--
