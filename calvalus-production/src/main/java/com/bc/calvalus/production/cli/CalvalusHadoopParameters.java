@@ -149,7 +149,67 @@ public class CalvalusHadoopParameters extends Configuration {
         }
     }
 
+    /**
+     * Function for use in production type translation rules
+     */
+    public String javaEnvForVersion(String version) {
+         if ("21".equals(version)) {
+             return "HADOOP_CONF_DIR=/opt/hadoop-3.4.2-BC/conf," +
+                     "HADOOP_MAPRED_HOME=/opt/hadoop-3.4.2-BC," +
+                     "JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64," +
+                     "PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:/usr/bin:/bin";
+         }
+         return "HADOOP_CONF_DIR=/opt/hadoop-3.2.1-BC/conf," +
+                 "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1-BC," +
+                 "HADOOP_COMMON_HOME=/opt/hadoop-3.2.1-BC," +
+                 "HADOOP_HDFS_HOME=/opt/hadoop-3.2.1-BC," +
+                 "HADOOP_YARN_HOME=/opt/hadoop-3.2.1-BC," +
+                 "HADOOP_HOME=/opt/hadoop-3.2.1-BC," +
+                 "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd," +
+                 "PATH=/usr/lib/jvm/java-8-openjdk-amd/bin:/usr/bin:/bin," +
+                 "LD_LIBRARY_PATH=/usr/lib64";
+    }
 
+    /**
+     * Function for use in production type translation rules
+     */
+    public String javaWhitelistForVersion(String version) {
+        if ("21".equals(version)) {
+            return "JAVA_HOME," +
+                    "HADOOP_COMMON_HOME," +
+                    "HADOOP_HDFS_HOME," +
+                    "HADOOP_CONF_DIR," +
+                    "CLASSPATH_PREPEND_DISTCACHE," +
+                    "HADOOP_YARN_HOME," +
+                    "HADOOP_MAPRED_HOME," +
+                    "HADOOP_HOME," +
+                    "PATH," +
+                    "LANG," +
+                    "TZ";
+        }
+        return "JAVA_HOME," +
+                "HADOOP_COMMON_HOME," +
+                "HADOOP_HDFS_HOME," +
+                "HADOOP_CONF_DIR," +
+                "CLASSPATH_PREPEND_DISTCACHE," +
+                "HADOOP_YARN_HOME," +
+                "HADOOP_MAPRED_HOME," +
+                "HADOOP_HOME," +
+                "PATH," +
+                "LANG," +
+                "TZ," +
+                "LD_LIBRARY_PATH";
+    }
+
+    /**
+     * Function for use in production type translation rules
+     */
+    public String javaAddOpensForVersion(String version) {
+        if ("21".equals(version)) {
+            return "true";
+        }
+        return "false";
+    }
 
     /**
      * Function for use in production type translation rules
