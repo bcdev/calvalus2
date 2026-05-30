@@ -162,6 +162,15 @@ public class CalvalusHadoopRequestConverter {
             translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
         }
 
+        // patch java options with javaOptsHook if mapreduce.jvm.add-opens-as-default is set, i.e. for Java 21
+        if (Boolean.parseBoolean(hadoopParameters.get("mapreduce.jvm.add-opens-as-default"))) {
+            final String javaOptsHook = hadoopParameters.get("javaOptsHook");
+            final String mapJavaOpts = hadoopParameters.get("mapreduce.map.java.opts");
+            final String reduceJavaOpts = hadoopParameters.get("mapreduce.reduce.java.opts");
+            hadoopParameters.set("mapreduce.map.java.opts", mapJavaOpts + " " + javaOptsHook);
+            hadoopParameters.set("mapreduce.reduce.java.opts", reduceJavaOpts + " " + javaOptsHook);
+        }
+
         // install processor bundles and calvalus and snap bundle
         JobConf jobConf = new JobConf(hadoopParameters);
         hadoopConnection.installProcessorBundles(userName, jobConf);
