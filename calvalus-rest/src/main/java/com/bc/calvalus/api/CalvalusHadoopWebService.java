@@ -22,6 +22,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -136,7 +138,7 @@ public class CalvalusHadoopWebService {
 
     @DELETE
     @Path("/{name}")
-    public Response delete(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) throws NotFoundException {
+    public Response cancel(@PathParam("name") String name, @Context HttpServletRequest request, @Context ServletContext context) throws NotFoundException {
         try {
             final String username = Utils.getUserName(request, context);
             final String requestUrl = request.getRequestURL().toString();
@@ -164,27 +166,48 @@ public class CalvalusHadoopWebService {
         }
     }
 
+    private static class JobIdMatcher {
+        private String[] names = null;
+        JobIdMatcher(String names) {
+            if (names != null) {
+                this.names = names.split(",");
+            }
+        }
+        boolean matches(String jobId) {
+            return names == null || Arrays.stream(names).anyMatch(x -> jobId.equals(x) || jobId.endsWith("_" + x));
+        }
+    }
+
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
-    public Response list(@Context HttpServletRequest request, @Context SecurityContext securityContext, @Context ServletContext context) throws NotFoundException {
+    public Response list(
+            @QueryParam("names") String names,
+            @Context HttpServletRequest request,
+            @Context SecurityContext securityContext,
+            @Context ServletContext context
+    ) throws NotFoundException {
         try {
+            // determine parameters and configuration
             final String username = Utils.getUserName(request, context);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
+            final JobIdMatcher jobIdMatcher = new JobIdMatcher(names);
 
+            // retrieve jobs
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(hadoopConnection, username);
             final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "-calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
             requestConverter.collectParameters(null, null, calvalusConfig);
-            JobStatus[] jobs = hadoopConnection.getAllJobs();
+            final JobStatus[] jobs = hadoopConnection.getAllJobs();
 
+            // collect status entries
             StringBuilder accu = new StringBuilder();
             CalvalusHadoopStatusConverter statusConverter = CalvalusHadoopStatusConverter.create(hadoopConnection, "json");
             statusConverter.initialiseJobStatus(accu);
             for (JobStatus job : jobs) {
-                if (username.equals(job.getUsername())) {
+                if (username.equals(job.getUsername()) && jobIdMatcher.matches(job.getJobId())) {
                     statusConverter.accumulateJobStatus(job.getJobId(), job, accu);
                 }
             }
