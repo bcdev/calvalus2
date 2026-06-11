@@ -8,7 +8,7 @@ import com.google.gwt.ajaxloader.client.Properties;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.maps.client.events.click.ClickMapEvent;
 import com.google.gwt.maps.client.events.click.ClickMapHandler;
-import com.google.gwt.maps.client.overlays.Polygon;
+//import com.google.gwt.maps.client.overlays.Polygon;
 
 import java.util.HashMap;
 import java.util.List;

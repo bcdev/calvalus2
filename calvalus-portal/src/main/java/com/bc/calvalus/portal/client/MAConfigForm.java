@@ -10,10 +10,10 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.maps.client.MapOptions;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.base.LatLng;
-import com.google.gwt.maps.client.base.LatLngBounds;
-import com.google.gwt.maps.client.overlays.Marker;
-import com.google.gwt.maps.client.overlays.MarkerImage;
-import com.google.gwt.maps.client.overlays.MarkerOptions;
+//import com.google.gwt.maps.client.base.LatLngBounds;
+//import com.google.gwt.maps.client.overlays.Marker;
+//import com.google.gwt.maps.client.overlays.MarkerImage;
+//import com.google.gwt.maps.client.overlays.MarkerOptions;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -169,6 +169,7 @@ public class MAConfigForm extends Composite {
                 mapOptions.setStreetViewControl(false);
                 final MapWidget mapWidget = new MapWidget(mapOptions);
                 mapWidget.setSize("800px", "520px");
+/*
                 LatLngBounds bounds = null;
                 MarkerImage markerImage = MarkerImage.newInstance("https://maps.gstatic.com/intl/en_ALL/mapfiles/markers2/measle.png");
                 for (int i = 0; i < points.length; ) {
@@ -199,6 +200,7 @@ public class MAConfigForm extends Composite {
                     };
                     dialog.show();
                 }
+ */
             }
 
             @Override

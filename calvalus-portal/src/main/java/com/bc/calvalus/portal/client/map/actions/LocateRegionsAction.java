@@ -5,8 +5,8 @@ import com.bc.calvalus.portal.client.map.AbstractMapAction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.maps.client.base.LatLngBounds;
-import com.google.gwt.maps.client.overlays.Polygon;
+//import com.google.gwt.maps.client.base.LatLngBounds;
+//import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Image;
@@ -44,12 +44,12 @@ public class LocateRegionsAction extends AbstractMapAction {
     }
 
     public static void locateRegion(RegionMap regionMap, Region region) {
-        Polygon regionPolygon = regionMap.getPolygon(region);
-        if (regionPolygon == null) {
-            regionPolygon = region.createPolygon();
-        }
-        LatLngBounds bounds = Region.getBounds(regionPolygon);
-        regionMap.getMapWidget().fitBounds(bounds);
-        regionMap.getMapWidget().panTo(bounds.getCenter());
+//        Polygon regionPolygon = regionMap.getPolygon(region);
+//        if (regionPolygon == null) {
+//            regionPolygon = region.createPolygon();
+//        }
+//        LatLngBounds bounds = Region.getBounds(regionPolygon);
+//        regionMap.getMapWidget().fitBounds(bounds);
+//        regionMap.getMapWidget().panTo(bounds.getCenter());
     }
 }

@@ -14,9 +14,9 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.maps.client.base.LatLng;
-import com.google.gwt.maps.client.base.LatLngBounds;
-import com.google.gwt.maps.client.overlays.Polygon;
+//import com.google.gwt.maps.client.base.LatLng;
+//import com.google.gwt.maps.client.base.LatLngBounds;
+//import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
@@ -56,7 +56,7 @@ public class L3ConfigForm extends Composite {
     private final List<String> l3InputVarNames;
     private final L3AggregatorTable aggregatorTable;
     private final L3VariableTable variableTable;
-    private LatLngBounds regionBounds;
+//    private LatLngBounds regionBounds;
 
 
     interface TheUiBinder extends UiBinder<Widget, L3ConfigForm> {
@@ -199,7 +199,7 @@ public class L3ConfigForm extends Composite {
         resolution.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                updateTargetSize();
+                //updateTargetSize();
             }
         });
         compositingType.addItem(COMPOSITING_TYPE_BINNING);
@@ -215,7 +215,7 @@ public class L3ConfigForm extends Composite {
         targetWidth.setEnabled(false);
         targetHeight.setEnabled(false);
 
-        updateSpatialParameters(null);
+        //updateSpatialParameters(null);
 
         HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
     }
@@ -278,22 +278,22 @@ public class L3ConfigForm extends Composite {
     }
 
     public void updateSpatialParameters(Region selectedRegion) {
-        if (selectedRegion != null) {
-            Polygon polygon = selectedRegion.createPolygon();
-            regionBounds = Region.getBounds(polygon);
-        } else {
-            final LatLng sw = LatLng.newInstance(-90, -180);
-            final LatLng ne = LatLng.newInstance(90, 180);
-            regionBounds = LatLngBounds.newInstance(sw, ne);
-        }
-        updateTargetSize();
+//        if (selectedRegion != null) {
+//            Polygon polygon = selectedRegion.createPolygon();
+//            regionBounds = Region.getBounds(polygon);
+//        } else {
+//            final LatLng sw = LatLng.newInstance(-90, -180);
+//            final LatLng ne = LatLng.newInstance(90, 180);
+//            regionBounds = LatLngBounds.newInstance(sw, ne);
+//        }
+        //updateTargetSize();
     }
 
-    private void updateTargetSize() {
-        int[] targetSize = L3ConfigUtils.getTargetSizeEstimation(regionBounds, resolution.getValue());
-        targetWidth.setValue(targetSize[0]);
-        targetHeight.setValue(targetSize[1]);
-    }
+//    private void updateTargetSize() {
+//        int[] targetSize = L3ConfigUtils.getTargetSizeEstimation(regionBounds, resolution.getValue());
+//        targetWidth.setValue(targetSize[0]);
+//        targetHeight.setValue(targetSize[1]);
+//    }
 
     public void updateAvailableVariables() {
         List<String> availableVariables = new ArrayList<String>(l3InputVarNames);

@@ -1,14 +1,14 @@
 package com.bc.calvalus.portal.client.map;
 
-import com.google.gwt.ajaxloader.client.ArrayHelper;
+//import com.google.gwt.ajaxloader.client.ArrayHelper;
 import com.google.gwt.maps.client.base.LatLng;
-import com.google.gwt.maps.client.base.LatLngBounds;
-import com.google.gwt.maps.client.mvc.MVCArray;
-import com.google.gwt.maps.client.mvc.MVCArrayCallback;
-import com.google.gwt.maps.client.overlays.Marker;
-import com.google.gwt.maps.client.overlays.Polygon;
-import com.google.gwt.maps.client.overlays.PolygonOptions;
-import com.google.gwt.maps.client.overlays.Rectangle;
+//import com.google.gwt.maps.client.base.LatLngBounds;
+//import com.google.gwt.maps.client.mvc.MVCArray;
+//import com.google.gwt.maps.client.mvc.MVCArrayCallback;
+//import com.google.gwt.maps.client.overlays.Marker;
+//import com.google.gwt.maps.client.overlays.Polygon;
+//import com.google.gwt.maps.client.overlays.PolygonOptions;
+//import com.google.gwt.maps.client.overlays.Rectangle;
 import com.google.gwt.view.client.ProvidesKey;
 
 /**
@@ -145,51 +145,51 @@ public class Region {
         return stringBuilder.toString();
     }
 
-    public Polygon createPolygon() {
-        PolygonOptions polygonOptions = PolygonOptions.newInstance();
-        polygonOptions.setPaths(ArrayHelper.toJsArray(getVertices()));
-        return Polygon.newInstance(polygonOptions);
-    }
+//    public Polygon createPolygon() {
+//        PolygonOptions polygonOptions = PolygonOptions.newInstance();
+//        polygonOptions.setPaths(ArrayHelper.toJsArray(getVertices()));
+//        return Polygon.newInstance(polygonOptions);
+//    }
 
-    public static LatLng[] getVertices(Polygon polygon) {
-        MVCArray<LatLng> polygonPath = polygon.getPath();
-        LatLng[] points = new LatLng[polygonPath.getLength()];
-        for (int i = 0; i < points.length; i++) {
-            points[i] = polygonPath.get(i);
-        }
-        return points;
-    }
+//    public static LatLng[] getVertices(Polygon polygon) {
+//        MVCArray<LatLng> polygonPath = polygon.getPath();
+//        LatLng[] points = new LatLng[polygonPath.getLength()];
+//        for (int i = 0; i < points.length; i++) {
+//            points[i] = polygonPath.get(i);
+//        }
+//        return points;
+//    }
 
-    public static LatLng[] getVertices(Marker marker) {
-        return new LatLng[]{
-                marker.getPosition()
-        };
-    }
+//    public static LatLng[] getVertices(Marker marker) {
+//        return new LatLng[]{
+//                marker.getPosition()
+//        };
+//    }
 
-    public static LatLng[] getVertices(Rectangle rectangle) {
-        LatLngBounds bounds = rectangle.getBounds();
-        LatLng[] points = new LatLng[4];
-        LatLng northEast = bounds.getNorthEast();
-        LatLng southWest = bounds.getSouthWest();
-        points[0] = northEast;
-        points[1] = LatLng.newInstance(southWest.getLatitude(), northEast.getLongitude());
-        points[2] = southWest;
-        points[3] = LatLng.newInstance(northEast.getLatitude(), southWest.getLongitude());
-        return points;
-    }
+//    public static LatLng[] getVertices(Rectangle rectangle) {
+//        LatLngBounds bounds = rectangle.getBounds();
+//        LatLng[] points = new LatLng[4];
+//        LatLng northEast = bounds.getNorthEast();
+//        LatLng southWest = bounds.getSouthWest();
+//        points[0] = northEast;
+//        points[1] = LatLng.newInstance(southWest.getLatitude(), northEast.getLongitude());
+//        points[2] = southWest;
+//        points[3] = LatLng.newInstance(northEast.getLatitude(), southWest.getLongitude());
+//        return points;
+//    }
 
-    public static LatLngBounds getBounds(Polygon polygon) {
-        MVCArray<LatLng> polygonPath = polygon.getPath();
-        LatLng latLngZero = polygonPath.get(0);
-        final LatLngBounds bounds = LatLngBounds.newInstance(latLngZero, latLngZero);
-        polygonPath.forEach(new MVCArrayCallback<LatLng>() {
-            @Override
-            public void forEach(LatLng latLng, int index) {
-                if (index > 0) {
-                    bounds.extend(latLng);
-                }
-            }
-        });
-        return bounds;
-    }
+//    public static LatLngBounds getBounds(Polygon polygon) {
+//        MVCArray<LatLng> polygonPath = polygon.getPath();
+//        LatLng latLngZero = polygonPath.get(0);
+//        final LatLngBounds bounds = LatLngBounds.newInstance(latLngZero, latLngZero);
+//        polygonPath.forEach(new MVCArrayCallback<LatLng>() {
+//            @Override
+//            public void forEach(LatLng latLng, int index) {
+//                if (index > 0) {
+//                    bounds.extend(latLng);
+//                }
+//            }
+//        });
+//        return bounds;
+//    }
 }
