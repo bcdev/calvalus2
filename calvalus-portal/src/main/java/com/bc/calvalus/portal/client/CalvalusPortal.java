@@ -158,9 +158,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             }
         };
         // load all the libs for use in the maps
-        ArrayList<LoadApi.LoadLibrary> loadLibraries = new ArrayList<LoadApi.LoadLibrary>();
-        loadLibraries.add(LoadApi.LoadLibrary.DRAWING);
-        loadLibraries.add(LoadApi.LoadLibrary.GEOMETRY);
+        ArrayList<LoadApi.LoadLibrary> loadLibraries = null;  // new ArrayList<LoadApi.LoadLibrary>();
+        //loadLibraries.add(LoadApi.LoadLibrary.DRAWING);
+        //loadLibraries.add(LoadApi.LoadLibrary.GEOMETRY);
 
 
         //LoadApi.go(runnable, loadLibraries, false);

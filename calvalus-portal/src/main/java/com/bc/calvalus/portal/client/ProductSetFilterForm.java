@@ -26,8 +26,8 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.maps.client.base.LatLng;
-import com.google.gwt.maps.client.base.LatLngBounds;
-import com.google.gwt.maps.client.overlays.Polygon;
+//import com.google.gwt.maps.client.base.LatLngBounds;
+//import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
@@ -320,15 +320,15 @@ public class ProductSetFilterForm extends Composite {
         } else if (spatialFilterByRegion.getValue()) {
             Region region = getSelectedRegion();
             if (region != null) {
-                Polygon polygon = region.createPolygon();
-                LatLngBounds bounds = Region.getBounds(polygon);
+                //Polygon polygon = region.createPolygon();
+                //LatLngBounds bounds = Region.getBounds(polygon);
                 parameters.put("regionName", region.getName());
                 parameters.put("regionWKT", region.getGeometryWkt());
                 // TODO mz remove these ??? unused
-                parameters.put("minLon", bounds.getSouthWest().getLongitude() + "");
-                parameters.put("minLat", bounds.getSouthWest().getLatitude() + "");
-                parameters.put("maxLon", bounds.getNorthEast().getLongitude() + "");
-                parameters.put("maxLat", bounds.getNorthEast().getLatitude() + "");
+                //parameters.put("minLon", bounds.getSouthWest().getLongitude() + "");
+                //parameters.put("minLat", bounds.getSouthWest().getLatitude() + "");
+                //parameters.put("maxLon", bounds.getNorthEast().getLongitude() + "");
+                //parameters.put("maxLat", bounds.getNorthEast().getLatitude() + "");
             }
         }
 
