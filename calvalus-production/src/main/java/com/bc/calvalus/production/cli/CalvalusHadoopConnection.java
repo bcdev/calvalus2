@@ -6,6 +6,10 @@ import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.ceres.binding.BindingException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -25,6 +29,7 @@ import java.io.InputStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 public class CalvalusHadoopConnection {
@@ -95,25 +100,55 @@ public class CalvalusHadoopConnection {
         }
     }
 
-    public Map<String, String> getProcessorDescriptorParameters(String bundles, String processor, String userName)
+    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {
+    };
+    public Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
+        final ObjectMapper jsonParser = new ObjectMapper();
+        jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+        return jsonParser.readValue(requestString, VALUE_TYPE_REF);
+    }
+
+    public Map<String, String> getProcessorDescriptorParameters(String processor, String bundles, String processorName, String userName)
             throws IOException, InterruptedException {
         return remoteUser.doAs((PrivilegedExceptionAction<Map<String, String>>) () -> {
-            Path path = new Path("/calvalus/software/1.0/" + bundles.split(",")[0] + "/bundle-descriptor.xml");
-            if (!jobClient.getFs().exists(path)) {
-                path = new Path("/calvalus/home/" + userName + "/software/" + bundles.split(",")[0] + "/bundle-descriptor.xml");
-                if (!jobClient.getFs().exists(path)) {
-                    LOG.fine("no bundle-descriptor.xml in bundle " + bundles.split(",")[0]);
-                    return Collections.emptyMap();
+            if (processor != null) {
+                for (String pathString : new String[]{
+                        "/calvalus/home/" + userName + "/software/" + processor + "-descriptor.json",
+                        "/calvalus/software/1.0/" + processor + "-descriptor.json"
+                }) {
+                    Path path = new Path(pathString);
+                    if (jobClient.getFs().exists(path)) {
+                        String content = readFile(jobClient.getFs(), path);
+                        Map<String, Object> contentMap = parseRequest(content);
+                        Map<String, String> parametersMap = new HashMap<String, String>();
+                        for (Map.Entry<String, Object> entry : contentMap.entrySet()) {
+                            if (entry.getValue() instanceof String) {
+                                parametersMap.put(entry.getKey(), String.valueOf(entry.getValue()));
+                            }
+                        }
+                        LOG.fine("adding bundle descriptor default parameters from " + path);
+                        return parametersMap;
+                    }
+                }
+                throw new IllegalArgumentException("processor " + processor + " not found");
+            } else {
+                for (String pathString : new String[]{
+                        "/calvalus/home/" + userName + "/software/" + bundles.split(",")[0] + "/bundle-descriptor.xml",
+                        "/calvalus/software/1.0/" + bundles.split(",")[0] + "/bundle-descriptor.xml"
+                }) {
+                    Path path = new Path(pathString);
+                    if (jobClient.getFs().exists(path)) {
+                        BundleDescriptor bd = readBundleDescriptor(path, jobClient.getFs());
+                        for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
+                            if (processorName.equals(pd.getExecutableName())) {
+                                LOG.fine("adding bundle descriptor default parameters from " + path);
+                                return pd.getJobConfiguration();
+                            }
+                        }
+                    }
                 }
             }
-            BundleDescriptor bd = readBundleDescriptor(path, jobClient.getFs());
-            for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
-                if (processor.equals(pd.getExecutableName())) {
-                    LOG.fine("adding bundle descriptor default parameters from " + path);
-                    return pd.getJobConfiguration();
-                }
-            }
-            LOG.fine("no processor descriptor for " + processor + " in bundle " + bundles.split(",")[0]);
+            LOG.fine("no processor descriptor for " + processorName + " in bundle " + bundles.split(",")[0]);
             return Collections.emptyMap();
         });
     }
