@@ -6,6 +6,7 @@ import com.bc.calvalus.production.cli.CalvalusHadoopConnection;
 import com.bc.calvalus.production.cli.CalvalusHadoopParameters;
 import com.bc.calvalus.production.cli.CalvalusHadoopRequestConverter;
 import com.bc.calvalus.production.cli.CalvalusHadoopStatusConverter;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.hadoop.mapred.JobConf;
@@ -48,6 +49,8 @@ public class CalvalusHadoopWebService {
     static {
         ISO_MILLIS_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
+    private static String PRODUCTION_TYPE_DIR = "production-types";
+    private static String PROCESSOR_DESCRIPTOR_DIR = "processor-descriptors";
     private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {};
 
     private static Logger LOG = CalvalusLogger.getLogger();
@@ -105,29 +108,83 @@ public class CalvalusHadoopWebService {
             final String catalinaHome = System.getProperty("catalina.home");
             HadoopJobHook hook = null;
 
-            // convert submitted request into Hadoop job
+            // read calvalus configuration
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
-            final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(hadoopConnection, username);
-            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "-calvalus.properties");
+            final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(
+                    hadoopConnection,
+                    username,
+                    catalinaHome + "/content/" + PRODUCTION_TYPE_DIR,
+                    catalinaHome + "/content/" + serviceName
+            );
+            final File calvalusConfigPath = new File(catalinaHome + "/content/" + serviceName + "/calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
-            final Map<String, Object> submittedRequest = requestConverter.parseRequest(requestString);
-            final CalvalusHadoopParameters hadoopParameters = requestConverter.collectParameters(submittedRequest, null, calvalusConfig);
-            final JobConf jobConf = requestConverter.createJob(hadoopParameters, hook);
 
-            // prepare output directory and submit job
-            if (Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
-                hadoopConnection.deleteOutputDir(jobConf);
+            // parse Json request
+            final Map<String, Object> submittedRequest;
+            try {
+                submittedRequest = requestConverter.parseRequest(requestString);
+            } catch (JsonParseException e) {
+                throw new WebApplicationException(
+                        e,
+                        Response.status(Response.Status.BAD_REQUEST)
+                                .entity("error parsing request: " + e.getMessage())
+                                .type(MediaType.TEXT_PLAIN)
+                                .build());
             }
-            final RunningJob runningJob = hadoopConnection.submitJob(jobConf);
-            LOG.info("Production successfully ordered with ID " + runningJob.getID());
 
-            // return job ID
-            return Response.ok(String.valueOf(runningJob.getID()) + "\n").build();
+            // merge parameters of request, configuration, production type, processor descriptor
+            final CalvalusHadoopParameters hadoopParameters;
+            try {
+                 hadoopParameters = requestConverter.collectParameters(
+                        submittedRequest,
+                        null,
+                        calvalusConfig
+                );
+            } catch (IllegalArgumentException e) {
+                throw new WebApplicationException(
+                        e,
+                        Response.status(Response.Status.BAD_REQUEST)
+                                .entity("error in request: " + e.getMessage())
+                                .type(MediaType.TEXT_PLAIN)
+                                .build());
+            }
+
+            // convert into JobConf, install processor packages, and submit
+            final JobConf jobConf;
+            try {
+                jobConf = requestConverter.createJob(hadoopParameters, hook);
+                // prepare output directory and submit job
+                if (Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
+                    hadoopConnection.deleteOutputDir(jobConf);
+                }
+                final RunningJob runningJob = hadoopConnection.submitJob(jobConf);
+                LOG.info("Production successfully ordered with ID " + runningJob.getID());
+                // return job ID
+                return Response.ok(String.valueOf(runningJob.getID()) + "\n").build();
+            } catch (IllegalArgumentException e) {
+                throw new WebApplicationException(
+                        e,
+                        Response.status(Response.Status.BAD_REQUEST)
+                                .entity("error in request: " + e.getMessage())
+                                .type(MediaType.TEXT_PLAIN)
+                                .build());
+            } catch (IOException e) {
+                throw new WebApplicationException(
+                        e,
+                        Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                                .entity("error in processor package deployment: " + e.getMessage())
+                                .type(MediaType.TEXT_PLAIN)
+                                .build());
+            }
+
+        // pass through user exceptions
         } catch (WebApplicationException e) {
-            LOG.log(Level.WARNING, e.getMessage(), e);
+            //LOG.log(Level.WARNING, e.getMessage(), e);
             throw e;
+
+        // report unexpected exceptions and configuration errors as internal server errors
         } catch (Exception e) {
-            LOG.log(Level.WARNING, e.getMessage(), e);
+            LOG.log(Level.SEVERE, e.getMessage(), e);
             throw new WebApplicationException(e,
                     Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                             .entity(e.getMessage())
@@ -147,7 +204,7 @@ public class CalvalusHadoopWebService {
 
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(hadoopConnection, username);
-            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "-calvalus.properties");
+            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "/calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
             requestConverter.collectParameters(null, null, calvalusConfig);
 
@@ -197,7 +254,7 @@ public class CalvalusHadoopWebService {
             // retrieve jobs
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(hadoopConnection, username);
-            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "-calvalus.properties");
+            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "/calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
             requestConverter.collectParameters(null, null, calvalusConfig);
             final JobStatus[] jobs = hadoopConnection.getAllJobs();
@@ -237,7 +294,7 @@ public class CalvalusHadoopWebService {
 
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(hadoopConnection, username);
-            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "-calvalus.properties");
+            final File calvalusConfigPath = new File(new File(new File(catalinaHome), "content"), serviceName + "/calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
             requestConverter.collectParameters(null, null, calvalusConfig);
 

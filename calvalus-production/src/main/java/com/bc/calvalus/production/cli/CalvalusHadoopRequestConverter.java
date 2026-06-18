@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.production.Production;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,11 +28,13 @@ import org.jdom.output.XMLOutputter;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,12 +63,26 @@ public class CalvalusHadoopRequestConverter {
 
     private final CalvalusHadoopConnection hadoopConnection;
     private final String userName;
+    private final String productionTypeDir;
+    private final String processorDescriptorDir;
 
-    public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName) {
+    public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName, String productionTypeDir, String processorDescriptorDir) {
         this.hadoopConnection = hadoopConnection;
         this.userName = userName;
+        this.productionTypeDir = productionTypeDir;
+        this.processorDescriptorDir = processorDescriptorDir;
+    }
+    public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName) {
+        this(hadoopConnection, userName, "etc", null);
     }
 
+
+    /**
+     * Parses Json string and returns cascaedd map with String leaves
+     * @param requestString  Json string
+     * @return  map with values that are either string or map
+     * @throws JsonProcessingException raised if request is not valid Json, message contains position
+     */
     public Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
         final ObjectMapper jsonParser = new ObjectMapper();
         jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
@@ -76,22 +93,42 @@ public class CalvalusHadoopRequestConverter {
      * Parameterise Hadoop job from command line, configuration, request, bundle descriptor, production type
      */
 
+    /**
+     * Merges parameters of command line, request, processor descriptor, Calvalus configuration, production type.
+     * production type and processor are specified in request and read from local directory.
+     * Processor descriptors are read from distributed file system either from bundle-descriptor.xml files
+     * or from processorname-descriptor.json. The json files can be cached in a local directory.
+     * @param submittedRequest   request parameters
+     * @param commandLineParameters  command line parameters (optional)
+     * @param configParameters   Calvalus configuration parametesr
+     * @return  Hadoop job configuration
+     * @throws IllegalArgumentException  thrown if production type or processor does not exist
+     * @throws InvocationTargetException  thrown if there is an error in a translation rule
+     * @throws IllegalAccessException    thrown if there is an error in a translation rule
+     * @throws NoSuchMethodException    thrown if there is an error in a translation rule
+     * @throws InterruptedException  thrown if access to descriptors on distributed file system fails
+     * @throws IOException  thrown if access to descriptors on distributed file system fails
+     */
     public CalvalusHadoopParameters collectParameters(
             Map<String, Object> submittedRequest,
             Map<String, String> commandLineParameters,
             Map<Object, Object> configParameters)
-            throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, InterruptedException {
+            throws IOException, InvocationTargetException, IllegalAccessException, NoSuchMethodException, InterruptedException {
         // set Hadoop default parameters
         CalvalusHadoopParameters hadoopParameters = new CalvalusHadoopParameters();
         setHadoopDefaultParameters(hadoopParameters);
         LOG.fine("setting " + hadoopParameters.size() + " default parameters");
 
-        // read product type definition
+        // read production type definition
         Map<String, Object> productionTypeDef = null;
         String productionType = null;
         if (submittedRequest != null) {
             productionType = getParameter(submittedRequest, "productionType", "calvalus.productionType");
-            productionTypeDef = parseIntoMap("etc/" + productionType + "-cht-type.json");
+            try {
+                productionTypeDef = parseIntoMap(productionTypeDir + "/" + productionType + "-cht-type.json");
+            } catch (FileNotFoundException e) {
+                throw new IllegalArgumentException("unknown production type " + productionType);
+            }
             final Date now = new Date();
             final String productionId = Production.createId(productionType);
             hadoopParameters.set("calvalus.output.dir", String.format("/calvalus/home/%s/%s", userName, productionId));
@@ -153,11 +190,35 @@ public class CalvalusHadoopRequestConverter {
             LOG.fine("adding " + commandLineParameters.size() + " command line parameters");
         }
 
+        // make relative output directory absolute
+        final String outputDir = hadoopParameters.get("calvalus.output.dir");
+        if (outputDir != null && ! outputDir.startsWith("/")) {
+            hadoopParameters.set("calvalus.output.dir", "/calvalus/home/" + userName + "/" + outputDir);
+        }
+
         // create job client for user and for access to file system
         hadoopConnection.createJobClient(hadoopParameters);
 
         // retrieve and add parameters of processor descriptor
-        Map<String, String> processorDescriptorParameters = getProcessorDescriptorParameters(hadoopConnection, userName, hadoopParameters);
+        final String processor = hadoopParameters.get("processor");
+        Map<String, String> processorDescriptorParameters = null;
+        // look in cached descriptor directory
+        if (processor != null && processorDescriptorDir != null) {
+            String descriptorPath = processorDescriptorDir + "/" + processor + "-descriptor.json";
+            if (new File(descriptorPath).exists()) {
+                Map<String, Object> contentMap = parseIntoMap(descriptorPath);
+                processorDescriptorParameters = new HashMap<String, String>();
+                for (Map.Entry<String, Object> entry : contentMap.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        processorDescriptorParameters.put(entry.getKey(), String.valueOf(entry.getValue()));
+                    }
+                }
+            }
+        }
+        // look in bundle for json descriptor or xml descriptor
+        if (processorDescriptorParameters == null) {
+            processorDescriptorParameters = getProcessorDescriptorParameters(hadoopConnection, userName, processor, hadoopParameters);
+        }
         if (processorDescriptorParameters != null) {
             for (Map.Entry<String, String> entry : processorDescriptorParameters.entrySet()) {
                 translateAndInsert(entry.getKey(), entry.getValue(), productionTypeDef, hadoopParameters);
@@ -189,6 +250,14 @@ public class CalvalusHadoopRequestConverter {
         return hadoopParameters;
     }
 
+    /**
+     * Converts Hadoop parameters into Hadoop JobConf, installs processor packages
+     * @param hadoopParameters  Job parameters in Configuration format
+     * @param hook  function to be applied on all parameters that can add parameters, e.g. a SAML token
+     * @return  JobConf with Hadoop job parameters
+     * @throws IllegalArgumentException  thrown if the procesor package is not found
+     * @throws IOException  thrown if processor package deployment fails
+     */
     public JobConf createJob(CalvalusHadoopParameters hadoopParameters, HadoopJobHook hook) throws IOException {
         // install processor bundles and calvalus and snap bundle
         JobConf jobConf = new JobConf(hadoopParameters);
@@ -308,10 +377,12 @@ public class CalvalusHadoopRequestConverter {
             case ".json":
                 ObjectMapper jsonParser = new ObjectMapper();
                 jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+                jsonParser.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
                 return jsonParser.readValue(new File(path), VALUE_TYPE_REF);
             case ".yaml":
                 ObjectMapper yamlParser = new ObjectMapper(new YAMLFactory());
                 yamlParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+                yamlParser.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
                 return yamlParser.readValue(new File(path), VALUE_TYPE_REF);
             case ".xml":
                 HashMap<String, Object> parameterMap = new HashMap<String, Object>();
@@ -415,15 +486,15 @@ public class CalvalusHadoopRequestConverter {
      */
 
     public static Map<String, String> getProcessorDescriptorParameters(
-            CalvalusHadoopConnection hadoopConnection, String userName, Configuration hadoopParameters
+            CalvalusHadoopConnection hadoopConnection, String userName, String processor, Configuration hadoopParameters
     ) throws IOException, InterruptedException {
         String bundles = hadoopParameters.get("calvalus.bundles");
-        String processor = hadoopParameters.get("calvalus.l2.operator");
-        if (bundles == null || processor == null) {
+        String processorName = hadoopParameters.get("calvalus.l2.operator");
+        if (processor == null && (bundles == null || processorName == null)) {
             LOG.info("no bundle or no processor requested");
             return null;
         }
-        return hadoopConnection.getProcessorDescriptorParameters(bundles, processor, userName);
+        return hadoopConnection.getProcessorDescriptorParameters(processor, bundles, processorName, userName);
     }
 
     /**
