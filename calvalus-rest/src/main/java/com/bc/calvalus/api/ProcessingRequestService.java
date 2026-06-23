@@ -6,7 +6,6 @@ import com.bc.calvalus.production.cli.CalvalusHadoopConnection;
 import com.bc.calvalus.production.cli.CalvalusHadoopParameters;
 import com.bc.calvalus.production.cli.CalvalusHadoopRequestConverter;
 import com.bc.calvalus.production.cli.CalvalusHadoopStatusConverter;
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.hadoop.mapred.JobConf;
@@ -42,8 +41,8 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Path("processingrequests")
-public class CalvalusHadoopWebService {
+@Path("processing-requests")
+public class ProcessingRequestService {
 
     private static final SimpleDateFormat ISO_MILLIS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     static {
@@ -93,14 +92,6 @@ public class CalvalusHadoopWebService {
     //@Consumes({MediaType.APPLICATION_JSON})
     public Response submit(String requestString, @Context HttpServletRequest request, @Context UriInfo uriInfo, @Context ServletContext context) throws NotFoundException {
         try {
-            // check request
-            if (requestString == null) {
-                throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
-                                                          .entity("missing request content")
-                                                          .type(MediaType.TEXT_PLAIN)
-                                                          .build());
-            }
-
             // determine context
             final String username = Utils.getUserName(request, context);
             final String requestUrl = request.getRequestURL().toString();
@@ -108,7 +99,6 @@ public class CalvalusHadoopWebService {
             final String catalinaHome = System.getProperty("catalina.home");
             HadoopJobHook hook = null;
 
-            // read calvalus configuration
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(
                     hadoopConnection,
@@ -116,72 +106,49 @@ public class CalvalusHadoopWebService {
                     catalinaHome + "/content/" + PRODUCTION_TYPE_DIR,
                     catalinaHome + "/content/" + serviceName
             );
+
+            // read Calvalus configuration
             final File calvalusConfigPath = new File(catalinaHome + "/content/" + serviceName + "/calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
 
-            // parse Json request
-            final Map<String, Object> submittedRequest;
-            try {
-                submittedRequest = requestConverter.parseRequest(requestString);
-            } catch (JsonParseException e) {
-                throw new WebApplicationException(
-                        e,
-                        Response.status(Response.Status.BAD_REQUEST)
-                                .entity("error parsing request: " + e.getMessage())
-                                .type(MediaType.TEXT_PLAIN)
-                                .build());
-            }
+            // parse JSON request
+            final Map<String, Object> submittedRequest = requestConverter.parseRequest(requestString);
 
             // merge parameters of request, configuration, production type, processor descriptor
-            final CalvalusHadoopParameters hadoopParameters;
-            try {
-                 hadoopParameters = requestConverter.collectParameters(
-                        submittedRequest,
-                        null,
-                        calvalusConfig
-                );
-            } catch (IllegalArgumentException e) {
-                throw new WebApplicationException(
-                        e,
-                        Response.status(Response.Status.BAD_REQUEST)
-                                .entity("error in request: " + e.getMessage())
-                                .type(MediaType.TEXT_PLAIN)
-                                .build());
+            final CalvalusHadoopParameters hadoopParameters = requestConverter.collectParameters(
+                    submittedRequest,
+                    null,
+                    calvalusConfig
+            );
+
+            // convert into JobConf, install processor packages, prepare output directory, and submit job
+            final JobConf jobConf = requestConverter.createJob(hadoopParameters, hook);
+            if (Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
+                hadoopConnection.deleteOutputDir(jobConf);
             }
+            final RunningJob runningJob = hadoopConnection.submitJob(jobConf);
 
-            // convert into JobConf, install processor packages, and submit
-            final JobConf jobConf;
-            try {
-                jobConf = requestConverter.createJob(hadoopParameters, hook);
-                // prepare output directory and submit job
-                if (Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
-                    hadoopConnection.deleteOutputDir(jobConf);
-                }
-                final RunningJob runningJob = hadoopConnection.submitJob(jobConf);
-                LOG.info("Production successfully ordered with ID " + runningJob.getID());
-                // return job ID
-                return Response.ok(String.valueOf(runningJob.getID()) + "\n").build();
-            } catch (IllegalArgumentException e) {
-                throw new WebApplicationException(
-                        e,
-                        Response.status(Response.Status.BAD_REQUEST)
-                                .entity("error in request: " + e.getMessage())
-                                .type(MediaType.TEXT_PLAIN)
-                                .build());
-            } catch (IOException e) {
-                throw new WebApplicationException(
-                        e,
-                        Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                                .entity("error in processor package deployment: " + e.getMessage())
-                                .type(MediaType.TEXT_PLAIN)
-                                .build());
-            }
+            // return job ID
+            LOG.info("Production successfully ordered with ID " + runningJob.getID());
+            return Response.ok(String.valueOf(runningJob.getID()) + "\n").build();
 
-        // pass through user exceptions
-        } catch (WebApplicationException e) {
-            //LOG.log(Level.WARNING, e.getMessage(), e);
-            throw e;
-
+            // pass through user exceptions
+        } catch (IllegalArgumentException e) {
+            throw new WebApplicationException(
+                    e,
+                    Response.status(Response.Status.BAD_REQUEST)
+                            .entity("error in request: " + e.getMessage())
+                            .type(MediaType.TEXT_PLAIN)
+                            .build());
+        // report configuration errors or temporary backend failure
+        } catch (IOException e) {
+            LOG.log(Level.WARNING, e.getMessage(), e);
+            throw new WebApplicationException(
+                    e,
+                    Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                            .entity("error in backend: " + e.getMessage())
+                            .type(MediaType.TEXT_PLAIN)
+                            .build());
         // report unexpected exceptions and configuration errors as internal server errors
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);

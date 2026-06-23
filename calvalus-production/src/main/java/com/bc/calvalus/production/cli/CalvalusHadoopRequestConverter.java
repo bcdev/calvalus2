@@ -81,12 +81,16 @@ public class CalvalusHadoopRequestConverter {
      * Parses Json string and returns cascaedd map with String leaves
      * @param requestString  Json string
      * @return  map with values that are either string or map
-     * @throws JsonProcessingException raised if request is not valid Json, message contains position
+     * @throws IllegalArgumentException raised if request is not valid Json, message contains position
      */
-    public Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
-        final ObjectMapper jsonParser = new ObjectMapper();
-        jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-        return jsonParser.readValue(requestString, VALUE_TYPE_REF);
+    public Map<String, Object> parseRequest(String requestString) throws IllegalArgumentException {
+        try {
+            final ObjectMapper jsonParser = new ObjectMapper();
+            jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+            return jsonParser.readValue(requestString, VALUE_TYPE_REF);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
     }
 
     /**
