@@ -167,8 +167,10 @@ public class CalvalusHadoopRequestConverter {
             final String javaOptsHook = hadoopParameters.get("javaOptsHook");
             final String mapJavaOpts = hadoopParameters.get("mapreduce.map.java.opts");
             final String reduceJavaOpts = hadoopParameters.get("mapreduce.reduce.java.opts");
+            //final String amJavaOpts = hadoopParameters.get("yarn.app.mapreduce.am.command-opts");
             hadoopParameters.set("mapreduce.map.java.opts", mapJavaOpts + " " + javaOptsHook);
             hadoopParameters.set("mapreduce.reduce.java.opts", reduceJavaOpts + " " + javaOptsHook);
+            //hadoopParameters.set("yarn.app.mapreduce.am.command-opts", amJavaOpts + " " + javaOptsHook);
         }
 
         // install processor bundles and calvalus and snap bundle
