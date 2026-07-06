@@ -63,9 +63,14 @@ public class CalvalusHadoopRequestConverter {
 
     private final CalvalusHadoopConnection hadoopConnection;
     private final String userName;
+    private CalvalusHadoopConnection.RoleMatcher roleMatcher = null;
     private final String productionTypeDir;
     private final String processorDescriptorDir;
 
+    public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName, CalvalusHadoopConnection.RoleMatcher roleMatcher, String productionTypeDir, String processorDescriptorDir) {
+        this(hadoopConnection, userName, productionTypeDir, processorDescriptorDir);
+        this.roleMatcher = roleMatcher;
+    }
     public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName, String productionTypeDir, String processorDescriptorDir) {
         this.hadoopConnection = hadoopConnection;
         this.userName = userName;
@@ -211,6 +216,10 @@ public class CalvalusHadoopRequestConverter {
             String descriptorPath = processorDescriptorDir + "/" + processor + "-descriptor.json";
             if (new File(descriptorPath).exists()) {
                 Map<String, Object> contentMap = parseIntoMap(descriptorPath);
+                List<String> authorisations = (List<String>) ((Map<String, Object>) contentMap.get("processorDescriptor")).get("authorisation");
+                if (roleMatcher != null && ! roleMatcher.matches(authorisations)) {
+                    throw new FileNotFoundException(descriptorPath + " does not exist");
+                }
                 processorDescriptorParameters = new HashMap<String, String>();
                 for (Map.Entry<String, Object> entry : contentMap.entrySet()) {
                     if (entry.getValue() instanceof String) {

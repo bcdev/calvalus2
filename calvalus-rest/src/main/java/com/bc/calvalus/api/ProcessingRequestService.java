@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
@@ -94,15 +95,18 @@ public class ProcessingRequestService {
         try {
             // determine context
             final String username = Utils.getUserName(request, context);
+            final String[] userRoles = Utils.getUserRoles(request);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             HadoopJobHook hook = null;
+            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
 
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(
                     hadoopConnection,
                     username,
+                    roleMatcher,
                     catalinaHome + "/content/" + PRODUCTION_TYPE_DIR,
                     catalinaHome + "/content/" + serviceName
             );
@@ -132,23 +136,20 @@ public class ProcessingRequestService {
             LOG.info("Production successfully ordered with ID " + runningJob.getID());
             return Response.ok(String.valueOf(runningJob.getID()) + "\n").build();
 
-            // pass through user exceptions
+        // pass through user exceptions
         } catch (IllegalArgumentException e) {
-            throw new WebApplicationException(
-                    e,
-                    Response.status(Response.Status.BAD_REQUEST)
-                            .entity("error in request: " + e.getMessage())
-                            .type(MediaType.TEXT_PLAIN)
-                            .build());
+            LOG.log(Level.WARNING, e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("error in request: " + e.getMessage())
+                    .type(MediaType.TEXT_PLAIN)
+                    .build();
         // report configuration errors or temporary backend failure
         } catch (IOException e) {
-            LOG.log(Level.WARNING, e.getMessage(), e);
-            throw new WebApplicationException(
-                    e,
-                    Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                            .entity("error in backend: " + e.getMessage())
-                            .type(MediaType.TEXT_PLAIN)
-                            .build());
+            LOG.log(Level.SEVERE, e.getMessage());
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity("error in configuration or request: " + e.getMessage())
+                    .type(MediaType.TEXT_PLAIN)
+                    .build();
         // report unexpected exceptions and configuration errors as internal server errors
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);

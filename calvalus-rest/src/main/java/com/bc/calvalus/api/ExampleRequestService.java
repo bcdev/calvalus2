@@ -38,11 +38,13 @@ public class ExampleRequestService {
     ) throws NotFoundException {
         try {
             final String username = Utils.getUserName(request, context);
+            final String[] userRoles = Utils.getUserRoles(request);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             final String serviceDir = catalinaHome + "/content/" + serviceName;
             final CalvalusHadoopConnection.IdMatcher idMatcher = new CalvalusHadoopConnection.IdMatcher(names);
+            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
 
             final File[] processorPackageDirs = new File(serviceDir).listFiles((File file, String name) -> new File(file, name).isDirectory());
             StringBuilder accu = new StringBuilder("[");
@@ -52,7 +54,11 @@ public class ExampleRequestService {
                     if (processorDescriptorFilenames != null) {
                         for (String filename : processorDescriptorFilenames) {
                             final String id = filename.substring(0, filename.length() - "-example-request.json".length());
-                            if (idMatcher.matches(processorPackageDir.getName() + "/" + id)) {
+                            final String exampleFilename = id + "-descriptor.json";
+                            if (idMatcher.matches(processorPackageDir.getName() + "/" + id) &&
+                                new File(processorPackageDir, exampleFilename).exists() &&
+                                roleMatcher.matches(processorPackageDir, filename))
+                            {
                                 if (accu.length() > 1) {
                                     accu.append(", ");
                                 }
@@ -85,24 +91,42 @@ public class ExampleRequestService {
     public Response show(@PathParam("package") String pkg, @PathParam("name") String name, @Context HttpServletRequest request, @Context SecurityContext securityContext, @Context ServletContext context) throws NotFoundException {
         try {
             final String username = Utils.getUserName(request, context);
+            final String[] userRoles = Utils.getUserRoles(request);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             final String serviceDir = catalinaHome + "/content/" + serviceName;
+            final String descriptorPath = serviceDir + "/" + pkg + "/" + name + "-descriptor.json";
             final String localPath = serviceDir + "/" + pkg + "/" + name + "-example-request.json";
+            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
 
-            if (new File(localPath).exists()) {
+            if (new File(localPath).exists() && new File(descriptorPath).exists()) {
                 final StringBuilder accu = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new FileReader(localPath))) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(descriptorPath))) {
                     String line;
                     while ((line = reader.readLine()) !=null){
                         accu.append(line);
                         accu.append("\n");
                     }
                 }
-                return Response.ok(String.valueOf(accu)).build();
+                final String content = String.valueOf(accu);
+                final StringBuilder accu2 = new StringBuilder();
+                try (BufferedReader reader2 = new BufferedReader(new FileReader(localPath))) {
+                    String line;
+                    while ((line = reader2.readLine()) !=null){
+                        accu2.append(line);
+                        accu2.append("\n");
+                    }
+                }
+                final String content2 = String.valueOf(accu2);
+                if (roleMatcher.matches(content)) {
+                    return Response.ok(content2).build();
+                }
             }
-            return Response.notModified("processor descriptor  " + pkg + "/" + name + " not found").build();
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .entity("processor descriptor  " + pkg + "/" + name + " not found")
+                    .build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
             throw new WebApplicationException(e, Response.status(Response.Status.INTERNAL_SERVER_ERROR)

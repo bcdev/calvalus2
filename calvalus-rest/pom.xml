@@ -89,6 +89,13 @@
             <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.tomcat</groupId>
+            <artifactId>tomcat-catalina</artifactId>
+            <version>9.0.119</version>
+            <scope>compile</scope>
+        </dependency>
+
         <!--
                 <dependency>
                     <groupId>org.mortbay.jetty</groupId>
