@@ -45,12 +45,14 @@ public class ProcessorDescriptorService {
     ) throws NotFoundException {
         try {
             final String username = Utils.getUserName(request, context);
+            final String[] userRoles = Utils.getUserRoles(request);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             final String serviceDir = catalinaHome + "/content/" + serviceName;
             final String maxAge = request.getHeader("max-age");
             final CalvalusHadoopConnection.IdMatcher idMatcher = new CalvalusHadoopConnection.IdMatcher(names);
+            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
 
             if ("0".equals(maxAge)) {
                 final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
@@ -58,8 +60,8 @@ public class ProcessorDescriptorService {
                 CalvalusHadoopParameters hadoopParameters = readCalvalusConfiguration(calvalusConfigPath);
                 hadoopConnection.createJobClient(hadoopParameters);
                 StringBuilder accu = new StringBuilder("[");
-                hadoopConnection.stageProcessorDescriptors(username, serviceDir, idMatcher, accu);
-                hadoopConnection.stageProcessorDescriptors(null, serviceDir, idMatcher, accu);
+                hadoopConnection.stageProcessorDescriptors(username, serviceDir, idMatcher, roleMatcher, accu);
+                hadoopConnection.stageProcessorDescriptors(null, serviceDir, idMatcher, roleMatcher, accu);
                 accu.append("]");
                 return Response.ok(String.valueOf(accu) + "\n").build();
             }
@@ -72,7 +74,10 @@ public class ProcessorDescriptorService {
                     if (processorDescriptorFilenames != null) {
                         for (String filename : processorDescriptorFilenames) {
                             final String id = filename.substring(0, filename.length() - "-descriptor.json".length());
-                            if (idMatcher.matches(processorPackageDir.getName() + "/" + id)) {
+
+                            if (idMatcher.matches(processorPackageDir.getName() + "/" + id) &&
+                                roleMatcher.matches(processorPackageDir, filename))
+                            {
                                 if (accu.length() > 1) {
                                     accu.append(", ");
                                 }
@@ -109,12 +114,14 @@ public class ProcessorDescriptorService {
     public Response show(@PathParam("package") String pkg, @PathParam("name") String name, @Context HttpServletRequest request, @Context SecurityContext securityContext, @Context ServletContext context) throws NotFoundException {
         try {
             final String username = Utils.getUserName(request, context);
+            final String[] userRoles = Utils.getUserRoles(request);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             final String serviceDir = catalinaHome + "/content/" + serviceName;
             final String localPath = serviceDir + "/" + pkg + "/" + name + "-descriptor.json";
             final String maxAge = request.getHeader("max-age");
+            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
 
             // refresh from processor package
             if ("0".equals(maxAge) || ! new File(localPath).exists()) {
@@ -123,13 +130,16 @@ public class ProcessorDescriptorService {
                 CalvalusHadoopParameters hadoopParameters = readCalvalusConfiguration(calvalusConfigPath);
                 hadoopConnection.createJobClient(hadoopParameters);
                 String content = hadoopConnection.getProcessorDescriptor(pkg + "/" + name, username);
+                if (! roleMatcher.matches(content)) {
+                    return Response.notModified("processor descriptor  " + pkg + "/" + name + " not found").build();
+                }
                 try (PrintStream out = new PrintStream(localPath)) {
                     out.print(content);
                 }
-                content = hadoopConnection.getExampleRequest(pkg + "/" + name, username);
-                if (content != null) {
+                String content2 = hadoopConnection.getExampleRequest(pkg + "/" + name, username);
+                if (content2 != null) {
                     try (PrintStream out = new PrintStream(serviceDir + "/" + pkg + "/" + name + "-example-request.json")) {
-                        out.print(content);
+                        out.print(content2);
                     }
                 }
                 return Response.ok(content).build();
@@ -144,9 +154,15 @@ public class ProcessorDescriptorService {
                         accu.append("\n");
                     }
                 }
-                return Response.ok(String.valueOf(accu)).build();
+                String content = String.valueOf(accu);
+                if (roleMatcher.matches(content)) {
+                    return Response.ok(content).build();
+                }
             }
-            return Response.notModified("processor descriptor  " + pkg + "/" + name + " not found").build();
+            return Response
+                    .status(Response.Status.NOT_FOUND)
+                    .entity("processor descriptor  " + pkg + "/" + name + " not found")
+                    .build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);
             throw new WebApplicationException(e, Response.status(Response.Status.INTERNAL_SERVER_ERROR)

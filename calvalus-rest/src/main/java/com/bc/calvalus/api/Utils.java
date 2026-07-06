@@ -1,8 +1,7 @@
 package com.bc.calvalus.api;
 
 import com.bc.calvalus.api.model.BackendConfig;
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.inventory.FileSystemService;
+import org.apache.catalina.realm.UserDatabaseRealm.UserDatabasePrincipal;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -11,17 +10,21 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.security.Principal;
 import java.util.List;
-import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class Utils {
+
+    public static String[] getUserRoles(HttpServletRequest request) throws NoSuchMethodException {
+        final Principal userPrincipal = request.getUserPrincipal();
+        if (userPrincipal instanceof UserDatabasePrincipal) {
+            UserDatabasePrincipal genericPrincipal = (UserDatabasePrincipal) userPrincipal;
+            final String[] roles = genericPrincipal.getRoles();
+            return roles;
+        } else {
+            throw new NoSuchMethodException("cannot determine roles: " + userPrincipal.getClass());
+        }
+    }
 
     public static String getUserName(HttpServletRequest request, ServletContext context) throws ServletException {
         String userName = request.getUserPrincipal().getName();

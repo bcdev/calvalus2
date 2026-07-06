@@ -14,7 +14,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -25,16 +24,19 @@ import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 
@@ -108,7 +110,7 @@ public class CalvalusHadoopConnection {
 
     private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {
     };
-    public Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
+    public static Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
         final ObjectMapper jsonParser = new ObjectMapper();
         jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
         return jsonParser.readValue(requestString, VALUE_TYPE_REF);
@@ -248,7 +250,9 @@ public class CalvalusHadoopConnection {
             }});
     }
 
-    public void stageProcessorDescriptors(String userName, String serviceDir, IdMatcher idMatcher, StringBuilder accu) throws IOException {
+    public void stageProcessorDescriptors(
+            String userName, String serviceDir, IdMatcher idMatcher, RoleMatcher roleMatcher, StringBuilder accu
+    ) throws IOException {
         final Path processorDirectory = new Path(userName == null ?
                 "/calvalus/software/1.0" :
                 "/calvalus/home/" + userName + "/software");
@@ -281,21 +285,23 @@ public class CalvalusHadoopConnection {
                         LOG.info("checking " + name);
                         if (idMatcher.matches(packageDir.getPath().getName() + "/" + name)) {
                             String content = readFile(fs, remoteFile.getPath());
-                            final String descriptorPath = serviceDir + "/" + remoteFile.getPath().getParent().getName() + "/" + remoteFile.getPath().getName();
-                            new File(descriptorPath).getParentFile().mkdirs();
-                            try (PrintStream out = new PrintStream(descriptorPath)) {
-                                out.print(content);
-                            }
-                            if (isDescriptor) {
-                                if (accu.length() > 1) {
-                                    accu.append(", ");
+                            if (roleMatcher.matches(content)) {
+                                final String descriptorPath = serviceDir + "/" + remoteFile.getPath().getParent().getName() + "/" + remoteFile.getPath().getName();
+                                new File(descriptorPath).getParentFile().mkdirs();
+                                try (PrintStream out = new PrintStream(descriptorPath)) {
+                                    out.print(content);
                                 }
-                                accu.append("\"");
-                                accu.append(packageDir.getPath().getName());
-                                accu.append("/");
-                                accu.append(name);
-                                accu.append("\"");
-                                LOG.info("staged " + name);
+                                if (isDescriptor) {
+                                    if (accu.length() > 1) {
+                                        accu.append(", ");
+                                    }
+                                    accu.append("\"");
+                                    accu.append(packageDir.getPath().getName());
+                                    accu.append("/");
+                                    accu.append(name);
+                                    accu.append("\"");
+                                    LOG.info("staged " + name);
+                                }
                             }
                         }
                     }
@@ -313,6 +319,45 @@ public class CalvalusHadoopConnection {
         }
         public boolean matches(String id) {
             return names == null || Arrays.stream(names).anyMatch(x -> id.contains(x));
+        }
+    }
+
+    public static class RoleMatcher {
+        private String user = null;
+        private List<String> roles = null;
+        public RoleMatcher(String user, String[] roles) {
+            this.user = user;
+            this.roles = Arrays.asList(roles);
+        }
+        public boolean matches(File dir, String descriptorFilename) throws IOException {
+            final StringBuilder accu = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new FileReader(new File(dir, descriptorFilename)))) {
+                String line;
+                while ((line = reader.readLine()) !=null){
+                    accu.append(line);
+                    accu.append("\n");
+                }
+            }
+            return matches(accu.toString());
+        }
+        public boolean matches(String content) throws JsonProcessingException {
+            Map<String, Object> contentMap = parseRequest(content);
+            List<String> authorisations = (List<String>) ((Map<String, Object>) contentMap.get("processorDescriptor")).get("authorisation");
+            return matches(authorisations);
+        }
+        public boolean matches(List<String> authorisations) throws JsonProcessingException {
+            for (String authorisation: authorisations) {
+                if (authorisation.startsWith("group:")) {
+                    if (roles.contains(authorisation.substring("group:".length()))) {
+                        return true;
+                    }
+                } else if (authorisation.startsWith("user:")) {
+                    if (authorisation.substring("user:".length()).equals(user)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }
