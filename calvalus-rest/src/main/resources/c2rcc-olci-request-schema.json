@@ -1,0 +1,146 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "",
+
+    "allOf": [
+        {
+            "$ref": "../../schemas/processing-request-schema.json"
+        },
+        
+        {
+            "type": "object",
+            "properties": {
+                "processor": {
+                    "type": "string",
+                    "enum": [ "c2rcc-13.0.rc1/c2rcc-olci" ]
+                },
+                "processorParameters": {
+                    "type": "object",
+                    "properties": {
+                        "parameters": {
+                            "$ref": "#/$defs/processorParameters"
+                        }
+                    },
+                    "required": [ "parameters" ]
+                },
+                "raParameters": {
+                    "type": "object",
+                    "properties": {
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "bands": {
+                                    "type": "object",
+                                    "properties": {
+                                        "band": {
+                                            "oneOf": [
+                                                {
+                                                    "type": "array",
+                                                    "uniqueItems": true,
+                                                    "minItems": 1,
+                                                    "items": { "$ref": "#/$defs/band" }
+                                                },
+                                                { "$ref": "#/$defs/band" }
+                                            ]
+                                        }
+                                    },
+                                    "required": [ "band" ]
+                                }
+                            }
+                        }
+                    },
+                    "required": [ "parameters" ]
+                }
+            },
+            "required": [ "processor" ]
+        }
+    ],
+
+    "$defs": {
+        "processorParameters": {
+            "type": "object",
+            "properties": {
+                "validPixelExpression": {
+                    "title": "Defines the pixels that are valid for processing, SNAP band-maths expression",
+                    "type": "string",
+                    "default": "!quality_flags.invalid && (!quality_flags.land || quality_flags.fresh_inland_water)",
+                    "minLength": 1
+                },
+                "salinity": {
+                    "title": "Value used as salinity for the scene, unit [PSU]",
+                    "type": "string",
+                    "default": "35.0",
+                    "minLength": 1
+                },
+                "temperature": {
+                    "title": "Value used as temperature for the scene, unit [C]",
+                    "type": "string",
+                    "default": "15.0",
+                    "minLength": 1
+                },
+                "ozone": {
+                    "title": "Value used as ozone if not provided by auxiliary data",
+                    "type": "string",
+                    "default": "330.0",
+                    "minLength": 1
+                },
+                "press": {
+                    "title": "Value used as surface air pressure at sea level if not provided by auxiliary data",
+                    "type": "string",
+                    "default": "1000.0",
+                    "minLength": 1
+                },
+                "outputAsRrs": {
+                    "title": "Output AC reflectances as rrs instead of rhow",
+                    "type": "string",
+                    "default": "false",
+                    "minLength": 1
+                },
+                "deriveRwFromPathAndTransmittance": {
+                    "title": "Derive water reflectance from path radiance and transmittance",
+                    "type": "string",
+                    "default": "false",
+                    "minLength": 1
+                },
+                "useEcmwfAuxData": {
+                    "title": "Use ECMWF aux data embedded into source product",
+                    "type": "string",
+                    "default": "true",
+                    "minLength": 1
+                },
+                "demName": {
+                    "title": "Name of digital elevation model",
+                    "type": "string",
+                    "enum": [ "Copernicus 90m Global DEM", "Copernicus 30m Global DEM", "GETASSE30" ],
+                    "minLength": 1
+                },
+                "outputUncertainties": {
+                    "title": "Output uncertainties",
+                    "type": "string",
+                    "default": "true",
+                    "minLength": 1
+                }
+            },
+            "additionalProperties": false
+        },
+
+        "band": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "enum": [ "rhow_1", "rhow_2", "rhow_3", "rhow_4", "rhow_5", "rhow_6", "rhow_7", "rhow_8", "rhow_9", "rhow_10", "rhow_11", "rhow_12", "rhow_16", "rhow_17", "rhow_18", "rhow_21", "iop_apig", "iop_adet", "iop_agelb", "iop_bpart", "iop_bwit", "iop_adg", "iop_atot", "iop_btot", "kd489", "kdmin", "kd_z90max", "conc_tsm", "conc_chl", "c2rcc_flags", "quality_flags" ]
+                },
+                "min": {
+                    "type": "string"
+                },
+                "max": {
+                    "type": "string"
+                },
+                "numBins": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "productionName" : "C2RCC OLCI example request",
+    "productionType" : "processing",
+    "processor"      : "c2rcc-13.0.rc1/c2rcc-olci",
+    "processorParameters" : {
+        "parameters": {
+            "validPixelExpression": "!quality_flags.invalid && (!quality_flags.land || quality_flags.fresh_inland_water)"
+        }
+    },
+    "inputPath"      : "/calvalus/eodata/OLCI_FR_L1/v2/2023/08/14/S3A_OL_1_EFR____20230814T224234_20230814T224534_20230816T035416_0179_102_158_1800_MAR_O_NT_002.SEN3.zip",
+    "regionGeometry" : "POLYGON((-180 60,-180 70,-170 70,-170 60,-180 60))",
+    "outputDir"      : "test-c2rcc-olci"
+}

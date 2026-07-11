@@ -1,0 +1,41 @@
+{
+    "productionName" : "C2RCC OLCI example request",
+    "productionType" : "ra",
+    "raParameters" : {
+        "parameters" : {
+            "regionSource" : "/calvalus/home/carole/region_data/Bergen_lakes.zip",
+            "regionSourceAttributeName" : "name",
+            "goodPixelExpression" : "(not quality_flags.invalid and not pixel_classif_flags.IDEPIX_CLOUD and not pixel_classif_flags.IDEPIX_CLOUD_BUFFER and not pixel_classif_flags.IDEPIX_CLOUD_SHADOW and not pixel_classif_flags.IDEPIX_SNOW_ICE and not (c2rcc_flags.Rtosa_OOS and conc_chl < 1.0) and not c2rcc_flags.Rtosa_OOR and not c2rcc_flags.Rhow_OOR and not (c2rcc_flags.Cloud_risk and immersed_cyanobacteria == 0) and floating_vegetation == 0 and conc_chl > 0.01 and not (floating_cyanobacteria == 1 or chl_pitarch > 500) and not (c2rcc_flags.Cloud_risk and quality_flags.bright))",
+            "bands" : {
+                "band" : [ {
+                    "name" : "Oa02",
+                    "numBins" : "4",
+                    "min" : "0",
+                    "max" : "1"
+                }, {
+                    "name" : "Oa05",
+                    "numBins" : "4",
+                    "min" : "0",
+                    "max" : "1"
+                }, {
+                    "name" : "Oa08",
+                    "numBins" : "4",
+                    "min" : "0",
+                    "max" : "1"
+                }, {
+                    "name" : "sea_level_pressure",
+                    "numBins" : "4",
+                    "min" : "0",
+                    "max" : "10000"
+                } ]
+            },
+            "percentiles" : "50,75,90",
+            "writePixelValues" : "false",
+            "writePerRegion" : "false",
+            "writeSeparateHistogram" : "false"
+        }
+    },
+    
+    "inputPath"      : "/calvalus/eodata/OLCI_FR_L1/v2/2023/08/14/S3A_OL_1_EFR____20230814T224234_20230814T224534_20230816T035416_0179_102_158_1800_MAR_O_NT_002.SEN3.zip",
+    "outputDir"      : "test-c2rcc-olci"
+}

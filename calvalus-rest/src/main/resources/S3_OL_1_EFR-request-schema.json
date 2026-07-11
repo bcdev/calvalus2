@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "",
+
+    "allOf": [
+        {
+            "$ref": "/opt/apache-tomcat-9.0.116/content/schemas/processing-request-schema.json"
+        },
+        
+        {
+            "anyOf": [
+                {
+                    "$ref": "../bc-calvalus/c2rcc-13.0.rc1/c2rcc-olci-request-schema.json"
+                },
+
+                {
+                    "type": "object",
+                    "properties": {
+                        "raParameters": {
+                            "type": "object",
+                            "properties": {
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "bands": {
+                                            "type": "object",
+                                            "properties": {
+                                                "band": {
+                                                    "oneOf": [
+                                                        {
+                                                            "type": "array",
+                                                            "uniqueItems": true,
+                                                            "minItems": 1,
+                                                            "items": { "$ref": "#/$defs/band" }
+                                                        },
+                                                        { "$ref": "#/$defs/band" }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [ "band" ]
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [ "parameters" ],
+                            "additionalProperties": false
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+
+    "$defs": {
+        "band": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "enum": [ "Oa01", "Oa02", "Oa03", "Oa04", "Oa05", "Oa06", "Oa07", "Oa08", "Oa08A", "Oa09", "Oa10", "Oa11", "Oa12", "Oa13", "Oa14", "Oa15", "Oa16", "Oa17", "Oa18", "Oa19", "Oa20", "Oa21", "quality_flags", "humidity", "sea_level_pressure", "total_columnar_water_vapour", "total_ozone", "SZA", "SAA", "OZA", "OAA" ]
+                },
+                "min": {
+                    "type": "string"
+                },
+                "max": {
+                    "type": "string"
+                },
+                "numBins": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        }
+    }
+}
