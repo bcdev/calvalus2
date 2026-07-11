@@ -1,0 +1,157 @@
+{
+    "processorName"    : "c2rcc.olci",
+    "processorType"    : "snap-operator",
+    
+    "calvalus.system.s3tbx.reader.olci.pixelGeoCoding" : "true",
+    "calvalus.system.snap.pixelGeoCoding.useTiling" : "true",
+    "calvalus.system.snap.useAlternatePixelGeoCoding" : "true",
+    "calvalus.system.snap.pixelGeoCoding.fractionAccuracy" : "true",
+
+    "outputFormat"     : "NetCDF4",
+    
+    "queue"            : "default",
+    "timeout"          : "1800",
+    "attempts"         : "3",
+    "failurePercent"   : "0",
+    "processingMemory" : "8192",
+    "snap.tileCache"   : "4096",
+
+    "processorBundles" : "c2rcc-13.0.rc1",
+    "calvalus"         : "calvalus-3.0.rc1",
+    "snap"             : "snap-13.0cv.rc1",
+
+    "yarn.app.mapreduce.am.command-opts" : "-Xmx384M -Djava.awt.headless=true -Djava.security.manager=allow --add-opens=java.base/java.lang=ALL-UNNAMED",
+    "yarn.app.mapreduce.am.env"          : "HADOOP_CONF_DIR=/opt/hadoop-3.4.2-BC/conf,HADOOP_MAPRED_HOME=/opt/hadoop-3.4.2-BC,JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64,PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:/usr/bin:/bin",
+    "mapreduce.map.env"                  : "HADOOP_CONF_DIR=/opt/hadoop-3.4.2-BC/conf,HADOOP_MAPRED_HOME=/opt/hadoop-3.4.2-BC,JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64,PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:/usr/bin:/bin",
+    "mapreduce.reduce.env"               : "HADOOP_CONF_DIR=/opt/hadoop-3.4.2-BC/conf,HADOOP_MAPRED_HOME=/opt/hadoop-3.4.2-BC,JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64,PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:/usr/bin:/bin",
+    "yarn.nodemanager.env-whitelist"     : "JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME,HADOOP_HOME,PATH,LANG,TZ",
+    "mapreduce.jvm.add-opens-as-default" : "true",
+
+    "processorDescriptor": {
+        "title": "Case 2R/CoastColour processor for OLCI",
+        "version": "13.0",
+        "description": "Performs atmospheric correction and IOP retrieval on Sentinel-2 MSI products using a neural-network approach",
+        "authorisation": [ "group:bc" ],
+        "inputProductTypes": [ "OLCI_L1B", "OL_1_EFR", "OL_1_ERR" ],
+        "outputProductType": "S3_OLCI_L2",
+        "outputFormats": [ "NetCDF4", "NetCDF", "GeoTIFF", "BEAM-DIMAP" ],
+        "parameterDescriptor": {
+            "validPixelExpression": {
+                "title": "Defines the pixels which are valid for processing, SNAP syntax",
+                "type": "string",
+                "default": "!quality_flags.invalid && (!quality_flags.land || quality_flags.fresh_inland_water)"
+            },
+            "salinity": {
+                "title": "Value used as salinity for the scene, unit [PSU]",
+                "type": "float",
+                "default": "35.0"
+            },
+            "temperature": {
+                "title": "Value used as temperature for the scene, unit [C]",
+                "type": "float",
+                "default": "15.0"
+            },
+            "ozone": {
+                "title": "Value used as ozone if not provided by auxiliary data",
+                "type": "float",
+                "default": "330.0"
+            },
+            "press": {
+                "title": "Value used as surface air pressure at sea level if not provided by auxiliary data",
+                "type": "float",
+                "default": "1000.0"
+            },
+            "outputAsRrs": {
+                "title": "Output AC reflectances as rrs instead of rhow",
+                "type": "boolean",
+                "default": "false"
+            },
+            "deriveRwFromPathAndTransmittance": {
+                "title": "Derive water reflectance from path radiance and transmittance",
+                "type": "boolean",
+                "default": "false"
+            },
+            "useEcmwfAuxData": {
+                "title": "Use ECMWF aux data embedded into source product",
+                "type": "boolean",
+                "default": "true"
+            },
+            "demName": {
+                "title": "Name of digital elevation model",
+                "type": "enum",
+                "values": [ "", "Copernicus 90m Global DEM", "Copernicus 30m Global DEM", "GETASSE30" ],
+                "default": "true"
+            },
+            "outputUncertainties": {
+                "title": "Output uncertainties",
+                "type": "boolean",
+                "default": "true"
+            }
+        },
+        "outputBandDescriptor": {
+            "rhow_1": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 400.0 nm",
+                        "type": "float" },
+            "rhow_2": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 412.5 nm",
+                        "type": "float" },
+            "rhow_3": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 442.5 nm",
+                        "type": "float" },
+            "rhow_4": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 490.0 nm",
+                        "type": "float" },
+            "rhow_5": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 510.0 nm",
+                        "type": "float" },
+            "rhow_6": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 560.0 nm",
+                        "type": "float" },
+            "rhow_7": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 620.0 nm",
+                        "type": "float" },
+            "rhow_8": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 665.0 nm",
+                        "type": "float" },
+            "rhow_9": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 673.75 nm",
+                        "type": "float" },
+            "rhow_10": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 681.25 nm",
+                         "type": "float" },
+            "rhow_11": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 708.75 nm",
+                         "type": "float" },
+            "rhow_12": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 753.75 nm",
+                         "type": "float" },
+            "rhow_16": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 778.75 nm",
+                         "type": "float" },
+            "rhow_17": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 865.0 nm",
+                         "type": "float" },
+            "rhow_18": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 885.0 nm",
+                         "type": "float" },
+            "rhow_21": { "title": "Atmospherically corrected angular dependent water leaving reflectances at 1020.0 nm",
+                         "type": "float" },
+            "iop_apig": { "title": "Absorption coefficient of phytoplankton pigments at 443 nm",
+                          "type": "float" },
+            "iop_adet": { "title": "Absorption coefficient of detritus at 443 nm",
+                          "type": "float" },
+            "iop_agelb": { "title": "Absorption coefficient of gelbstoff at 443 nm",
+                           "type": "float" },
+            "iop_bpart": { "title": "Scattering coefficient of marine paticles at 443 nm",
+                           "type": "float" },
+            "iop_bwit": { "title": "Scattering coefficient of white particles at 443 nm",
+                          "type": "float" },
+            "iop_adg": { "title": "Detritus + gelbstoff absorption at 443 nm",
+                         "type": "float" },
+            "iop_atot": { "title": "phytoplankton + detritus + gelbstoff absorption at 443 nm",
+                          "type": "float" },
+            "iop_btot": { "title": "total particle scattering at 443 nm",
+                          "type": "float" },
+            "kd489": { "title": "Irradiance attenuation coefficient at 489 nm",
+                       "type": "float" },
+            "kdmin": { "title": "Mean irradiance attenuation coefficient at the three bands with minimum kd",
+                       "type": "float" },
+            "kd_z90max": { "title": "Depth of the water column from which 90% of the water leaving irradiance comes from",
+                           "type": "float" },
+            "conc_tsm": { "title": "Total suspended matter dry weight concentration",
+                          "type": "float" },
+            "conc_chl": { "title": "Chlorophyll concentration",
+                          "type": "float" },
+            "c2rcc_flags": { "title": "C2RCC quality flags",
+                             "type": "uint" },
+            "quality_flags": { "title": "Classification and quality flags",
+                               "type": "uint" }
+        }
+    }
+}
+
