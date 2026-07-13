@@ -1,7 +1,7 @@
 package com.bc.calvalus.api;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.production.cli.CalvalusHadoopConnection;
+import com.bc.calvalus.production.util.DescriptorUtils;
 import com.sun.jersey.api.NotFoundException;
 
 import javax.servlet.ServletContext;
@@ -35,7 +35,7 @@ public class ExampleRequestService {
             @Context HttpServletRequest request,
             @Context SecurityContext securityContext,
             @Context ServletContext context
-    ) throws NotFoundException {
+    ) {
         try {
             final String username = Utils.getUserName(request, context);
             final String[] userRoles = Utils.getUserRoles(request);
@@ -43,30 +43,45 @@ public class ExampleRequestService {
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             final String serviceDir = catalinaHome + "/content/" + serviceName;
-            final CalvalusHadoopConnection.IdMatcher idMatcher = new CalvalusHadoopConnection.IdMatcher(names);
-            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
+            final DescriptorUtils.IdMatcher idMatcher = new DescriptorUtils.IdMatcher(names);
+            final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(
+                    username, userRoles
+            );
 
-            final File[] processorPackageDirs = new File(serviceDir).listFiles((File file, String name) -> new File(file, name).isDirectory());
+            final File[] processorPackageDirs = new File(serviceDir).listFiles(
+                    (File file, String name) -> new File(file, name).isDirectory()
+            );
             StringBuilder accu = new StringBuilder("[");
             if (processorPackageDirs != null) {
                 for (File processorPackageDir : processorPackageDirs) {
-                    final String[] processorDescriptorFilenames = processorPackageDir.list((File _file, String name) -> name.endsWith("-example-request.json"));
+                    final String[] processorDescriptorFilenames = processorPackageDir.list(
+                            (File _file, String name) -> name.endsWith("-descriptor.json")
+                    );
                     if (processorDescriptorFilenames != null) {
-                        for (String filename : processorDescriptorFilenames) {
-                            final String id = filename.substring(0, filename.length() - "-example-request.json".length());
-                            final String exampleFilename = id + "-descriptor.json";
-                            if (idMatcher.matches(processorPackageDir.getName() + "/" + id) &&
-                                new File(processorPackageDir, exampleFilename).exists() &&
-                                roleMatcher.matches(processorPackageDir, filename))
-                            {
-                                if (accu.length() > 1) {
-                                    accu.append(", ");
+                        for (String descriptorFilename : processorDescriptorFilenames) {
+                            final String processorName = descriptorFilename.substring(
+                                    0,
+                                    descriptorFilename.length() - "-descriptor.json".length()
+                            );
+                            if (roleMatcher.matches(processorPackageDir, descriptorFilename)) {
+                                final String[] exampleFilenames = processorPackageDir.list(
+                                        (File _file, String name) -> name.startsWith(processorName) && name.endsWith("-example-request.json")
+                                );
+                                if (exampleFilenames != null) {
+                                    for (String filename : exampleFilenames) {
+                                        final String id = filename.substring(0, filename.length() - "-example-request.json".length());
+                                        if (idMatcher.matches(processorPackageDir.getName() + "/" + id)) {
+                                            if (accu.length() > 1) {
+                                                accu.append(", ");
+                                            }
+                                            accu.append("\"");
+                                            accu.append(processorPackageDir.getName());
+                                            accu.append("/");
+                                            accu.append(id);
+                                            accu.append("\"");
+                                        }
+                                    }
                                 }
-                                accu.append("\"");
-                                accu.append(processorPackageDir.getName());
-                                accu.append("/");
-                                accu.append(id);
-                                accu.append("\"");
                             }
                         }
                     }
@@ -96,36 +111,35 @@ public class ExampleRequestService {
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             final String serviceDir = catalinaHome + "/content/" + serviceName;
-            final String descriptorPath = serviceDir + "/" + pkg + "/" + name + "-descriptor.json";
+            // TODO Shall we handle more than a single example request?;
             final String localPath = serviceDir + "/" + pkg + "/" + name + "-example-request.json";
-            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
+            final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(username, userRoles);
 
-            if (new File(localPath).exists() && new File(descriptorPath).exists()) {
-                final StringBuilder accu = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new FileReader(descriptorPath))) {
-                    String line;
-                    while ((line = reader.readLine()) !=null){
-                        accu.append(line);
-                        accu.append("\n");
+            if (new File(localPath).exists()) {
+                // find descriptor with prefix also prefixing the desired example file
+                final String[] processorDescriptorFilenames = new File(new File(serviceDir), pkg).list(
+                        (File _file, String name1) -> name1.endsWith("-descriptor.json")
+                        && name.startsWith(name1.substring(0, name1.length() - "-descriptor.xml".length()))
+                );
+                if (
+                        processorDescriptorFilenames != null
+                        && roleMatcher.matches(new File(new File(serviceDir), pkg), processorDescriptorFilenames[0])
+                ) {
+                    final StringBuilder accu = new StringBuilder();
+                    try (BufferedReader reader = new BufferedReader(new FileReader(localPath))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            accu.append(line);
+                            accu.append("\n");
+                        }
+                        final String content = String.valueOf(accu);
+                        return Response.ok(content).build();
                     }
-                }
-                final String content = String.valueOf(accu);
-                final StringBuilder accu2 = new StringBuilder();
-                try (BufferedReader reader2 = new BufferedReader(new FileReader(localPath))) {
-                    String line;
-                    while ((line = reader2.readLine()) !=null){
-                        accu2.append(line);
-                        accu2.append("\n");
-                    }
-                }
-                final String content2 = String.valueOf(accu2);
-                if (roleMatcher.matches(content)) {
-                    return Response.ok(content2).build();
                 }
             }
             return Response
                     .status(Response.Status.NOT_FOUND)
-                    .entity("processor descriptor  " + pkg + "/" + name + " not found")
+                    .entity("request example  " + pkg + "/" + name + " not found")
                     .build();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, e.getMessage(), e);

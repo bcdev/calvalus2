@@ -40,7 +40,9 @@ public class ProductionTypeService {
             final String productionTypeDirPath = catalinaHome + "/content/" + PRODUCTION_TYPE_DIR;
             final IdMatcher idMatcher = new IdMatcher(names);
 
-            final String[] productionTypeFilenames = new File(productionTypeDirPath).list((File _file, String name) -> name.endsWith("-cht-type.json"));
+            final String[] productionTypeFilenames = new File(productionTypeDirPath).list(
+                    (File _file, String name) -> name.endsWith("-cht-type.json")
+            );
             StringBuilder accu = new StringBuilder("[");
             for (String filename: productionTypeFilenames) {
                 final String id = filename.substring(0, filename.length() - "-cht-type.json".length());

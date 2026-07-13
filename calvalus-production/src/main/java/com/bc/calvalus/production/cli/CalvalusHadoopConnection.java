@@ -5,11 +5,8 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.production.util.DescriptorUtils;
 import com.bc.ceres.binding.BindingException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -24,21 +21,20 @@ import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class CalvalusHadoopConnection {
     private static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
@@ -108,14 +104,6 @@ public class CalvalusHadoopConnection {
         }
     }
 
-    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {
-    };
-    public static Map<String, Object> parseRequest(String requestString) throws JsonProcessingException {
-        final ObjectMapper jsonParser = new ObjectMapper();
-        jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
-        return jsonParser.readValue(requestString, VALUE_TYPE_REF);
-    }
-
     public String getProcessorDescriptor(String processor, String userName) throws IOException, InterruptedException {
         final String descriptorContent = remoteUser.doAs((PrivilegedExceptionAction<String>) () -> {
             for (String pathString : new String[] {
@@ -162,7 +150,7 @@ public class CalvalusHadoopConnection {
                     Path path = new Path(pathString);
                     if (jobClient.getFs().exists(path)) {
                         String content = readFile(jobClient.getFs(), path);
-                        Map<String, Object> contentMap = parseRequest(content);
+                        Map<String, Object> contentMap = DescriptorUtils.parseRequest(content);
                         Map<String, String> parametersMap = new HashMap<String, String>();
                         for (Map.Entry<String, Object> entry : contentMap.entrySet()) {
                             if (entry.getValue() instanceof String) {
@@ -250,114 +238,69 @@ public class CalvalusHadoopConnection {
             }});
     }
 
-    public void stageProcessorDescriptors(
-            String userName, String serviceDir, IdMatcher idMatcher, RoleMatcher roleMatcher, StringBuilder accu
-    ) throws IOException {
-        final Path processorDirectory = new Path(userName == null ?
-                "/calvalus/software/1.0" :
-                "/calvalus/home/" + userName + "/software");
+    public String getProcessorRootDir(String userName) {
+        if (userName == null) {
+            return "/calvalus/software/1.0";
+        } else {
+            return "/calvalus/home/" + userName + "/software";
+        }
+    }
+
+    public Iterable<String> listSubdirs(String rootDir) throws IOException {
+        final Path rootPath = new Path(rootDir);
         final FileSystem fs = jobClient.getFs();
-        if (fs.exists(processorDirectory)) {
-            LOG.info("scanning " + processorDirectory);
-            for (FileStatus packageDir : fs.listStatus(
-                    processorDirectory,
-                    (Path path) -> {
-                        try {
-                            return fs.isDirectory(path);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-            )) {
-                if (packageDir != null) {
-                    LOG.info("scanning package " + packageDir.getPath());
-                    for (FileStatus remoteFile : fs.listStatus(
-                            packageDir.getPath(), (Path path) ->
-                                    path.getName().endsWith("-descriptor.json")
-                                            || path.getName().endsWith("-example-request.json"))) {
-                        final boolean isDescriptor = remoteFile.getPath().getName().endsWith("-descriptor.json");
-                        final String name =
-                                remoteFile.getPath().getName().substring(
-                                    0,
-                                    remoteFile.getPath().getName().length()
-                                            - (isDescriptor ? "-descriptor.json".length() : "-example-request.json".length())
-                        );
-                        LOG.info("checking " + name);
-                        if (idMatcher.matches(packageDir.getPath().getName() + "/" + name)) {
-                            String content = readFile(fs, remoteFile.getPath());
-                            if (roleMatcher.matches(content)) {
-                                final String descriptorPath = serviceDir + "/" + remoteFile.getPath().getParent().getName() + "/" + remoteFile.getPath().getName();
-                                new File(descriptorPath).getParentFile().mkdirs();
-                                try (PrintStream out = new PrintStream(descriptorPath)) {
-                                    out.print(content);
-                                }
-                                if (isDescriptor) {
-                                    if (accu.length() > 1) {
-                                        accu.append(", ");
-                                    }
-                                    accu.append("\"");
-                                    accu.append(packageDir.getPath().getName());
-                                    accu.append("/");
-                                    accu.append(name);
-                                    accu.append("\"");
-                                    LOG.info("staged " + name);
-                                }
-                            }
-                        }
-                    }
+        if (fs.exists(rootPath)) {
+            FileStatus[] processorDir = fs.listStatus(rootPath, (Path path) -> {
+                try {
+                    return fs.isDirectory(path);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-            }
+            });
+            return Arrays.stream(processorDir).map((FileStatus path) -> path.getPath().toString()).collect(Collectors.toList());
+        } else {
+            return new Iterable<String>() {
+                @Override
+                public Iterator<String> iterator() {
+                    return new Iterator<String>() {
+                                    @Override
+                                    public boolean hasNext() { return false; }
+                                    @Override
+                                    public String next() { return null; }
+                                };
+                }
+
+                @Override
+                public void forEach(Consumer<? super String> action) {
+                    Iterable.super.forEach(action);
+                }
+
+                @Override
+                public Spliterator<String> spliterator() {
+                    return Iterable.super.spliterator();
+                }
+            };
         }
     }
 
-    public static class IdMatcher {
-        private String[] names = null;
-        public IdMatcher(String names) {
-            if (names != null) {
-                this.names = names.split(",");
-            }
-        }
-        public boolean matches(String id) {
-            return names == null || Arrays.stream(names).anyMatch(x -> id.contains(x));
+    public Iterable<String> listFiles(String dir, String prefix, String suffix) throws IOException {
+        final Path rootPath = new Path(dir);
+        final FileSystem fs = jobClient.getFs();
+        FileStatus[] files = fs.listStatus(rootPath, (Path path) -> path.getName().startsWith(prefix) && path.getName().endsWith(suffix));
+        return Arrays.stream(files).map((FileStatus path) -> path.getPath().toString()).collect(Collectors.toList());
+    }
+
+    public boolean exists(String pathName) throws IOException {
+        return jobClient.getFs().exists(new Path(pathName));
+    }
+
+    public String readFile(String pathName) throws IOException {
+         try (InputStream is = jobClient.getFs().open(new Path(pathName));
+             ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+             IOUtils.copyBytes(is, stream, 8192);
+             return stream.toString();
         }
     }
 
-    public static class RoleMatcher {
-        private String user = null;
-        private List<String> roles = null;
-        public RoleMatcher(String user, String[] roles) {
-            this.user = user;
-            this.roles = Arrays.asList(roles);
-        }
-        public boolean matches(File dir, String descriptorFilename) throws IOException {
-            final StringBuilder accu = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new FileReader(new File(dir, descriptorFilename)))) {
-                String line;
-                while ((line = reader.readLine()) !=null){
-                    accu.append(line);
-                    accu.append("\n");
-                }
-            }
-            return matches(accu.toString());
-        }
-        public boolean matches(String content) throws JsonProcessingException {
-            Map<String, Object> contentMap = parseRequest(content);
-            List<String> authorisations = (List<String>) ((Map<String, Object>) contentMap.get("processorDescriptor")).get("authorisation");
-            return matches(authorisations);
-        }
-        public boolean matches(List<String> authorisations) throws JsonProcessingException {
-            for (String authorisation: authorisations) {
-                if (authorisation.startsWith("group:")) {
-                    if (roles.contains(authorisation.substring("group:".length()))) {
-                        return true;
-                    }
-                } else if (authorisation.startsWith("user:")) {
-                    if (authorisation.substring("user:".length()).equals(user)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-    }
+
 }

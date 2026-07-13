@@ -6,6 +6,7 @@ import com.bc.calvalus.production.cli.CalvalusHadoopConnection;
 import com.bc.calvalus.production.cli.CalvalusHadoopParameters;
 import com.bc.calvalus.production.cli.CalvalusHadoopRequestConverter;
 import com.bc.calvalus.production.cli.CalvalusHadoopStatusConverter;
+import com.bc.calvalus.production.util.DescriptorUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.jersey.api.NotFoundException;
 import org.apache.hadoop.mapred.JobConf;
@@ -100,7 +101,7 @@ public class ProcessingRequestService {
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
             final String catalinaHome = System.getProperty("catalina.home");
             HadoopJobHook hook = null;
-            final CalvalusHadoopConnection.RoleMatcher roleMatcher = new CalvalusHadoopConnection.RoleMatcher(username, userRoles);
+            final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(username, userRoles);
 
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(

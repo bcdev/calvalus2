@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.util.DescriptorUtils;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,11 +64,11 @@ public class CalvalusHadoopRequestConverter {
 
     private final CalvalusHadoopConnection hadoopConnection;
     private final String userName;
-    private CalvalusHadoopConnection.RoleMatcher roleMatcher = null;
+    private DescriptorUtils.RoleMatcher roleMatcher = null;
     private final String productionTypeDir;
     private final String processorDescriptorDir;
 
-    public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName, CalvalusHadoopConnection.RoleMatcher roleMatcher, String productionTypeDir, String processorDescriptorDir) {
+    public CalvalusHadoopRequestConverter(CalvalusHadoopConnection hadoopConnection, String userName, DescriptorUtils.RoleMatcher roleMatcher, String productionTypeDir, String processorDescriptorDir) {
         this(hadoopConnection, userName, productionTypeDir, processorDescriptorDir);
         this.roleMatcher = roleMatcher;
     }
