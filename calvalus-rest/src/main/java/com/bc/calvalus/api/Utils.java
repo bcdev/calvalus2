@@ -1,6 +1,7 @@
 package com.bc.calvalus.api;
 
 import com.bc.calvalus.api.model.BackendConfig;
+import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.realm.UserDatabaseRealm.UserDatabasePrincipal;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
@@ -10,6 +11,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.security.Principal;
 import java.util.List;
 
@@ -19,6 +21,10 @@ public class Utils {
         final Principal userPrincipal = request.getUserPrincipal();
         if (userPrincipal instanceof UserDatabasePrincipal) {
             UserDatabasePrincipal genericPrincipal = (UserDatabasePrincipal) userPrincipal;
+            final String[] roles = genericPrincipal.getRoles();
+            return roles;
+        } else if (userPrincipal instanceof GenericPrincipal) {
+            GenericPrincipal genericPrincipal = (GenericPrincipal) userPrincipal;
             final String[] roles = genericPrincipal.getRoles();
             return roles;
         } else {
