@@ -119,10 +119,11 @@ public class ExampleRequestService {
                 // find descriptor with prefix also prefixing the desired example file
                 final String[] processorDescriptorFilenames = new File(new File(serviceDir), pkg).list(
                         (File _file, String name1) -> name1.endsWith("-descriptor.json")
-                        && name.startsWith(name1.substring(0, name1.length() - "-descriptor.xml".length()))
+                        && name.startsWith(name1.substring(0, name1.length() - "-descriptor.json".length()))
                 );
                 if (
                         processorDescriptorFilenames != null
+                        && processorDescriptorFilenames.length > 0
                         && roleMatcher.matches(new File(new File(serviceDir), pkg), processorDescriptorFilenames[0])
                 ) {
                     final StringBuilder accu = new StringBuilder();
