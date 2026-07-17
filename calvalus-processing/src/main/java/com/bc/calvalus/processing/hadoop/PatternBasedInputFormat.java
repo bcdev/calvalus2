@@ -53,6 +53,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -356,9 +357,11 @@ public class PatternBasedInputFormat extends InputFormat {
         } else if (! productIdentifiers.isEmpty()) {
 
             // TODO This is an abuse of calvalus.input.productIdentifiers for a path list that is not checked on the client side
-
+            Collection<String> orderedProductIdentifiers = conf.getStringCollection(
+                    JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS
+            );
             splits = new ArrayList<>();
-            for (String identifier : productIdentifiers) {
+            for (String identifier : orderedProductIdentifiers) {
                 splits.add(new ProductSplit(new Path(identifier), -1, null));
             }
 
