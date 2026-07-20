@@ -165,8 +165,8 @@ public class CalvalusHadoopParameters extends Configuration {
                  "HADOOP_HDFS_HOME=/opt/hadoop-3.2.1-BC," +
                  "HADOOP_YARN_HOME=/opt/hadoop-3.2.1-BC," +
                  "HADOOP_HOME=/opt/hadoop-3.2.1-BC," +
-                 "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd," +
-                 "PATH=/usr/lib/jvm/java-8-openjdk-amd/bin:/usr/bin:/bin," +
+                 "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64," +
+                 "PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:/usr/bin:/bin," +
                  "LD_LIBRARY_PATH=/usr/lib64";
     }
 
