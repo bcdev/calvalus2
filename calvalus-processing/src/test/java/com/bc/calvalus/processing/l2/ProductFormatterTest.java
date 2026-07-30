@@ -22,7 +22,7 @@ public class ProductFormatterTest {
                 ProductFormatter.FORMAT_NETCDF4_SEAGRID,
                 "none");
 
-        assertEquals("NetCDF4-BEAM", formatter.getOutputFormat());
+        assertEquals(ProductFormatter.FORMAT_NETCDF4_SEAGRID, formatter.getOutputFormat());
         assertEquals("example.nc", formatter.getProductFilename());
         assertEquals("example.nc", formatter.getOutputFilename());
         assertEquals("", formatter.getOutputCompression());

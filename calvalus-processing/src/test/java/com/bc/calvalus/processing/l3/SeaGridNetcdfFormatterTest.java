@@ -11,6 +11,7 @@ package com.bc.calvalus.processing.l3;
 
 import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinSource;
+import org.esa.snap.binning.operator.formatter.FormatterFactory;
 import org.esa.snap.binning.support.SEAGrid;
 import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
@@ -40,7 +41,7 @@ public class SeaGridNetcdfFormatterTest {
 
     @Before
     public void setUp() throws IOException {
-        outputFile = File.createTempFile("calvalus-isin-structure-", ".nc");
+        outputFile = File.createTempFile("calvalus-seagrid-structure-", ".nc");
     }
 
     @After
@@ -124,6 +125,11 @@ public class SeaGridNetcdfFormatterTest {
         assertTrue(L3Formatter.usesSeaGridNetcdfFormatter("netcdf4-seagrid"));
         assertTrue(!L3Formatter.usesSeaGridNetcdfFormatter("NetCDF4-BEAM"));
         assertTrue(!L3Formatter.usesSeaGridNetcdfFormatter(null));
+    }
+
+    @Test
+    public void seaGridFormatterIsAvailableThroughSnapFactory() {
+        assertTrue(FormatterFactory.get(SeaGridFormatterPlugin.NAME) instanceof SeaGridFormatter);
     }
 
     private static TemporalBin createBin(long index, float... values) {

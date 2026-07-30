@@ -96,9 +96,9 @@ public class ProductFormatter {
         } else if (outputFormat.equalsIgnoreCase(FORMAT_NETCDF4_SEAGRID)) {
             outputExtension = ".nc";
             outputCompression = ""; // already written as NetCDF-4
-            // ProductFormatter provides the temporary file and HDFS copy only.
-            // L3Formatter selects the dedicated writer from the requested format.
-            outputFormat = "NetCDF4-BEAM";
+            // L3Formatter uses the dedicated binning FormatterPlugin; ProductFormatter
+            // only provides the temporary file and HDFS copy, so no ProductWriterPlugIn
+            // is required.
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
             outputCompression = desiredOutputCompression;
@@ -115,20 +115,22 @@ public class ProductFormatter {
         } else {
             outputCompression = desiredOutputCompression;
         }
-        // test if writer for output format exists
-        ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
-        Iterator it = registry.getWriterPlugIns(outputFormat);
-        if(it.hasNext()) {
-            ProductWriterPlugIn plugIn = (ProductWriterPlugIn) it.next();
-            if (outputExtension.isEmpty()) {
-                // get output extension from writer
-                String[] defaultFileExtensions = plugIn.getDefaultFileExtensions();
-                if (defaultFileExtensions != null && defaultFileExtensions.length > 0) {
-                    outputExtension = defaultFileExtensions[0];
+        if (!FORMAT_NETCDF4_SEAGRID.equalsIgnoreCase(outputFormat)) {
+            // test if writer for output format exists
+            ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
+            Iterator it = registry.getWriterPlugIns(outputFormat);
+            if(it.hasNext()) {
+                ProductWriterPlugIn plugIn = (ProductWriterPlugIn) it.next();
+                if (outputExtension.isEmpty()) {
+                    // get output extension from writer
+                    String[] defaultFileExtensions = plugIn.getDefaultFileExtensions();
+                    if (defaultFileExtensions != null && defaultFileExtensions.length > 0) {
+                        outputExtension = defaultFileExtensions[0];
+                    }
                 }
+            } else {
+                throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
             }
-        } else {
-            throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
 
         if ("zip".equals(outputCompression)) {

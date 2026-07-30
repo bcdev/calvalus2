@@ -27,9 +27,9 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import com.bc.ceres.binding.Converter;
 import com.bc.ceres.binding.ConverterRegistry;
+import org.esa.snap.binning.operator.formatter.Formatter;
 import org.esa.snap.binning.operator.formatter.FormatterFactory;
 import org.esa.snap.binning.support.IsinPlanetaryGrid;
-import org.esa.snap.binning.support.SEAGrid;
 import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -63,7 +63,6 @@ public class L3Formatter {
     private final Configuration configuration;
     private final PlanetaryGrid planetaryGrid;
     private final String[] featureNames;
-    private final File outputFile;
     private final MetadataSerializer metadataSerializer;
     private final BinningConfig binningConfig;
     private FormatterConfig formatterConfig;
@@ -75,7 +74,6 @@ public class L3Formatter {
         this.startTime = parseTime(dateStart);
         this.endTime = parseTime(dateStop);
         this.configuration = conf;
-        this.outputFile = new File(outputFile);
 
         featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         String formatterXML = conf.get(JobConfigNames.CALVALUS_L3_FORMAT_PARAMETERS);
@@ -93,34 +91,29 @@ public class L3Formatter {
 
     private void format(TemporalBinSource temporalBinSource,
                         String regionName,
-                        String regionWKT,
-                        boolean useSeaGridNetcdfFormatter) throws Exception {
+                        String regionWKT) throws Exception {
+        boolean useSeaGridNetcdfFormatter =
+                usesSeaGridNetcdfFormatter(formatterConfig.getOutputFormat());
+        Formatter formatter;
         if (useSeaGridNetcdfFormatter) {
-            if (!(planetaryGrid instanceof SEAGrid)) {
-                throw new IllegalArgumentException(
-                        ProductFormatter.FORMAT_NETCDF4_SEAGRID +
-                        " requires org.esa.snap.binning.support.SEAGrid, but the request uses " +
-                        planetaryGrid.getClass().getName());
-            }
-            LOG.info("Using flattened SEAGrid NetCDF formatter for output format " +
-                     ProductFormatter.FORMAT_NETCDF4_SEAGRID + '.');
-            SeaGridNetcdfFormatter.write(outputFile,
-                                         (SEAGrid) planetaryGrid,
-                                         temporalBinSource,
-                                         featureNames,
-                                         startTime);
-            return;
-        }
-
-        Geometry regionGeometry = GeometryUtils.createGeometry(regionWKT);
-        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
-        final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
-        // TODO maybe replace region information in metadata if overwritten in formatting request
-        org.esa.snap.binning.operator.formatter.Formatter formatter;
-        if (planetaryGrid instanceof IsinPlanetaryGrid) {
+            // SNAP's default formatter maps planetary grids to rectangular raster products.
+            // Select the Calvalus plugin by output format, not just by grid type, because
+            // existing SEA-grid requests may still require a standard raster product.
+            formatter = FormatterFactory.get(SeaGridFormatterPlugin.NAME);
+        } else if (planetaryGrid instanceof IsinPlanetaryGrid) {
             formatter = FormatterFactory.get("isin");
         } else {
             formatter = FormatterFactory.get("default");
+        }
+
+        Geometry regionGeometry = null;
+        MetadataElement[] metadataElements = new MetadataElement[0];
+        if (!useSeaGridNetcdfFormatter) {
+            regionGeometry = GeometryUtils.createGeometry(regionWKT);
+            final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
+            final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
+            // TODO maybe replace region information in metadata if overwritten in formatting request
+            metadataElements = new MetadataElement[]{processingGraphMetadata};
         }
         formatter.format(planetaryGrid,
                 temporalBinSource,
@@ -129,7 +122,7 @@ public class L3Formatter {
                 regionGeometry,
                 startTime,
                 endTime,
-                processingGraphMetadata);
+                metadataElements);
     }
 
     private static ProductData.UTC parseTime(String timeString) {
@@ -160,7 +153,6 @@ public class L3Formatter {
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
-        boolean useSeaGridNetcdfFormatter = usesSeaGridNetcdfFormatter(format);
         ProductFormatter productFormatter;
         if ("org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())){
             productFormatter = new ProductFormatter(productName,  "dir",null);
@@ -176,7 +168,7 @@ public class L3Formatter {
                                                     conf);
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
-            formatter.format(temporalBinSource, regionName, regionWKT, useSeaGridNetcdfFormatter);
+            formatter.format(temporalBinSource, regionName, regionWKT);
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");
