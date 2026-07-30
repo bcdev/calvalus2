@@ -46,6 +46,8 @@ import java.util.zip.ZipOutputStream;
  */
 public class ProductFormatter {
 
+    public static final String FORMAT_NETCDF4_SEAGRID = "NetCDF4-SEAGrid";
+
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final String outputFormat;
@@ -91,6 +93,12 @@ public class ProductFormatter {
             outputExtension = ".nc";
             outputCompression = ""; // no further compression required
             outputFormat = "NetCDF4-BEAM"; // use NetCDF with BEAM extensions
+        } else if (outputFormat.equalsIgnoreCase(FORMAT_NETCDF4_SEAGRID)) {
+            outputExtension = ".nc";
+            outputCompression = ""; // already written as NetCDF-4
+            // ProductFormatter provides the temporary file and HDFS copy only.
+            // L3Formatter selects the dedicated writer from the requested format.
+            outputFormat = "NetCDF4-BEAM";
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
             outputCompression = desiredOutputCompression;

@@ -29,6 +29,7 @@ import com.bc.ceres.binding.Converter;
 import com.bc.ceres.binding.ConverterRegistry;
 import org.esa.snap.binning.operator.formatter.FormatterFactory;
 import org.esa.snap.binning.support.IsinPlanetaryGrid;
+import org.esa.snap.binning.support.SEAGrid;
 import org.locationtech.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -36,7 +37,6 @@ import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.esa.snap.binning.PlanetaryGrid;
 import org.esa.snap.binning.TemporalBinSource;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.binning.operator.formatter.Formatter;
 import org.esa.snap.binning.operator.formatter.FormatterConfig;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
@@ -63,6 +63,7 @@ public class L3Formatter {
     private final Configuration configuration;
     private final PlanetaryGrid planetaryGrid;
     private final String[] featureNames;
+    private final File outputFile;
     private final MetadataSerializer metadataSerializer;
     private final BinningConfig binningConfig;
     private FormatterConfig formatterConfig;
@@ -74,6 +75,7 @@ public class L3Formatter {
         this.startTime = parseTime(dateStart);
         this.endTime = parseTime(dateStop);
         this.configuration = conf;
+        this.outputFile = new File(outputFile);
 
         featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         String formatterXML = conf.get(JobConfigNames.CALVALUS_L3_FORMAT_PARAMETERS);
@@ -89,7 +91,27 @@ public class L3Formatter {
         metadataSerializer = new MetadataSerializer();
     }
 
-    private void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
+    private void format(TemporalBinSource temporalBinSource,
+                        String regionName,
+                        String regionWKT,
+                        boolean useSeaGridNetcdfFormatter) throws Exception {
+        if (useSeaGridNetcdfFormatter) {
+            if (!(planetaryGrid instanceof SEAGrid)) {
+                throw new IllegalArgumentException(
+                        ProductFormatter.FORMAT_NETCDF4_SEAGRID +
+                        " requires org.esa.snap.binning.support.SEAGrid, but the request uses " +
+                        planetaryGrid.getClass().getName());
+            }
+            LOG.info("Using flattened SEAGrid NetCDF formatter for output format " +
+                     ProductFormatter.FORMAT_NETCDF4_SEAGRID + '.');
+            SeaGridNetcdfFormatter.write(outputFile,
+                                         (SEAGrid) planetaryGrid,
+                                         temporalBinSource,
+                                         featureNames,
+                                         startTime);
+            return;
+        }
+
         Geometry regionGeometry = GeometryUtils.createGeometry(regionWKT);
         final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
         final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
@@ -138,6 +160,7 @@ public class L3Formatter {
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        boolean useSeaGridNetcdfFormatter = usesSeaGridNetcdfFormatter(format);
         ProductFormatter productFormatter;
         if ("org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())){
             productFormatter = new ProductFormatter(productName,  "dir",null);
@@ -153,7 +176,7 @@ public class L3Formatter {
                                                     conf);
             LOG.info("Start formatting product to file: " + productFile.getName());
             context.setStatus("formatting");
-            formatter.format(temporalBinSource, regionName, regionWKT);
+            formatter.format(temporalBinSource, regionName, regionWKT, useSeaGridNetcdfFormatter);
 
             LOG.info("Finished formatting product.");
             context.setStatus("copying");
@@ -172,6 +195,11 @@ public class L3Formatter {
             productFormatter.cleanupTempDir();
             context.setStatus("");
         }
+    }
+
+    static boolean usesSeaGridNetcdfFormatter(String outputFormat) {
+        return outputFormat != null &&
+               ProductFormatter.FORMAT_NETCDF4_SEAGRID.equalsIgnoreCase(outputFormat);
     }
 
     private static class ProductConverter implements Converter<Product> {

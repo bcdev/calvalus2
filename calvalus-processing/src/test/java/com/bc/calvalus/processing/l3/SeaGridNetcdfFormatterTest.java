@@ -89,11 +89,20 @@ public class SeaGridNetcdfFormatterTest {
 
             Array chlorA = netcdfFile.findVariable("chlor_a").read();
             Array totalNobs = netcdfFile.findVariable("total_nobs").read();
-            assertEquals(1.25f, chlorA.getFloat(0), 0.0f);
-            assertEquals(3.5f, totalNobs.getFloat(0), 0.0f);
-            assertTrue(Float.isNaN(chlorA.getFloat(1)));
-            assertEquals(2.5f, chlorA.getFloat(10), 0.0f);
-            assertEquals(7.0f, totalNobs.getFloat(10), 0.0f);
+            int firstOutputIndex = outputIndex(grid, 0);
+            int secondOutputIndex = outputIndex(grid, 10);
+            assertEquals(1.25f, chlorA.getFloat(firstOutputIndex), 0.0f);
+            assertEquals(3.5f, totalNobs.getFloat(firstOutputIndex), 0.0f);
+            assertTrue(Float.isNaN(chlorA.getFloat(firstOutputIndex + 1)));
+            assertEquals(2.5f, chlorA.getFloat(secondOutputIndex), 0.0f);
+            assertEquals(7.0f, totalNobs.getFloat(secondOutputIndex), 0.0f);
+
+            Array latitudes = netcdfFile.findVariable("lat").read();
+            Array longitudes = netcdfFile.findVariable("lon").read();
+            assertTrue(latitudes.getFloat(0) < 0.0f);
+            assertTrue(latitudes.getFloat((int) grid.getNumBins() - 1) > 0.0f);
+            assertTrue(longitudes.getFloat(0) <
+                       longitudes.getFloat(grid.getNumCols(0) - 1));
 
             Attribute conventions = netcdfFile.findGlobalAttribute("Conventions");
             assertNotNull(conventions);
@@ -109,12 +118,27 @@ public class SeaGridNetcdfFormatterTest {
         assertEquals(2640174L, new SEAGrid(1440).getNumBins());
     }
 
+    @Test
+    public void dedicatedOutputFormatSelectsSeaGridFormatter() {
+        assertTrue(L3Formatter.usesSeaGridNetcdfFormatter("NetCDF4-SEAGrid"));
+        assertTrue(L3Formatter.usesSeaGridNetcdfFormatter("netcdf4-seagrid"));
+        assertTrue(!L3Formatter.usesSeaGridNetcdfFormatter("NetCDF4-BEAM"));
+        assertTrue(!L3Formatter.usesSeaGridNetcdfFormatter(null));
+    }
+
     private static TemporalBin createBin(long index, float... values) {
         TemporalBin bin = new TemporalBin(index, values.length);
         bin.setNumObs(1);
         bin.setNumPasses(1);
         System.arraycopy(values, 0, bin.getFeatureValues(), 0, values.length);
         return bin;
+    }
+
+    private static int outputIndex(SEAGrid grid, long sourceIndex) {
+        int sourceRow = grid.getRowIndex(sourceIndex);
+        int outputRow = grid.getNumRows() - 1 - sourceRow;
+        long column = sourceIndex - grid.getFirstBinIndex(sourceRow);
+        return (int) (grid.getFirstBinIndex(outputRow) + column);
     }
 
     private static void assertDimensions(Variable variable, String... names) {

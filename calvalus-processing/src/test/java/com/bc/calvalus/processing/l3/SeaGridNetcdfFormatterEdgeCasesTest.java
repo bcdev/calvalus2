@@ -59,10 +59,12 @@ public class SeaGridNetcdfFormatterEdgeCasesTest {
         try {
             Array first = netcdfFile.findVariable("first").read();
             Array second = netcdfFile.findVariable("second").read();
-            assertEquals(1.0f, first.getFloat(0), 0.0f);
-            assertTrue(Float.isNaN(first.getFloat(9999)));
-            assertEquals(3.0f, first.getFloat(10000), 0.0f);
-            assertEquals(4.0f, second.getFloat(10000), 0.0f);
+            int firstOutputIndex = outputIndex(grid, 0);
+            int secondOutputIndex = outputIndex(grid, 10000);
+            assertEquals(1.0f, first.getFloat(firstOutputIndex), 0.0f);
+            assertTrue(Float.isNaN(first.getFloat(secondOutputIndex - 1)));
+            assertEquals(3.0f, first.getFloat(secondOutputIndex), 0.0f);
+            assertEquals(4.0f, second.getFloat(secondOutputIndex), 0.0f);
         } finally {
             netcdfFile.close();
         }
@@ -138,6 +140,13 @@ public class SeaGridNetcdfFormatterEdgeCasesTest {
         TemporalBin bin = new TemporalBin(index, values.length);
         System.arraycopy(values, 0, bin.getFeatureValues(), 0, values.length);
         return bin;
+    }
+
+    private static int outputIndex(SEAGrid grid, long sourceIndex) {
+        int sourceRow = grid.getRowIndex(sourceIndex);
+        int outputRow = grid.getNumRows() - 1 - sourceRow;
+        long column = sourceIndex - grid.getFirstBinIndex(sourceRow);
+        return (int) (grid.getFirstBinIndex(outputRow) + column);
     }
 
     private static final class TrackingSource implements TemporalBinSource {

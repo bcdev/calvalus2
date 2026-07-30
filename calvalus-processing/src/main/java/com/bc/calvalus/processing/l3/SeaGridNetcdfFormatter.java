@@ -35,8 +35,10 @@ import java.util.Set;
  *
  * The structural model follows the OC-CCI reference products: science
  * variables use {@code (time, bin_index)}, while latitude and longitude use
- * {@code (bin_index)}. Product-specific metadata is intentionally left to a
- * later post-processing step.
+ * {@code (bin_index)}. The bin-row order is south to north, matching the
+ * reference; longitude order within each row is preserved.
+ * Product-specific metadata is intentionally left to a later post-processing
+ * step.
  */
 final class SeaGridNetcdfFormatter {
 
@@ -68,6 +70,7 @@ final class SeaGridNetcdfFormatter {
                       ProductData.UTC startTime,
                       NetcdfFileWriter.Version version) throws IOException {
         validateArguments(outputFile, planetaryGrid, temporalBinSource, featureNames);
+        validateMirroredRows(planetaryGrid);
 
         final long numBinsLong = planetaryGrid.getNumBins();
         if (numBinsLong > Integer.MAX_VALUE) {
@@ -122,9 +125,10 @@ final class SeaGridNetcdfFormatter {
         try {
             writer.create();
             writeScalarVariables(writer, timeVariable, crsVariable, startTime);
-            writeCoordinates(writer, planetaryGrid, latitudeVariable, longitudeVariable, numBins);
+            writeCoordinates(writer, planetaryGrid, latitudeVariable, longitudeVariable);
 
-            final FeatureBuffer featureBuffer = new FeatureBuffer(writer, featureVariables, numBins);
+            final FeatureBuffer featureBuffer =
+                    new FeatureBuffer(writer, featureVariables, planetaryGrid);
             final int partCount = temporalBinSource.open();
             sourceOpened = true;
             for (int partIndex = 0; partIndex < partCount; partIndex++) {
@@ -165,8 +169,10 @@ final class SeaGridNetcdfFormatter {
                                           SEAGrid planetaryGrid,
                                           TemporalBinSource temporalBinSource,
                                           String[] featureNames) {
-        if (outputFile == null || planetaryGrid == null || temporalBinSource == null || featureNames == null) {
-            throw new NullPointerException("Output file, grid, bin source, and feature names are required.");
+        if (outputFile == null || planetaryGrid == null || temporalBinSource == null ||
+            featureNames == null) {
+            throw new NullPointerException(
+                    "Output file, grid, bin source, and feature names are required.");
         }
         if (featureNames.length == 0) {
             throw new IllegalArgumentException("At least one science variable is required.");
@@ -185,6 +191,17 @@ final class SeaGridNetcdfFormatter {
         }
     }
 
+    private static void validateMirroredRows(SEAGrid planetaryGrid) throws IOException {
+        int numRows = planetaryGrid.getNumRows();
+        for (int row = 0; row < numRows / 2; row++) {
+            int mirroredRow = numRows - 1 - row;
+            if (planetaryGrid.getNumCols(row) != planetaryGrid.getNumCols(mirroredRow)) {
+                throw new IOException("Cannot reverse SEAGrid rows " + row + " and " + mirroredRow +
+                                      " because their column counts differ.");
+            }
+        }
+    }
+
     private static void writeScalarVariables(NetcdfFileWriter writer,
                                              Variable timeVariable,
                                              Variable crsVariable,
@@ -198,22 +215,32 @@ final class SeaGridNetcdfFormatter {
     private static void writeCoordinates(NetcdfFileWriter writer,
                                          SEAGrid planetaryGrid,
                                          Variable latitudeVariable,
-                                         Variable longitudeVariable,
-                                         int numBins)
+                                         Variable longitudeVariable)
             throws IOException, InvalidRangeException {
-        for (int origin = 0; origin < numBins; origin += BUFFER_SIZE) {
-            int length = Math.min(BUFFER_SIZE, numBins - origin);
-            float[] latitudes = new float[length];
-            float[] longitudes = new float[length];
-            for (int offset = 0; offset < length; offset++) {
-                double[] center = planetaryGrid.getCenterLatLon((long) origin + offset);
-                latitudes[offset] = (float) center[0];
-                longitudes[offset] = (float) center[1];
+        int numRows = planetaryGrid.getNumRows();
+        for (int outputRow = 0; outputRow < numRows; outputRow++) {
+            // SNAP's SEAGrid enumerates rows north-to-south. Mirror them on output to work around
+            // this limitation and produce the south-to-north bin order used by standard L3 products.
+            int sourceRow = numRows - 1 - outputRow;
+            int numCols = planetaryGrid.getNumCols(outputRow);
+            long outputRowStart = planetaryGrid.getFirstBinIndex(outputRow);
+            long sourceRowStart = planetaryGrid.getFirstBinIndex(sourceRow);
+            for (int columnOrigin = 0; columnOrigin < numCols; columnOrigin += BUFFER_SIZE) {
+                int length = Math.min(BUFFER_SIZE, numCols - columnOrigin);
+                float[] latitudes = new float[length];
+                float[] longitudes = new float[length];
+                for (int offset = 0; offset < length; offset++) {
+                    double[] center = planetaryGrid.getCenterLatLon(
+                            sourceRowStart + columnOrigin + offset);
+                    latitudes[offset] = (float) center[0];
+                    longitudes[offset] = (float) center[1];
+                }
+                int origin = (int) (outputRowStart + columnOrigin);
+                writer.write(latitudeVariable, new int[]{origin},
+                             Array.factory(DataType.FLOAT, new int[]{length}, latitudes));
+                writer.write(longitudeVariable, new int[]{origin},
+                             Array.factory(DataType.FLOAT, new int[]{length}, longitudes));
             }
-            writer.write(latitudeVariable, new int[]{origin},
-                         Array.factory(DataType.FLOAT, new int[]{length}, latitudes));
-            writer.write(longitudeVariable, new int[]{origin},
-                         Array.factory(DataType.FLOAT, new int[]{length}, longitudes));
         }
     }
 
@@ -221,18 +248,27 @@ final class SeaGridNetcdfFormatter {
 
         private final NetcdfFileWriter writer;
         private final List<Variable> variables;
-        private final int numBins;
+        private final SEAGrid planetaryGrid;
+        private final long numBins;
         private final float[][] values;
 
-        private long startIndex = -1;
         private long lastIndex = -1;
-        private int length;
+        private int sourceRow = -1;
+        private int minColumn;
+        private int maxColumn;
 
-        private FeatureBuffer(NetcdfFileWriter writer, List<Variable> variables, int numBins) {
+        private FeatureBuffer(NetcdfFileWriter writer,
+                              List<Variable> variables,
+                              SEAGrid planetaryGrid) {
             this.writer = writer;
             this.variables = variables;
-            this.numBins = numBins;
-            values = new float[variables.size()][BUFFER_SIZE];
+            this.planetaryGrid = planetaryGrid;
+            this.numBins = planetaryGrid.getNumBins();
+            int maxNumCols = 0;
+            for (int row = 0; row < planetaryGrid.getNumRows(); row++) {
+                maxNumCols = Math.max(maxNumCols, planetaryGrid.getNumCols(row));
+            }
+            values = new float[variables.size()][maxNumCols];
         }
 
         private void add(TemporalBin temporalBin) throws IOException, InvalidRangeException {
@@ -248,39 +284,47 @@ final class SeaGridNetcdfFormatter {
                                       temporalBin.getFeatureValues().length + " features; expected " +
                                       variables.size() + '.');
             }
-            if (startIndex < 0 || binIndex >= startIndex + BUFFER_SIZE) {
+            int binRow = planetaryGrid.getRowIndex(binIndex);
+            if (sourceRow != binRow) {
                 flush();
-                reset(binIndex);
+                reset(binRow);
             }
 
-            int offset = (int) (binIndex - startIndex);
+            int column = (int) (binIndex - planetaryGrid.getFirstBinIndex(sourceRow));
+            float[] featureValues = temporalBin.getFeatureValues();
             for (int featureIndex = 0; featureIndex < values.length; featureIndex++) {
-                values[featureIndex][offset] = temporalBin.getFeatureValues()[featureIndex];
+                values[featureIndex][column] = featureValues[featureIndex];
             }
-            length = Math.max(length, offset + 1);
+            minColumn = Math.min(minColumn, column);
+            maxColumn = Math.max(maxColumn, column);
             lastIndex = binIndex;
         }
 
-        private void reset(long newStartIndex) {
-            startIndex = newStartIndex;
-            length = 0;
+        private void reset(int newSourceRow) {
+            sourceRow = newSourceRow;
+            int numCols = planetaryGrid.getNumCols(sourceRow);
             for (float[] featureValues : values) {
-                Arrays.fill(featureValues, Float.NaN);
+                Arrays.fill(featureValues, 0, numCols, Float.NaN);
             }
+            minColumn = numCols;
+            maxColumn = -1;
         }
 
         private void flush() throws IOException, InvalidRangeException {
-            if (length == 0) {
+            if (sourceRow < 0 || maxColumn < minColumn) {
                 return;
             }
-            int[] origin = new int[]{0, (int) startIndex};
+            // Apply the same SNAP-to-standard row-order conversion as for the coordinate variables.
+            int outputRow = planetaryGrid.getNumRows() - 1 - sourceRow;
+            long outputRowStart = planetaryGrid.getFirstBinIndex(outputRow);
+            int length = maxColumn - minColumn + 1;
+            int[] origin = new int[]{0, (int) (outputRowStart + minColumn)};
             for (int featureIndex = 0; featureIndex < variables.size(); featureIndex++) {
-                float[] data = Arrays.copyOf(values[featureIndex], length);
+                float[] data = Arrays.copyOfRange(values[featureIndex], minColumn, maxColumn + 1);
                 writer.write(variables.get(featureIndex), origin,
                              Array.factory(DataType.FLOAT, new int[]{1, length}, data));
             }
-            startIndex = -1;
-            length = 0;
+            sourceRow = -1;
         }
     }
 }
