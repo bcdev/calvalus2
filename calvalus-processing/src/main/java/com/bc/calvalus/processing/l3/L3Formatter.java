@@ -198,8 +198,7 @@ public class L3Formatter {
     }
 
     static boolean usesSeaGridNetcdfFormatter(String outputFormat) {
-        return outputFormat != null &&
-               ProductFormatter.FORMAT_NETCDF4_SEAGRID.equalsIgnoreCase(outputFormat);
+        return ProductFormatter.FORMAT_NETCDF4_SEAGRID.equalsIgnoreCase(outputFormat);
     }
 
     private static class ProductConverter implements Converter<Product> {
