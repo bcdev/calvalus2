@@ -45,7 +45,7 @@ final class SeaGridNetcdfFormatter {
     private static final int BUFFER_SIZE = 8192;
     private static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
     private static final Set<String> RESERVED_VARIABLE_NAMES = new HashSet<String>(
-            Arrays.asList("time", "bin_index", "lat", "lon", "crs"));
+            Arrays.asList("time", "bin_index", "lat", "lon", "crs", "num_obs", "num_passes"));
 
     private SeaGridNetcdfFormatter() {
     }
@@ -109,10 +109,20 @@ final class SeaGridNetcdfFormatter {
         longitudeVariable.addAttribute(new Attribute("units", "degrees_east"));
         longitudeVariable.addAttribute(new Attribute("axis", "X"));
 
+        final List<Dimension> dataDimensions = Arrays.asList(timeDimension, binIndexDimension);
+        final Variable numObsVariable = writer.addVariable("num_obs", DataType.INT, dataDimensions);
+        numObsVariable.addAttribute(new Attribute("_FillValue", -1));
+        numObsVariable.addAttribute(new Attribute("coordinates", "lat lon"));
+        numObsVariable.addAttribute(new Attribute("grid_mapping", "crs"));
+
+        final Variable numPassesVariable = writer.addVariable("num_passes", DataType.SHORT, dataDimensions);
+        numPassesVariable.addAttribute(new Attribute("_FillValue", (short) -1));
+        numPassesVariable.addAttribute(new Attribute("coordinates", "lat lon"));
+        numPassesVariable.addAttribute(new Attribute("grid_mapping", "crs"));
+
         final List<Variable> featureVariables = new ArrayList<Variable>(featureNames.length);
         for (String featureName : featureNames) {
-            Variable featureVariable = writer.addVariable(featureName, DataType.FLOAT,
-                                                           Arrays.asList(timeDimension, binIndexDimension));
+            Variable featureVariable = writer.addVariable(featureName, DataType.FLOAT, dataDimensions);
             featureVariable.addAttribute(new Attribute("_FillValue", Float.NaN));
             featureVariable.addAttribute(new Attribute("coordinates", "lat lon"));
             featureVariable.addAttribute(new Attribute("grid_mapping", "crs"));
@@ -128,7 +138,8 @@ final class SeaGridNetcdfFormatter {
             writeCoordinates(writer, planetaryGrid, latitudeVariable, longitudeVariable);
 
             final FeatureBuffer featureBuffer =
-                    new FeatureBuffer(writer, featureVariables, planetaryGrid);
+                    new FeatureBuffer(writer, numObsVariable, numPassesVariable,
+                                      featureVariables, planetaryGrid);
             final int partCount = temporalBinSource.open();
             sourceOpened = true;
             for (int partIndex = 0; partIndex < partCount; partIndex++) {
@@ -247,9 +258,13 @@ final class SeaGridNetcdfFormatter {
     private static final class FeatureBuffer {
 
         private final NetcdfFileWriter writer;
+        private final Variable numObsVariable;
+        private final Variable numPassesVariable;
         private final List<Variable> variables;
         private final SEAGrid planetaryGrid;
         private final long numBins;
+        private final int[] numObsValues;
+        private final short[] numPassesValues;
         private final float[][] values;
 
         private long lastIndex = -1;
@@ -258,9 +273,13 @@ final class SeaGridNetcdfFormatter {
         private int maxColumn;
 
         private FeatureBuffer(NetcdfFileWriter writer,
+                              Variable numObsVariable,
+                              Variable numPassesVariable,
                               List<Variable> variables,
                               SEAGrid planetaryGrid) {
             this.writer = writer;
+            this.numObsVariable = numObsVariable;
+            this.numPassesVariable = numPassesVariable;
             this.variables = variables;
             this.planetaryGrid = planetaryGrid;
             this.numBins = planetaryGrid.getNumBins();
@@ -268,6 +287,8 @@ final class SeaGridNetcdfFormatter {
             for (int row = 0; row < planetaryGrid.getNumRows(); row++) {
                 maxNumCols = Math.max(maxNumCols, planetaryGrid.getNumCols(row));
             }
+            numObsValues = new int[maxNumCols];
+            numPassesValues = new short[maxNumCols];
             values = new float[variables.size()][maxNumCols];
         }
 
@@ -284,6 +305,11 @@ final class SeaGridNetcdfFormatter {
                                       temporalBin.getFeatureValues().length + " features; expected " +
                                       variables.size() + '.');
             }
+            int numPasses = temporalBin.getNumPasses();
+            if (numPasses < 0 || numPasses > Short.MAX_VALUE) {
+                throw new IOException("Temporal bin " + binIndex + " has num_passes " + numPasses +
+                                      "; expected a value between 0 and " + Short.MAX_VALUE + '.');
+            }
             int binRow = planetaryGrid.getRowIndex(binIndex);
             if (sourceRow != binRow) {
                 flush();
@@ -291,6 +317,8 @@ final class SeaGridNetcdfFormatter {
             }
 
             int column = (int) (binIndex - planetaryGrid.getFirstBinIndex(sourceRow));
+            numObsValues[column] = temporalBin.getNumObs();
+            numPassesValues[column] = (short) numPasses;
             float[] featureValues = temporalBin.getFeatureValues();
             for (int featureIndex = 0; featureIndex < values.length; featureIndex++) {
                 values[featureIndex][column] = featureValues[featureIndex];
@@ -303,6 +331,8 @@ final class SeaGridNetcdfFormatter {
         private void reset(int newSourceRow) {
             sourceRow = newSourceRow;
             int numCols = planetaryGrid.getNumCols(sourceRow);
+            Arrays.fill(numObsValues, 0, numCols, -1);
+            Arrays.fill(numPassesValues, 0, numCols, (short) -1);
             for (float[] featureValues : values) {
                 Arrays.fill(featureValues, 0, numCols, Float.NaN);
             }
@@ -319,6 +349,12 @@ final class SeaGridNetcdfFormatter {
             long outputRowStart = planetaryGrid.getFirstBinIndex(outputRow);
             int length = maxColumn - minColumn + 1;
             int[] origin = new int[]{0, (int) (outputRowStart + minColumn)};
+            int[] numObsData = Arrays.copyOfRange(numObsValues, minColumn, maxColumn + 1);
+            writer.write(numObsVariable, origin,
+                         Array.factory(DataType.INT, new int[]{1, length}, numObsData));
+            short[] numPassesData = Arrays.copyOfRange(numPassesValues, minColumn, maxColumn + 1);
+            writer.write(numPassesVariable, origin,
+                         Array.factory(DataType.SHORT, new int[]{1, length}, numPassesData));
             for (int featureIndex = 0; featureIndex < variables.size(); featureIndex++) {
                 float[] data = Arrays.copyOfRange(values[featureIndex], minColumn, maxColumn + 1);
                 writer.write(variables.get(featureIndex), origin,

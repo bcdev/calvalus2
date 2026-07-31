@@ -18,6 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import ucar.ma2.Array;
+import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.NetcdfFile;
@@ -55,7 +56,11 @@ public class SeaGridNetcdfFormatterTest {
     public void writesReferenceDimensionModelFromSyntheticBins() throws Exception {
         SEAGrid grid = new SEAGrid(4);
         TemporalBin firstBin = createBin(0, 1.25f, 3.5f);
+        firstBin.setNumObs(17);
+        firstBin.setNumPasses(2);
         TemporalBin secondBin = createBin(10, 2.5f, 7.0f);
+        secondBin.setNumObs(29);
+        secondBin.setNumPasses(3);
         TemporalBinSource source = new SinglePartSource(firstBin, secondBin);
 
         SeaGridNetcdfFormatter.write(outputFile,
@@ -76,6 +81,8 @@ public class SeaGridNetcdfFormatterTest {
 
             assertDimensions(netcdfFile.findVariable("chlor_a"), "time", "bin_index");
             assertDimensions(netcdfFile.findVariable("total_nobs"), "time", "bin_index");
+            assertDimensions(netcdfFile.findVariable("num_obs"), "time", "bin_index");
+            assertDimensions(netcdfFile.findVariable("num_passes"), "time", "bin_index");
             assertDimensions(netcdfFile.findVariable("lat"), "bin_index");
             assertDimensions(netcdfFile.findVariable("lon"), "bin_index");
             assertDimensions(netcdfFile.findVariable("time"), "time");
@@ -90,13 +97,27 @@ public class SeaGridNetcdfFormatterTest {
 
             Array chlorA = netcdfFile.findVariable("chlor_a").read();
             Array totalNobs = netcdfFile.findVariable("total_nobs").read();
+            Variable numObsVariable = netcdfFile.findVariable("num_obs");
+            Variable numPassesVariable = netcdfFile.findVariable("num_passes");
+            assertEquals(DataType.INT, numObsVariable.getDataType());
+            assertEquals(DataType.SHORT, numPassesVariable.getDataType());
+            assertEquals(-1, numObsVariable.findAttribute("_FillValue").getNumericValue().intValue());
+            assertEquals(-1, numPassesVariable.findAttribute("_FillValue").getNumericValue().shortValue());
+            Array numObs = numObsVariable.read();
+            Array numPasses = numPassesVariable.read();
             int firstOutputIndex = outputIndex(grid, 0);
             int secondOutputIndex = outputIndex(grid, 10);
             assertEquals(1.25f, chlorA.getFloat(firstOutputIndex), 0.0f);
             assertEquals(3.5f, totalNobs.getFloat(firstOutputIndex), 0.0f);
+            assertEquals(17, numObs.getInt(firstOutputIndex));
+            assertEquals(2, numPasses.getShort(firstOutputIndex));
             assertTrue(Float.isNaN(chlorA.getFloat(firstOutputIndex + 1)));
+            assertEquals(-1, numObs.getInt(firstOutputIndex + 1));
+            assertEquals(-1, numPasses.getShort(firstOutputIndex + 1));
             assertEquals(2.5f, chlorA.getFloat(secondOutputIndex), 0.0f);
             assertEquals(7.0f, totalNobs.getFloat(secondOutputIndex), 0.0f);
+            assertEquals(29, numObs.getInt(secondOutputIndex));
+            assertEquals(3, numPasses.getShort(secondOutputIndex));
 
             Array latitudes = netcdfFile.findVariable("lat").read();
             Array longitudes = netcdfFile.findVariable("lon").read();

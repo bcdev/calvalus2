@@ -94,6 +94,8 @@ public class SeaGridNetcdfFormatterEdgeCasesTest {
     @Test
     public void rejectsReservedDuplicateAndEmptyFeatureNamesBeforeOpeningSource() throws Exception {
         assertBadNames(new String[]{"time"}, "Reserved NetCDF variable name");
+        assertBadNames(new String[]{"num_obs"}, "Reserved NetCDF variable name");
+        assertBadNames(new String[]{"num_passes"}, "Reserved NetCDF variable name");
         assertBadNames(new String[]{"value", "value"}, "Duplicate science-variable name");
         assertBadNames(new String[]{" "}, "must not be empty");
     }
