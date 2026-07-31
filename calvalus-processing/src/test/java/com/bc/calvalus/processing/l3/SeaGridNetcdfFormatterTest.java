@@ -13,6 +13,8 @@ import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinSource;
 import org.esa.snap.binning.operator.formatter.FormatterFactory;
 import org.esa.snap.binning.support.SEAGrid;
+import org.esa.snap.core.datamodel.MetadataAttribute;
+import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
 import org.junit.Before;
@@ -62,12 +64,21 @@ public class SeaGridNetcdfFormatterTest {
         secondBin.setNumObs(29);
         secondBin.setNumPasses(3);
         TemporalBinSource source = new SinglePartSource(firstBin, secondBin);
+        ProductData.UTC startTime = ProductData.UTC.create(new Date(1659312000000L), 0);
+        ProductData.UTC endTime = ProductData.UTC.create(new Date(1661904000000L), 0);
+        MetadataElement processingGraph = new MetadataElement("Processing_Graph");
+        MetadataElement node = new MetadataElement("node_0");
+        node.addAttribute(new MetadataAttribute(
+                "operator", ProductData.createInstance("l3-agg"), true));
+        processingGraph.addElement(node);
 
         SeaGridNetcdfFormatter.write(outputFile,
                                   grid,
                                   source,
                                   new String[]{"chlor_a", "total_nobs"},
-                                  ProductData.UTC.create(new Date(1659312000000L), 0),
+                                  startTime,
+                                  endTime,
+                                  new MetadataElement[]{processingGraph},
                                   NetcdfFileWriter.Version.netcdf3);
 
         NetcdfFile netcdfFile = NetcdfFile.open(outputFile.getAbsolutePath());
@@ -87,6 +98,13 @@ public class SeaGridNetcdfFormatterTest {
             assertDimensions(netcdfFile.findVariable("lon"), "bin_index");
             assertDimensions(netcdfFile.findVariable("time"), "time");
             assertDimensions(netcdfFile.findVariable("crs"), "time");
+
+            Variable metadata = netcdfFile.findVariable("metadata");
+            assertNotNull(metadata);
+            assertEquals(DataType.BYTE, metadata.getDataType());
+            assertEquals(0, metadata.getDimensions().size());
+            assertEquals("l3-agg",
+                         metadata.findAttribute("Processing_Graph:node_0:operator").getStringValue());
 
             Variable crs = netcdfFile.findVariable("crs");
             assertEquals("1D binned sinusoidal",
@@ -129,6 +147,9 @@ public class SeaGridNetcdfFormatterTest {
             Attribute conventions = netcdfFile.findGlobalAttribute("Conventions");
             assertNotNull(conventions);
             assertEquals("CF-1.7", conventions.getStringValue());
+            assertGlobalStringAttribute(netcdfFile, "product_type", "BINNED-L3");
+            assertGlobalStringAttribute(netcdfFile, "start_date", startTime.format());
+            assertGlobalStringAttribute(netcdfFile, "stop_date", endTime.format());
         } finally {
             netcdfFile.close();
         }
@@ -174,6 +195,14 @@ public class SeaGridNetcdfFormatterTest {
         for (int index = 0; index < names.length; index++) {
             assertEquals(names[index], variable.getDimension(index).getShortName());
         }
+    }
+
+    private static void assertGlobalStringAttribute(NetcdfFile netcdfFile,
+                                                    String name,
+                                                    String expectedValue) {
+        Attribute attribute = netcdfFile.findGlobalAttribute(name);
+        assertNotNull(attribute);
+        assertEquals(expectedValue, attribute.getStringValue());
     }
 
     private static final class SinglePartSource implements TemporalBinSource {

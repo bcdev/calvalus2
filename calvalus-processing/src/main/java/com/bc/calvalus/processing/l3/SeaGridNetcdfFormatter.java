@@ -12,7 +12,22 @@ package com.bc.calvalus.processing.l3;
 import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinSource;
 import org.esa.snap.binning.support.SEAGrid;
+import org.esa.snap.core.datamodel.MetadataElement;
+import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.dataio.netcdf.AbstractNetCdfWriterPlugIn;
+import org.esa.snap.dataio.netcdf.DefaultNetCdfWriter;
+import org.esa.snap.dataio.netcdf.ProfileWriteContext;
+import org.esa.snap.dataio.netcdf.ProfileWriteContextImpl;
+import org.esa.snap.dataio.netcdf.metadata.profiles.beam.BeamMetadataPart;
+import org.esa.snap.dataio.netcdf.metadata.profiles.beam.BeamNetCdf4WriterPlugIn;
+import org.esa.snap.dataio.netcdf.metadata.profiles.beam.BeamNetCdfWriterPlugIn;
+import org.esa.snap.dataio.netcdf.metadata.profiles.cf.CfTimePart;
+import org.esa.snap.dataio.netcdf.nc.N3Variable;
+import org.esa.snap.dataio.netcdf.nc.N4Variable;
+import org.esa.snap.dataio.netcdf.nc.NFileWriteable;
+import org.esa.snap.dataio.netcdf.nc.NVariable;
+import org.esa.snap.dataio.netcdf.util.DataTypeUtils;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
@@ -37,15 +52,17 @@ import java.util.Set;
  * variables use {@code (time, bin_index)}, while latitude and longitude use
  * {@code (bin_index)}. The bin-row order is south to north, matching the
  * reference; longitude order within each row is preserved.
- * Product-specific metadata is intentionally left to a later post-processing
- * step.
+ * The Calvalus processing graph and core BEAM product attributes are retained;
+ * remaining product-specific metadata is left to a later post-processing step.
  */
 final class SeaGridNetcdfFormatter {
 
     private static final int BUFFER_SIZE = 8192;
     private static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
+    private static final String PRODUCT_TYPE = "BINNED-L3";
     private static final Set<String> RESERVED_VARIABLE_NAMES = new HashSet<String>(
-            Arrays.asList("time", "bin_index", "lat", "lon", "crs", "num_obs", "num_passes"));
+            Arrays.asList("metadata", "time", "bin_index", "lat", "lon", "crs",
+                          "num_obs", "num_passes"));
 
     private SeaGridNetcdfFormatter() {
     }
@@ -55,8 +72,20 @@ final class SeaGridNetcdfFormatter {
                       TemporalBinSource temporalBinSource,
                       String[] featureNames,
                       ProductData.UTC startTime) throws IOException {
-        write(outputFile, planetaryGrid, temporalBinSource, featureNames, startTime,
+        write(outputFile, planetaryGrid, temporalBinSource, featureNames, startTime, startTime,
+              new MetadataElement[0],
               NetcdfFileWriter.Version.netcdf4_classic);
+    }
+
+    static void write(File outputFile,
+                      SEAGrid planetaryGrid,
+                      TemporalBinSource temporalBinSource,
+                      String[] featureNames,
+                      ProductData.UTC startTime,
+                      ProductData.UTC endTime,
+                      MetadataElement... metadataElements) throws IOException {
+        write(outputFile, planetaryGrid, temporalBinSource, featureNames, startTime, endTime,
+              metadataElements, NetcdfFileWriter.Version.netcdf4_classic);
     }
 
     /**
@@ -68,6 +97,18 @@ final class SeaGridNetcdfFormatter {
                       TemporalBinSource temporalBinSource,
                       String[] featureNames,
                       ProductData.UTC startTime,
+                      NetcdfFileWriter.Version version) throws IOException {
+        write(outputFile, planetaryGrid, temporalBinSource, featureNames, startTime, startTime,
+              new MetadataElement[0], version);
+    }
+
+    static void write(File outputFile,
+                      SEAGrid planetaryGrid,
+                      TemporalBinSource temporalBinSource,
+                      String[] featureNames,
+                      ProductData.UTC startTime,
+                      ProductData.UTC endTime,
+                      MetadataElement[] metadataElements,
                       NetcdfFileWriter.Version version) throws IOException {
         validateArguments(outputFile, planetaryGrid, temporalBinSource, featureNames);
         validateMirroredRows(planetaryGrid);
@@ -81,6 +122,10 @@ final class SeaGridNetcdfFormatter {
         NetcdfFileWriter writer = NetcdfFileWriter.createNew(version, outputFile.getAbsolutePath());
         writer.setFill(true);
         writer.setLargeFile(true);
+
+        writer.addGlobalAttribute("Conventions", "CF-1.7");
+        writer.addGlobalAttribute("product_type", PRODUCT_TYPE);
+        addMetadataAndTimeAttributes(writer, startTime, endTime, metadataElements, version);
 
         final Dimension timeDimension = writer.addDimension("time", 1);
         final Dimension binIndexDimension = writer.addDimension("bin_index", numBins);
@@ -129,8 +174,6 @@ final class SeaGridNetcdfFormatter {
             featureVariables.add(featureVariable);
         }
 
-        writer.addGlobalAttribute("Conventions", "CF-1.7");
-
         boolean sourceOpened = false;
         try {
             writer.create();
@@ -174,6 +217,34 @@ final class SeaGridNetcdfFormatter {
                 throw closeFailure;
             }
         }
+    }
+
+    private static void addMetadataAndTimeAttributes(NetcdfFileWriter writer,
+                                                     ProductData.UTC startTime,
+                                                     ProductData.UTC endTime,
+                                                     MetadataElement[] metadataElements,
+                                                     NetcdfFileWriter.Version version) throws IOException {
+        final boolean netcdf4 = version == NetcdfFileWriter.Version.netcdf4 ||
+                                version == NetcdfFileWriter.Version.netcdf4_classic;
+        final ExistingFileWriteable writeable = new ExistingFileWriteable(writer, netcdf4);
+        final ProfileWriteContext context = new ProfileWriteContextImpl(writeable);
+
+        final Product metadataProduct = new Product("metadata", PRODUCT_TYPE, 1, 1);
+        final AbstractNetCdfWriterPlugIn writerPlugIn =
+                netcdf4 ? new BeamNetCdf4WriterPlugIn() : new BeamNetCdfWriterPlugIn();
+        metadataProduct.setProductWriter(new DefaultNetCdfWriter(writerPlugIn));
+        metadataProduct.setStartTime(startTime);
+        metadataProduct.setEndTime(endTime);
+        if (metadataElements != null) {
+            for (MetadataElement metadataElement : metadataElements) {
+                if (metadataElement != null) {
+                    metadataProduct.getMetadataRoot().addElement(metadataElement);
+                }
+            }
+        }
+
+        new BeamMetadataPart().preEncode(context, metadataProduct);
+        new CfTimePart().preEncode(context, metadataProduct);
     }
 
     private static void validateArguments(File outputFile,
@@ -361,6 +432,49 @@ final class SeaGridNetcdfFormatter {
                              Array.factory(DataType.FLOAT, new int[]{1, length}, data));
             }
             sourceRow = -1;
+        }
+    }
+
+    /**
+     * Adapts SNAP's metadata profile writer to the already-open definition
+     * phase of this formatter's NetCDF writer.
+     */
+    private static final class ExistingFileWriteable extends NFileWriteable {
+
+        private final boolean netcdf4;
+
+        private ExistingFileWriteable(NetcdfFileWriter writer, boolean netcdf4) {
+            this.netcdfFileWriter = writer;
+            this.netcdf4 = netcdf4;
+        }
+
+        @Override
+        public NVariable addScalarVariable(String name, DataType dataType) {
+            Variable variable = netcdfFileWriter.addVariable(
+                    null, name, dataType, new ArrayList<Dimension>());
+            NVariable nVariable = netcdf4
+                    ? new N4Variable(variable, null, netcdfFileWriter)
+                    : new N3Variable(variable, netcdfFileWriter);
+            variables.put(name, nVariable);
+            return nVariable;
+        }
+
+        @Override
+        public NVariable addVariable(String name,
+                                     DataType dataType,
+                                     boolean unsigned,
+                                     java.awt.Dimension tileSize,
+                                     String dimensions,
+                                     int compressionLevel) {
+            throw new UnsupportedOperationException(
+                    "The metadata adapter only supports scalar variables.");
+        }
+
+        @Override
+        public DataType getNetcdfDataType(int dataType) {
+            return netcdf4
+                    ? DataTypeUtils.getNetcdf4DataType(dataType)
+                    : DataTypeUtils.getNetcdfDataType(dataType);
         }
     }
 }

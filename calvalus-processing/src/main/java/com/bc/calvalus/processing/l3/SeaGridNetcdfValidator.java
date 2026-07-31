@@ -31,7 +31,7 @@ import java.util.Set;
 public final class SeaGridNetcdfValidator {
 
     private static final Set<String> STRUCTURAL_VARIABLE_NAMES = new HashSet<String>(
-            Arrays.asList("time", "bin_index", "lat", "lon", "crs"));
+            Arrays.asList("metadata", "time", "bin_index", "lat", "lon", "crs"));
 
     private SeaGridNetcdfValidator() {
     }
@@ -200,4 +200,3 @@ public final class SeaGridNetcdfValidator {
         }
     }
 }
-

@@ -60,6 +60,8 @@ final class SeaGridFormatter implements Formatter {
                                      (SEAGrid) planetaryGrid,
                                      temporalBinSource,
                                      featureNames,
-                                     startTime);
+                                     startTime,
+                                     endTime,
+                                     metadataElements);
     }
 }

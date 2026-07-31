@@ -12,11 +12,15 @@ package com.bc.calvalus.processing.l3;
 import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.TemporalBinSource;
 import org.esa.snap.binning.support.SEAGrid;
+import org.esa.snap.core.datamodel.MetadataAttribute;
+import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.ProductData;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import ucar.nc2.NetcdfFile;
+import ucar.nc2.Variable;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +29,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -53,14 +59,38 @@ public class SeaGridNetcdf4SmokeTest {
         SEAGrid grid = new SEAGrid(4);
         TemporalBin bin = new TemporalBin(2, 1);
         bin.getFeatureValues()[0] = 42.0f;
+        ProductData.UTC startTime = ProductData.UTC.create(new Date(1659312000000L), 0);
+        ProductData.UTC endTime = ProductData.UTC.create(new Date(1661904000000L), 0);
+        MetadataElement processingGraph = new MetadataElement("Processing_Graph");
+        MetadataElement node = new MetadataElement("node_0");
+        node.addAttribute(new MetadataAttribute(
+                "operator", ProductData.createInstance("l3-agg"), true));
+        processingGraph.addElement(node);
 
         SeaGridNetcdfFormatter.write(outputFile,
                                      grid,
                                      new SinglePartSource(bin),
                                      new String[]{"science_value"},
-                                     ProductData.UTC.create(new Date(1659312000000L), 0));
+                                     startTime,
+                                     endTime,
+                                     processingGraph);
 
         assertTrue(SeaGridNetcdfValidator.validate(outputFile, 4).isEmpty());
+        NetcdfFile netcdfFile = NetcdfFile.open(outputFile.getAbsolutePath());
+        try {
+            Variable metadata = netcdfFile.findVariable("metadata");
+            assertNotNull(metadata);
+            assertEquals("l3-agg",
+                         metadata.findAttribute("Processing_Graph:node_0:operator").getStringValue());
+            assertEquals("BINNED-L3",
+                         netcdfFile.findGlobalAttribute("product_type").getStringValue());
+            assertEquals(startTime.format(),
+                         netcdfFile.findGlobalAttribute("start_date").getStringValue());
+            assertEquals(endTime.format(),
+                         netcdfFile.findGlobalAttribute("stop_date").getStringValue());
+        } finally {
+            netcdfFile.close();
+        }
     }
 
     private static final class SinglePartSource implements TemporalBinSource {
@@ -90,4 +120,3 @@ public class SeaGridNetcdf4SmokeTest {
         }
     }
 }
-

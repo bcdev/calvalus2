@@ -107,14 +107,13 @@ public class L3Formatter {
         }
 
         Geometry regionGeometry = null;
-        MetadataElement[] metadataElements = new MetadataElement[0];
         if (!useSeaGridNetcdfFormatter) {
             regionGeometry = GeometryUtils.createGeometry(regionWKT);
-            final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
-            final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
-            // TODO maybe replace region information in metadata if overwritten in formatting request
-            metadataElements = new MetadataElement[]{processingGraphMetadata};
         }
+        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
+        final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
+        // TODO maybe replace region information in metadata if overwritten in formatting request
+        MetadataElement[] metadataElements = new MetadataElement[]{processingGraphMetadata};
         formatter.format(planetaryGrid,
                 temporalBinSource,
                 featureNames,
