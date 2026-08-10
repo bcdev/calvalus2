@@ -29,6 +29,7 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoColorPalette;
 import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
@@ -244,6 +245,29 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             regionPersistence.storeRegions(regions);
         } catch (IOException e) {
             throw new BackendServiceException("Failed to store regions: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public DtoColorPalette[] loadColorPalettes(String filter) throws BackendServiceException {
+        ColorPalettePersistence colorPalettePersistence = new ColorPalettePersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
+        try {
+            DtoColorPalette[] dtoColorPalettes = colorPalettePersistence.loadColorPalettes();
+            LOG.fine("loadColorPalettes returns " + dtoColorPalettes.length);
+            return dtoColorPalettes;
+        } catch (IOException e) {
+            log(e.getMessage(), e);
+            throw new BackendServiceException("Failed to load color palettes: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void storeColorPalettes(DtoColorPalette[] colorPalettes) throws BackendServiceException {
+        ColorPalettePersistence colorPalettePersistence = new ColorPalettePersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
+        try {
+            colorPalettePersistence.storeColorPalettes(colorPalettes);
+        } catch (IOException e) {
+            throw new BackendServiceException("Failed to store color palettes: " + e.getMessage(), e);
         }
     }
 

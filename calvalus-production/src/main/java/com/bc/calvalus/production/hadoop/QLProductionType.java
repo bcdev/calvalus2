@@ -64,21 +64,15 @@ public class QLProductionType extends HadoopProductionType {
 
         // todo - if autoStaging=true, create sequential workflow and add staging job
         String stagingDir = productionRequest.getStagingDirectory(productionId);
-        //boolean autoStaging = productionRequest.isAutoStaging(); //TODO
-        boolean autoStaging = false;
+        boolean autoStaging = productionRequest.isAutoStaging();
+        String quicklookOutputDir = getOutputPath(productionRequest, productionId, "");
         return new Production(productionId,
                               productionName,
-                              "",
+                              quicklookOutputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,
                               workflowItem);
-    }
-
-    // TODO, at the moment no staging implemented
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) {
-        throw new UnsupportedOperationException("Staging currently not implemented for quick look generation.");
     }
 
     WorkflowItem createWorkflowItem(String productionId,

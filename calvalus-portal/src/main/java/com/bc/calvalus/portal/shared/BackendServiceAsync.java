@@ -13,6 +13,10 @@ public interface BackendServiceAsync {
 
     void storeRegions(DtoRegion[] regions, AsyncCallback<Void> callback);
 
+    void loadColorPalettes(String filter, AsyncCallback<DtoColorPalette[]> callback);
+
+    void storeColorPalettes(DtoColorPalette[] colorPalettes, AsyncCallback<Void> callback);
+
     void listUserFiles(String dir, AsyncCallback<String[]> callback);
 
     void removeUserFile(String path, AsyncCallback<Boolean> callback);

@@ -76,6 +76,9 @@ public class Quicklooks {
         @Parameter
         private String shapefileURL;
 
+        @Parameter(defaultValue = "false")
+        private boolean wmsEnabled;
+
         public String getImageType() {
             return imageType;
         }
@@ -155,5 +158,10 @@ public class Quicklooks {
         public void setOverlayURL(String overlayURL) {
             this.overlayURL = overlayURL;
         }
+
+        public boolean isWmsEnabled() {
+            return wmsEnabled;
+        }
+
     }
 }
