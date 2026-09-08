@@ -29,9 +29,42 @@ public class WritableUtils {
      * The array must match in size.
      */
     public static void convertByteToFloat(byte[] byteArray, float[] floatArray) {
-        Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
-        for (int i = 0; i < floatArray.length; i++) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        final int stop = Math.min(floatArray.length, byteArray.length / 4);
+        for (int i = 0; i < stop; i++) {
             floatArray[i] = WritableComparator.readFloat(byteArray, i * 4);
+        }
+    }
+
+    public static void convertByteToInt(byte[] byteArray, int[] floatArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        final int stop = Math.min(floatArray.length, byteArray.length / 4);
+        for (int i = 0; i < stop; i++) {
+            floatArray[i] = WritableComparator.readInt(byteArray, i * 4);
+        }
+    }
+
+    public static void convertByteToShort(byte[] byteArray, short[] floatArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        final int stop = Math.min(floatArray.length, byteArray.length / 2);
+        for (int i = 0; i < stop; i++) {
+            floatArray[i] = (short) WritableComparator.readUnsignedShort(byteArray, i * 2);
+        }
+    }
+
+    public static void convertByteToDouble(byte[] byteArray, double[] floatArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        final int stop = Math.min(floatArray.length, byteArray.length / 8);
+        for (int i = 0; i < stop; i++) {
+            floatArray[i] = WritableComparator.readDouble(byteArray, i * 8);
+        }
+    }
+
+    public static void convertByteToLong(byte[] byteArray, long[] floatArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        final int stop = Math.min(floatArray.length, byteArray.length / 8);
+        for (int i = 0; i < stop; i++) {
+            floatArray[i] = WritableComparator.readLong(byteArray, i * 8);
         }
     }
 
@@ -40,7 +73,7 @@ public class WritableUtils {
      * The array must match in size.
      */
     public static void convertFloatToByte(float[] floatArray, byte[] byteArray) {
-        Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
         int bi = 0;
         for (float aFloat : floatArray) {
             int intBits = Float.floatToIntBits(aFloat);
@@ -48,6 +81,88 @@ public class WritableUtils {
             byteArray[bi++] = (byte) ((intBits >>> 16) & 0xFF);
             byteArray[bi++] = (byte) ((intBits >>> 8) & 0xFF);
             byteArray[bi++] = (byte) ((intBits >>> 0) & 0xFF);
+            if (bi >= byteArray.length) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Converts a float array into a byte array.
+     * The array must match in size.
+     */
+    public static void convertIntToByte(int[] floatArray, byte[] byteArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        int bi = 0;
+        for (int intBits : floatArray) {
+            byteArray[bi++] = (byte) ((intBits >>> 24) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 16) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 8) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 0) & 0xFF);
+            if (bi >= byteArray.length) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Converts a float array into a byte array.
+     * The array must match in size.
+     */
+    public static void convertShortToByte(short[] floatArray, byte[] byteArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        int bi = 0;
+        for (short intBits : floatArray) {
+            byteArray[bi++] = (byte) ((intBits >>> 8) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 0) & 0xFF);
+            if (bi >= byteArray.length) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Converts a float array into a byte array.
+     * The array must match in size.
+     */
+    public static void convertDoubleToByte(double[] floatArray, byte[] byteArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        int bi = 0;
+        for (double aFloat : floatArray) {
+            long intBits = Double.doubleToLongBits(aFloat);
+            byteArray[bi++] = (byte) ((intBits >>> 56) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 48) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 40) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 32) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 24) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 16) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 8) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 0) & 0xFF);
+            if (bi >= byteArray.length) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Converts a float array into a byte array.
+     * The array must match in size.
+     */
+    public static void convertLongToByte(long[] floatArray, byte[] byteArray) {
+        //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
+        int bi = 0;
+        for (long intBits : floatArray) {
+            byteArray[bi++] = (byte) ((intBits >>> 56) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 48) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 40) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 32) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 24) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 16) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 8) & 0xFF);
+            byteArray[bi++] = (byte) ((intBits >>> 0) & 0xFF);
+            if (bi >= byteArray.length) {
+                break;
+            }
         }
     }
 
