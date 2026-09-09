@@ -144,7 +144,7 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                             final byte[] buffer = new byte[4096];
                             while (true) {
                                 final int count = byteStream.read(buffer);
-                                if (count == 0) {
+                                if (count <= 0) {
                                     break;
                                 }
                                 out.write(buffer, 0, count);

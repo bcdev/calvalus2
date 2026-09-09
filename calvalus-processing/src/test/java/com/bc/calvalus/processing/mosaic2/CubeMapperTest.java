@@ -40,7 +40,7 @@ public class CubeMapperTest extends TestCase {
         Configuration conf;
         public MapperProxy(Configuration conf) {
             this.conf = conf;
-            conf.set("calvalus.l3.parameters", "<parameters><aggregators><aggregator><type>TOptCube</type><varNames>CHL,CHL_algo,Turbidity,Turbidity_algo,SDD,adg,TIME</varNames><timeAxisLength>30</timeAxisLength><yAxisLength>160</yAxisLength><xAxisLength>200</xAxisLength><chunkSizeX>64</chunkSizeX><chunkSizeY>64</chunkSizeY><chunkSizeT>6</chunkSizeT><encoding>littleendian</encoding></aggregator></aggregators></parameters>");
+            conf.set("calvalus.l3.parameters", "<parameters><aggregators><aggregator><type>TOptCube</type><varNames>CHL,CHL_algo,Turbidity,Turbidity_algo,SDD,adg,TIME</varNames><timeAxisLength>30</timeAxisLength><yAxisLength>160</yAxisLength><xAxisLength>200</xAxisLength><chunkSizeX>64</chunkSizeX><chunkSizeY>64</chunkSizeY><chunkSizeT>6</chunkSizeT><encoding>littleendian</encoding><compression>zlib,level:1</compression><jsonFormattedCubeMetadataStr>{\"project\":\"okosat\",\"creator\":\"Brockmann Consult GmbH\"}</jsonFormattedCubeMetadataStr></aggregator></aggregators></parameters>");
             conf.set("calvalus.output.dir", "test.zarr");
         }
         public class CubeMapperContext extends Context {
@@ -51,7 +51,7 @@ public class CubeMapperTest extends TestCase {
                         new Path(this.getClass().getClassLoader().getResource("eodata/subset_0_of_20260621-P1D-L3-norge-300m-v0.nc").getPath()),
                         965216L,
                         new String[] { "localhost" },
-                        new String[] { "timeIndex", "3" }
+                        new String[] { "timeIndex", "3", "writeChunksOnly", "false" }
                 );
             }
 

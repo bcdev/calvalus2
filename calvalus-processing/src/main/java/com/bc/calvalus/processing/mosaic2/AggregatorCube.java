@@ -78,18 +78,18 @@ public class AggregatorCube extends AbstractAggregator {
     public static class Config extends AggregatorConfig {
         /*
         {
-                            "type": "TOptCube",
-                            "varNames": "CHL,CHL_algo,TUR,TUR_algo,SDD,adg,TIME",
-                            "timeAxisLength": 30,
-                            "yAxisLength": 5110,
-                            "xAxisLength": 4321,
-                            "chunkSizeX": 128,
-                            "chunkSizeY": 128,
-                            "chunkSizeT": 30,
-                            "encoding": "littleendian",
-                            "writeChunksOnly" : true,
-                            "jsonFormattedCubeMetadataStr": "{}"
-                        }
+             "type": "TOptCube",
+             "varNames": "CHL,CHL_algo,TUR,TUR_algo,SDD,adg,TIME",
+             "timeAxisLength": 30,
+             "yAxisLength": 5110,
+             "xAxisLength": 4321,
+             "chunkSizeX": 128,
+             "chunkSizeY": 128,
+             "chunkSizeT": 30,
+             "encoding": "littleendian",
+             "compression": "zlib,1",
+             "jsonFormattedCubeMetadataStr": "{\"project\":\"okosat\",\"creator\":\"Brockmann Consult GmbH\"}"
+         }
          */
 
         @Parameter(label = "Type", notEmpty = true, notNull = true, description = "constant value TOptCube")
@@ -108,15 +108,19 @@ public class AggregatorCube extends AbstractAggregator {
         int chunkSizeY;
         @Parameter(label = "Cube width chunk size", description = "Length of one chunk of the x axis of the cube")
         int chunkSizeX;
-        @Parameter(label = "Number encoding", description = "Length of one chunk of the x axis of the cube")
+        @Parameter(label = "Number encoding", description = "either littleendian or bigendian")
         String encoding;
+        @Parameter(label = "Compression method and parameters", description = "e.g. zlib,1")
+        String compression;
+        @Parameter(label = "Metadata", description = "JSON dict with key-value pairs")
+        String jsonFormattedCubeMetadataStr;
 
 
         public Config() {
-            this(null, null,0,0,0,0,0,0, null);
+            this(null, null,0,0,0,0,0,0, null, null, null);
         }
 
-        public Config(String type, String varNames, int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX, String encoding) {
+        public Config(String type, String varNames, int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX, String encoding, String compression, String jsonFormattedCubeMetadataStr) {
             super(Descriptor.NAME);
             this.type = type;
             this.varNames = varNames;
@@ -126,7 +130,11 @@ public class AggregatorCube extends AbstractAggregator {
             this.chunkSizeT = chunkSizeT;
             this.chunkSizeY= chunkSizeY;
             this.chunkSizeX = chunkSizeX;
+            this.encoding = encoding;
+            this.compression = compression;
+            this.jsonFormattedCubeMetadataStr = jsonFormattedCubeMetadataStr;
         }
+
     }
 
     public static class Descriptor implements AggregatorDescriptor {
