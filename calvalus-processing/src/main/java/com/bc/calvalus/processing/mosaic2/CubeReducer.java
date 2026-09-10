@@ -17,29 +17,15 @@
 package com.bc.calvalus.processing.mosaic2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.snap.binning.AggregatorConfig;
-import org.esa.snap.binning.BinningContext;
-import org.esa.snap.binning.TemporalBinner;
-import org.esa.snap.binning.cellprocessor.CellProcessorChain;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.core.datamodel.MetadataElement;
 
-import javax.imageio.stream.ImageOutputStream;
-import javax.imageio.stream.MemoryCacheImageOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.logging.Logger;
-import java.util.zip.Deflater;
-import java.util.zip.DeflaterOutputStream;
 
 /**
  * Reduces ...
@@ -86,6 +72,8 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
             final int chunkSizeX = aggregatorConfig.chunkSizeX;
             final String destDir = conf.get("calvalus.output.dir");
 
+            final ZarrWriter zarrWriter = new ZarrWriter(null);
+
             // repeatedly receives chunks with key and array
 
             int currentVariableIndex = -1;
@@ -102,7 +90,7 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                 CubeChunkWritable value = context.getCurrentValue();
                 Object elems = value.getSamples();
 
-                // determines whether (v, ty, tx, t) is a contribution to the current chunk, flushes the current one, initialises a new one
+                // determines whether (v, ty, tx, t) is a contribution to the next chunk, flushes the current one, initialises a new one
 
                 if (key.getVariableIndex() != currentVariableIndex
                         || key.getTileY() != currentTileY
@@ -113,59 +101,7 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
 
                         // flushing means writing a zarr file, name determined by variable name, tt, ty, tx
 
-                        String destination = destDir + "/" + variableNames[currentVariableIndex] + "/" + currentTileT + "." + currentTileY + "." + currentTileX;
-                        Files.createDirectories(Paths.get(destDir + "/" + variableNames[currentVariableIndex]));
-
-                        final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(new ByteArrayOutputStream());
-                        byteStream.setByteOrder(ByteOrder.LITTLE_ENDIAN);  // TODO parameter
-                        if (currentData instanceof float[]) {
-                            byteStream.writeFloats((float[]) currentData, 0, ((float[]) currentData).length);
-                        } else if (currentData instanceof int[]) {
-                            byteStream.writeInts((int[]) currentData, 0, ((int[]) currentData).length);
-                        } else if (currentData instanceof short[]) {
-                            byteStream.writeShorts((short[]) currentData, 0, ((short[]) currentData).length);
-                        } else if (currentData instanceof byte[]) {
-                            byteStream.write((byte[]) currentData, 0, ((byte[]) currentData).length);
-                        } else if (currentData instanceof double[]) {
-                            byteStream.writeDoubles((double[]) currentData, 0, ((double[]) currentData).length);
-                        } else if (currentData instanceof long[]) {
-                            byteStream.writeLongs((long[]) currentData, 0, ((long[]) currentData).length);
-                        } else {
-                            throw new IllegalArgumentException("unexpected data type " + currentData);
-                        }
-                        byteStream.seek(0);
-
-                        final int level = 1;
-                        Deflater deflater = new Deflater(level);
-                        try (final DeflaterOutputStream out = new DeflaterOutputStream(
-                                new FileOutputStream(destination),
-                                deflater
-                        )) {
-                            final byte[] buffer = new byte[4096];
-                            while (true) {
-                                final int count = byteStream.read(buffer);
-                                if (count <= 0) {
-                                    break;
-                                }
-                                out.write(buffer, 0, count);
-                            }
-                        }
-                        deflater.end();
-
-                        // TODO distinguish compression methods, allow their specification in parameters
-
-//                        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//                        passThrough(is, baos);
-//                        final byte[] inputBytes = baos.toByteArray();
-//                        final int inputSize = inputBytes.length;
-//                        final int outputSize = inputSize + JBlosc.OVERHEAD;
-//                        final ByteBuffer inputBuffer = ByteBuffer.wrap(inputBytes);
-//                        final ByteBuffer outBuffer = ByteBuffer.allocate(outputSize);
-//                        final int i = JBlosc.compressCtx(clevel, shuffle, 1, inputBuffer, inputSize, outBuffer, outputSize, cname, blocksize, 1);
-//                        final BufferSizes bs = cbufferSizes(outBuffer);
-//                        byte[] compressedChunk = Arrays.copyOfRange(outBuffer.array(), 0, (int) bs.getCbytes());
-//                        os.write(compressedChunk);
-
+                        zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
                     }
 
                     // initialising means determination of t1, y1, x1, lt, ly, lx, provisioning of data array with length lt
@@ -207,4 +143,5 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
             cleanup(context);
         }
     }
+
 }

@@ -25,7 +25,6 @@ import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -33,32 +32,29 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.SampleCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.geotools.referencing.operation.transform.AffineTransform2D;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.logging.Logger;
 
 /**
- * processes and reprojects one input, applies aggregators, writes micro tiles (instead of single pixels).
+ * Processes one input, cuts into spatial chunks, streams them to reducers ordered by variable, spatial chunk, time.
+ * It streams the single time value to a common reducer.
+ * If this input is labelled to provide the metadata then this mapper writes all .zxxx files, y and x.
  *
- * @author Martin
+ * @author MB
  */
 public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWritable, CubeChunkWritable> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
-                       
+    private static final String CUBE_REFERENCE_DATE = "1970-01-01";
+
     int numObs = 0;
     int numBins = 0;
-
+    ObjectMapper objectMapper;
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
@@ -81,7 +77,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
         final String encoding = aggregatorConfig.encoding;
         final String compressorName = aggregatorConfig.compression.split(",")[0];
         final String[] compressorParameters = aggregatorConfig.compression.substring(aggregatorConfig.compression.indexOf(",") + 1).split(",");
-
+        final String jsonFormattedCubeMetadataStr = aggregatorConfig.jsonFormattedCubeMetadataStr;
         final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
 
         // open product (time index, dimensions, fill value, variable content)
@@ -106,17 +102,22 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                     : true;
             final String destDir = conf.get("calvalus.output.dir");
 
-            final ObjectMapper objectMapper;
+            final MetadataCollector metadataCollector;
+            final ZarrWriter zarrWriter;
             final ObjectNode zmetadata;
             final ObjectNode metadata;
             if (!writeChunksOnly) {
                 objectMapper = new ObjectMapper();
                 zmetadata = objectMapper.createObjectNode();
                 metadata = zmetadata.putObject("metadata");
+                zarrWriter = new ZarrWriter(objectMapper);
+                metadataCollector = new MetadataCollector(objectMapper, CUBE_REFERENCE_DATE);
             } else {
                 objectMapper = null;
                 zmetadata = null;
                 metadata = null;
+                zarrWriter = null;
+                metadataCollector = null;
             }
 
             // TODO forward time value to a reducer, it is required to write the time variable
@@ -136,6 +137,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                     throw new IllegalArgumentException("variable " + variableNames[i] + " not found in input " + ((ParameterizedSplit) context.getInputSplit()).getPath());
                 }
                 double fillValue = band.isNoDataValueSet() ? band.getNoDataValue() : Double.NaN;
+                
                 streamBandData(
                         band, (short) i, timeIndex, fillValue, generateEmptyAggregate,
                         productHeight, productWidth, chunkSizeY, chunkSizeX,
@@ -146,95 +148,55 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
 
                 if (!writeChunksOnly) {
 
-                    // write .zarray
-
-                    final ObjectNode zarray = collectZarrayContent(
+                    final ObjectNode zarray = metadataCollector.collectZarrayContent(
                             variableNames[i], band, fillValue, encoding, compressorName, compressorParameters, 
                             timeAxisLength, yAxisLength, xAxisLength, chunkSizeT, chunkSizeY, chunkSizeX, 
                             metadata
                     );
-                    final String destination = destDir + "/" + variableNames[i] + "/.zarray";
-                    Files.createDirectories(Paths.get(destDir + "/" + variableNames[i]));
-                    try (BufferedWriter out = new BufferedWriter(new FileWriter(destination))) {
-                        objectMapper.writeValue(out, zarray);
-                    }
+                    zarrWriter.writeJsonFile(destDir, variableNames[i],  ".zarray", zarray);
 
-                    // write .zattrs
-
-                    final ObjectNode zattrs = collectZattrsContent(
+                    final ObjectNode zattrs = metadataCollector.collectZattrsContent(
                             variableNames[i], band, metadata
                     );
-                    final String destination2 = destDir + "/" + variableNames[i] + "/.zattrs";
-                    try (BufferedWriter out = new BufferedWriter(new FileWriter(destination2))) {
-                        objectMapper.writeValue(out, zattrs);
-                    }
+                    zarrWriter.writeJsonFile(destDir, variableNames[i],  ".zattrs", zattrs);
                 }
             }
+            // count 1 per pixel only
             numObs /= variableNames.length;
 
             if (! writeChunksOnly) {
-                                
-                // TODO time, y, x
 
-                final ObjectNode zarraySpatialRef = metadata.putObject("spatial_ref/.zarray");
-                zarraySpatialRef.putArray("chunks");
-                zarraySpatialRef.putNull("compressor");
-                zarraySpatialRef.put("dtype", "|i1");
-                zarraySpatialRef.put("fill_value", 0);
-                zarraySpatialRef.putNull("filters");
-                zarraySpatialRef.put("order", "C");
-                zarraySpatialRef.putArray("shape");
-                zarraySpatialRef.put("zarr_format", 2);
+                // write y, x, and metadata of time, spatial_ref, global metadata, .zmetadata
 
-                final String destination6 = destDir + "/spatial_ref/.zarray";
-                Files.createDirectories(Paths.get(destDir+ "/spatial_ref"));
-                try (BufferedWriter out = new BufferedWriter(new FileWriter(destination6))) {
-                    objectMapper.writeValue(out, zarraySpatialRef);
-                }
+                final ObjectNode zarrayY = metadataCollector.collectXYzarray("y", metadata, product);
+                zarrWriter.writeJsonFile(destDir, "y",  ".zarray", zarrayY);
+                final ObjectNode zattrsY = metadataCollector.collectXYzattrs("y", metadata);
+                zarrWriter.writeJsonFile(destDir, "y",  ".zattrs", zattrsY);
+                zarrWriter.writeXYValuesToZarr("y", product, destDir);
 
-                final ObjectNode zattrsSpatialRef = metadata.putObject("spatial_ref/.zattrs");
-                zattrsSpatialRef.putArray("_ARRAY_DIMENSIONS");
-                zattrsSpatialRef.put("crs_wkt", product.getSceneGeoCoding().getMapCRS().toWKT());
-                final AffineTransform2D imageToMapTransform = (AffineTransform2D) product.getSceneGeoCoding().getImageToMapTransform();
-                double[] t = new double[6];
-                imageToMapTransform.getMatrix(t);
-                zattrsSpatialRef.put("i2m", String.format("%f,%f,%f,%f,%f,%f", t[0],t[1],t[2],t[3],t[4],t[5]));
+                final ObjectNode zarrayX = metadataCollector.collectXYzarray("x", metadata, product);
+                zarrWriter.writeJsonFile(destDir, "x",  ".zarray", zarrayX);
+                final ObjectNode zattrsX = metadataCollector.collectXYzattrs("x", metadata);
+                zarrWriter.writeJsonFile(destDir, "x",  ".zattrs", zattrsX);
+                zarrWriter.writeXYValuesToZarr("x", product, destDir);
 
-                final String destination7 = destDir + "/spatial_ref/.zattrs";
-                try (BufferedWriter out = new BufferedWriter(new FileWriter(destination7))) {
-                    objectMapper.writeValue(out, zattrsSpatialRef);
-                }
+                final ObjectNode zarrayTime = metadataCollector.collectTarray(timeAxisLength, chunkSizeT, metadata);
+                zarrWriter.writeJsonFile(destDir, "time",  ".zarray", zarrayTime);
+                final ObjectNode zattrsTime = metadataCollector.collectTattrs(metadata);
+                zarrWriter.writeJsonFile(destDir, "time",  ".zattrs", zattrsTime);
 
-                // write .zgroup
+                final ObjectNode zarraySpatialRef = metadataCollector.collectCRSarray(metadata);
+                zarrWriter.writeJsonFile(destDir, "spatial_ref",  ".zarray", zarraySpatialRef);
+                final ObjectNode zattrsSpatialRef = metadataCollector.collectCRSattrs(product, metadata);
+                zarrWriter.writeJsonFile(destDir, "spatial_ref",  ".zattrs", zattrsSpatialRef);
 
-                final ObjectNode zgroup = metadata.putObject(".zgroup");
-                zgroup.put("zarr_format", 2);
-                final String destination3 = destDir + "/.zgroup";
-                Files.createDirectories(Paths.get(destDir));
-                try (BufferedWriter out = new BufferedWriter(new FileWriter(destination3))) {
-                    objectMapper.writeValue(out, zgroup);
-                }
-
-                // write .zattrs
-
-                final ObjectNode zattrsGlobal = zmetadata.putObject(".zattrs");
-                for (String attr : product.getMetadataRoot().getAttributeNames()) {
-                    zattrsGlobal.put(attr, product.getMetadataRoot().getAttributeString(attr));
-                }
-                final String destination4 = destDir + "/.zattrs";
-                //Files.createDirectories(Paths.get(destDir));
-                try (BufferedWriter out = new BufferedWriter(new FileWriter(destination4))) {
-                    objectMapper.writeValue(out, zattrsGlobal);
-                }
-
-                // write .zmetadata
+                final ObjectNode zgroup = metadataCollector.collectZgroup(metadata);
+                zarrWriter.writeJsonFile(destDir,".zgroup", zgroup);
+                final ObjectNode zattrsGlobal = metadataCollector.collectGlobalMetadata(jsonFormattedCubeMetadataStr, zmetadata);
+                zarrWriter.writeJsonFile(destDir, ".zattrs", zattrsGlobal);
 
                 zmetadata.put("zarr_consolidated_format", 1);
-                final String destination5 = destDir + "/.zmetadata";
-                //Files.createDirectories(Paths.get(destDir));
-                try (BufferedWriter out = new BufferedWriter(new FileWriter(destination5))) {
-                    objectMapper.writeValue(out, zmetadata);
-                }
+                zarrWriter.writeJsonFile(destDir, ".zmetadata", zmetadata);
             }
 
             if (numObs > 0L) {
@@ -277,114 +239,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
         }
     }
 
-    private ObjectNode collectZattrsContent(String variableName, Band band, ObjectNode metadata) {
-        final ObjectNode zattrs = metadata.putObject(variableName + "/" + ".zattrs");
-        final ArrayNode dims = zattrs.putArray("_ARRAY_DIMENSIONS");
-        dims.add("time");
-        dims.add("y");   // TODO is it sometimes lat and lon?
-        dims.add("x");
-        zattrs.put("grid_mapping", "spatial_ref");
-        if (band.getDescription() != null) {
-            zattrs.put("description", band.getDescription());
-        }
-        if (band.getFlagCoding() != null) {
-            zattrs.put("flag_masks", flagMasksOf(band.getFlagCoding()));
-            zattrs.put("flag_meanings", flagMeaningsOf(band.getFlagCoding()));
-        } else if (band.getIndexCoding() != null) {
-            zattrs.put("flag_values", flagMasksOf(band.getIndexCoding()));
-            zattrs.put("flag_meanings", flagMeaningsOf(band.getIndexCoding()));
-        }
-        if (band.getSpectralWavelength() > 0.0f) {
-            zattrs.put("spectral_wavelength", band.getSpectralWavelength());
-        }
-        zattrs.put("grid_mapping", "spatial_ref");
-        return zattrs;
-    }
-
-    private ObjectNode collectZarrayContent(
-            String variableName, Band band, double fillValue,
-            String encoding, String compressorName, String[] compressorParameters,
-            int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX,
-            ObjectNode metadata
-    ) {
-        final ObjectNode zarray =  metadata.putObject(variableName + "/" + ".zarray");
-        final ArrayNode chunks = zarray.putArray("chunks");
-        chunks.add(chunkSizeT);
-        chunks.add(chunkSizeY);
-        chunks.add(chunkSizeX);
-        final ObjectNode compressor = zarray.putObject("compressor");
-        compressor.put("id", compressorName);
-        for (String parameter : compressorParameters) {
-            compressor.put(parameter.split(":")[0], parameter.split(":")[1]);
-        }
-        zarray.put("dtype", zarrEncodingOf(encoding) + zarrTypeOf(band.getDataType()));
-        if (band.isNoDataValueSet()) {
-            if (Double.isNaN(fillValue)) {
-                zarray.put("fill_value", "NaN");
-            } else {
-                zarray.put("fill_value", fillValue);
-            }
-        }
-        zarray.putNull("filters");
-        zarray.put("order", "C");
-        final ArrayNode shape = zarray.putArray("shape");
-        chunks.add(timeAxisLength);
-        chunks.add(yAxisLength);
-        chunks.add(xAxisLength);
-        zarray.put("zarr_format", 2);
-        return zarray;
-    }
-
-    private String zarrEncodingOf(String encoding) {
-        if ("littleendian".equals(encoding)) {
-            return "<";
-        } else {
-            return ">";
-        }
-    }
-
-    private String flagMasksOf(SampleCoding flagCoding) {
-        StringBuffer accu = new StringBuffer();
-        for (int i=0; i<flagCoding.getSampleCount(); ++i) {
-            if (i>0) {
-                accu.append(",");
-            }
-            accu.append(flagCoding.getSampleValue(i));
-        }
-        return accu.toString();
-    }
-
-    private String flagMeaningsOf(SampleCoding flagCoding) {
-        StringBuffer accu = new StringBuffer();
-        for (int i=0; i<flagCoding.getSampleCount(); ++i) {
-            if (i>0) {
-                accu.append(",");
-            }
-            accu.append(flagCoding.getSampleName(i));
-        }
-        return accu.toString();
-    }
-
-    private String zarrTypeOf(int dataType) {
-        switch (dataType) {
-            case ProductData.TYPE_FLOAT32:
-                return "f4";
-            case ProductData.TYPE_INT32:
-                return "i4";
-            case ProductData.TYPE_INT16:
-                return "i2";
-            case ProductData.TYPE_INT8:
-                return "b";
-            case ProductData.TYPE_FLOAT64:
-                return "f8";
-            case ProductData.TYPE_INT64:
-                return "i8";
-            default:
-                throw new IllegalArgumentException("unknown dtype code " + dataType);
-        }
-    }
-
-    private boolean containsNonFillValue(Object elems, int length, double fillValue) {
+     private static boolean containsNonFillValue(Object elems, int length, double fillValue) {
         if (elems instanceof float[]) {
             float[] values = (float[]) elems;
             if (Double.isNaN(fillValue)) {
