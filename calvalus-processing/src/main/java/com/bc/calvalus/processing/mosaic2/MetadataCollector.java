@@ -30,6 +30,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.SampleCoding;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 
+import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -115,12 +116,12 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrsTime;
     }
 
-    public ObjectNode collectTarray(int timeAxisLength, int chunkSizeT, ObjectNode metadata) {
+    public ObjectNode collectTarray(int timeAxisLength, int chunkSizeT, ByteOrder byteOrder, ObjectNode metadata) {
         final ObjectNode zarrayTime = metadata.putObject("time/.zarray");
         final ArrayNode tChunks = zarrayTime.putArray("chunks");
         tChunks.add(chunkSizeT);
         zarrayTime.putNull("compressor");
-        zarrayTime.put("dtype", "<i8");
+        zarrayTime.put("dtype", zarrEncodingOf(byteOrder) + "i8");
         zarrayTime.put("fill_value", -1);
         zarrayTime.putNull("filters");
         zarrayTime.put("order", "C");
@@ -140,17 +141,17 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrs;
     }
 
-    public ObjectNode collectXYzarray(String variableName, ObjectNode metadata, Product product) {
+    public ObjectNode collectXYzarray(String variableName, int size, ByteOrder byteOrder, ObjectNode metadata) {
         final ObjectNode zarray = metadata.putObject(variableName + "/.zarray");
         final ArrayNode chunks = zarray.putArray("chunks");
-        chunks.add(product.getSceneRasterHeight());
+        chunks.add(size);
         zarray.putNull("compressor");
-        zarray.put("dtype", "<f8");
+        zarray.put("dtype", zarrEncodingOf(byteOrder) + "f8");
         zarray.put("fill_value", Double.NaN);
         zarray.putNull("filters");
         zarray.put("order", "C");
         final ArrayNode shape = zarray.putArray("shape");
-        shape.add(product.getSceneRasterHeight());
+        shape.add(size);
         zarray.put("zarr_format", 2);
         return zarray;
     }
@@ -181,7 +182,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
 
     public ObjectNode collectZarrayContent(
             String variableName, Band band, double fillValue,
-            String encoding, String compressorName, String[] compressorParameters,
+            ByteOrder byteOrder, String compressorName, Map<String,String> compressorParameters,
             int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX,
             ObjectNode metadata
     ) {
@@ -192,10 +193,10 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         chunks.add(chunkSizeX);
         final ObjectNode compressor = zarray.putObject("compressor");
         compressor.put("id", compressorName);
-        for (String parameter : compressorParameters) {
-            compressor.put(parameter.split(":")[0], parameter.split(":")[1]);
+        for (Map.Entry<String,String> parameter : compressorParameters.entrySet()) {
+            compressor.put(parameter.getKey(), parameter.getValue());
         }
-        zarray.put("dtype", zarrEncodingOf(encoding) + zarrTypeOf(band.getDataType()));
+        zarray.put("dtype", zarrEncodingOf(byteOrder) + zarrTypeOf(band.getDataType()));
         if (band.isNoDataValueSet()) {
             if (Double.isNaN(fillValue)) {
                 zarray.put("fill_value", "NaN");
@@ -213,11 +214,11 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarray;
     }
 
-    private static String zarrEncodingOf(String encoding) {
-        if ("littleendian".equals(encoding)) {
-            return "<";
-        } else {
+    private static String zarrEncodingOf(ByteOrder byteOrder) {
+        if (byteOrder == ByteOrder.BIG_ENDIAN) {
             return ">";
+        } else {
+            return "<";
         }
     }
 

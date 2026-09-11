@@ -161,6 +161,11 @@
             <artifactId>commons-lang</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.lasersonlab</groupId>
+            <artifactId>jblosc</artifactId>
+        </dependency>
+
         <!--  Test -->
 
         <dependency>

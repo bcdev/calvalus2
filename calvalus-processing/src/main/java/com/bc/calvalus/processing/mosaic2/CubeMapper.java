@@ -36,7 +36,10 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
+import java.nio.ByteOrder;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -74,9 +77,13 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
         final int chunkSizeT = aggregatorConfig.chunkSizeT;
         final int chunkSizeY = aggregatorConfig.chunkSizeY;
         final int chunkSizeX = aggregatorConfig.chunkSizeX;
-        final String encoding = aggregatorConfig.encoding;
+        final ByteOrder byteOrder = "bigendian".equals(aggregatorConfig.encoding) ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
         final String compressorName = aggregatorConfig.compression.split(",")[0];
-        final String[] compressorParameters = aggregatorConfig.compression.substring(aggregatorConfig.compression.indexOf(",") + 1).split(",");
+        final Map<String,String> compressorParameters = new HashMap<>();
+        for (String pair: aggregatorConfig.compression.substring(aggregatorConfig.compression.indexOf(",") + 1).split(",")) {
+            String[] elements = pair.split(":");
+            compressorParameters.put(elements[0], elements[1]);
+        }
         final String jsonFormattedCubeMetadataStr = aggregatorConfig.jsonFormattedCubeMetadataStr;
         final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
 
@@ -110,7 +117,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                 objectMapper = new ObjectMapper();
                 zmetadata = objectMapper.createObjectNode();
                 metadata = zmetadata.putObject("metadata");
-                zarrWriter = new ZarrWriter(objectMapper);
+                zarrWriter = new ZarrWriter(objectMapper, byteOrder, compressorName, compressorParameters);
                 metadataCollector = new MetadataCollector(objectMapper, CUBE_REFERENCE_DATE);
             } else {
                 objectMapper = null;
@@ -149,7 +156,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                 if (!writeChunksOnly) {
 
                     final ObjectNode zarray = metadataCollector.collectZarrayContent(
-                            variableNames[i], band, fillValue, encoding, compressorName, compressorParameters, 
+                            variableNames[i], band, fillValue, byteOrder, compressorName, compressorParameters,
                             timeAxisLength, yAxisLength, xAxisLength, chunkSizeT, chunkSizeY, chunkSizeX, 
                             metadata
                     );
@@ -168,19 +175,19 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
 
                 // write y, x, and metadata of time, spatial_ref, global metadata, .zmetadata
 
-                final ObjectNode zarrayY = metadataCollector.collectXYzarray("y", metadata, product);
+                final ObjectNode zarrayY = metadataCollector.collectXYzarray("y", product.getSceneRasterHeight(), byteOrder, metadata);
                 zarrWriter.writeJsonFile(destDir, "y",  ".zarray", zarrayY);
                 final ObjectNode zattrsY = metadataCollector.collectXYzattrs("y", metadata);
                 zarrWriter.writeJsonFile(destDir, "y",  ".zattrs", zattrsY);
                 zarrWriter.writeXYValuesToZarr("y", product, destDir);
 
-                final ObjectNode zarrayX = metadataCollector.collectXYzarray("x", metadata, product);
+                final ObjectNode zarrayX = metadataCollector.collectXYzarray("x", product.getSceneRasterWidth(), byteOrder, metadata);
                 zarrWriter.writeJsonFile(destDir, "x",  ".zarray", zarrayX);
                 final ObjectNode zattrsX = metadataCollector.collectXYzattrs("x", metadata);
                 zarrWriter.writeJsonFile(destDir, "x",  ".zattrs", zattrsX);
                 zarrWriter.writeXYValuesToZarr("x", product, destDir);
 
-                final ObjectNode zarrayTime = metadataCollector.collectTarray(timeAxisLength, chunkSizeT, metadata);
+                final ObjectNode zarrayTime = metadataCollector.collectTarray(timeAxisLength, chunkSizeT, byteOrder, metadata);
                 zarrWriter.writeJsonFile(destDir, "time",  ".zarray", zarrayTime);
                 final ObjectNode zattrsTime = metadataCollector.collectTattrs(metadata);
                 zarrWriter.writeJsonFile(destDir, "time",  ".zattrs", zattrsTime);
