@@ -109,31 +109,32 @@ public class ZarrWriter {
     }
 
     public void writeChunkToZarr(
-            String variableNames,
-            int currentTileY, int currentTileX, int currentTileT, Object currentData,
+            String variable,
+            int currentTileY, int currentTileX, int currentTileT, byte[] currentData,
             String destDir
     ) throws IOException {
-        String destination = destDir + "/" + variableNames + "/" + currentTileT + "." + currentTileY + "." + currentTileX;
-        Files.createDirectories(Paths.get(destDir + "/" + variableNames));
+        File destination = new File(new File(destDir, variable),
+                                    currentTileT + "." + currentTileY + "." + currentTileX);
+        Files.createDirectories(Paths.get(destDir, variable));
 
-        final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(new ByteArrayOutputStream());
-        byteStream.setByteOrder(byteOrder);
-        if (currentData instanceof float[]) {
-            byteStream.writeFloats((float[]) currentData, 0, ((float[]) currentData).length);
-        } else if (currentData instanceof int[]) {
-            byteStream.writeInts((int[]) currentData, 0, ((int[]) currentData).length);
-        } else if (currentData instanceof short[]) {
-            byteStream.writeShorts((short[]) currentData, 0, ((short[]) currentData).length);
-        } else if (currentData instanceof byte[]) {
-            byteStream.write((byte[]) currentData, 0, ((byte[]) currentData).length);
-        } else if (currentData instanceof double[]) {
-            byteStream.writeDoubles((double[]) currentData, 0, ((double[]) currentData).length);
-        } else if (currentData instanceof long[]) {
-            byteStream.writeLongs((long[]) currentData, 0, ((long[]) currentData).length);
-        } else {
-            throw new IllegalArgumentException("unexpected data type " + currentData);
-        }
-        byteStream.seek(0);
+//        final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(new ByteArrayOutputStream());
+//        byteStream.setByteOrder(byteOrder);
+//        if (currentData instanceof float[]) {
+//            byteStream.writeFloats((float[]) currentData, 0, ((float[]) currentData).length);
+//        } else if (currentData instanceof int[]) {
+//            byteStream.writeInts((int[]) currentData, 0, ((int[]) currentData).length);
+//        } else if (currentData instanceof short[]) {
+//            byteStream.writeShorts((short[]) currentData, 0, ((short[]) currentData).length);
+//        } else if (currentData instanceof byte[]) {
+//            byteStream.write((byte[]) currentData, 0, ((byte[]) currentData).length);
+//        } else if (currentData instanceof double[]) {
+//            byteStream.writeDoubles((double[]) currentData, 0, ((double[]) currentData).length);
+//        } else if (currentData instanceof long[]) {
+//            byteStream.writeLongs((long[]) currentData, 0, ((long[]) currentData).length);
+//        } else {
+//            throw new IllegalArgumentException("unexpected data type " + currentData);
+//        }
+//        byteStream.seek(0);
 
         if ("zlib".equals(compressorName)) {
             final int level = compressorParameters.containsKey("level")
@@ -144,14 +145,7 @@ public class ZarrWriter {
                     new FileOutputStream(destination),
                     deflater
             )) {
-                final byte[] buffer = new byte[4096];
-                while (true) {
-                    final int count = byteStream.read(buffer);
-                    if (count <= 0) {
-                        break;
-                    }
-                    out.write(buffer, 0, count);
-                }
+                out.write(currentData);
             }
             deflater.end();
         } else if ("blosc".equals(compressorName)) {
@@ -167,12 +161,9 @@ public class ZarrWriter {
             final int blocksize = compressorParameters.containsKey("blocksize")
                     ? Integer.parseInt(compressorParameters.get("blocksize"))
                     : 0;
-            final int inputSize = (int) byteStream.length();
-            // TODO one copy too much
-            byte[] inputBytes = new byte[inputSize];
-            byteStream.read(inputBytes);
+            final int inputSize = currentData.length;
             final int outputSize = inputSize + JBlosc.OVERHEAD;
-            final ByteBuffer inputBuffer = ByteBuffer.wrap(inputBytes);
+            final ByteBuffer inputBuffer = ByteBuffer.wrap(currentData);
             final ByteBuffer outBuffer = ByteBuffer.allocate(outputSize);
             final int i = JBlosc.compressCtx(clevel, shuffle, 1, inputBuffer, inputSize, outBuffer, outputSize, cname, blocksize, 1);
             final BufferSizes bs = cbufferSizes(outBuffer);

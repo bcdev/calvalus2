@@ -157,7 +157,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
     }
 
     public ObjectNode collectZattrsContent(String variableName, Band band, ObjectNode metadata) {
-        final ObjectNode zattrs = metadata.putObject(variableName + "/" + ".zattrs");
+        final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
         final ArrayNode dims = zattrs.putArray("_ARRAY_DIMENSIONS");
         dims.add("time");
         dims.add("y");   // TODO is it sometimes lat and lon?
@@ -186,7 +186,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
             int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX,
             ObjectNode metadata
     ) {
-        final ObjectNode zarray =  metadata.putObject(variableName + "/" + ".zarray");
+        final ObjectNode zarray =  metadata.putObject(variableName + "/.zarray");
         final ArrayNode chunks = zarray.putArray("chunks");
         chunks.add(chunkSizeT);
         chunks.add(chunkSizeY);
