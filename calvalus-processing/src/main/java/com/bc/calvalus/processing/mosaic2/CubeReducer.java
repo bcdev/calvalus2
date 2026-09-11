@@ -25,12 +25,15 @@ import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.operator.BinningConfig;
 
 import java.io.IOException;
+import java.nio.ByteOrder;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 /**
  * Reduces ...
  *
- * @author Martin
+ * @author MB
  */
 public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, NullWritable, NullWritable> {
 
@@ -70,9 +73,16 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
             final int chunkSizeT = aggregatorConfig.chunkSizeT;
             final int chunkSizeY = aggregatorConfig.chunkSizeY;
             final int chunkSizeX = aggregatorConfig.chunkSizeX;
+            final ByteOrder byteOrder = "bigendian".equals(aggregatorConfig.encoding) ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+            final String compressorName = aggregatorConfig.compression.split(",")[0];
+            final Map<String,String> compressorParameters = new HashMap<>();
+            for (String pair: aggregatorConfig.compression.substring(aggregatorConfig.compression.indexOf(",") + 1).split(",")) {
+                String[] elements = pair.split(":");
+                compressorParameters.put(elements[0], elements[1]);
+            }
             final String destDir = conf.get("calvalus.output.dir");
 
-            final ZarrWriter zarrWriter = new ZarrWriter(null);
+            final ZarrWriter zarrWriter = new ZarrWriter(null, byteOrder, compressorName, compressorParameters);
 
             // repeatedly receives chunks with key and array
 
@@ -99,12 +109,10 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                 ) {
                     if (currentVariableIndex != -1) {
 
-                        // flushing means writing a zarr file, name determined by variable name, tt, ty, tx
-
                         zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
                     }
 
-                    // initialising means determination of t1, y1, x1, lt, ly, lx, provisioning of data array with length lt
+                    // initialising t1, y1, x1, lt, ly, lx, provisioning of data array with length lt
 
                     currentVariableIndex = key.getVariableIndex();
                     currentTileY = key.getTileY();
@@ -131,7 +139,7 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                     }
                     LOG.info("collecting contributions of chunk "
                                      + variableNames[currentVariableIndex]
-                                     + " [" + currentTileT + "," + currentTileY + "," + currentTileX + "]");
+                                     + "[" + currentTileT + "," + currentTileY + "," + currentTileX + "]");
                 }
 
                 // appends data to the current chunk, i.e. reads values into ly, lx array, sets into data array at t-t1 (t of index)

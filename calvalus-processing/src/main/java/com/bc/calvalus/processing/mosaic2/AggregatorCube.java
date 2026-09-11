@@ -120,7 +120,11 @@ public class AggregatorCube extends AbstractAggregator {
             this(null, null,0,0,0,0,0,0, null, null, null);
         }
 
-        public Config(String type, String varNames, int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX, String encoding, String compression, String jsonFormattedCubeMetadataStr) {
+        public Config(
+                String type, String varNames,
+                int timeAxisLength, int yAxisLength, int xAxisLength,
+                int chunkSizeT, int chunkSizeY, int chunkSizeX,
+                String encoding, String compression, String jsonFormattedCubeMetadataStr) {
             super(Descriptor.NAME);
             this.type = type;
             this.varNames = varNames;
