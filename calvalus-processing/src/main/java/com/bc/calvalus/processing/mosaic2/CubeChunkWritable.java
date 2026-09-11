@@ -20,9 +20,13 @@ import com.bc.calvalus.processing.hadoop.WritableUtils;
 import org.apache.hadoop.io.CompressedWritable;
 import org.esa.snap.core.datamodel.ProductData;
 
+import javax.imageio.stream.ImageOutputStream;
+import javax.imageio.stream.MemoryCacheImageOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.ByteOrder;
 
 /**
  * A Hadoop writable for a cube chunk.
@@ -31,132 +35,126 @@ import java.io.IOException;
  */
 public class CubeChunkWritable extends CompressedWritable {
 
-    private Object elems;
+    private byte typeLength;
+    private byte[] fillBytes;
     private int length;
+    private byte[] buffer;
+    private Object elems;
+    private ByteOrder byteOrder;
+    private double fillValue;
 
     public CubeChunkWritable() {
     }
 
-    public CubeChunkWritable(Object elems, int length) {
+    public CubeChunkWritable(Object elems, int length, ByteOrder byteOrder, double fillValue) {
         this.elems = elems;
         this.length = length;
+        this.byteOrder = byteOrder;
+        this.fillValue = fillValue;
     }
 
     public Object getSamples() {
         ensureInflated();
-        return elems;
+        return buffer;
+    }
+
+    public byte[] getBuffer() {
+        ensureInflated();
+        return buffer;
+    }
+
+    public int getLength() {
+        ensureInflated();
+        return length;
+    }
+
+    public byte getTypeLength() {
+        ensureInflated();
+        return typeLength;
+    }
+
+    public byte[] getFillBytes() {
+        ensureInflated();
+        return fillBytes;
+    }
+
+    class PlainByteArrayOutputStream extends ByteArrayOutputStream {
+        public PlainByteArrayOutputStream(int size) {
+            super(size);
+        }
+        public byte[] toByteArray() {
+            return buf;
+        }
     }
 
     @Override
     public void writeCompressed(DataOutput out) throws IOException {
         if (elems instanceof float[]) {
-            out.writeByte(ProductData.TYPE_FLOAT32);
-            out.writeInt(length);
-            byte[] buffer = new byte[length * 4];
-            WritableUtils.convertFloatToByte((float[])elems, buffer);
-            out.write(buffer);
+            final ByteArrayOutputStream byteArrayStream = new PlainByteArrayOutputStream(4 + length * 4);
+            final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(byteArrayStream);
+            byteStream.setByteOrder(byteOrder);
+            byteStream.writeFloat((float) fillValue);
+            byteStream.writeFloats((float[]) elems, 0, length);
+            out.writeByte(4);
+            out.writeInt(length * 4);
+            out.write(byteArrayStream.toByteArray());
         } else if (elems instanceof int[]) {
-            out.writeByte(ProductData.TYPE_INT32);
-            out.writeInt(length);
-            byte[] buffer = new byte[length * 4];
-            WritableUtils.convertIntToByte((int[])elems, buffer);
-            out.write(buffer);
+            final ByteArrayOutputStream byteArrayStream = new PlainByteArrayOutputStream(4 + length * 4);
+            final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(byteArrayStream);
+            byteStream.setByteOrder(byteOrder);
+            byteStream.writeInt(Double.isFinite(fillValue) ? (int) fillValue : 0);
+            byteStream.writeInts((int[]) elems, 0, length);
+            out.writeByte(4);
+            out.writeInt(length * 4);
+            out.write(byteArrayStream.toByteArray());
         } else if (elems instanceof short[]) {
-            out.writeByte(ProductData.TYPE_INT16);
-            out.writeInt(length);
-            byte[] buffer = new byte[length * 2];
-            WritableUtils.convertShortToByte((short[])elems, buffer);
-            out.write(buffer);
+            final ByteArrayOutputStream byteArrayStream = new PlainByteArrayOutputStream(2 + length * 2);
+            final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(byteArrayStream);
+            byteStream.setByteOrder(byteOrder);
+            byteStream.writeShort(Double.isFinite(fillValue) ? (short) fillValue : 0);
+            byteStream.writeShorts((short[]) elems, 0, length);
+            out.writeByte(2);
+            out.writeInt(length * 2);
+            out.write(byteArrayStream.toByteArray());
         } else if (elems instanceof byte[]) {
-            out.writeByte(ProductData.TYPE_INT8);
+            final byte[] buffer = (byte[]) elems;
+            out.writeByte(1);
             out.writeInt(length);
-            byte[] buffer = new byte[length];
-            System.arraycopy((byte[])elems, 0, buffer, 0, length);
-            out.write(buffer);
+            out.write(Double.isFinite(fillValue) ? (byte) fillValue : (byte)0);
+            out.write(buffer, 0, length);
         } else if (elems instanceof double[]) {
-            out.writeByte(ProductData.TYPE_FLOAT64);
-            out.writeInt(length);
-            byte[] buffer = new byte[length * 8];
-            WritableUtils.convertDoubleToByte((double[])elems, buffer);
+            final ByteArrayOutputStream byteArrayStream = new PlainByteArrayOutputStream(8 + length * 8);
+            final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(byteArrayStream);
+            byteStream.setByteOrder(byteOrder);
+            byteStream.writeDouble(fillValue);
+            byteStream.writeDoubles((double[]) elems, 0, length);
+            final byte[] buffer = byteArrayStream.toByteArray();
+            out.writeByte(8);
+            out.writeInt(length * 8);
             out.write(buffer);
         } else if (elems instanceof long[]) {
-            out.writeByte(ProductData.TYPE_INT64);
-            out.writeInt(length);
-            byte[] buffer = new byte[length * 8];
-            WritableUtils.convertLongToByte((long[])elems, buffer);
+            final ByteArrayOutputStream byteArrayStream = new PlainByteArrayOutputStream(8 + length * 8);
+            final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(byteArrayStream);
+            byteStream.setByteOrder(byteOrder);
+            byteStream.writeLong(Double.isFinite(fillValue) ? (long)fillValue : 0L);
+            byteStream.writeLongs((long[]) elems, 0, length);
+            final byte[] buffer = byteArrayStream.toByteArray();
+            out.writeByte(8);
+            out.writeInt(length * 8);
             out.write(buffer);
         } else {
-            throw new IllegalArgumentException("unknown type of " + elems);
+            throw new IllegalArgumentException("unexpected data type " + elems);
         }
     }
 
     @Override
     public void readFieldsCompressed(DataInput in) throws IOException {
-        final int elemType = in.readByte();
-        final int numElems = in.readInt();
-        final byte[] byteBuffer;
-        switch (elemType) {
-            case ProductData.TYPE_FLOAT32:
-                float[] floats = (float[]) this.elems;
-                if (floats == null || floats.length < numElems) {
-                    floats = new float[numElems];
-                    this.elems = floats;
-                }
-                byteBuffer = new byte[numElems * 4];
-                in.readFully(byteBuffer);
-                WritableUtils.convertByteToFloat(byteBuffer, floats);
-                break;
-            case ProductData.TYPE_INT32:
-                int[] ints = (int[]) this.elems;
-                if (ints == null || ints.length < numElems) {
-                    ints = new int[numElems];
-                    this.elems = ints;
-                }
-                byteBuffer = new byte[numElems * 4];
-                in.readFully(byteBuffer);
-                WritableUtils.convertByteToInt(byteBuffer, ints);
-                break;
-            case ProductData.TYPE_INT16:
-                short[] shorts = (short[]) this.elems;
-                if (shorts == null || shorts.length < numElems) {
-                    shorts = new short[numElems];
-                    this.elems = shorts;
-                }
-                byteBuffer = new byte[numElems * 2];
-                in.readFully(byteBuffer);
-                WritableUtils.convertByteToShort(byteBuffer, shorts);
-                break;
-            case ProductData.TYPE_INT8:
-                byte[] bytes = (byte[]) this.elems;
-                if (bytes == null || bytes.length < numElems) {
-                    bytes = new byte[numElems];
-                    this.elems = bytes;
-                }
-                in.readFully(bytes, 0, numElems);
-                break;
-            case ProductData.TYPE_FLOAT64:
-                double[] doubles = (double[]) this.elems;
-                if (doubles == null || doubles.length < numElems) {
-                    doubles = new double[numElems];
-                    this.elems = doubles;
-                }
-                byteBuffer = new byte[numElems * 8];
-                in.readFully(byteBuffer);
-                WritableUtils.convertByteToDouble(byteBuffer, doubles);
-                break;
-            case ProductData.TYPE_INT64:
-                long[] longs = (long[]) this.elems;
-                if (longs == null || longs.length < numElems) {
-                    longs = new long[numElems];
-                    this.elems = longs;
-                }
-                byteBuffer = new byte[numElems * 8];
-                in.readFully(byteBuffer);
-                WritableUtils.convertByteToLong(byteBuffer, longs);
-                break;
-            default:
-                throw new IllegalArgumentException("unknown chunk encoding type " + elemType);
-        }
+        typeLength = in.readByte();
+        length = in.readInt();
+        fillBytes = new byte[typeLength];
+        in.readFully(fillBytes);
+        buffer = new byte[length];
+        in.readFully(buffer);
     }
 }
 

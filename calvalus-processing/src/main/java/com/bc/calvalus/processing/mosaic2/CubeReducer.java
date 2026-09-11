@@ -93,12 +93,11 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
             int sizeY = -1;
             int sizeX = -1;
             int sizeT = -1;
-            Object currentData = null;
+            byte[] currentData = null;
 
             while (context.nextKey()) {
                 CubeIndexWritable key = context.getCurrentKey();
                 CubeChunkWritable value = context.getCurrentValue();
-                Object elems = value.getSamples();
 
                 // determines whether (v, ty, tx, t) is a contribution to the next chunk, flushes the current one, initialises a new one
 
@@ -108,7 +107,6 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                         || key.getTimeIndex() / chunkSizeT != currentTileT
                 ) {
                     if (currentVariableIndex != -1) {
-
                         zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
                     }
 
@@ -121,21 +119,9 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                     sizeY = Math.min(chunkSizeY, yAxisLength - currentTileY * chunkSizeY);
                     sizeX = Math.min(chunkSizeX, xAxisLength - currentTileX * chunkSizeX);
                     sizeT = Math.min(chunkSizeT, timeAxisLength - currentTileT * chunkSizeT);
-                    if (elems instanceof float[]) {
-                        currentData = new float[sizeT * sizeY * sizeX];
-                        // TBD init with fill value
-                    } else if (elems instanceof int[]) {
-                        currentData = new int[sizeT * sizeY * sizeX];
-                    } else if (elems instanceof short[]) {
-                        currentData = new short[sizeT * sizeY * sizeX];
-                    } else if (elems instanceof byte[]) {
-                        currentData = new byte[sizeT * sizeY * sizeX];
-                    } else if (elems instanceof double[]) {
-                        currentData = new double[sizeT * sizeY * sizeX];
-                    } else if (elems instanceof long[]) {
-                        currentData = new long[sizeT * sizeY * sizeX];
-                    } else {
-                        throw new IllegalArgumentException("unknown array type of " + elems);
+                    currentData = new byte[sizeT * sizeY * sizeX * value.getTypeLength()];
+                    for (int i=0; i<sizeT * sizeY * sizeX; ++i) {
+                        System.arraycopy(value.getFillBytes(), 0, currentData, i*value.getTypeLength(), value.getTypeLength());
                     }
                     LOG.info("collecting contributions of chunk "
                                      + variableNames[currentVariableIndex]
@@ -144,9 +130,14 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
 
                 // appends data to the current chunk, i.e. reads values into ly, lx array, sets into data array at t-t1 (t of index)
 
+                final byte[] bytes = value.getBuffer();
                 final int timePositionInChunk = key.getTimeIndex() - currentTileT * chunkSizeT;
-                System.arraycopy(elems, 0, currentData, timePositionInChunk * sizeY * sizeX, sizeY * sizeX);
+                System.arraycopy(bytes, 0, currentData, timePositionInChunk * sizeY * sizeX * value.getTypeLength(), sizeY * sizeX * value.getTypeLength());  // TODO check whether to multiply with type size
             }
+            if (currentVariableIndex != -1) {
+                zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
+            }
+
         } finally {
             cleanup(context);
         }

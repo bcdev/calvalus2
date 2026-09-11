@@ -146,7 +146,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                 double fillValue = band.isNoDataValueSet() ? band.getNoDataValue() : Double.NaN;
                 
                 streamBandData(
-                        band, (short) i, timeIndex, fillValue, generateEmptyAggregate,
+                        band, (short) i, timeIndex, fillValue, generateEmptyAggregate, byteOrder,
                         productHeight, productWidth, chunkSizeY, chunkSizeX,
                         context
                 );
@@ -223,7 +223,13 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
         }
     }
 
-    private void streamBandData(Band band, short i, int timeIndex, double fillValue, boolean generateEmptyAggregate, int productHeight, int productWidth, int chunkSizeY, int chunkSizeX, Mapper<NullWritable, NullWritable, CubeIndexWritable, CubeChunkWritable>.Context context) throws IOException, InterruptedException {
+    private void streamBandData(
+            Band band,
+            short variableIndex, int timeIndex,
+            double fillValue, boolean generateEmptyAggregate,
+            ByteOrder byteOrder,
+            int productHeight, int productWidth, int chunkSizeY, int chunkSizeX,
+            Mapper<NullWritable, NullWritable, CubeIndexWritable, CubeChunkWritable>.Context context) throws IOException, InterruptedException {
         final ProductData data = ProductData.createInstance(band.getDataType(), chunkSizeY * chunkSizeX);
         for (int ty = 0; ty < (productHeight + chunkSizeY - 1) / chunkSizeY; ++ty) {
             final int startY = ty * chunkSizeY;
@@ -235,8 +241,8 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                 // check whether some values are not fill value
                 if (generateEmptyAggregate || containsNonFillValue(data.getElems(), countY * countX, fillValue)) {
                     // determine key
-                    final CubeIndexWritable key = new CubeIndexWritable(i, (byte) ty, (byte) tx, timeIndex);
-                    final CubeChunkWritable chunk = new CubeChunkWritable(data.getElems(), countY * countX);
+                    final CubeIndexWritable key = new CubeIndexWritable(variableIndex, (byte) ty, (byte) tx, timeIndex);
+                    final CubeChunkWritable chunk = new CubeChunkWritable(data.getElems(), countY * countX, byteOrder, fillValue);
                     // send data
                     context.write(key, chunk);
                     numObs += countY * countX;
