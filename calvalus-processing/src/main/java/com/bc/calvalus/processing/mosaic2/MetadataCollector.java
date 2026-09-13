@@ -156,12 +156,22 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarray;
     }
 
-    public ObjectNode collectZattrsContent(String variableName, Band band, ObjectNode metadata) {
+    public ObjectNode collectLatLonzattrs(String variableName, ObjectNode metadata) {
+        final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
+        final ArrayNode arrayDimensions = zattrs.putArray("_ARRAY_DIMENSIONS");
+        arrayDimensions.add(variableName);
+        zattrs.put("long_name", "lat".equals(variableName) ? "latitude" : "longitude");
+        zattrs.put("standard_name", "lat".equals(variableName) ? "latitude" : "longitude");
+        zattrs.put("units", "lat".equals(variableName) ? "degrees north" : "degrees east");
+        return zattrs;
+    }
+
+    public ObjectNode collectZattrsContent(String variableName, Band band, ObjectNode metadata, String dimY, String dimX) {
         final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
         final ArrayNode dims = zattrs.putArray("_ARRAY_DIMENSIONS");
         dims.add("time");
-        dims.add("y");   // TODO is it sometimes lat and lon?
-        dims.add("x");
+        dims.add(dimY);
+        dims.add(dimX);
         zattrs.put("grid_mapping", "spatial_ref");
         if (band.getDescription() != null) {
             zattrs.put("description", band.getDescription());

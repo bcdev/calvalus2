@@ -19,6 +19,9 @@ package com.bc.calvalus.processing.mosaic2;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
@@ -90,6 +93,43 @@ public class ZarrWriter {
             pos.setOrdinate(ordinateIndex, i+0.5);
             transform.transform(pos, targetPos);
             values[i] = targetPos.getOrdinate(ordinateIndex);
+        }
+        final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(new ByteArrayOutputStream());
+        byteStream.setByteOrder(byteOrder);
+        byteStream.writeDoubles(values, 0, values.length);
+        byteStream.seek(0);
+        Files.createDirectories(Paths.get(destDir, variableName));
+        try (final FileOutputStream out = new FileOutputStream(new File(new File(destDir, variableName), "0"))) {
+            final byte[] buffer = new byte[4096];
+            while (true) {
+                final int count = byteStream.read(buffer);
+                if (count <= 0) {
+                    break;
+                }
+                out.write(buffer, 0, count);
+            }
+        }
+    }
+
+    public void writeLatLonValuesToZarr(String variableName, Product product, String destDir) throws IOException {
+        final GeoCoding geoCoding = product.getSceneGeoCoding();
+        final int size = "lat".equals(variableName) ? product.getSceneRasterHeight() : product.getSceneRasterWidth();
+        final double[] values = new double[size];
+        GeoPos geoPos = new GeoPos();
+        PixelPos pipo = new PixelPos();
+        pipo.setLocation(0.5, 0.5);
+        if ("lat".equals(variableName)) {
+            for (int y = 0; y < size; y++) {
+                pipo.y = y + 0.5;
+                geoCoding.getGeoPos(pipo, geoPos);
+                values[y] = geoPos.lat;
+            }
+        } else {
+            for (int x = 0; x < size; x++) {
+                pipo.x = x + 0.5;
+                geoCoding.getGeoPos(pipo, geoPos);
+                values[x] = geoPos.lat;
+            }
         }
         final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(new ByteArrayOutputStream());
         byteStream.setByteOrder(byteOrder);

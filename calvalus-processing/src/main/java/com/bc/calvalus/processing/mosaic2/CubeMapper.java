@@ -32,8 +32,11 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.geotools.referencing.CRS;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -43,8 +46,17 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Processes one input, cuts into spatial chunks, streams them to reducers ordered by variable, spatial chunk, time.
- * It streams the single time value to a common reducer.
+ * Processes one input, cuts it into spatial chunks, streams them to reducers ordered by variable, spatial chunk, time.
+ * Key is variable index, y tile index, x tile index, time index.
+ * The chunk is encoded as byte array on the mapper side, considering byte order.
+ * The value transmitted from mapper to reducer is a quadrupel of num bytes per value, num bytes of the transmitted
+ * array, fill value encoded bytes, data encoded as bytes.
+ *
+ * The quadrupel is compressed for transfer and will be uncompressed on the reducer side.
+ * The time of the input is streamed as a separate key-value pair.
+ * The key is number of variables, 0, 0, time index.
+ * The value is a quadrupel of 8, 8, the bytes for double -1 as fill value, and the bytes for the double with the
+ * number of days between 2000-01-01 and the acquisition time of the input product of this mapper.
  * If this input is labelled to provide the metadata then this mapper writes all .zxxx files, y and x.
  *
  * @author MB
@@ -127,6 +139,66 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                 zarrWriter = null;
                 metadataCollector = null;
             }
+            String dimY = null;
+            String dimX = null;
+
+            if (! writeChunksOnly) {
+
+                // write y, x, and metadata of time, spatial_ref, global metadata, .zmetadata
+
+                if (isGeographic(product.getSceneGeoCoding())) {
+
+                    final ObjectNode zarrayY = metadataCollector.collectXYzarray("lat", product.getSceneRasterHeight(), byteOrder, metadata);
+                    zarrWriter.writeJsonFile(destDir, "lat", ".zarray", zarrayY);
+                    final ObjectNode zattrsY = metadataCollector.collectLatLonzattrs("lat", metadata);
+                    zarrWriter.writeJsonFile(destDir, "lat", ".zattrs", zattrsY);
+                    zarrWriter.writeLatLonValuesToZarr("lat", product, destDir);
+
+                    final ObjectNode zarrayX = metadataCollector.collectXYzarray("lon", product.getSceneRasterWidth(), byteOrder, metadata);
+                    zarrWriter.writeJsonFile(destDir, "lon", ".zarray", zarrayX);
+                    final ObjectNode zattrsX = metadataCollector.collectLatLonzattrs("lon", metadata);
+                    zarrWriter.writeJsonFile(destDir, "lon", ".zattrs", zattrsX);
+                    zarrWriter.writeLatLonValuesToZarr("lon", product, destDir);
+
+                    dimY = "lat";
+                    dimX = "lon";
+
+                } else {
+
+                    final ObjectNode zarrayY = metadataCollector.collectXYzarray("y", product.getSceneRasterHeight(), byteOrder, metadata);
+                    zarrWriter.writeJsonFile(destDir, "y", ".zarray", zarrayY);
+                    final ObjectNode zattrsY = metadataCollector.collectXYzattrs("y", metadata);
+                    zarrWriter.writeJsonFile(destDir, "y", ".zattrs", zattrsY);
+                    zarrWriter.writeXYValuesToZarr("y", product, destDir);
+
+                    final ObjectNode zarrayX = metadataCollector.collectXYzarray("x", product.getSceneRasterWidth(), byteOrder, metadata);
+                    zarrWriter.writeJsonFile(destDir, "x", ".zarray", zarrayX);
+                    final ObjectNode zattrsX = metadataCollector.collectXYzattrs("x", metadata);
+                    zarrWriter.writeJsonFile(destDir, "x", ".zattrs", zattrsX);
+                    zarrWriter.writeXYValuesToZarr("x", product, destDir);
+
+                    dimY = "y";
+                    dimX = "x";
+                }
+
+                final ObjectNode zarrayTime = metadataCollector.collectTarray(timeAxisLength, chunkSizeT, byteOrder, metadata);
+                zarrWriter.writeJsonFile(destDir, "time",  ".zarray", zarrayTime);
+                final ObjectNode zattrsTime = metadataCollector.collectTattrs(metadata);
+                zarrWriter.writeJsonFile(destDir, "time",  ".zattrs", zattrsTime);
+
+                final ObjectNode zarraySpatialRef = metadataCollector.collectCRSarray(metadata);
+                zarrWriter.writeJsonFile(destDir, "spatial_ref",  ".zarray", zarraySpatialRef);
+                final ObjectNode zattrsSpatialRef = metadataCollector.collectCRSattrs(product, metadata);
+                zarrWriter.writeJsonFile(destDir, "spatial_ref",  ".zattrs", zattrsSpatialRef);
+
+                final ObjectNode zgroup = metadataCollector.collectZgroup(metadata);
+                zarrWriter.writeJsonFile(destDir,".zgroup", zgroup);
+                final ObjectNode zattrsGlobal = metadataCollector.collectGlobalMetadata(jsonFormattedCubeMetadataStr, zmetadata);
+                zarrWriter.writeJsonFile(destDir, ".zattrs", zattrsGlobal);
+
+                zmetadata.put("zarr_consolidated_format", 1);
+                zarrWriter.writeJsonFile(destDir, ".zmetadata", zmetadata);
+            }
 
             // send time value with key num_variables x 0 x 0 x timeIndex
 
@@ -166,48 +238,13 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                     zarrWriter.writeJsonFile(destDir, variableNames[i],  ".zarray", zarray);
 
                     final ObjectNode zattrs = metadataCollector.collectZattrsContent(
-                            variableNames[i], band, metadata
+                            variableNames[i], band, metadata, dimY, dimX
                     );
                     zarrWriter.writeJsonFile(destDir, variableNames[i],  ".zattrs", zattrs);
                 }
             }
             // count 1 per pixel only
             numObs /= variableNames.length;
-
-            if (! writeChunksOnly) {
-
-                // write y, x, and metadata of time, spatial_ref, global metadata, .zmetadata
-
-                final ObjectNode zarrayY = metadataCollector.collectXYzarray("y", product.getSceneRasterHeight(), byteOrder, metadata);
-                zarrWriter.writeJsonFile(destDir, "y",  ".zarray", zarrayY);
-                final ObjectNode zattrsY = metadataCollector.collectXYzattrs("y", metadata);
-                zarrWriter.writeJsonFile(destDir, "y",  ".zattrs", zattrsY);
-                zarrWriter.writeXYValuesToZarr("y", product, destDir);
-
-                final ObjectNode zarrayX = metadataCollector.collectXYzarray("x", product.getSceneRasterWidth(), byteOrder, metadata);
-                zarrWriter.writeJsonFile(destDir, "x",  ".zarray", zarrayX);
-                final ObjectNode zattrsX = metadataCollector.collectXYzattrs("x", metadata);
-                zarrWriter.writeJsonFile(destDir, "x",  ".zattrs", zattrsX);
-                zarrWriter.writeXYValuesToZarr("x", product, destDir);
-
-                final ObjectNode zarrayTime = metadataCollector.collectTarray(timeAxisLength, chunkSizeT, byteOrder, metadata);
-                zarrWriter.writeJsonFile(destDir, "time",  ".zarray", zarrayTime);
-                final ObjectNode zattrsTime = metadataCollector.collectTattrs(metadata);
-                zarrWriter.writeJsonFile(destDir, "time",  ".zattrs", zattrsTime);
-
-                final ObjectNode zarraySpatialRef = metadataCollector.collectCRSarray(metadata);
-                zarrWriter.writeJsonFile(destDir, "spatial_ref",  ".zarray", zarraySpatialRef);
-                final ObjectNode zattrsSpatialRef = metadataCollector.collectCRSattrs(product, metadata);
-                zarrWriter.writeJsonFile(destDir, "spatial_ref",  ".zattrs", zattrsSpatialRef);
-
-                final ObjectNode zgroup = metadataCollector.collectZgroup(metadata);
-                zarrWriter.writeJsonFile(destDir,".zgroup", zgroup);
-                final ObjectNode zattrsGlobal = metadataCollector.collectGlobalMetadata(jsonFormattedCubeMetadataStr, zmetadata);
-                zarrWriter.writeJsonFile(destDir, ".zattrs", zattrsGlobal);
-
-                zmetadata.put("zarr_consolidated_format", 1);
-                zarrWriter.writeJsonFile(destDir, ".zmetadata", zmetadata);
-            }
 
             if (numObs > 0L) {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
@@ -224,6 +261,15 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
             pm.done();
             processorAdapter.dispose();
         }
+    }
+
+    private boolean isGeographic(GeoCoding sceneGeoCoding) {
+        if (! (sceneGeoCoding instanceof CrsGeoCoding)) {
+            //throw new IllegalArgumentException("CRS geocoding of input expected, found " + sceneGeoCoding);
+            return false;
+        }
+        final String crsString = CRS.toSRS(((CrsGeoCoding) sceneGeoCoding).getMapCRS(), true);
+        return "4326".equals(crsString) || "84".equals(crsString) || crsString.startsWith("WGS84");
     }
 
     private void streamBandData(
