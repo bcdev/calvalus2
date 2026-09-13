@@ -124,16 +124,16 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                     sizeX = Math.min(chunkSizeX, xAxisLength - currentTileX * chunkSizeX);
                     sizeT = Math.min(chunkSizeT, timeAxisLength - currentTileT * chunkSizeT);
                     if (currentVariableIndex < variableNames.length) {
-                        currentData = new byte[sizeT * sizeY * sizeX * value.getTypeLength()];
-                        for (int i = 0; i < sizeT * sizeY * sizeX; ++i) {
+                        currentData = new byte[chunkSizeT * chunkSizeY * chunkSizeX * value.getTypeLength()];
+                        for (int i = 0; i < chunkSizeT * chunkSizeY * chunkSizeX; ++i) {
                             System.arraycopy(value.getFillBytes(), 0, currentData, i * value.getTypeLength(), value.getTypeLength());
                         }
                         LOG.info("collecting contributions of chunk "
                                          + variableNames[currentVariableIndex]
                                          + "[" + currentTileT + "," + currentTileY + "," + currentTileX + "]");
                     } else {
-                        currentData = new byte[sizeT * value.getTypeLength()];
-                        for (int i = 0; i < sizeT; ++i) {
+                        currentData = new byte[chunkSizeT * value.getTypeLength()];
+                        for (int i = 0; i < chunkSizeT; ++i) {
                             System.arraycopy(value.getFillBytes(), 0, currentData, i * value.getTypeLength(), value.getTypeLength());
                         }
                         LOG.info("collecting contributions of chunk time" + "[" + currentTileT + "]");
@@ -145,7 +145,18 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                 final byte[] bytes = value.getBuffer();
                 final int timePositionInChunk = key.getTimeIndex() - currentTileT * chunkSizeT;
                 if (currentVariableIndex < variableNames.length) {
-                    System.arraycopy(bytes, 0, currentData, timePositionInChunk * sizeY * sizeX * value.getTypeLength(), sizeY * sizeX * value.getTypeLength());
+                    if (sizeX == chunkSizeX) {
+                        System.arraycopy(bytes, 0, currentData, timePositionInChunk * chunkSizeY * chunkSizeX * value.getTypeLength(), sizeY * sizeX * value.getTypeLength());
+                    } else {
+                        for (int y = 0; y < sizeY; ++y) {
+                            System.arraycopy(bytes,
+                                             y * sizeX * value.getTypeLength(),
+                                             currentData,
+                                             timePositionInChunk * chunkSizeY * chunkSizeX * value.getTypeLength() + y * chunkSizeX * value.getTypeLength(),
+                                             sizeX * value.getTypeLength()
+                            );
+                        }
+                    }
                 } else {
                     System.arraycopy(bytes, 0, currentData, timePositionInChunk * value.getTypeLength(), value.getTypeLength());
                 }

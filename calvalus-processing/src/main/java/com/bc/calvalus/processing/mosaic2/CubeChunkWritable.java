@@ -98,7 +98,8 @@ public class CubeChunkWritable extends CompressedWritable {
             byteStream.close();
             out.writeByte(4);
             out.writeInt(length * 4);
-            out.write(byteArrayStream.toByteArray());
+            final byte[] bytes = byteArrayStream.toByteArray();
+            out.write(bytes);
         } else if (elems instanceof int[]) {
             final ByteArrayOutputStream byteArrayStream = new PlainByteArrayOutputStream(4 + length * 4);
             final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(byteArrayStream);
