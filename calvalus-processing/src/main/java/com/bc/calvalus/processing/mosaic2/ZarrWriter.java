@@ -173,6 +173,55 @@ public class ZarrWriter {
         }
     }
 
+    public void writeTimeToZarr(
+            String variable,
+            int currentTileT, byte[] currentData,
+            String destDir
+    ) throws IOException {
+        File destination = new File(new File(destDir, variable),String.valueOf(currentTileT));
+        Files.createDirectories(Paths.get(destDir, variable));
+
+//        if ("zlib".equals(compressorName)) {
+//            final int level = compressorParameters.containsKey("level")
+//                    ? Integer.parseInt(compressorParameters.get("level"))
+//                    : Deflater.DEFAULT_COMPRESSION;
+//            Deflater deflater = new Deflater(level);
+//            try (final DeflaterOutputStream out = new DeflaterOutputStream(
+//                    new FileOutputStream(destination),
+//                    deflater
+//            )) {
+//                out.write(currentData);
+//            }
+//            deflater.end();
+//        } else if ("blosc".equals(compressorName)) {
+//            final int clevel = compressorParameters.containsKey("clevel")
+//                    ? Integer.parseInt(compressorParameters.get("clevel"))
+//                    : 5;
+//            final int shuffle = compressorParameters.containsKey("shuffle")
+//                    ? Integer.parseInt(compressorParameters.get("shuffle"))
+//                    : 1;
+//            final String cname = compressorParameters.containsKey("cname")
+//                    ? compressorParameters.get("cname")
+//                    : "lz4";
+//            final int blocksize = compressorParameters.containsKey("blocksize")
+//                    ? Integer.parseInt(compressorParameters.get("blocksize"))
+//                    : 0;
+//            final int inputSize = currentData.length;
+//            final int outputSize = inputSize + JBlosc.OVERHEAD;
+//            final ByteBuffer inputBuffer = ByteBuffer.wrap(currentData);
+//            final ByteBuffer outBuffer = ByteBuffer.allocate(outputSize);
+//            final int i = JBlosc.compressCtx(clevel, shuffle, 1, inputBuffer, inputSize, outBuffer, outputSize, cname, blocksize, 1);
+//            final BufferSizes bs = cbufferSizes(outBuffer);
+//            try (FileOutputStream out = new FileOutputStream(destination)) {
+//                out.write(outBuffer.array(), 0, (int) bs.getCbytes());
+//            }
+//        } else {
+            try (final FileOutputStream out = new FileOutputStream(destination)) {
+                out.write(currentData);
+            }
+//        }
+    }
+
     private BufferSizes cbufferSizes(ByteBuffer cbuffer) {
             NativeLongByReference nbytes = new NativeLongByReference();
             NativeLongByReference cbytes = new NativeLongByReference();

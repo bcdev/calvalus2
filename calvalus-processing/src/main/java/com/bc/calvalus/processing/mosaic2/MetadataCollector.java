@@ -121,8 +121,8 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         final ArrayNode tChunks = zarrayTime.putArray("chunks");
         tChunks.add(chunkSizeT);
         zarrayTime.putNull("compressor");
-        zarrayTime.put("dtype", zarrEncodingOf(byteOrder) + "i8");
-        zarrayTime.put("fill_value", -1);
+        zarrayTime.put("dtype", zarrEncodingOf(byteOrder) + "f8");
+        zarrayTime.put("fill_value", -1.0);
         zarrayTime.putNull("filters");
         zarrayTime.put("order", "C");
         final ArrayNode shapeT = zarrayTime.putArray("shape");

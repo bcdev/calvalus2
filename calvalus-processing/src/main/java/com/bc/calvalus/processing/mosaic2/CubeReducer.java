@@ -103,11 +103,15 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
 
                 if (key.getVariableIndex() != currentVariableIndex
                         || key.getTileY() != currentTileY
-                        || key.getTileY() != currentTileX
+                        || key.getTileX() != currentTileX
                         || key.getTimeIndex() / chunkSizeT != currentTileT
                 ) {
                     if (currentVariableIndex != -1) {
-                        zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
+                        if (currentVariableIndex < variableNames.length) {
+                            zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
+                        } else {
+                            zarrWriter.writeTimeToZarr("time", currentTileT, currentData, destDir);
+                        }
                     }
 
                     // initialising t1, y1, x1, lt, ly, lx, provisioning of data array with length lt
@@ -119,23 +123,39 @@ public class CubeReducer extends Reducer<CubeIndexWritable, CubeChunkWritable, N
                     sizeY = Math.min(chunkSizeY, yAxisLength - currentTileY * chunkSizeY);
                     sizeX = Math.min(chunkSizeX, xAxisLength - currentTileX * chunkSizeX);
                     sizeT = Math.min(chunkSizeT, timeAxisLength - currentTileT * chunkSizeT);
-                    currentData = new byte[sizeT * sizeY * sizeX * value.getTypeLength()];
-                    for (int i=0; i<sizeT * sizeY * sizeX; ++i) {
-                        System.arraycopy(value.getFillBytes(), 0, currentData, i*value.getTypeLength(), value.getTypeLength());
+                    if (currentVariableIndex < variableNames.length) {
+                        currentData = new byte[sizeT * sizeY * sizeX * value.getTypeLength()];
+                        for (int i = 0; i < sizeT * sizeY * sizeX; ++i) {
+                            System.arraycopy(value.getFillBytes(), 0, currentData, i * value.getTypeLength(), value.getTypeLength());
+                        }
+                        LOG.info("collecting contributions of chunk "
+                                         + variableNames[currentVariableIndex]
+                                         + "[" + currentTileT + "," + currentTileY + "," + currentTileX + "]");
+                    } else {
+                        currentData = new byte[sizeT * value.getTypeLength()];
+                        for (int i = 0; i < sizeT; ++i) {
+                            System.arraycopy(value.getFillBytes(), 0, currentData, i * value.getTypeLength(), value.getTypeLength());
+                        }
+                        LOG.info("collecting contributions of chunk time" + "[" + currentTileT + "]");
                     }
-                    LOG.info("collecting contributions of chunk "
-                                     + variableNames[currentVariableIndex]
-                                     + "[" + currentTileT + "," + currentTileY + "," + currentTileX + "]");
                 }
 
                 // appends data to the current chunk, i.e. reads values into ly, lx array, sets into data array at t-t1 (t of index)
 
                 final byte[] bytes = value.getBuffer();
                 final int timePositionInChunk = key.getTimeIndex() - currentTileT * chunkSizeT;
-                System.arraycopy(bytes, 0, currentData, timePositionInChunk * sizeY * sizeX * value.getTypeLength(), sizeY * sizeX * value.getTypeLength());  // TODO check whether to multiply with type size
+                if (currentVariableIndex < variableNames.length) {
+                    System.arraycopy(bytes, 0, currentData, timePositionInChunk * sizeY * sizeX * value.getTypeLength(), sizeY * sizeX * value.getTypeLength());
+                } else {
+                    System.arraycopy(bytes, 0, currentData, timePositionInChunk * value.getTypeLength(), value.getTypeLength());
+                }
             }
             if (currentVariableIndex != -1) {
-                zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
+                if (currentVariableIndex < variableNames.length) {
+                    zarrWriter.writeChunkToZarr(variableNames[currentVariableIndex], currentTileY, currentTileX, currentTileT, currentData, destDir);
+                } else {
+                    zarrWriter.writeTimeToZarr("time", currentTileT, currentData, destDir);
+                }
             }
 
         } finally {
