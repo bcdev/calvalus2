@@ -128,10 +128,8 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                 metadataCollector = null;
             }
 
-            // TODO forward time value to a reducer, it is required to write the time variable
-            // TODO forward fill value
-
             // send time value with key num_variables x 0 x 0 x timeIndex
+
             CubeIndexWritable timeKey = new CubeIndexWritable((short)variableNames.length, (byte)0, (byte)0, timeIndex);
             CubeChunkWritable timeValue = new CubeChunkWritable(new double[] { mjd }, 1, byteOrder, -1.0);
             context.write(timeKey, timeValue);
