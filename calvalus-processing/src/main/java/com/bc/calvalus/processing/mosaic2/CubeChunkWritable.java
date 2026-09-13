@@ -95,6 +95,7 @@ public class CubeChunkWritable extends CompressedWritable {
             byteStream.setByteOrder(byteOrder);
             byteStream.writeFloat((float) fillValue);
             byteStream.writeFloats((float[]) elems, 0, length);
+            byteStream.close();
             out.writeByte(4);
             out.writeInt(length * 4);
             out.write(byteArrayStream.toByteArray());
@@ -104,6 +105,7 @@ public class CubeChunkWritable extends CompressedWritable {
             byteStream.setByteOrder(byteOrder);
             byteStream.writeInt(Double.isFinite(fillValue) ? (int) fillValue : 0);
             byteStream.writeInts((int[]) elems, 0, length);
+            byteStream.close();
             out.writeByte(4);
             out.writeInt(length * 4);
             out.write(byteArrayStream.toByteArray());
@@ -113,6 +115,7 @@ public class CubeChunkWritable extends CompressedWritable {
             byteStream.setByteOrder(byteOrder);
             byteStream.writeShort(Double.isFinite(fillValue) ? (short) fillValue : 0);
             byteStream.writeShorts((short[]) elems, 0, length);
+            byteStream.close();
             out.writeByte(2);
             out.writeInt(length * 2);
             out.write(byteArrayStream.toByteArray());
@@ -128,6 +131,7 @@ public class CubeChunkWritable extends CompressedWritable {
             byteStream.setByteOrder(byteOrder);
             byteStream.writeDouble(fillValue);
             byteStream.writeDoubles((double[]) elems, 0, length);
+            byteStream.close();
             final byte[] buffer = byteArrayStream.toByteArray();
             out.writeByte(8);
             out.writeInt(length * 8);
@@ -138,6 +142,7 @@ public class CubeChunkWritable extends CompressedWritable {
             byteStream.setByteOrder(byteOrder);
             byteStream.writeLong(Double.isFinite(fillValue) ? (long)fillValue : 0L);
             byteStream.writeLongs((long[]) elems, 0, length);
+            byteStream.close();
             final byte[] buffer = byteArrayStream.toByteArray();
             out.writeByte(8);
             out.writeInt(length * 8);

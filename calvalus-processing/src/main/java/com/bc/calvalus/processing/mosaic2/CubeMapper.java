@@ -53,7 +53,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
-    private static final String CUBE_REFERENCE_DATE = "1970-01-01";
+    private static final String CUBE_REFERENCE_DATE = "2000-01-01";
 
     int numObs = 0;
     int numBins = 0;
@@ -108,6 +108,7 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
                     ? Boolean.parseBoolean(parameters[3])
                     : true;
             final String destDir = conf.get("calvalus.output.dir");
+            double mjd = product.getStartTime().getMJD();
 
             final MetadataCollector metadataCollector;
             final ZarrWriter zarrWriter;
@@ -130,8 +131,12 @@ public class CubeMapper extends Mapper<NullWritable, NullWritable, CubeIndexWrit
             // TODO forward time value to a reducer, it is required to write the time variable
             // TODO forward fill value
 
-            // loop over variables
-            // loop over tiles
+            // send time value with key num_variables x 0 x 0 x timeIndex
+            CubeIndexWritable timeKey = new CubeIndexWritable((short)variableNames.length, (byte)0, (byte)0, timeIndex);
+            CubeChunkWritable timeValue = new CubeChunkWritable(new double[] { mjd }, 1, byteOrder, -1.0);
+            context.write(timeKey, timeValue);
+
+            // loop over variables and over their tiles
 
             numObs = 0;
             numBins = 0;

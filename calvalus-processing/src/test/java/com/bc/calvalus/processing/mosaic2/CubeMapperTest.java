@@ -4,6 +4,8 @@ import com.bc.calvalus.processing.hadoop.ParameterizedSplit;
 import junit.framework.TestCase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DataInputBuffer;
+import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.mapreduce.Counter;
@@ -82,6 +84,12 @@ public class CubeMapperTest extends TestCase {
             public void write(CubeIndexWritable cubeIndex, CubeChunkWritable cubeChunk) throws IOException, InterruptedException {
                 System.out.println("writing " + cubeIndex);
                 mrData.put(cubeIndex, cubeChunk);
+                DataOutputBuffer out = new DataOutputBuffer();
+                cubeChunk.write(out);
+                DataInputBuffer in = new DataInputBuffer();
+                in.reset(out.getData(), out.getData().length);
+                cubeChunk.readFields(in);
+                cubeChunk.getLength();
             }
 
             @Override
