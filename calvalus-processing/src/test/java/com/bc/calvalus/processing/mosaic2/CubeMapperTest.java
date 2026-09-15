@@ -40,20 +40,20 @@ public class CubeMapperTest extends TestCase {
         parameters.put(
                 "calvalus.l3.parameters",
                 "<parameters><aggregators><aggregator>" +
-                        "<type>TOptCube</type>" +
+                        "<type>TimeChunkedCube</type>" +
                         "<varNames>CHL,CHL_algo,Turbidity,Turbidity_algo,SDD,adg,TIME</varNames>" +
-                        "<timeAxisLength>30</timeAxisLength>" +
-                        "<yAxisLength>160</yAxisLength>" +
-                        "<xAxisLength>200</xAxisLength>" +
-                        "<chunkSizeX>64</chunkSizeX>" +
-                        "<chunkSizeY>64</chunkSizeY>" +
-                        "<chunkSizeT>6</chunkSizeT>" +
-                        "<encoding>littleendian</encoding>" +
+                        "<timeShape>30</timeShape>" +
+                        "<yShape>160</yShape>" +
+                        "<xShape>200</xShape>" +
+                        "<timeChunks>6</timeChunks>" +
+                        "<yChunks>64</yChunks>" +
+                        "<xChunks>64</xChunks>" +
+                        "<byteOrder>littleendian</byteOrder>" +
                         "<compression>zlib,level:1</compression>" +
-                        "<jsonFormattedCubeMetadataStr>{\"project\":\"okosat\",\"creator\":\"Brockmann Consult GmbH\"}</jsonFormattedCubeMetadataStr>" +
+                        "<cubeMetadata>{\"project\":\"okosat\",\"creator\":\"Brockmann Consult GmbH\"}</cubeMetadata>" +
                         "</aggregator></aggregators></parameters>"
         );
-        parameters.put("calvalus.output.dir", "test.zarr");
+        parameters.put("calvalus.output.dir", "file:///tmp/test.zarr");
         parameters.put("inputPath", "eodata/subset_0_of_20260621-P1D-L3-norge-300m-v0.nc");
         parameters.put("timeIndex", "3");
         parameters.put("writeChunksOnly", "false");
