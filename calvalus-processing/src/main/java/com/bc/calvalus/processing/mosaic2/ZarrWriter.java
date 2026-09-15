@@ -16,9 +16,11 @@
 
 package com.bc.calvalus.processing.mosaic2;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
@@ -35,13 +37,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import com.sun.jna.ptr.NativeLongByReference;
@@ -50,35 +52,41 @@ import org.blosc.BufferSizes;
 import org.blosc.IBloscDll;
 
 /**
- * Functions to write content to zarr files, json, uncompressed data, and compressed data
+ * Utility functions to write content to zarr files in JSON, uncompressed data, and compressed data
  *
  * @author MB
  */
 public class ZarrWriter {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper jsonFactory;
     private final ByteOrder byteOrder;
     private final String compressorName;
     private final Map<String,String> compressorParameters;
+    private final Path rootPath;
+    private final FileSystem fileSystem;
 
-    public ZarrWriter(ObjectMapper objectMapper, ByteOrder byteOrder, String compressorName, Map<String,String> compressorParameters) {
-        this.objectMapper = objectMapper;
+    public ZarrWriter(ObjectMapper jsonFactory, ByteOrder byteOrder, String compressorName, Map<String,String> compressorParameters, Configuration conf, String destRoot) throws IOException {
+        this.jsonFactory = jsonFactory;
         this.byteOrder = byteOrder;
         this.compressorName = compressorName;
         this.compressorParameters = compressorParameters;
+        this.rootPath = new Path(destRoot);
+        this.fileSystem = rootPath.getFileSystem(conf);
     }
 
     public void writeJsonFile(String destDir, String variableName, String filename, ObjectNode json) throws IOException {
-        Files.createDirectories(Paths.get(destDir, variableName));
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(new File(new File(destDir, variableName), filename)))) {
-            objectMapper.writeValue(out, json);
+        final Path variablePath = new Path(rootPath, variableName);
+        fileSystem.mkdirs(variablePath);
+        final Path filePath = new Path(variablePath, filename);
+        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(fileSystem.create(filePath)))) {
+            jsonFactory.writeValue(out, json);
         }
     }
     public void writeJsonFile(String destDir, String filename, ObjectNode json) throws IOException {
-        Files.createDirectories(Paths.get(destDir));
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(new File(destDir, filename)))) {
-            objectMapper.writeValue(out, json);
+        fileSystem.mkdirs(rootPath);
+        final Path filePath = new Path(rootPath, filename);
+        try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(fileSystem.create(filePath)))) {
+            jsonFactory.writeValue(out, json);
         }
     }
 
@@ -98,8 +106,11 @@ public class ZarrWriter {
         byteStream.setByteOrder(byteOrder);
         byteStream.writeDoubles(values, 0, values.length);
         byteStream.seek(0);
-        Files.createDirectories(Paths.get(destDir, variableName));
-        try (final FileOutputStream out = new FileOutputStream(new File(new File(destDir, variableName), "0"))) {
+
+        final Path variablePath = new Path(rootPath, variableName);
+        fileSystem.mkdirs(variablePath);
+        final Path filePath = new Path(variablePath, "0");
+        try (final OutputStream out = fileSystem.create(filePath)) {
             final byte[] buffer = new byte[4096];
             while (true) {
                 final int count = byteStream.read(buffer);
@@ -135,8 +146,10 @@ public class ZarrWriter {
         byteStream.setByteOrder(byteOrder);
         byteStream.writeDoubles(values, 0, values.length);
         byteStream.seek(0);
-        Files.createDirectories(Paths.get(destDir, variableName));
-        try (final FileOutputStream out = new FileOutputStream(new File(new File(destDir, variableName), "0"))) {
+        final Path variablePath = new Path(rootPath, variableName);
+        fileSystem.mkdirs(variablePath);
+        final Path filePath = new Path(variablePath, "0");
+        try (final OutputStream out = fileSystem.create(filePath)) {
             final byte[] buffer = new byte[4096];
             while (true) {
                 final int count = byteStream.read(buffer);
@@ -153,28 +166,9 @@ public class ZarrWriter {
             int currentTileY, int currentTileX, int currentTileT, byte[] currentData,
             String destDir
     ) throws IOException {
-        File destination = new File(new File(destDir, variable),
-                                    currentTileT + "." + currentTileY + "." + currentTileX);
-        Files.createDirectories(Paths.get(destDir, variable));
-
-//        final ImageOutputStream byteStream = new MemoryCacheImageOutputStream(new ByteArrayOutputStream());
-//        byteStream.setByteOrder(byteOrder);
-//        if (currentData instanceof float[]) {
-//            byteStream.writeFloats((float[]) currentData, 0, ((float[]) currentData).length);
-//        } else if (currentData instanceof int[]) {
-//            byteStream.writeInts((int[]) currentData, 0, ((int[]) currentData).length);
-//        } else if (currentData instanceof short[]) {
-//            byteStream.writeShorts((short[]) currentData, 0, ((short[]) currentData).length);
-//        } else if (currentData instanceof byte[]) {
-//            byteStream.write((byte[]) currentData, 0, ((byte[]) currentData).length);
-//        } else if (currentData instanceof double[]) {
-//            byteStream.writeDoubles((double[]) currentData, 0, ((double[]) currentData).length);
-//        } else if (currentData instanceof long[]) {
-//            byteStream.writeLongs((long[]) currentData, 0, ((long[]) currentData).length);
-//        } else {
-//            throw new IllegalArgumentException("unexpected data type " + currentData);
-//        }
-//        byteStream.seek(0);
+        final Path variablePath = new Path(rootPath, variable);
+        fileSystem.mkdirs(variablePath);
+        final Path filePath = new Path(variablePath, currentTileT + "." + currentTileY + "." + currentTileX);
 
         if ("zlib".equals(compressorName)) {
             final int level = compressorParameters.containsKey("level")
@@ -182,7 +176,7 @@ public class ZarrWriter {
                     : Deflater.DEFAULT_COMPRESSION;
             Deflater deflater = new Deflater(level);
             try (final DeflaterOutputStream out = new DeflaterOutputStream(
-                    new FileOutputStream(destination),
+                    fileSystem.create(filePath),
                     deflater
             )) {
                 out.write(currentData);
@@ -207,8 +201,12 @@ public class ZarrWriter {
             final ByteBuffer outBuffer = ByteBuffer.allocate(outputSize);
             final int i = JBlosc.compressCtx(clevel, shuffle, 1, inputBuffer, inputSize, outBuffer, outputSize, cname, blocksize, 1);
             final BufferSizes bs = cbufferSizes(outBuffer);
-            try (FileOutputStream out = new FileOutputStream(destination)) {
+            try (OutputStream out = fileSystem.create(filePath)) {
                 out.write(outBuffer.array(), 0, (int) bs.getCbytes());
+            }
+        } else {
+            try (final OutputStream out = fileSystem.create(filePath)) {
+                out.write(currentData);
             }
         }
     }
@@ -218,48 +216,12 @@ public class ZarrWriter {
             int currentTileT, byte[] currentData,
             String destDir
     ) throws IOException {
-        File destination = new File(new File(destDir, variable),String.valueOf(currentTileT));
-        Files.createDirectories(Paths.get(destDir, variable));
-
-//        if ("zlib".equals(compressorName)) {
-//            final int level = compressorParameters.containsKey("level")
-//                    ? Integer.parseInt(compressorParameters.get("level"))
-//                    : Deflater.DEFAULT_COMPRESSION;
-//            Deflater deflater = new Deflater(level);
-//            try (final DeflaterOutputStream out = new DeflaterOutputStream(
-//                    new FileOutputStream(destination),
-//                    deflater
-//            )) {
-//                out.write(currentData);
-//            }
-//            deflater.end();
-//        } else if ("blosc".equals(compressorName)) {
-//            final int clevel = compressorParameters.containsKey("clevel")
-//                    ? Integer.parseInt(compressorParameters.get("clevel"))
-//                    : 5;
-//            final int shuffle = compressorParameters.containsKey("shuffle")
-//                    ? Integer.parseInt(compressorParameters.get("shuffle"))
-//                    : 1;
-//            final String cname = compressorParameters.containsKey("cname")
-//                    ? compressorParameters.get("cname")
-//                    : "lz4";
-//            final int blocksize = compressorParameters.containsKey("blocksize")
-//                    ? Integer.parseInt(compressorParameters.get("blocksize"))
-//                    : 0;
-//            final int inputSize = currentData.length;
-//            final int outputSize = inputSize + JBlosc.OVERHEAD;
-//            final ByteBuffer inputBuffer = ByteBuffer.wrap(currentData);
-//            final ByteBuffer outBuffer = ByteBuffer.allocate(outputSize);
-//            final int i = JBlosc.compressCtx(clevel, shuffle, 1, inputBuffer, inputSize, outBuffer, outputSize, cname, blocksize, 1);
-//            final BufferSizes bs = cbufferSizes(outBuffer);
-//            try (FileOutputStream out = new FileOutputStream(destination)) {
-//                out.write(outBuffer.array(), 0, (int) bs.getCbytes());
-//            }
-//        } else {
-            try (final FileOutputStream out = new FileOutputStream(destination)) {
-                out.write(currentData);
-            }
-//        }
+        Path variablePath = new Path(rootPath, variable);
+        fileSystem.mkdirs(variablePath);
+        Path filePath = new Path(variablePath, String.valueOf(currentTileT));
+        try (final OutputStream out = fileSystem.create(filePath)) {
+            out.write(currentData);
+        }
     }
 
     private BufferSizes cbufferSizes(ByteBuffer cbuffer) {

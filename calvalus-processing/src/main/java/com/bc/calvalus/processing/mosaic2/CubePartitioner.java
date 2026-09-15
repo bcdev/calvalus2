@@ -61,17 +61,17 @@ public class CubePartitioner extends Partitioner<CubeIndexWritable, CubeChunkWri
         this.conf = conf;
         final BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
         final AggregatorConfig[] aggregatorConfigs = binningConfig.getAggregatorConfigs();
-        if (aggregatorConfigs.length < 1 || ! "TOptCube".equals(aggregatorConfigs[0].getName())) {
-            throw new IllegalArgumentException("configuration incomplete, aggregator TOptCube expected");
+        if (aggregatorConfigs.length < 1 || ! "TimeChunkedCube".equals(aggregatorConfigs[0].getName())) {
+            throw new IllegalArgumentException("configuration incomplete, aggregator TimeChunkedCube expected");
         }
-        final AggregatorCube.Config aggregatorConfig = (AggregatorCube.Config) aggregatorConfigs[0];
+        final TimeChunkedCubeAggregator.Config aggregatorConfig = (TimeChunkedCubeAggregator.Config) aggregatorConfigs[0];
         final String[] variableNames = aggregatorConfig.varNames.split(",");
-        chunkSizeT = aggregatorConfig.chunkSizeT;
-        final int chunkSizeY = aggregatorConfig.chunkSizeY;
-        final int chunkSizeX = aggregatorConfig.chunkSizeX;
-        final int yAxisLength = aggregatorConfig.yAxisLength;
-        final int xAxisLength = aggregatorConfig.xAxisLength;
-        final int timeAxisLength = aggregatorConfig.timeAxisLength;
+        chunkSizeT = aggregatorConfig.timeChunks;
+        final int chunkSizeY = aggregatorConfig.yChunks;
+        final int chunkSizeX = aggregatorConfig.xChunks;
+        final int yAxisLength = aggregatorConfig.yShape;
+        final int xAxisLength = aggregatorConfig.xShape;
+        final int timeAxisLength = aggregatorConfig.timeShape;
         numVariables = variableNames.length;
         numChunksY = (yAxisLength + chunkSizeY - 1) / chunkSizeY;
         numChunksX = (xAxisLength + chunkSizeX - 1) / chunkSizeX;

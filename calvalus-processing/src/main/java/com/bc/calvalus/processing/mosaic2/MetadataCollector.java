@@ -36,28 +36,24 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Processes one input, cuts into spatial chunks, streams them to reducers ordered by variable, spatial chunk, time.
- * It streams the single time value to a common reducer.
- * If this input is labelled to provide the metadata then this mapper writes all .zxxx files, y and x.
+ * Utility class with functions to create JSON structures for .zarray and .zattrs
  *
  * @author MB
  */
 public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIndexWritable, CubeChunkWritable> {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
     private final String cubeReferenceDate;
+    private final ObjectMapper jsonFactory;
 
-    private final ObjectMapper objectMapper;
-
-    public MetadataCollector(ObjectMapper objectMapper, String cubeReferenceDate) {
-        this.objectMapper = objectMapper;
+    public MetadataCollector(ObjectMapper jsonFactory, String cubeReferenceDate) {
+        this.jsonFactory = jsonFactory;
         this.cubeReferenceDate = cubeReferenceDate;
     }
 
-    public ObjectNode collectGlobalMetadata(String jsonFormattedCubeMetadataStr, ObjectNode zmetadata) throws JsonProcessingException {
+    public ObjectNode collectGlobalMetadata(String cubeMetadata, ObjectNode zmetadata) throws JsonProcessingException {
         final ObjectNode zattrsGlobal = zmetadata.putObject(".zattrs");
-        if (jsonFormattedCubeMetadataStr != null && jsonFormattedCubeMetadataStr.length() > 0) {
-            final JsonNode configuredMetadata = objectMapper.readTree(jsonFormattedCubeMetadataStr);
+        if (cubeMetadata != null && cubeMetadata.length() > 0) {
+            final JsonNode configuredMetadata = jsonFactory.readTree(cubeMetadata);
             for (Iterator<Map.Entry<String, JsonNode>> it = configuredMetadata.fields(); it.hasNext(); ) {
                 Map.Entry<String, JsonNode> pair = it.next();
                 JsonNode node = pair.getValue();
@@ -75,13 +71,13 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrsGlobal;
     }
 
-    public ObjectNode collectZgroup(ObjectNode metadata) {
+    public ObjectNode collectGroup(ObjectNode metadata) {
         final ObjectNode zgroup = metadata.putObject(".zgroup");
         zgroup.put("zarr_format", 2);
         return zgroup;
     }
 
-    public ObjectNode collectCRSattrs(Product product, ObjectNode metadata) {
+    public ObjectNode collectCrsAttrs(Product product, ObjectNode metadata) {
         final ObjectNode zattrsSpatialRef = metadata.putObject("spatial_ref/.zattrs");
         zattrsSpatialRef.putArray("_ARRAY_DIMENSIONS");
         zattrsSpatialRef.put("crs_wkt", product.getSceneGeoCoding().getMapCRS().toWKT());
@@ -92,7 +88,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrsSpatialRef;
     }
 
-    public ObjectNode collectCRSarray(ObjectNode metadata) {
+    public ObjectNode collectCrsArray(ObjectNode metadata) {
         final ObjectNode zarraySpatialRef = metadata.putObject("spatial_ref/.zarray");
         zarraySpatialRef.putArray("chunks");
         zarraySpatialRef.putNull("compressor");
@@ -105,7 +101,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarraySpatialRef;
     }
 
-    public ObjectNode collectTattrs(ObjectNode metadata) {
+    public ObjectNode collectTimeAttrs(ObjectNode metadata) {
         final ObjectNode zattrsTime = metadata.putObject("time/.zattrs");
         final ArrayNode tArrayDimensions = zattrsTime.putArray("_ARRAY_DIMENSIONS");
         tArrayDimensions.add("time");
@@ -116,7 +112,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrsTime;
     }
 
-    public ObjectNode collectTarray(int timeAxisLength, int chunkSizeT, ByteOrder byteOrder, ObjectNode metadata) {
+    public ObjectNode collectTimeArray(int timeAxisLength, int chunkSizeT, ByteOrder byteOrder, ObjectNode metadata) {
         final ObjectNode zarrayTime = metadata.putObject("time/.zarray");
         final ArrayNode tChunks = zarrayTime.putArray("chunks");
         tChunks.add(chunkSizeT);
@@ -131,7 +127,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarrayTime;
     }
 
-    public ObjectNode collectXYzattrs(String variableName, ObjectNode metadata) {
+    public ObjectNode collectXyAttrs(String variableName, ObjectNode metadata) {
         final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
         final ArrayNode arrayDimensions = zattrs.putArray("_ARRAY_DIMENSIONS");
         arrayDimensions.add(variableName);
@@ -141,7 +137,17 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrs;
     }
 
-    public ObjectNode collectXYzarray(String variableName, int size, ByteOrder byteOrder, ObjectNode metadata) {
+    public ObjectNode collectLatLonAttrs(String variableName, ObjectNode metadata) {
+        final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
+        final ArrayNode arrayDimensions = zattrs.putArray("_ARRAY_DIMENSIONS");
+        arrayDimensions.add(variableName);
+        zattrs.put("long_name", "lat".equals(variableName) ? "latitude" : "longitude");
+        zattrs.put("standard_name", "lat".equals(variableName) ? "latitude" : "longitude");
+        zattrs.put("units", "lat".equals(variableName) ? "degrees north" : "degrees east");
+        return zattrs;
+    }
+
+    public ObjectNode collectCoordinateArray(String variableName, int size, ByteOrder byteOrder, ObjectNode metadata) {
         final ObjectNode zarray = metadata.putObject(variableName + "/.zarray");
         final ArrayNode chunks = zarray.putArray("chunks");
         chunks.add(size);
@@ -156,17 +162,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarray;
     }
 
-    public ObjectNode collectLatLonzattrs(String variableName, ObjectNode metadata) {
-        final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
-        final ArrayNode arrayDimensions = zattrs.putArray("_ARRAY_DIMENSIONS");
-        arrayDimensions.add(variableName);
-        zattrs.put("long_name", "lat".equals(variableName) ? "latitude" : "longitude");
-        zattrs.put("standard_name", "lat".equals(variableName) ? "latitude" : "longitude");
-        zattrs.put("units", "lat".equals(variableName) ? "degrees north" : "degrees east");
-        return zattrs;
-    }
-
-    public ObjectNode collectZattrsContent(String variableName, Band band, ObjectNode metadata, String dimY, String dimX) {
+    public ObjectNode collectVariableAttrs(String variableName, Band band, ObjectNode metadata, String dimY, String dimX) {
         final ObjectNode zattrs = metadata.putObject(variableName + "/.zattrs");
         final ArrayNode dims = zattrs.putArray("_ARRAY_DIMENSIONS");
         dims.add("time");
@@ -190,7 +186,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zattrs;
     }
 
-    public ObjectNode collectZarrayContent(
+    public ObjectNode collectVariableArray(
             String variableName, Band band, double fillValue,
             ByteOrder byteOrder, String compressorName, Map<String,String> compressorParameters,
             int timeAxisLength, int yAxisLength, int xAxisLength, int chunkSizeT, int chunkSizeY, int chunkSizeX,

@@ -27,16 +27,14 @@ import org.esa.snap.binning.Vector;
 import org.esa.snap.binning.WritableVector;
 import org.esa.snap.core.gpf.annotations.Parameter;
 
-import java.util.Arrays;
-
 /**
  * An aggregator that computes the minimum and maximum values.
  */
-public class AggregatorCube extends AbstractAggregator {
+public class TimeChunkedCubeAggregator extends AbstractAggregator {
 
     private final int varIndex;
 
-    public AggregatorCube(VariableContext varCtx, String varName, String targetVarName) {
+    public TimeChunkedCubeAggregator(VariableContext varCtx, String varName, String targetVarName) {
         super(Descriptor.NAME, new String[] { varName }, new String[] { varName }, new String[] { targetVarName });
 
         if (varCtx == null) {
@@ -78,42 +76,42 @@ public class AggregatorCube extends AbstractAggregator {
     public static class Config extends AggregatorConfig {
         /*
         {
-             "type": "TOptCube",
+             "type": "TimeChunkedCube",
              "varNames": "CHL,CHL_algo,TUR,TUR_algo,SDD,adg,TIME",
-             "timeAxisLength": 30,
-             "yAxisLength": 5110,
-             "xAxisLength": 4321,
-             "chunkSizeX": 128,
-             "chunkSizeY": 128,
-             "chunkSizeT": 30,
-             "encoding": "littleendian",
-             "compression": "zlib,1",
-             "jsonFormattedCubeMetadataStr": "{\"project\":\"okosat\",\"creator\":\"Brockmann Consult GmbH\"}"
+             "timeShape": 30,
+             "yShape": 5110,
+             "xShape": 4321,
+             "xChunks": 128,
+             "yChunks": 128,
+             "timeChunks": 30,
+             "byteOrder": "littleendian",
+             "compression": "zlib,level:1",
+             "cubeMetadata": "{\"project\":\"okosat\",\"creator\":\"Brockmann Consult GmbH\"}"
          }
          */
 
-        @Parameter(label = "Type", notEmpty = true, notNull = true, description = "constant value TOptCube")
+        @Parameter(label = "Type", notEmpty = true, notNull = true, description = "constant value TimeChunkedCube")
         String type;
         @Parameter(label = "Band names", notEmpty = true, notNull = true, description = "Source bands to be included in the cube")
         String varNames;
         @Parameter(label = "Cube length", description = "Length of the time axis of the cube")
-        int timeAxisLength;
+        int timeShape;
         @Parameter(label = "Cube height", description = "Length of the y axis of the cube")
-        int yAxisLength;
+        int yShape;
         @Parameter(label = "Cube width", description = "Length of the x axis of the cube")
-        int xAxisLength;
+        int xShape;
         @Parameter(label = "Cube time chunk size", description = "Length of one chunk of the time axis of the cube")
-        int chunkSizeT;
+        int timeChunks;
         @Parameter(label = "Cube height chunk size", description = "Length of one chunk of the y axis of the cube")
-        int chunkSizeY;
+        int yChunks;
         @Parameter(label = "Cube width chunk size", description = "Length of one chunk of the x axis of the cube")
-        int chunkSizeX;
+        int xChunks;
         @Parameter(label = "Number encoding", description = "either littleendian or bigendian")
-        String encoding;
+        String byteOrder;
         @Parameter(label = "Compression method and parameters", description = "e.g. zlib,1")
         String compression;
-        @Parameter(label = "Metadata", description = "JSON dict with key-value pairs")
-        String jsonFormattedCubeMetadataStr;
+        @Parameter(label = "Metadata", description = "JSON dict with key-value pairs formatted as string")
+        String cubeMetadata;
 
 
         public Config() {
@@ -122,28 +120,28 @@ public class AggregatorCube extends AbstractAggregator {
 
         public Config(
                 String type, String varNames,
-                int timeAxisLength, int yAxisLength, int xAxisLength,
-                int chunkSizeT, int chunkSizeY, int chunkSizeX,
-                String encoding, String compression, String jsonFormattedCubeMetadataStr) {
+                int timeShape, int yShape, int xShape,
+                int timeChunks, int yChunks, int xChunks,
+                String byteOrder, String compression, String cubeMetadata) {
             super(Descriptor.NAME);
             this.type = type;
             this.varNames = varNames;
-            this.timeAxisLength = timeAxisLength;
-            this.yAxisLength = yAxisLength;
-            this.xAxisLength = xAxisLength;
-            this.chunkSizeT = chunkSizeT;
-            this.chunkSizeY= chunkSizeY;
-            this.chunkSizeX = chunkSizeX;
-            this.encoding = encoding;
+            this.timeShape = timeShape;
+            this.yShape = yShape;
+            this.xShape = xShape;
+            this.timeChunks = timeChunks;
+            this.yChunks = yChunks;
+            this.xChunks = xChunks;
+            this.byteOrder = byteOrder;
             this.compression = compression;
-            this.jsonFormattedCubeMetadataStr = jsonFormattedCubeMetadataStr;
+            this.cubeMetadata = cubeMetadata;
         }
 
     }
 
     public static class Descriptor implements AggregatorDescriptor {
 
-        public static final String NAME = "TOptCube";
+        public static final String NAME = "TimeChunkedCube";
 
         @Override
         public String getName() {
