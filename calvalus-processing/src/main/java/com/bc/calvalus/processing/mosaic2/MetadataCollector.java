@@ -200,7 +200,11 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         final ObjectNode compressor = zarray.putObject("compressor");
         compressor.put("id", compressorName);
         for (Map.Entry<String,String> parameter : compressorParameters.entrySet()) {
-            compressor.put(parameter.getKey(), parameter.getValue());
+            try {
+                compressor.put(parameter.getKey(), Integer.parseInt(parameter.getValue()));
+            } catch (NumberFormatException _) {
+                compressor.put(parameter.getKey(), parameter.getValue());
+            }
         }
         zarray.put("dtype", zarrEncodingOf(byteOrder) + zarrTypeOf(band.getDataType()));
         if (band.isNoDataValueSet()) {

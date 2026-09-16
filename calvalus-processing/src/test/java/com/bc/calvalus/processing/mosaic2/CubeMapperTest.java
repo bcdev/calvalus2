@@ -29,9 +29,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * TODO add API doc
+ * Test for time chunked cube generation.
+ * Reads one subset input in mapper, collects intermediates as key-value pairs in mrData dict, formats zarr in reducer.
  *
- * @author Martin Boettcher
+ * @author MB
  */
 public class CubeMapperTest extends TestCase {
 
@@ -60,6 +61,17 @@ public class CubeMapperTest extends TestCase {
     }
 
     Map<CubeIndexWritable, CubeChunkWritable> mrData = new HashMap<>();
+
+    public void testRun() throws IOException, InterruptedException {
+            Configuration conf = new Configuration();
+            MapperProxy mapper = new MapperProxy(conf);
+            MapperProxy.CubeMapperContext mcontext = mapper.new CubeMapperContext();
+            mapper.run(mcontext);
+
+            ReducerProxy reducer = new ReducerProxy(conf);
+            ReducerProxy.CubeReducerContext rcontext = reducer.new CubeReducerContext();
+            reducer.run(rcontext);
+        }
 
     public class MapperProxy extends CubeMapper {
         Configuration conf;
@@ -612,17 +624,6 @@ public class CubeMapperTest extends TestCase {
                 return null;
             }
         }
-    }
 
-
-    public void testRun() throws IOException, InterruptedException {
-        Configuration conf = new Configuration();
-        MapperProxy mapper = new MapperProxy(conf);
-        MapperProxy.CubeMapperContext context = mapper.new CubeMapperContext();
-        mapper.run(context);
-
-        ReducerProxy reducer = new ReducerProxy(conf);
-        ReducerProxy.CubeReducerContext context2 = reducer.new CubeReducerContext();
-        reducer.run(context2);
     }
 }
