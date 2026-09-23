@@ -92,7 +92,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
             final boolean generateEmptyAggregate = conf.getBoolean("calvalus.generateEmptyAggregate", false);
             String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
             if ((numReducers == 1 || "org.esa.snap.binning.support.IsinPlanetaryGrid".equals(binningConfig.getPlanetaryGrid())) && format != null) {
-                CalvalusLogger.getLogger().info("single reducer, may integrate formatting");
+                CalvalusLogger.getLogger().info("single reducer, integrates formatting");
                 // if only one reducer and output format parameter set, format directly
 
                 // handle metadata
@@ -309,7 +309,8 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
                 LongWritable binIndex = context.getCurrentKey();
                 Iterable<L3SpatialBin> spatialBins = context.getValues();
                 TemporalBin temporalBin = aggregate(binIndex, spatialBins);
-                context.write(binIndex, (L3TemporalBin) temporalBin);
+                // get rid of part files if L3 reducer formats the output
+                //context.write(binIndex, (L3TemporalBin) temporalBin);
                 return temporalBin;
             } catch (Exception e) {
                 throw new RuntimeException(e);
