@@ -459,7 +459,14 @@ public class PatternBasedInputFormat extends InputFormat {
 
     private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
-        productArchivePath = matcher.replaceAll(pathReplacement);
+        // strip _N0500 from archive path if product is not part of reprocessing
+        if (!pathReplacement.contains("_N05xx")) {
+            productArchivePath = matcher.replaceAll(pathReplacement);
+        } else if (productArchivePath.contains("_N0500")) {
+            productArchivePath = matcher.replaceAll(pathReplacement.replace("_N05xx", "_N0500"));
+        } else {
+            productArchivePath = matcher.replaceAll(pathReplacement.replace("_N05xx", ""));
+        }
         return productArchivePath;
     }
 
