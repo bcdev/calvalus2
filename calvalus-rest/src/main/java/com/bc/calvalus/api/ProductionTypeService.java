@@ -20,12 +20,16 @@ import java.io.FileReader;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 @Path("production-types")
 public class ProductionTypeService {
 
     private static Logger LOG = CalvalusLogger.getLogger();
     private static String PRODUCTION_TYPE_DIR = "production-types";
+
+    private static Pattern COMMENT_LINE = Pattern.compile("(.*)/[*].*[*]/(.*)");
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -74,7 +78,7 @@ public class ProductionTypeService {
 
     @GET
     @Path("/{name}")
-    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.TEXT_PLAIN})
+    @Produces({MediaType.APPLICATION_JSON})
     public Response show(
             @PathParam("name") String name,
             @Context HttpServletRequest request,
@@ -89,7 +93,12 @@ public class ProductionTypeService {
                 final StringBuilder accu = new StringBuilder();
                 try (BufferedReader reader = new BufferedReader(new FileReader(productionTypePath))) {
                     String line;
-                    while ((line = reader.readLine()) !=null){
+                    while ((line = reader.readLine()) !=null) {
+                        // filter comment lines /*  */
+                        Matcher m = COMMENT_LINE.matcher(line);
+                        if (m.matches()) {
+                            line = m.group(1) + m.group(2);
+                        }
                         accu.append(line);
                         accu.append("\n");
                     }
