@@ -12,7 +12,12 @@ public class JsonProductionRequestConverterTest {
     @Test
     public void testConversionToMap() throws Exception {
         String requestPath = getClass().getResource("processing-request.json").getPath();
-        Map<String, Object> request = CalvalusHadoopRequestConverter.parseIntoMap(requestPath);
+        final CalvalusHadoopRequestConverter requestConverter =
+                new CalvalusHadoopRequestConverter(
+                        new CalvalusHadoopConnection("nobody"),
+                        "nobody"
+                );
+        final Map<String, Object> request = requestConverter.parseIntoMap(requestPath);
         for (Map.Entry<String, Object> entry : request.entrySet()) {
             if (entry.getValue() instanceof Map) {
                 assertEquals("combinations", entry.getKey());

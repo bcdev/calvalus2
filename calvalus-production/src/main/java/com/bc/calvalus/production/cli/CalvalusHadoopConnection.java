@@ -5,8 +5,10 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.production.util.DescriptorUtils;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
@@ -23,9 +25,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class CalvalusHadoopConnection {
     private static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
@@ -95,25 +104,82 @@ public class CalvalusHadoopConnection {
         }
     }
 
-    public Map<String, String> getProcessorDescriptorParameters(String bundles, String processor, String userName)
+    public String getProcessorDescriptor(String processor, String userName) throws IOException, InterruptedException {
+        final String descriptorContent = remoteUser.doAs((PrivilegedExceptionAction<String>) () -> {
+            for (String pathString : new String[] {
+                    "/calvalus/home/" + userName + "/software/" + processor + "-descriptor.json",
+                    "/calvalus/software/1.0/" + processor + "-descriptor.json"
+            }) {
+                Path path = new Path(pathString);
+                if (jobClient.getFs().exists(path)) {
+                    String content = readFile(jobClient.getFs(), path);
+                    return content;
+                }
+            }
+            throw new NoSuchElementException(processor + " not found");
+        });
+        return descriptorContent;
+    }
+
+    public String getExampleRequest(String processor, String userName) throws IOException, InterruptedException {
+        final String descriptorContent = remoteUser.doAs((PrivilegedExceptionAction<String>) () -> {
+            for (String pathString : new String[] {
+                    "/calvalus/home/" + userName + "/software/" + processor + "-example-request.json",
+                    "/calvalus/software/1.0/" + processor + "-example-request.json"
+            }) {
+                Path path = new Path(pathString);
+                if (jobClient.getFs().exists(path)) {
+                    String content = readFile(jobClient.getFs(), path);
+                    return content;
+                }
+                return null;
+            }
+            throw new NoSuchElementException(processor + " not found");
+        });
+        return descriptorContent;
+    }
+
+    public Map<String, String> getProcessorDescriptorParameters(String processor, String bundles, String processorName, String userName)
             throws IOException, InterruptedException {
         return remoteUser.doAs((PrivilegedExceptionAction<Map<String, String>>) () -> {
-            Path path = new Path("/calvalus/software/1.0/" + bundles.split(",")[0] + "/bundle-descriptor.xml");
-            if (!jobClient.getFs().exists(path)) {
-                path = new Path("/calvalus/home/" + userName + "/software/" + bundles.split(",")[0] + "/bundle-descriptor.xml");
-                if (!jobClient.getFs().exists(path)) {
-                    LOG.fine("no bundle-descriptor.xml in bundle " + bundles.split(",")[0]);
-                    return Collections.emptyMap();
+            if (processor != null) {
+                for (String pathString : new String[]{
+                        "/calvalus/home/" + userName + "/software/" + processor + "-descriptor.json",
+                        "/calvalus/software/1.0/" + processor + "-descriptor.json"
+                }) {
+                    Path path = new Path(pathString);
+                    if (jobClient.getFs().exists(path)) {
+                        String content = readFile(jobClient.getFs(), path);
+                        Map<String, Object> contentMap = DescriptorUtils.parseRequest(content);
+                        Map<String, String> parametersMap = new HashMap<String, String>();
+                        for (Map.Entry<String, Object> entry : contentMap.entrySet()) {
+                            if (entry.getValue() instanceof String) {
+                                parametersMap.put(entry.getKey(), String.valueOf(entry.getValue()));
+                            }
+                        }
+                        LOG.fine("adding bundle descriptor default parameters from " + path);
+                        return parametersMap;
+                    }
+                }
+                throw new IllegalArgumentException("processor " + processor + " not found");
+            } else {
+                for (String pathString : new String[]{
+                        "/calvalus/home/" + userName + "/software/" + bundles.split(",")[0] + "/bundle-descriptor.xml",
+                        "/calvalus/software/1.0/" + bundles.split(",")[0] + "/bundle-descriptor.xml"
+                }) {
+                    Path path = new Path(pathString);
+                    if (jobClient.getFs().exists(path)) {
+                        BundleDescriptor bd = readBundleDescriptor(path, jobClient.getFs());
+                        for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
+                            if (processorName.equals(pd.getExecutableName())) {
+                                LOG.fine("adding bundle descriptor default parameters from " + path);
+                                return pd.getJobConfiguration();
+                            }
+                        }
+                    }
                 }
             }
-            BundleDescriptor bd = readBundleDescriptor(path, jobClient.getFs());
-            for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
-                if (processor.equals(pd.getExecutableName())) {
-                    LOG.fine("adding bundle descriptor default parameters from " + path);
-                    return pd.getJobConfiguration();
-                }
-            }
-            LOG.fine("no processor descriptor for " + processor + " in bundle " + bundles.split(",")[0]);
+            LOG.fine("no processor descriptor for " + processorName + " in bundle " + bundles.split(",")[0]);
             return Collections.emptyMap();
         });
     }
@@ -171,4 +237,70 @@ public class CalvalusHadoopConnection {
                 return dirPath;
             }});
     }
+
+    public String getProcessorRootDir(String userName) {
+        if (userName == null) {
+            return "/calvalus/software/1.0";
+        } else {
+            return "/calvalus/home/" + userName + "/software";
+        }
+    }
+
+    public Iterable<String> listSubdirs(String rootDir) throws IOException {
+        final Path rootPath = new Path(rootDir);
+        final FileSystem fs = jobClient.getFs();
+        if (fs.exists(rootPath)) {
+            FileStatus[] processorDir = fs.listStatus(rootPath, (Path path) -> {
+                try {
+                    return fs.isDirectory(path);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return Arrays.stream(processorDir).map((FileStatus path) -> path.getPath().toString()).collect(Collectors.toList());
+        } else {
+            return new Iterable<String>() {
+                @Override
+                public Iterator<String> iterator() {
+                    return new Iterator<String>() {
+                                    @Override
+                                    public boolean hasNext() { return false; }
+                                    @Override
+                                    public String next() { return null; }
+                                };
+                }
+
+                @Override
+                public void forEach(Consumer<? super String> action) {
+                    Iterable.super.forEach(action);
+                }
+
+                @Override
+                public Spliterator<String> spliterator() {
+                    return Iterable.super.spliterator();
+                }
+            };
+        }
+    }
+
+    public Iterable<String> listFiles(String dir, String prefix, String suffix) throws IOException {
+        final Path rootPath = new Path(dir);
+        final FileSystem fs = jobClient.getFs();
+        FileStatus[] files = fs.listStatus(rootPath, (Path path) -> path.getName().startsWith(prefix) && path.getName().endsWith(suffix));
+        return Arrays.stream(files).map((FileStatus path) -> path.getPath().toString()).collect(Collectors.toList());
+    }
+
+    public boolean exists(String pathName) throws IOException {
+        return jobClient.getFs().exists(new Path(pathName));
+    }
+
+    public String readFile(String pathName) throws IOException {
+         try (InputStream is = jobClient.getFs().open(new Path(pathName));
+             ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
+             IOUtils.copyBytes(is, stream, 8192);
+             return stream.toString();
+        }
+    }
+
+
 }

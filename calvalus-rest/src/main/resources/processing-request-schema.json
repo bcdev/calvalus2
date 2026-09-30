@@ -1,0 +1,713 @@
+{
+    "$id": "http://localhost:8080/schemas/processing-requests.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "JSON schema for Calvalus processing requests, generic version",
+    "type": "object",
+    
+    "properties": {
+        "productionName": {
+            "description": "User-provided name for this production, listed in queue",
+            "type": "string",
+            "minLength": 1
+        },
+        
+        "processor": {
+            "description": "Processor package and processor name, separated by a slash, optionally prefixed by processor owner",
+            "type": "string",
+            "pattern": "^..*/..*$"
+        },
+        "processorParameters": {
+            "description": "Parameters passed to the processor, processor-dependent",
+            "type": "object",
+            "properties": {
+                "parameters": {
+                    "type": "object"
+                }
+            },
+            "required": [
+                "parameters"
+            ]
+        },
+        
+        "dateRanges": {
+            "description": "One or several time intervals specified by start and end date",
+            "oneOf": [
+                {
+                    "type": "string",
+                    "pattern": "^\\[....-..-..:....-..-..\\](,\\[....-..-..:....-..-..\\])*$"
+                },
+                {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "patern": "....-..-..:....-..-.."
+                    }
+                }
+            ]
+        },
+
+        "regionGeometry": {
+            "description": "Polygon in geographic coordinates of area to be processed",
+            "type": "string",
+            "minLength": 1
+        },
+        
+        "outputDir": {
+            "description": "Directory for outputs in distributed file system",
+            "type": "string",
+            "minLength": 1
+        },
+        
+        "queue": {
+            "description": "Project or service queue for the request",
+            "type": "string",
+            "minLength": 1
+        },
+        "failurePercent": {
+            "description": "Percentage of accepted failed processing tasks before request is cancelled",
+            "type": "string",
+            "minLength": 1
+        },
+        "attempts": {
+            "description": "Number of processing attempts before a task is considered failed",
+            "type": "string",
+            "minLength": 1
+        }
+    },
+    "required": [
+        "productionName",
+        "outputDir"
+    ],
+
+    "oneOf": [
+        {
+            "type": "object",
+            "properties": {
+                "inputPath": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": "inputPath"
+        },
+        {
+            "type": "object",
+            "properties": {
+                "inputIdentifiers": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": "inputIdentifiers"
+        },
+        {
+            "type": "object",
+            "properties": {
+                "inputInventory": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": "inputInventory"
+        },
+        {
+            "type": "object",
+            "properties": {
+                "inputTable": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "minItem": 1,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "input": "string"
+                        },
+                        "required": [ "input" ]
+                    }
+                }
+            },
+            "required": "inputTable"
+        }
+    ],
+    
+    "oneOf": [
+        {
+            "type": "object",
+            "properties": {
+                "productionType": {
+                    "type": "string",
+                    "enum": [ "processing" ]
+                }
+            },
+            "required": [ "productionType" ]
+        },
+        {
+            "type": "object",
+            "properties": {
+                "productionType": {
+                    "type": "string",
+                    "enum": [ "l3-agg" ]
+                },
+                "aggregationParameters": {
+                    "type": "object",
+                    "properties": {
+                        "parameters": {
+                            "$ref": "#/$defs/aggregationParameters"
+                        }
+                    },
+                    "required": [
+                        "parameters"
+                    ]
+                }
+            },
+            "required": [ "productionType" ]
+        },
+        {
+            "type": "object",
+            "properties": {
+                "productionType": {
+                    "type": "string",
+                    "enum": [ "ma" ]
+                },
+                "matchupParameters": {
+                    "type": "object",
+                    "properties": {
+                        "parameters": {
+                            "$ref": "#/$defs/matchupParameters"
+                        }
+                    },
+                    "required": [
+                        "parameters"
+                    ]
+                }
+            },
+            "required": [ "productionType" ]
+        },
+        {
+            "type": "object",
+            "properties": {
+                "productionType": {
+                    "type": "string",
+                    "enum": [ "ra" ]
+                },
+                "raParameters": {
+                    "type": "object",
+                    "properties": {
+                        "parameters": {
+                            "$ref": "#/$defs/raParameters"
+                        }
+                    },
+                    "required": [
+                        "parameters"
+                    ]
+                }
+            },
+            "required": [ "productionType" ]
+        }  
+    ],
+
+    "$defs": {
+
+        "matchupParameters": {
+            "description": "",
+            "type": "object",
+            "properties": {
+                "recordSourceUrl": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "macroPixelSize": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "maxTimeDifference": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "filteredMeanCoeff": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "1.5"
+                },
+                "filterOverlapping": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "false"
+                },
+                "onlyExtractComplete": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "true"
+                },
+                "goodPixelExpression": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "true"
+                },
+                "goodRecordExpression": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "true"
+                },
+                "copyInput": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "true"
+                },
+                "outputGroupName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "site"
+                },
+                "outputTimeFormat": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "dd-MMM-yyyy HH:mm:ss"
+                },
+                "saveProcessedProducts": {
+                    "type": "string",
+                    "minLength": 1,
+                    "default": "false"
+                }
+            },
+            "required": [
+                "recordSourceUrl",
+                "macroPixelSize",
+                "maxTimeDifference"
+            ],
+            "additionalProperties": false
+        },
+
+        "raParameters": {
+            "type": "object",
+            "properties": {
+                "regionSource": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "regionSourceAttributeName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "withRegionEnvelope": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "goodPixelExpression": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "percentiles": {
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "uniqueItems": true,
+                            "minItems": 1,
+                            "items": {
+                                "type": "string",
+                                "minLength": 1
+                            }
+                        },
+                        {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    ]
+                },
+                "bands": {
+                    "type": "object",
+                    "properties": {
+                        "band": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "uniqueItems": true,
+                                    "minItems": 1,
+                                    "items": { "$ref": "#/$defs/band" }
+                                },
+                                { "$ref": "#/$defs/band" }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "band"
+                    ]
+                },
+                "withProductNames": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "writePerRegion": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "writeSeparateHistogram": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "writePixelValues": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "regionSource",
+                "regionSourceAttributeName",
+                "bands"
+            ],
+            "additionalProperties": false
+        },
+
+        "band": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "min": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "max": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "numBins": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "name",
+                "min",
+                "max",
+                "numBins"
+            ],
+            "additionalProperties": false
+        },
+        
+        "aggregationParameters": {
+            "description": "",
+            "type": "object",
+            "properties": {
+                "planetaryGrid": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "numRows": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "compositingType": {
+                    "type": "string",
+                    "enum": [ "BINNING", "MOSAICKING" ]
+                },
+                "superSampling": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "maskExpr": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "variables": {
+                    "type": "object",
+                    "properties": {
+                        "variable": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "uniqueItems": true,
+                                    "minItems": 1,
+                                    "items": { "$ref": "#/$defs/variable" }
+                                },
+                                { "$ref": "#/$defs/variable" }
+                            ]
+                        }
+                    },
+                    "required": [ "variable" ]
+                },
+                "aggregators": {
+                    "type": "object",
+                    "properties": {
+                        "aggregator": {
+                            "oneOf": [
+                                {
+                                    "type": "array",
+                                    "uniqueItems": true,
+                                    "minItems": 1,
+                                    "items": { "$ref": "#/$defs/aggregator" }
+                                },
+                                { "$ref": "#/$defs/aggregator" }
+                            ]
+                        }
+                    },
+                    "required": [
+                        "aggregator"
+                    ]
+                }
+            },
+            "required": [
+                "planetaryGrid",
+                "numRows",
+                "compositingType",
+                "aggregators"
+            ],
+            "additionalProperties": false
+        },
+        
+        "aggregator": {
+            "type": "object",
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/avg"
+                },
+                {
+                    "$ref": "#/$defs/first"
+                },
+                {
+                    "$ref": "#/$defs/mean"
+                },
+                {
+                    "$ref": "#/$defs/min_max"
+                },
+                {
+                    "$ref": "#/$defs/on_max_set"
+                },
+                {
+                    "$ref": "#/$defs/percentile"
+                },
+                {
+                    "$ref": "#/$defs/status_avg_select"
+                },
+                {
+                    "$ref": "#/$defs/sum"
+                }
+            ]
+        },
+        
+        "variable": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "expr": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "validExpr": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "name",
+                "expr"
+            ],
+            "additionalProperties": false
+        },
+
+        "avg": {
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "AVG" ]
+                },
+                "varName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "weightCoeff": {
+                    "type": "string",
+                    "default": "1.0"
+                },
+                "outputCounts": {
+                    "type": "string",
+                    "default": "false"
+                },
+                "outputSums": {
+                    "type": "string",
+                    "default": "false"
+                }
+            },
+            "required": [ "type", "varName" ],
+            "additionalProperties": false
+        },
+
+        "first": {
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "FIRST" ]
+                },
+                "varName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [ "type", "varName" ],
+            "additionalProperties": false
+        },
+
+        "mean": {
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "MEAN" ]
+                },
+                "varName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "sameResolution": {
+                    "type": "string",
+                    "default": "false"
+                }
+            },
+            "required": [ "type", "varName" ],
+            "additionalProperties": false
+        },
+
+        "min_max": {
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "MIN_MAX" ]
+                },
+                "varName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [ "type", "varName" ],
+            "additionalProperties": false
+        },
+
+        "on_max_set": {
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "ON_MAX_SET" ]
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "onMaxVarName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "setVarNames": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [ "type", "onMaxVarName" ],
+            "additionalProperties": false
+        },
+
+        "percentile": {
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "PERCENTILE" ]
+                },
+                "varName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "percentage": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [ "type", "varName", "percentage" ],
+            "additionalProperties": false
+        },
+
+        "status_avg_select": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "STATUS_AVG_SELECT" ]
+                },
+                "statusVarName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "onMaxVarName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "setVarNames": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [ "type", "onMaxVarName" ],
+            "additionalProperties": false
+        },
+
+        "sum": {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "JSON schema for Calvalus processing requests",
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": [ "SUM" ]
+                },
+                "varName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "targetName": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [ "type", "varName" ],
+            "additionalProperties": false
+        }
+    }
+}
