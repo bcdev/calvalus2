@@ -106,7 +106,7 @@ public class StreamingProductReader extends AbstractProductReader {
         sliceHeight = Integer.parseInt(sliceHeightText.toString());
 
         dom = createDOM(metadata.get(new Text("dim")));
-        Product product = DimapProductHelpers.createProduct(dom, "unknown", null);
+        Product product = DimapProductHelpers.createProduct(dom, "unknown", (Dimension)null);
         readTiepoints(product);
 
 
