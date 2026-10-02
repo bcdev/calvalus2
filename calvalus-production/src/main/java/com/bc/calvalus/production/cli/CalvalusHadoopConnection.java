@@ -246,6 +246,12 @@ public class CalvalusHadoopConnection {
         }
     }
 
+    /**
+     * Lists content of a directory, filters for directories
+     * @param rootDir directory to list content of
+     * @return iterable of names of sub-directories
+     * @throws IOException if access to file system fails
+     */
     public Iterable<String> listSubdirs(String rootDir) throws IOException {
         final Path rootPath = new Path(rootDir);
         final FileSystem fs = jobClient.getFs();
@@ -257,7 +263,7 @@ public class CalvalusHadoopConnection {
                     throw new RuntimeException(e);
                 }
             });
-            return Arrays.stream(processorDir).map((FileStatus path) -> path.getPath().toString()).collect(Collectors.toList());
+            return Arrays.stream(processorDir).map((FileStatus path) -> path.getPath().getName().toString()).collect(Collectors.toList());
         } else {
             return new Iterable<String>() {
                 @Override
@@ -283,11 +289,19 @@ public class CalvalusHadoopConnection {
         }
     }
 
+    /**
+     * Lists content of a directory, filters for files
+     * @param dir directory to list content of
+     * @param prefix prefix of file names
+     * @param suffix suffix of file names
+     * @return iterable of names of files
+     * @throws IOException if access to file system fails
+     */
     public Iterable<String> listFiles(String dir, String prefix, String suffix) throws IOException {
         final Path rootPath = new Path(dir);
         final FileSystem fs = jobClient.getFs();
         FileStatus[] files = fs.listStatus(rootPath, (Path path) -> path.getName().startsWith(prefix) && path.getName().endsWith(suffix));
-        return Arrays.stream(files).map((FileStatus path) -> path.getPath().toString()).collect(Collectors.toList());
+        return Arrays.stream(files).map((FileStatus path) -> path.getPath().getName().toString()).collect(Collectors.toList());
     }
 
     public boolean exists(String pathName) throws IOException {
