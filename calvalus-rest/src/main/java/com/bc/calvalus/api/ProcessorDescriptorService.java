@@ -219,7 +219,7 @@ public class ProcessorDescriptorService {
                 )) {
                     String processorName = descriptorFilename.substring(
                             0,
-                            descriptorFilename.length() + "-descriptor.json".length()
+                            descriptorFilename.length() - "-descriptor.json".length()
                     );
                     final String packageId = userName == null
                             ? processorPackageName
