@@ -202,7 +202,7 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         for (Map.Entry<String,String> parameter : compressorParameters.entrySet()) {
             try {
                 compressor.put(parameter.getKey(), Integer.parseInt(parameter.getValue()));
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException _ex) {
                 compressor.put(parameter.getKey(), parameter.getValue());
             }
         }
