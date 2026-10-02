@@ -230,7 +230,7 @@ public class CalvalusHadoopRequestConverter {
             }
         }
         // look in bundle for json descriptor or xml descriptor
-        if (processorDescriptorParameters == null) {
+        if (submittedRequest != null && processorDescriptorParameters == null) {
             processorDescriptorParameters = getProcessorDescriptorParameters(hadoopConnection, userName, processor, hadoopParameters);
         }
         if (processorDescriptorParameters != null) {
