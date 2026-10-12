@@ -14,7 +14,6 @@ import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -140,6 +139,7 @@ public class PatternBasedInputFormat extends InputFormat {
         String timeIndex = conf.get(JobConfigNames.CALVALUS_INPUT_TIME_INDEX);
         Set<String> productIdentifiers = new HashSet<>(conf.getStringCollection(
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
+        String n05xxSwitchdate = System.getProperty(JobConfigNames.CALVALUS_N05XX_SWITCHDATE);  // "20261213T081331"
 
         List<InputSplit> splits;
         long t0 = System.currentTimeMillis();
@@ -305,7 +305,7 @@ public class PatternBasedInputFormat extends InputFormat {
                             for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit == 0 || splits.size() < requestSizeLimit); ++i) {
                                 String productArchivePath = pathNodes.item(i).getTextContent();
                                 if (pathPattern != null && pathReplacement != null) {
-                                    productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+                                    productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement, n05xxSwitchdate);
                                 }
                                 System.out.println(productArchivePath);
                                 splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
@@ -328,7 +328,7 @@ public class PatternBasedInputFormat extends InputFormat {
                         for (String path : paths) {
                             String productArchivePath = path;
                             if (pathPattern != null && pathReplacement != null) {
-                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement);
+                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement, n05xxSwitchdate);
                             }
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
@@ -460,15 +460,15 @@ public class PatternBasedInputFormat extends InputFormat {
         return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     }
 
-    private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement) {
+    private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement, String n05xxSwitchdate) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
-        // strip _N0500 from archive path if product is not part of reprocessing
-        if (!pathReplacement.contains("_N05xx")) {
-            productArchivePath = matcher.replaceAll(pathReplacement);
-        } else if (productArchivePath.contains("_N0500")) {
-            productArchivePath = matcher.replaceAll(pathReplacement.replace("_N05xx", "_N0500"));
-        } else {
-            productArchivePath = matcher.replaceAll(pathReplacement.replace("_N05xx", ""));
+        try {
+            // strip _N0500 from archive path if product is later or equal switch date
+            if (n05xxSwitchdate != null && !pathReplacement.contains("_N0500") && matcher.group(1).compareTo(n05xxSwitchdate) >= 0) {
+                productArchivePath = matcher.replaceAll(pathReplacement.replace("_N0500", ""));
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new IllegalArgumentException("pattern " + pathPattern + " lacks () around datetime", ex);
         }
         return productArchivePath;
     }
