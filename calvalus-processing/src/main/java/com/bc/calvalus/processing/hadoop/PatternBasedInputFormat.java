@@ -138,7 +138,6 @@ public class PatternBasedInputFormat extends InputFormat {
         String timeIndex = conf.get(JobConfigNames.CALVALUS_INPUT_TIME_INDEX);
         Set<String> productIdentifiers = new HashSet<>(conf.getStringCollection(
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
-        String n05xxSwitchdate = System.getProperty(JobConfigNames.CALVALUS_N05XX_SWITCHDATE);  // "20261213T081331"
 
         List<InputSplit> splits;
         long t0 = System.currentTimeMillis();
@@ -253,6 +252,8 @@ public class PatternBasedInputFormat extends InputFormat {
             final Pattern pathPattern = conf.get("calvalus." + provider + ".pathpattern") != null
                     ? Pattern.compile(conf.get("calvalus." + provider + ".pathpattern")) : null;
             final String pathReplacement = conf.get("calvalus." + provider + ".pathreplacement");
+            final String n05xxSwitchdate = conf.get(JobConfigNames.CALVALUS_N05XX_SWITCHDATE);  // "20261213T081331"
+            final String acquisitionDateReplacement = conf.get("calvalus." + provider + ".acquisitiondatereplacement");
             final String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             final List<DateRange> dateRanges = createDateRangeList(dateRangesString);
 
@@ -304,7 +305,7 @@ public class PatternBasedInputFormat extends InputFormat {
                             for (int i = 0; i < pathNodes.getLength() && (requestSizeLimit == 0 || splits.size() < requestSizeLimit); ++i) {
                                 String productArchivePath = pathNodes.item(i).getTextContent();
                                 if (pathPattern != null && pathReplacement != null) {
-                                    productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement, n05xxSwitchdate);
+                                    productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement, n05xxSwitchdate, acquisitionDateReplacement);
                                 }
                                 System.out.println(productArchivePath);
                                 splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
@@ -327,7 +328,7 @@ public class PatternBasedInputFormat extends InputFormat {
                         for (String path : paths) {
                             String productArchivePath = path;
                             if (pathPattern != null && pathReplacement != null) {
-                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement, n05xxSwitchdate);
+                                productArchivePath = replacePathPattern(productArchivePath, pathPattern, pathReplacement, n05xxSwitchdate, acquisitionDateReplacement);
                             }
                             System.out.println(productArchivePath);
                             splits.add(new ProductSplit(new Path(productArchivePath), -1, null));
@@ -457,15 +458,28 @@ public class PatternBasedInputFormat extends InputFormat {
         return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     }
 
-    private String replacePathPattern(String productArchivePath, Pattern pathPattern, String pathReplacement, String n05xxSwitchdate) {
+    private String replacePathPattern(
+            String productArchivePath,
+            Pattern pathPattern,
+            String pathReplacement,
+            String n05xxSwitchdate,
+            String acquisitionDateReplacement
+    ) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
-        try {
+
+        if (!pathReplacement.contains("_N0500")
+                || n05xxSwitchdate == null
+                || acquisitionDateReplacement == null
+                || matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) < 0
+        ) {
+            productArchivePath = matcher.replaceAll(pathReplacement);
+        } else {
             // strip _N0500 from archive path if product is later or equal switch date
-            if (n05xxSwitchdate != null && !pathReplacement.contains("_N0500") && matcher.group(1).compareTo(n05xxSwitchdate) >= 0) {
+            try {
                 productArchivePath = matcher.replaceAll(pathReplacement.replace("_N0500", ""));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                throw new IllegalArgumentException("pattern " + pathPattern + " lacks () around datetime", ex);
             }
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            throw new IllegalArgumentException("pattern " + pathPattern + " lacks () around datetime", ex);
         }
         return productArchivePath;
     }
