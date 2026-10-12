@@ -161,4 +161,5 @@ public interface JobConfigNames {
     String CALVALUS = "calvalus";
     String SNAP = "snap";
     String SNAP_TILECACHE = "snap.tileCache";
+    String CALVALUS_N05XX_SWITCHDATE = "calvalus.n05xx.switchdate";
 }
