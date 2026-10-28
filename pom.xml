@@ -42,6 +42,7 @@
         <module>calvalus-wps-impl</module>
         <module>calvalus-reporting</module>
         <module>calvalus-rest</module>
+        <module>calvalus-ogc-api-processes</module>
     </modules>
 
     <repositories>
