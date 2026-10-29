@@ -1,10 +1,7 @@
 package com.bc.calvalus.ogcapiprocesses;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.ogcapiprocesses.model.CalvalusFullProcessorDescriptor;
-import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
-import com.bc.calvalus.ogcapiprocesses.model.OGCProcessDescription;
-import com.bc.calvalus.ogcapiprocesses.model.ProcessDescriptorOld;
+import com.bc.calvalus.ogcapiprocesses.model.*;
 import com.bc.calvalus.production.cli.CalvalusHadoopParameters;
 import com.bc.calvalus.production.cli.CalvalusHadoopRequestConverter;
 import com.bc.calvalus.production.util.DescriptorUtils;
@@ -28,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,16 +43,14 @@ public class ProcessDescriptionService {
     private static final String CALVALUS_PROPERTIES_FILENAME = "calvalus.properties";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private CalvalusProcessRepository repository;
-    private CalvalusToOGCProcessTranslator translator;
+    private CalvalusProcessorRepository repository;
+    private final CalvalusToOGCProcessTranslator translator;
 
-    public ProcessDescriptionService(CalvalusProcessRepository repository, CalvalusToOGCProcessTranslator translator) {
-        this.repository = repository;
+    public ProcessDescriptionService(CalvalusProcessorRepository repository, CalvalusToOGCProcessTranslator translator) {
         this.translator = translator;
     }
 
     public ProcessDescriptionService() {
-        this.repository = new CalvalusProcessRepository();
         this.translator = new CalvalusToOGCProcessTranslator();
     }
 
@@ -68,26 +64,23 @@ public class ProcessDescriptionService {
             ) throws NotFoundException {
 
         try {
-            // TODO old
+            final String catalinaHome = System.getProperty("catalina.home");
+            final String serviceName = getServiceName(context);
+            final String serviceDir = catalinaHome + "/content/" + serviceName;
             final String username = Utils.getUserName(request, context);
             final String[] userRoles = Utils.getUserRoles(request);
             final String maxAge = request.getHeader("max-age");
-            final String serviceName = getServiceName(context);
-            final String catalinaHome = System.getProperty("catalina.home");
             final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(username, userRoles);
-            final String serviceDir = catalinaHome + "/content/" + serviceName;
-            // TODO old end
+            final Response notFoundResponse = Response
+                    .status(ClientResponse.Status.NOT_FOUND)
+                    .entity("Could not retrieve process '" + processID + "'").build();
+
+            // TODO repository should be created per server, not per request
+            // TODO populate registry
+            final CalvalusProcessorRegistry registry = new CalvalusProcessorRegistry();
+            this.repository = new CalvalusProcessorRepository(serviceDir, registry);
 
             ObjectMapper mapper = new ObjectMapper();
-            // TODO hardcoded example
-            final String processorName = "c2rcc-14.0";
-            final String content = "{}";
-
-            ProcessDescriptorOld processDescriptor = new ProcessDescriptorOld(
-                    processorName,
-                    processID,
-                    serviceDir
-            );
 
             String processDescriptorContent = null;
             boolean success = true;
@@ -95,23 +88,25 @@ public class ProcessDescriptionService {
             final CalvalusHadoopParameters hadoopParameters = readCalvalusConfiguration(getCalvalusConfigPath(catalinaHome, serviceName));
             hadoopConnection.createJobClient(hadoopParameters);
 
-            if ("0".equals(maxAge) || ! processDescriptor.localPath().exists()) {
-                success = refreshCache(
-                        processDescriptor,
-                        hadoopConnection
-                );
+            Optional<File> localDescritorPath = this.repository.localDescriptorPath(processID);
+            if (!localDescritorPath.isPresent()) {
+                return notFoundResponse;
             }
-            if (success) {
-                processDescriptorContent = processDescriptor.getContent(hadoopConnection, username);
-            }
-            if (!success || !roleMatcher.matches(processDescriptorContent)) {
-                return Response
-                        .status( ClientResponse.Status.NOT_FOUND)
-                        .entity("Could not retrieve " + processDescriptor + "/"  + processorName).build();
+            if ("0".equals(maxAge) || ! localDescritorPath.get().exists()) {
+                success = this.repository.refreshCache(hadoopConnection, processID, username);
+                success = success || this.repository.refreshCache(hadoopConnection, processID, null);
             }
 
-            if (processDescriptorContent == null) {
-                return Response.status( ClientResponse.Status.NOT_FOUND).build();
+            boolean has_access = this.repository.checkAccess(processID, roleMatcher);
+            if (!success || !has_access) {
+                return notFoundResponse;
+            }
+
+            Optional<String> content = this.repository.descriptorContent(processID);
+            if (!content.isPresent()) {
+                return notFoundResponse;
+            } else {
+                processDescriptorContent = content.get();
             }
             CalvalusFullProcessorDescriptor calvalusFullDescriptor = mapper.readValue(processDescriptorContent, CalvalusFullProcessorDescriptor.class);
             CalvalusProcessorDescriptor calvalusDescriptor = calvalusFullDescriptor.processorDescriptor;
@@ -127,50 +122,6 @@ public class ProcessDescriptionService {
                             .build());
         }
     }
-
-    /**
-     * Retrieve process descriptor file and store locally
-     * @param processDescriptor the process descriptor to fetch
-     * @param hadoopConnection CalvalusHadoopConnection to access the reference files
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    private boolean refreshCache(
-        ProcessDescriptorOld processDescriptor,
-        CalvalusHadoopConnection hadoopConnection
-    ) throws  IOException, InterruptedException {
-        String descriptorContent;
-        try (PrintStream out = new PrintStream(processDescriptor.localPath())) {
-            // TODO allow user-local processes
-            descriptorContent = processDescriptor.getContent(hadoopConnection, null);
-            out.print(descriptorContent);
-        }
-
-        return descriptorContent == null;
-    }
-
-    // TODO add a class (OGC process description) for this object that with an instance to be constructed from a processor descriptor
-    /**
-     * Builds an OGC process description according to https://docs.ogc.org/is/18-062r2/18-062r2.html#ogc_process_description.
-     * @param processDescriptor
-     * @param processDescriptorContent
-     * @return
-     */
-    private String buildSuccessResponseContent(ProcessDescriptorOld processDescriptor, JsonNode processDescriptorContent) {
-        ObjectMapper reponseMapper = new ObjectMapper();
-        ObjectNode accu = reponseMapper.createObjectNode();
-        accu.put("id", processDescriptor.getProcessID());
-        accu.put("title", processDescriptorContent.get("title").asText());
-        accu.put("description", processDescriptorContent.get("description").asText());
-        ArrayNode outputTransmission = accu.putArray("outputTransmission");
-        outputTransmission.add("reference");
-        ArrayNode inputs = accu.putArray("inputs");
-        // TODO continue
-
-        return accu.toString();
-    }
-
 
     private File getCalvalusConfigPath(String catalinaHome, String serviceName) {
         return new File(catalinaHome + "/content/" + serviceName + "/" + CALVALUS_PROPERTIES_FILENAME);
