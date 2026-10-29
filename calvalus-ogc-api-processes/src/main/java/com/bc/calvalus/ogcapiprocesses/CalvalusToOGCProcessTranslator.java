@@ -10,8 +10,11 @@ import java.util.HashMap;
 
 public class CalvalusToOGCProcessTranslator {
     public OGCProcessDescription toOgcProcessDescription(CalvalusProcessorDescriptor calvalusDescriptor) {
-        OGCProcessDescription ogcProcessDescription = new OGCProcessDescription();
+        return toOgcProcessDescription(calvalusDescriptor, null);
+    }
 
+    public OGCProcessDescription toOgcProcessDescription(CalvalusProcessorDescriptor calvalusDescriptor, String processId) {
+        OGCProcessDescription ogcProcessDescription = new OGCProcessDescription();
 
         HashMap<String, OGCInputDescription> inputDescriptions = new HashMap<>();
         for (String key: calvalusDescriptor.parameterDescriptor.keySet()) {
@@ -43,6 +46,9 @@ public class CalvalusToOGCProcessTranslator {
         HashMap<String, OGCOutputDescription> outputDescriptions = new HashMap<>();
         outputDescriptions.put("output", outputDescription);
 
+        ogcProcessDescription.id = processId;
+        ogcProcessDescription.version = calvalusDescriptor.version;
+
         ogcProcessDescription.inputs = inputDescriptions;
         ogcProcessDescription.outputs = outputDescriptions;
         ogcProcessDescription.title = calvalusDescriptor.title;
@@ -50,11 +56,40 @@ public class CalvalusToOGCProcessTranslator {
         return ogcProcessDescription;
     }
 
+    /**
+     * Converts types specified in Calvalus processor descriptors to those allowed in OGC Process Descriptor Schemas:
+     * <a href="http://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/schema.yaml">...</a>
+     * @param type
+     * @return a valid OGC schema type or null if none was found
+     */
+    public String convertCalvalusToOgcSchemaType(String type) {
+        switch (type) {
+            case "array":
+                return "array";
+            case "boolean":
+                return "boolean";
+            case "integer":
+            case "int":
+                return "integer";
+            case "number":
+            case "float":
+                return "number";
+            case "object":
+                return "object";
+            case "string":
+            case "enum":
+                return "string";
+            default:
+                return null;
+        }
+    }
+
     private ObjectNode createSchemaFromParameter(String type, String defaultValue) {
         ObjectMapper objectMapper = new ObjectMapper();
 
         ObjectNode schema = objectMapper.createObjectNode();
-        schema.put("type", type);
+        String schemaType = convertCalvalusToOgcSchemaType(type);
+        schema.put("type", schemaType);
         if (defaultValue != null) {
             schema.put("default", defaultValue);
         }

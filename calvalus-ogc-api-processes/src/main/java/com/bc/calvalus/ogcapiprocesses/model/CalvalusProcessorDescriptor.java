@@ -8,6 +8,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CalvalusProcessorDescriptor {
     public String title;
+    public String version;
     public String description;
     public List<String> authorization;
     public List<String> inputProductTypes;

@@ -115,7 +115,7 @@ public class ProcessDescriptionService {
             }
             CalvalusFullProcessorDescriptor calvalusFullDescriptor = mapper.readValue(processDescriptorContent, CalvalusFullProcessorDescriptor.class);
             CalvalusProcessorDescriptor calvalusDescriptor = calvalusFullDescriptor.processorDescriptor;
-            OGCProcessDescription ogcProcessDescription = this.translator.toOgcProcessDescription(calvalusDescriptor);
+            OGCProcessDescription ogcProcessDescription = this.translator.toOgcProcessDescription(calvalusDescriptor, processID);
             return Response.ok(ogcProcessDescription).build();
 
         } catch (Exception e) {
