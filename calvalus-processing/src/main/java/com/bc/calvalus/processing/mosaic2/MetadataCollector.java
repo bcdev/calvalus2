@@ -268,6 +268,12 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
                 return "f8";
             case ProductData.TYPE_INT64:
                 return "i8";
+            case ProductData.TYPE_UINT8:
+                return "u1";
+            case ProductData.TYPE_UINT16:
+                return "u2";
+            case ProductData.TYPE_UINT32:
+                return "u4";
             default:
                 throw new IllegalArgumentException("unknown dtype code " + dataType);
         }
