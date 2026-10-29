@@ -59,7 +59,7 @@ public class CalvalusToOGCProcessTranslator {
     /**
      * Converts types specified in Calvalus processor descriptors to those allowed in OGC Process Descriptor Schemas:
      * <a href="http://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/schemas/schema.yaml">...</a>
-     * @param type
+     * @param type Type as declared in the Calvalus processor descriptor
      * @return a valid OGC schema type or null if none was found
      */
     public String convertCalvalusToOgcSchemaType(String type) {
