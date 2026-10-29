@@ -1,6 +1,7 @@
 package com.bc.calvalus.ogcapiprocesses;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.ogcapiprocesses.model.CalvalusFullProcessorDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.OGCProcessDescription;
 import com.bc.calvalus.ogcapiprocesses.model.ProcessDescriptorOld;
@@ -79,7 +80,7 @@ public class ProcessDescriptionService {
 
             ObjectMapper mapper = new ObjectMapper();
             // TODO hardcoded example
-            final String processorName = "c2rcc-olci";
+            final String processorName = "c2rcc-14.0";
             final String content = "{}";
 
             ProcessDescriptorOld processDescriptor = new ProcessDescriptorOld(
@@ -89,27 +90,31 @@ public class ProcessDescriptionService {
             );
 
             String processDescriptorContent = null;
-            if ("0".equals(maxAge) || ! processDescriptor.localPath().exists()) {
-                final CalvalusHadoopParameters hadoopParameters = readCalvalusConfiguration(getCalvalusConfigPath(catalinaHome, serviceName));
-                final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
-                hadoopConnection.createJobClient(hadoopParameters);
+            boolean success = true;
+            final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
+            final CalvalusHadoopParameters hadoopParameters = readCalvalusConfiguration(getCalvalusConfigPath(catalinaHome, serviceName));
+            hadoopConnection.createJobClient(hadoopParameters);
 
-                final boolean success = refreshCache(
+            if ("0".equals(maxAge) || ! processDescriptor.localPath().exists()) {
+                success = refreshCache(
                         processDescriptor,
                         hadoopConnection
                 );
+            }
+            if (success) {
                 processDescriptorContent = processDescriptor.getContent(hadoopConnection, username);
-                if (!success || !roleMatcher.matches(processDescriptorContent)) {
-                    return Response
-                            .status( ClientResponse.Status.NOT_FOUND)
-                            .entity("Could not retrieve " + processDescriptor + "/"  + processorName).build();
-                }
+            }
+            if (!success || !roleMatcher.matches(processDescriptorContent)) {
+                return Response
+                        .status( ClientResponse.Status.NOT_FOUND)
+                        .entity("Could not retrieve " + processDescriptor + "/"  + processorName).build();
             }
 
             if (processDescriptorContent == null) {
                 return Response.status( ClientResponse.Status.NOT_FOUND).build();
             }
-            CalvalusProcessorDescriptor calvalusDescriptor = mapper.readValue(processDescriptorContent, CalvalusProcessorDescriptor.class);
+            CalvalusFullProcessorDescriptor calvalusFullDescriptor = mapper.readValue(processDescriptorContent, CalvalusFullProcessorDescriptor.class);
+            CalvalusProcessorDescriptor calvalusDescriptor = calvalusFullDescriptor.processorDescriptor;
             OGCProcessDescription ogcProcessDescription = this.translator.toOgcProcessDescription(calvalusDescriptor);
             return Response.ok(ogcProcessDescription).build();
 

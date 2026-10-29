@@ -27,7 +27,7 @@ public class ProcessDescriptorOld {
     }
 
     private String relativePathString(boolean skipExtension) {
-        return processID + File.separator + processorName +  (skipExtension ? "" : "-descriptor.json");
+        return processorName + File.separator + processID +  (skipExtension ? "" : "-descriptor.json");
     }
 
     public String relativePathString() {

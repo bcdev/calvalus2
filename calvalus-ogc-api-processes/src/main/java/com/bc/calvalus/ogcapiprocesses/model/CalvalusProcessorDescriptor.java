@@ -1,8 +1,11 @@
 package com.bc.calvalus.ogcapiprocesses.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CalvalusProcessorDescriptor {
     public String title;
     public String description;
