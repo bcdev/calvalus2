@@ -56,7 +56,7 @@ public class CalvalusToOGCProcessTranslator {
         ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", type);
         if (defaultValue != null) {
-            schema.put("default", type);
+            schema.put("default", defaultValue);
         }
 
         return schema;
