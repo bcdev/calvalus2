@@ -19,7 +19,6 @@ public class LandingPageService {
     private static Logger LOG = CalvalusLogger.getLogger();
     public static final String CONFORMACE_REL_TYPE = "http://www.opengis.net/def/rel/ogc/1.0/conformance";
     public static final String PROCESSED_REL_TYPE = "http://www.opengis.net/def/rel/ogc/1.0/processes";
-    public static final String JSON_MIME = "application/json";
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -34,13 +33,13 @@ public class LandingPageService {
         OGCLink conformanceLink = new OGCLink();
         conformanceLink.href = uriInfo.getBaseUriBuilder().path("conformance").build().toString();
         conformanceLink.rel = CONFORMACE_REL_TYPE;
-        conformanceLink.type = JSON_MIME;
+        conformanceLink.type = MediaType.APPLICATION_JSON;
         conformanceLink.title = "OGC API - Processes conformance classes implemented by this server";
 
         OGCLink processesLink = new OGCLink();
         processesLink.href = uriInfo.getBaseUriBuilder().path("processes").build().toString();
         processesLink.rel = PROCESSED_REL_TYPE;
-        processesLink.type = JSON_MIME;
+        processesLink.type = MediaType.APPLICATION_JSON;
         processesLink.title = "List of executable processes with metadata";
 
         OGCLink selfLink = OGCLink.self(uriInfo.getAbsolutePath().toString());
