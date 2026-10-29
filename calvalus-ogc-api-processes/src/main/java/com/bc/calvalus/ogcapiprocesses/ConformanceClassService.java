@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 @Path("/conformance")
 public class ConformanceClassService {
     private static Logger LOG = CalvalusLogger.getLogger();
-    public static final String CONF_CLASS_CORE = " http://www.opengis.net/spec/ogcapi-processes-1/1.0/req/core ";
+    public static final String CONF_CLASS_CORE = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/req/core";
     public static final String CONF_CLASS_OGC_PROCESS_DESCRIPTION = "http://www.opengis.net/spec/ogcapi-processes-1/1.0/req/ogc-process-description";
 
     @GET
