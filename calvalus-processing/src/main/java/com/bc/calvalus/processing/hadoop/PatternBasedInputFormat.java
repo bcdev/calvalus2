@@ -469,11 +469,13 @@ public class PatternBasedInputFormat extends InputFormat {
             String acquisitionDateReplacement
     ) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
+        String lastPathComponent = productArchivePath.substring(productArchivePath.lastIndexOf('/') + 1);
+        boolean processingBaselineGEN0500 = lastPathComponent.contains("_N05");
 
         if (!pathReplacement.contains("_N0500")
                 || n05xxSwitchdate == null
                 || acquisitionDateReplacement == null
-                || matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) < 0
+                || (matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) < 0 && processingBaselineGEN0500)
         ) {
             productArchivePath = matcher.replaceAll(pathReplacement);
         } else {
