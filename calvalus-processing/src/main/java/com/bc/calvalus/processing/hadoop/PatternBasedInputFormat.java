@@ -461,7 +461,8 @@ public class PatternBasedInputFormat extends InputFormat {
         return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     }
 
-    private String replacePathPattern(
+    // visible for testing
+    String replacePathPattern(
             String productArchivePath,
             Pattern pathPattern,
             String pathReplacement,
