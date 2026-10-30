@@ -470,21 +470,24 @@ public class PatternBasedInputFormat extends InputFormat {
     ) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
         String lastPathComponent = productArchivePath.substring(productArchivePath.lastIndexOf('/') + 1);
-        boolean processingBaselineGEN0500 = lastPathComponent.contains("_N05");
+        boolean processingBaselineLessThanN0500 = ! lastPathComponent.contains("_N05");
 
-        if (!pathReplacement.contains("_N0500")
-                || n05xxSwitchdate == null
-                || acquisitionDateReplacement == null
-                || (matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) < 0 && processingBaselineGEN0500)
+        if (processingBaselineLessThanN0500 || (
+                    pathReplacement.contains("_N0500")
+                    && n05xxSwitchdate != null
+                    && acquisitionDateReplacement != null
+                    && matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) >= 0
+                )
         ) {
-            productArchivePath = matcher.replaceAll(pathReplacement);
-        } else {
             // strip _N0500 from archive path if product is later or equal switch date
             try {
                 productArchivePath = matcher.replaceAll(pathReplacement.replace("_N0500", ""));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException("pattern " + pathPattern + " lacks () around datetime", ex);
             }
+
+        } else {
+            productArchivePath = matcher.replaceAll(pathReplacement);
         }
         return productArchivePath;
     }
