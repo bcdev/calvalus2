@@ -38,7 +38,6 @@ public class PatternBasedInputFormatTest {
         // No example of an N0400 product after switch date available, unclear if it exists. Made-up example
         String n0400After = "S2B_MSIL2A_20260103T212809_N0400_R043_T06VUQ_20260103T225909.SAFE";
 
-        // TODO
         Pattern pathPattern = Pattern.compile("(S2._MSIL2A_(....)(..)(..)(T......).*.SAFE)");
         String pathReplacement = "s3a://eodata/Sentinel-2/MSI/L2A_N0500/$2/$3/$4/$1";
         String acquisitionDateReplacement = "$2$3$4$5";
