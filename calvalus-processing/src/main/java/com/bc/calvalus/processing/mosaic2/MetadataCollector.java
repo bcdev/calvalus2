@@ -206,7 +206,8 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
                 compressor.put(parameter.getKey(), parameter.getValue());
             }
         }
-        zarray.put("dtype", zarrEncodingOf(byteOrder) + zarrTypeOf(band.getDataType()));
+        final String encodingPrefix = zarrTypeOf(band.getDataType());
+        zarray.put("dtype", zarrEncodingOf(byteOrder, encodingPrefix) + encodingPrefix);
         if (band.isNoDataValueSet()) {
             if (Double.isNaN(fillValue)) {
                 zarray.put("fill_value", "NaN");
@@ -224,6 +225,13 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarray;
     }
 
+    private static String zarrEncodingOf(ByteOrder byteOrder, String zarrTypeCode) {
+        if ("i1".equals(zarrTypeCode) || "u1".equals(zarrTypeCode)) {
+            return "|";
+        } else {
+            return zarrEncodingOf(byteOrder);
+        }
+    }
     private static String zarrEncodingOf(ByteOrder byteOrder) {
         if (byteOrder == ByteOrder.BIG_ENDIAN) {
             return ">";
