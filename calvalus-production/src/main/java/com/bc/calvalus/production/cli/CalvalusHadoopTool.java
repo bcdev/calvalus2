@@ -150,7 +150,7 @@ public class CalvalusHadoopTool {
         String auth = commandLineParameters.getOrDefault("auth", (String) configParameters.getOrDefault("auth", "unix"));
         HadoopJobHook hook = parameterizeTokenGenerator(auth, configParameters, userName);
         // read request file, convert into Hadoop parameters, and create Hadoop job
-        Map<String, Object> submittedRequest = CalvalusHadoopRequestConverter.parseIntoMap(requestPath);
+        Map<String, Object> submittedRequest = CalvalusHadoopRequestConverter.parseFeatures(requestPath);
         LOG.info("reading request from " + requestPath + " with " + submittedRequest.size() + " parameters");
 
         final CalvalusHadoopParameters hadoopParameters = requestConverter.collectParameters(

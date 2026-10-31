@@ -17,7 +17,7 @@ public class JsonProductionRequestConverterTest {
                         new CalvalusHadoopConnection("nobody"),
                         "nobody"
                 );
-        final Map<String, Object> request = requestConverter.parseIntoMap(requestPath);
+        final Map<String, Object> request = requestConverter.parseFeatures(requestPath);
         for (Map.Entry<String, Object> entry : request.entrySet()) {
             if (entry.getValue() instanceof Map) {
                 assertEquals("combinations", entry.getKey());
