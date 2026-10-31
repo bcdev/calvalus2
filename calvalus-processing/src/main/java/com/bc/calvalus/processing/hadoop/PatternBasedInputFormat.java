@@ -461,7 +461,8 @@ public class PatternBasedInputFormat extends InputFormat {
         return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     }
 
-    private String replacePathPattern(
+    // visible for testing
+    String replacePathPattern(
             String productArchivePath,
             Pattern pathPattern,
             String pathReplacement,
@@ -469,20 +470,25 @@ public class PatternBasedInputFormat extends InputFormat {
             String acquisitionDateReplacement
     ) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
+        String lastPathComponent = productArchivePath.substring(productArchivePath.lastIndexOf('/') + 1);
+        boolean processingBaselineLessThanN0500 = ! lastPathComponent.contains("_N05");
 
-        if (!pathReplacement.contains("_N0500")
-                || n05xxSwitchdate == null
-                || acquisitionDateReplacement == null
-                || matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) < 0
+        if (processingBaselineLessThanN0500 || (
+                    pathReplacement.contains("_N0500")
+                    && n05xxSwitchdate != null
+                    && acquisitionDateReplacement != null
+                    && matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) >= 0
+                )
         ) {
-            productArchivePath = matcher.replaceAll(pathReplacement);
-        } else {
             // strip _N0500 from archive path if product is later or equal switch date
             try {
                 productArchivePath = matcher.replaceAll(pathReplacement.replace("_N0500", ""));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException("pattern " + pathPattern + " lacks () around datetime", ex);
             }
+
+        } else {
+            productArchivePath = matcher.replaceAll(pathReplacement);
         }
         return productArchivePath;
     }
