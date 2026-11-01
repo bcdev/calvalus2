@@ -151,6 +151,7 @@ public class CalvalusHadoopRequestConverter {
             if (new File(descriptorPath).exists()) {
                 processorDescriptor = parseFeatures(descriptorPath);
                 check_authorisation(processorDescriptor, processor);
+                processorDescriptor.remove("processorDescriptor");
             }
         }
 
@@ -208,17 +209,17 @@ public class CalvalusHadoopRequestConverter {
             LOG.info(parameterTranslationRules.size() + " parameter translation rules");
         }
 
+        // add parameters of config
+
+        count = mergeParameters(configParameters, parameterTranslationRules, hadoopParameters, structuredParameters);
+        LOG.info("reading calvalus configuration with " + count + " parameters");
+
         // add parameters of processor descriptor
 
         if (processorDescriptor != null) {
             count = mergeParameters(processorDescriptor, parameterTranslationRules, hadoopParameters, structuredParameters);
             LOG.info("reading processor descriptor with " + count + " parameters");
         }
-
-        // add parameters of config
-
-        count = mergeParameters(configParameters, parameterTranslationRules, hadoopParameters, structuredParameters);
-        LOG.info("reading calvalus configuration with " + count + " parameters");
 
         // add parameters of request
 
@@ -228,7 +229,7 @@ public class CalvalusHadoopRequestConverter {
         }
 
         // add parameters of command line
-        if (commandLineParameters != null) {
+        if (commandLineParameters != null && commandLineParameters.size() > 0) {
             count = mergeParameters(commandLineParameters, parameterTranslationRules, hadoopParameters, structuredParameters);
             LOG.fine("adding " + count + " command line parameters");
         }
@@ -246,10 +247,13 @@ public class CalvalusHadoopRequestConverter {
                 // look for processor descriptor json
 
                 processorDescriptor = hadoopConnection.getRemoteProcessorDescriptor(processor, userName);
-                if (processorDescriptor != null) {
-                    check_authorisation(processorDescriptor, processor);
-                    LOG.info("reading processor descriptor from bundle with " + processorDescriptor.size() + " parameters");
+                // no undeclared processors allowed
+                if (processorDescriptor == null) {
+                    throw new IllegalArgumentException("unknown producessor " + processor);
                 }
+                check_authorisation(processorDescriptor, processor);
+                LOG.info("reading processor descriptor from bundle with " + processorDescriptor.size() + " parameters");
+                processorDescriptor.remove("processorDescriptor");
 
             } else {
 
@@ -286,10 +290,10 @@ public class CalvalusHadoopRequestConverter {
                         throw new IllegalArgumentException("unknown production type " + productionType);
                     }
                 }
-                // override with processor descriptor
-                mergeParameters(processorDescriptor, parameterTranslationRules, hadoopParameters, structuredParameters);
                 // override with config
                 mergeParameters(configParameters, parameterTranslationRules, hadoopParameters, structuredParameters);
+                // override with processor descriptor
+                mergeParameters(processorDescriptor, parameterTranslationRules, hadoopParameters, structuredParameters);
                 // override with request
                 if (submittedRequest != null) {
                     mergeParameters(submittedRequest, parameterTranslationRules, hadoopParameters, structuredParameters);
