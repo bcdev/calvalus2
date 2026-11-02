@@ -493,12 +493,13 @@ public class PatternBasedInputFormat extends InputFormat {
 
         // Do not strip "N0500" from pathReplacement:
         // pathReplacement = [...]/L2A/[...] (no N0500 in pathReplacement)
-        // n05xxswitchDate = 20231213T081331; input = S2B_[...]_20221115[...]_N0511[...] (acquisition is before n05xxswitchDate)
         // n05xxswitchDate = 20231213T081331; input = S2A_[...]_20220129[...]_N0400_[...] (The baseline is not N05xx)
+        // n05xxswitchDate = 20231213T081331; input = S2B_[...]_20221115[...]_N0511[...] (acquisition is before n05xxswitchDate)
         if (! pathReplacement.contains("_N0500")
                 || n05xxSwitchdate == null
                 || acquisitionDateReplacement == null
-                || (inputBaseLineIsN05xx(productArchivePath) && inputAcquisitionIsBeforeSwitchDate(matcher.replaceAll(acquisitionDateReplacement), n05xxSwitchdate))
+                || ! inputBaseLineIsN05xx(productArchivePath)
+                || inputAcquisitionIsBeforeSwitchDate(matcher.replaceAll(acquisitionDateReplacement), n05xxSwitchdate)
         ) {
             productArchivePath = matcher.replaceAll(pathReplacement);
         } else {
