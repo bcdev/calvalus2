@@ -461,7 +461,28 @@ public class PatternBasedInputFormat extends InputFormat {
         return (NodeList) expr.evaluate(doc, XPathConstants.NODESET);
     }
 
-    private String replacePathPattern(
+    /**
+     * Construct productArchivePath by filling the pathReplacement with the values extracted
+     * by the pathPattern from the productArchivePath.
+     * <br>
+     * In addition to the pathPattern, pathReplacement is modified by stripping "_N0500" from the
+     * pathReplacement, if the product would be stored in a subdirectory without this suffix.
+     * E.g.: /eodata/Sentinel-2/MSI/L2A_N0500/ -> /eodata/Sentinel-2/MSI/L2A/
+     * <br>
+     * The decision to strip is based on the {@code n05xxSwitchdate} (strip N0500 for acquisitions after the switch date)
+     * and {@code acquisitionDateReplacement} (extracts the observation date from the path) parameters.
+     *
+     * @param productArchivePath product archive path before applying the pathReplacement
+     * @param pathPattern pattern to extract values (acquisition date) from the {@code productArchivePath}
+     * @param pathReplacement Structure of the modified path, placeholders are replaced with values extracted from
+     *     {@code pathReplacement}.
+     * @param n05xxSwitchdate earliest acquisition date where N0500 should be stripped from {@code pathReplacement}.
+     * @param acquisitionDateReplacement structure of the acquisition date of the input, placeholders are replaced with
+     *     values extracted from {@code pathReplacement}.
+     * @return product archive path with pathReplacement applied
+     */
+    // visible for testing
+    String replacePathPattern(
             String productArchivePath,
             Pattern pathPattern,
             String pathReplacement,
@@ -470,22 +491,41 @@ public class PatternBasedInputFormat extends InputFormat {
     ) {
         Matcher matcher = pathPattern.matcher(productArchivePath);
 
-        if (!pathReplacement.contains("_N0500")
+        // Do not strip "N0500" from pathReplacement:
+        // pathReplacement = [...]/L2A/[...] (no N0500 in pathReplacement)
+        // n05xxswitchDate = 20231213T081331; input = S2A_[...]_20220129[...]_N0400_[...] (The baseline is not N05xx)
+        // n05xxswitchDate = 20231213T081331; input = S2B_[...]_20221115[...]_N0511[...] (acquisition is before n05xxswitchDate)
+        if (! pathReplacement.contains("_N0500")
                 || n05xxSwitchdate == null
                 || acquisitionDateReplacement == null
-                || matcher.replaceAll(acquisitionDateReplacement).compareTo(n05xxSwitchdate) < 0
+                || ! inputBaseLineIsN05xx(productArchivePath)
+                || inputAcquisitionIsBeforeSwitchDate(matcher.replaceAll(acquisitionDateReplacement), n05xxSwitchdate)
         ) {
             productArchivePath = matcher.replaceAll(pathReplacement);
         } else {
-            // strip _N0500 from archive path if product is later or equal switch date
+            // Do strip "N0500":
+            // pathReplacement = [...]/L2A_N0500/[...]
+            // n05xxswitchDate = 20231213T081331;
+            // input = S2A_[...]_20260103[...]_N0510[...]
             try {
                 productArchivePath = matcher.replaceAll(pathReplacement.replace("_N0500", ""));
             } catch (ArrayIndexOutOfBoundsException ex) {
                 throw new IllegalArgumentException("pattern " + pathPattern + " lacks () around datetime", ex);
             }
+
         }
         return productArchivePath;
     }
+
+    private boolean inputBaseLineIsN05xx(String productArchivePath) {
+        String lastPathComponent = productArchivePath.substring(productArchivePath.lastIndexOf('/') + 1);
+        return lastPathComponent.contains("_N05");
+    }
+
+    private boolean inputAcquisitionIsBeforeSwitchDate(String acquisitionDate, String n05xxSwitchdate) {
+        return acquisitionDate.compareTo(n05xxSwitchdate) < 0 ;
+    }
+
 
     private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(
                 RemoteIterator<LocatedFileStatus> fileStatusIt,
