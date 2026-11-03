@@ -247,13 +247,22 @@ public class CalvalusHadoopRequestConverter {
                 // look for processor descriptor json
 
                 processorDescriptor = hadoopConnection.getRemoteProcessorDescriptor(processor, userName);
-                // no undeclared processors allowed
-                if (processorDescriptor == null) {
-                    throw new IllegalArgumentException("unknown producessor " + processor);
+                if (processorDescriptor != null) {
+                    check_authorisation(processorDescriptor, processor);
+                    LOG.info("reading processor descriptor from bundle with " + processorDescriptor.size() + " parameters");
+                    processorDescriptor.remove("processorDescriptor");
+                } else {
+                    // raise failure in case of declared processor but undeclared production type
+                    if (productionType == null) {
+                        throw new IllegalArgumentException("unknown processor " + processor);
+                    }
+                    // support defaults for undeclared processor
+                    String bundles = processor.substring(0, processor.indexOf('/'));
+                    String processorName = processor.substring(processor.indexOf('/') + 1);
+                    hadoopParameters.set("calvalus.bundles", bundles);
+                    hadoopParameters.set("calvalus.l2.operator", processorName);
+                    LOG.info("no processor descriptor found, assuming operator " + processorName + " in processor package " + bundles);
                 }
-                check_authorisation(processorDescriptor, processor);
-                LOG.info("reading processor descriptor from bundle with " + processorDescriptor.size() + " parameters");
-                processorDescriptor.remove("processorDescriptor");
 
             } else {
 
