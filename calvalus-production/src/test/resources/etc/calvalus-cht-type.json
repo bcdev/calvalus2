@@ -1,0 +1,96 @@
+{
+    /* Hadoop parameters */
+    
+    "_translate.productionName"   : "mapreduce.job.name",
+    "_translate.queue"            : "mapreduce.job.queuename",
+    "_translate.attempts"         : [ "mapreduce.map.maxattempts", "mapreduce.reduce.maxattempts" ],
+    "_translate.failurePercent"   : "mapreduce.map.failures.maxpercent",
+    "_translate.maxReducers"      : [ "mapreduce.job.reduces", "calvalus.mosaic.maxReducers" ],
+    "_translate.processingMemory" : [ [ "mapreduce.map.java.opts", "javaOptsOfMem" ], [ "mapreduce.map.memory.mb", "add512" ] ],
+    "_translate.aggregationMemory" : [ [ "mapreduce.reduce.java.opts", "javaOptsOfMem" ], [ "mapreduce.reduce.memory.mb", "add512" ] ],
+    "_translate.executableMemory" : [ [ "mapreduce.map.java.opts", "javaOptsForExec" ], [ "mapreduce.map.memory.mb", "add512" ] ],
+    "_translate.timeout"          : [ [ "mapreduce.task.timeout", "seconds2Millis" ], [ "mapreduce.task.stuck.timeout-ms", "seconds2Millis" ] ],
+    "_translate.outputReplication": "dfs.replication",
+    "_translate.outputUmask"      : "fs.permissions.umask-mode",
+    "_translate.processorJavaVersion" : [ [ "yarn.app.mapreduce.am.env", "javaEnvForVersion" ], [ "mapreduce.map.env", "javaEnvForVersion" ], [ "mapreduce.reduce.env", "javaEnvForVersion" ], [ "yarn.nodemanager.env-whitelist", "javaWhitelistForVersion" ], [ "mapreduce.jvm.add-opens-as-default", "javaAddOpensForVersion" ] ],
+    "_translate.processingCores"  : "mapreduce.map.cpu.vcores",
+
+    /* SNAP parameters */
+    
+    "_translate.snap.tileCache"   : "calvalus.system.snap.jai.tileCacheSize",
+
+    /* Calvalus software parameters */
+    
+    "_translate.processorName"    : "calvalus.l2.operator",
+    "_translate.processorImpl"    : "calvalus.l2.implementation",
+    "_translate.processorCall"    : "calvalus.l2.commandline",
+    "_translate.condaEnv"         : "calvalus.l2.condaenv",
+    "_translate.processorAdapterType" : "calvalus.l2.processorType",
+    "_translate.calvalus"         : "calvalus.calvalus.bundle",
+    "_translate.snap"             : "calvalus.snap.bundle",
+    "_translate.processorBundles" : "calvalus.bundles",
+    
+    /* Calvalus production type parameters */
+    
+    "_translate.productionType"   : "calvalus.productionType",
+    "_translate.processorParameters" : "calvalus.l2.parameters",
+    "_translate.aggregationParameters" : "calvalus.l3.parameters",
+    "_translate.matchupParameters" : "calvalus.ma.parameters",
+    "_translate.raParameters"     : [ [ "calvalus.ra.parameters", "raParameters2RaParameters" ], [ "calvalus.regionGeometry", "raParameters2Region" ] ],
+    "_translate.qlParameters"     : "calvalus.ql.parameters",
+    "_translate.formattingParameters" : "calvalus.l3.format.parameters",
+    
+    /* Calvalus temporal selection parameters */
+    
+    "_translate.dateRanges"       : [ "calvalus.input.dateRanges", [ "calvalus.minDate", "minDateOf" ], [ "calvalus.maxDate", "maxDateOf" ] ],
+    "_translate.dateList"          : [ [ "calvalus.input.dateRanges", "listDateRange" ] ],
+    "_translate.period"          : [ [ "calvalus.input.dateRanges", "periodMinMaxDateRange" ] ],
+    "_translate.compositingPeriod" : [ [ "calvalus.input.dateRanges", "compositingPeriodDateRange" ] ],
+    "_translate.minDate"          : [ "calvalus.minDate", [ "calvalus.input.dateRanges", "minMaxDateRange" ] ],
+    "_translate.maxDate"          : [ "calvalus.maxDate", [ "calvalus.input.dateRanges", "maxMinDateRange" ] ],
+    
+    /* Calvalus spatial seletion parameters */
+    
+    "_translate.regionGeometry"   : [ "calvalus.regionGeometry", "calvalus.mosaic.regionGeometry" ],
+    "_translate.regionName"       : "calvalus.input.regionName",
+    "_translate.checkIntersection": "calvalus.input.checkintersection",
+    "_translate.inputSubsetting"  : "calvalus.input.subsetting",
+    "_translate.outputSubsetting" : "calvalus.output.subsetting",
+    "_translate.forceReprocess"   : "calvalus.processAll",
+    
+    /* Calvalus input selection parameters */
+    
+    "_translate.inputPath"        : [ "calvalus.input.pathPatterns", "mapreduce.input.fileinputformat.inputdir" ],
+    "_translate.inputInventory"   : "calvalus.input.geoInventory",
+    "_translate.catalogue"        : "calvalus.input.catalogue",
+    "_translate.productIdentifiers" : "calvalus.input.productIdentifiers",
+    "_translate.inputTable"       : [ "calvalus.input.table", [ "mapreduce.job.inputformat.class", "tableInputFormat" ] ],
+    "_translate.inputProductType" : "calvalus.input.productType",
+    "_translate.inputFormat"      : "calvalus.input.format",
+    "_translate.collection"       : "calvalus.input.collectionName",
+    "_translate.collectionName"   : "calvalus.input.geoInventory",
+    "_translate.combinations"     : "calvalus.combinations.config",
+    
+    /* Calvalus output parameters */
+    
+    "_translate.outputDir"        : [ "calvalus.output.dir", "mapreduce.output.fileoutputformat.outputdir" ],
+    "_translate.outputVersion"    : [ "calvalus.output.version" ],
+    "_translate.outputRegex"      : "calvalus.output.regex",
+    "_translate.outputReplacement": "calvalus.output.replacement",
+    "_translate.outputPattern"    : "calvalus.output.pattern",
+    "_translate.outputDateFormat" : "calvalus.output.dateFormat",
+    "_translate.outputDateElement": "calvalus.output.dateElement",
+    "_translate.outputCompression" : "calvalus.output.compression",
+    "_translate.preserveDateTree" : "calvalus.output.preserveDateTree",
+    
+    /* other parameters */
+    
+    "_translate.cloudFilterInput" : "calvalus.lc.sdr8mean",
+    "_translate.metadataTemplate" : "calvalus.metadata.template",
+    "_translate.outputBands"      : "calvalus.output.bandList",
+    "_translate.outputCrs"        : "calvalus.output.crs",
+    "_translate.outputNameFormat" : "calvalus.output.nameformat",
+    "_translate.regionBufferPixels":"calvalus.regionBufferPixels",
+    "_translate.replaceNanValue"  : "calvalus.output.replaceNanValue",
+    "_translate.sensor"           : [ "calvalus.lc.resolution", "calvalus.lc.sensor" ]
+}

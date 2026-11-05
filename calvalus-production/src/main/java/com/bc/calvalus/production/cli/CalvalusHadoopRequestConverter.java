@@ -236,7 +236,9 @@ public class CalvalusHadoopRequestConverter {
 
         // create job client for user and for access to file system
 
-        hadoopConnection.createJobClient(hadoopParameters);
+        if (hadoopConnection != null) {
+            hadoopConnection.createJobClient(hadoopParameters);
+        }
 
         // handle case of processor descriptor that is not cached, look into remote dir, re-apply updates
 
