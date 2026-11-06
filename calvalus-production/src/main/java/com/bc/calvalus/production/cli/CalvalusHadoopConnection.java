@@ -7,6 +7,9 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.util.DescriptorUtils;
 import com.bc.ceres.binding.BindingException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -39,7 +42,8 @@ import java.util.stream.Collectors;
 public class CalvalusHadoopConnection {
     private static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
     private static Logger LOG = CalvalusLogger.getLogger();
-
+    private static final TypeReference<Map<String, Object>> VALUE_TYPE_REF = new TypeReference<Map<String, Object>>() {
+    };
     private final UserGroupInformation remoteUser;
     private JobClient jobClient;
 
@@ -132,7 +136,6 @@ public class CalvalusHadoopConnection {
                     String content = readFile(jobClient.getFs(), path);
                     return content;
                 }
-                return null;
             }
             throw new NoSuchElementException(processor + " not found");
         });
@@ -181,6 +184,57 @@ public class CalvalusHadoopConnection {
             }
             LOG.fine("no processor descriptor for " + processorName + " in bundle " + bundles.split(",")[0]);
             return Collections.emptyMap();
+        });
+    }
+
+    public Map<String, Object> getRemoteProcessorDescriptor(String processor, String userName)
+            throws IOException, InterruptedException {
+        return remoteUser.doAs((PrivilegedExceptionAction<Map<String, Object>>) () -> {
+            for (String pathString : new String[] {
+                    "/calvalus/home/" + userName + "/software/" + processor + "-descriptor.json",
+                    "/calvalus/software/1.0/" + processor + "-descriptor.json"
+            }) {
+                Path path = new Path(pathString);
+                if (jobClient.getFs().exists(path)) {
+                    try (InputStream is = jobClient.getFs().open(path)) {
+                         LOG.fine("adding bundle descriptor default parameters from " + path);
+                         ObjectMapper jsonParser = new ObjectMapper();
+                         jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+                         jsonParser.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
+                        return jsonParser.readValue(is, VALUE_TYPE_REF);
+                    }
+                }
+            }
+            return null;
+        });
+    }
+
+    public Map<String, Object> getRemoteBundleDescriptor(String bundles, String processorName, String userName)
+            throws IOException, InterruptedException {
+        return remoteUser.doAs((PrivilegedExceptionAction<Map<String, Object>>) () -> {
+            for (String pathString : new String[]{
+                    "/calvalus/home/" + userName + "/software/" + bundles.split(",")[0] + "/bundle-descriptor.xml",
+                    "/calvalus/software/1.0/" + bundles.split(",")[0] + "/bundle-descriptor.xml"
+            }) {
+                Path path = new Path(pathString);
+                if (jobClient.getFs().exists(path)) {
+                    BundleDescriptor bd = readBundleDescriptor(path, jobClient.getFs());
+                    for (ProcessorDescriptor pd : bd.getProcessorDescriptors()) {
+                        if (processorName.equals(pd.getExecutableName())) {
+                            LOG.fine("adding bundle descriptor default parameters from " + path);
+                            HashMap<String, Object> map = new HashMap<>();
+                            if (pd.getJobConfiguration() != null) {
+                                for (Map.Entry<String, String> jobParameter : pd.getJobConfiguration().entrySet()) {
+                                    map.put(jobParameter.getKey(), jobParameter.getValue());
+                                }
+                            }
+                            return map;
+                        }
+                    }
+                }
+            }
+            LOG.fine("no processor descriptor for " + processorName + " in bundle " + bundles.split(",")[0]);
+            return null;
         });
     }
 

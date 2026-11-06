@@ -206,7 +206,8 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
                 compressor.put(parameter.getKey(), parameter.getValue());
             }
         }
-        zarray.put("dtype", zarrEncodingOf(byteOrder) + zarrTypeOf(band.getDataType()));
+        final String encodingPrefix = zarrTypeOf(band.getDataType());
+        zarray.put("dtype", zarrEncodingOf(byteOrder, encodingPrefix) + encodingPrefix);
         if (band.isNoDataValueSet()) {
             if (Double.isNaN(fillValue)) {
                 zarray.put("fill_value", "NaN");
@@ -224,6 +225,13 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
         return zarray;
     }
 
+    private static String zarrEncodingOf(ByteOrder byteOrder, String zarrTypeCode) {
+        if ("i1".equals(zarrTypeCode) || "u1".equals(zarrTypeCode)) {
+            return "|";
+        } else {
+            return zarrEncodingOf(byteOrder);
+        }
+    }
     private static String zarrEncodingOf(ByteOrder byteOrder) {
         if (byteOrder == ByteOrder.BIG_ENDIAN) {
             return ">";
@@ -268,6 +276,12 @@ public class MetadataCollector extends Mapper<NullWritable, NullWritable, CubeIn
                 return "f8";
             case ProductData.TYPE_INT64:
                 return "i8";
+            case ProductData.TYPE_UINT8:
+                return "u1";
+            case ProductData.TYPE_UINT16:
+                return "u2";
+            case ProductData.TYPE_UINT32:
+                return "u4";
             default:
                 throw new IllegalArgumentException("unknown dtype code " + dataType);
         }

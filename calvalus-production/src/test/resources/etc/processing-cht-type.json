@@ -1,0 +1,92 @@
+{
+    "productionType"   : "processing",
+    
+    /* variable parameters */
+
+    "outputVersion"    : "1.0",
+    "queue"            : "default",
+    "attempts"         : "3",
+    "failurePercent"   : "5",
+    "maxReducers"      : "0",
+    
+    /* type-specific parameters */
+
+    "mapreduce.job.inputformat.class" : "com.bc.calvalus.processing.hadoop.PatternBasedInputFormat",
+    "mapreduce.job.map.class" : "com.bc.calvalus.processing.l2.ProcessingMapper",
+    "mapreduce.job.outputformat.class" : "com.bc.calvalus.processing.beam.SimpleOutputFormat",
+    "mapreduce.fileoutputcommitter.marksuccessfuljobs" : "false",
+
+    /* mode dependent parameters */
+
+    "outputCompression" : "none",
+    "calvalus.system.snap.pixelGeoCoding.useTiling" : "true",
+    "calvalus.system.snap.dataio.reader.tileHeight" : "512",
+    "calvalus.system.snap.dataio.reader.tileWidth" : "512",
+    "calvalus.system.beam.pixelGeoCoding.useTiling" : "true",
+    "calvalus.system.beam.reader.tileHeight" : "64",
+    "calvalus.system.beam.reader.tileWidth" : "*",
+    "calvalus.system.snap.dataio.bigtiff.compression.type" : "LZW",
+    "calvalus.system.snap.dataio.bigtiff.tiling.height" : "128",
+    "calvalus.system.snap.dataio.bigtiff.tiling.width" : "128",
+    "calvalus.input.minWidth" : "0",
+    "calvalus.input.minHeight" : "0",
+
+    /* sizing parameters */
+
+    "timeout"                                       : "600",  /* 600000 */
+    "outputReplication"                             : "1",
+    "outputUmask"                                   : "002",
+    "processingMemory"                              : "2048",
+    "aggregationMemory"                             : "2048",
+    "snap.tileCache"                                : "1024",
+    "mapreduce.reduce.shuffle.input.buffer.percent" : "0.35",
+    "yarn.app.mapreduce.am.command-opts"            : "-Xmx384M -Djava.awt.headless=true",
+    "yarn.app.mapreduce.am.resource.mb"             : "384",
+    "dfs.blocksize"                                 : "2147483136",
+
+    /* software parameters */
+
+    "calvalus"                         : "calvalus-2.26",
+    "snap"                             : "snap-9.5cv",
+    "javaOptsHook" : "-XX:+IgnoreUnrecognizedVMOptions --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.math=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.text=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED --add-opens=java.base/sun.security.util=ALL-UNNAMED --add-opens=java.base/sun.security.x509=ALL-UNNAMED --add-opens=java.desktop/java.awt.font=ALL-UNNAMED --add-exports=java.base/sun.net.dns=ALL-UNNAMED --add-exports=java.base/sun.net.util=ALL-UNNAMED",
+
+    /* translation rules */
+
+    "_translate.productionName"   : "mapreduce.job.name",
+    "_translate.inputPath"        : [ "calvalus.input.pathPatterns", "mapreduce.input.fileinputformat.inputdir" ],
+    "_translate.inputInventory"   : "calvalus.input.geoInventory",
+    "_translate.catalogue"        : "calvalus.input.catalogue",
+    "_translate.productIdentifiers" : "calvalus.input.productIdentifiers",
+    "_translate.inputTable"       : [ "calvalus.input.table", [ "mapreduce.job.inputformat.class", "tableInputFormat" ] ],
+    "_translate.inputProductType" : "calvalus.input.productType",
+    "_translate.dateRanges"       : [ "calvalus.input.dateRanges", [ "calvalus.minDate", "minDateOf" ], [ "calvalus.maxDate", "maxDateOf" ] ],
+    "_translate.regionGeometry"   : [ "calvalus.regionGeometry", "calvalus.mosaic.regionGeometry" ],
+    "_translate.checkIntersection": "calvalus.input.checkintersection",
+    "_translate.processorName"    : "calvalus.l2.operator",
+    "_translate.processorImpl"    : "calvalus.l2.implementation",
+    "_translate.processorCall"    : "calvalus.l2.commandline",
+    "_translate.condaEnv"         : "calvalus.l2.condaenv",
+    "_translate.outputDir"        : [ "calvalus.output.dir", "mapreduce.output.fileoutputformat.outputdir" ],
+    "_translate.outputVersion"    : [ "calvalus.output.version" ],
+    "_translate.outputRegex"      : "calvalus.output.regex",
+    "_translate.outputReplacement": "calvalus.output.replacement",
+    "_translate.outputPattern"    : "calvalus.output.pattern",
+    "_translate.queue"            : "mapreduce.job.queuename",
+    "_translate.attempts"         : "mapreduce.map.maxattempts",
+    "_translate.failurePercent"   : "mapreduce.map.failures.maxpercent",
+    "_translate.maxReducers"      : [ "mapreduce.job.reduces", "calvalus.mosaic.maxReducers" ],
+    
+    "_translate.sensor"           : [ "calvalus.lc.resolution", "calvalus.lc.sensor" ],
+    
+    "_translate.timeout"          : [ [ "mapreduce.task.timeout", "seconds2Millis" ], [ "mapreduce.task.stuck.timeout-ms", "seconds2Millis" ] ],
+    "_translate.outputReplication" : "dfs.replication",
+    "_translate.outputUmask"      : "fs.permissions.umask-mode",
+    "_translate.processingMemory" : [ [ "mapreduce.map.java.opts", "javaOptsOfMem" ], [ "mapreduce.map.memory.mb", "add512" ] ],
+    "_translate.aggregationMemory" : [ [ "mapreduce.reduce.java.opts", "javaOptsOfMem" ], [ "mapreduce.reduce.memory.mb", "add512" ] ],
+    "_translate.executableMemory" : [ [ "mapreduce.map.java.opts", "javaOptsForExec" ], [ "mapreduce.map.memory.mb", "add512" ] ],
+    
+    "_translate.calvalus"         : "calvalus.calvalus.bundle",
+    "_translate.snap"             : "calvalus.snap.bundle",
+    "_translate.processorBundles" : "calvalus.bundles",
+    "_translate.processorJavaVersion" : [ [ "yarn.app.mapreduce.am.env", "javaEnvForVersion" ], [ "mapreduce.map.env", "javaEnvForVersion" ], [ "mapreduce.reduce.env", "javaEnvForVersion" ], [ "yarn.nodemanager.env-whitelist", "javaWhitelistForVersion" ], [ "mapreduce.jvm.add-opens-as-default", "javaAddOpensForVersion" ] ]
+}
