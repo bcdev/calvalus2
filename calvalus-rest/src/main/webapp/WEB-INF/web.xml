@@ -4,13 +4,7 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0">
 
-    <!--
-    replacement for ...
-    @ApplicationPath("/*")
-    public class ApplicationConfig extends Application {}
-    -->
-
-    <display-name>Calvalus REST</display-name>
+    <display-name>Calvalus REST interfaces</display-name>
     <servlet>
         <servlet-name>API</servlet-name>
         <!-- Define ServletContainer of Jersey -->
@@ -20,10 +14,10 @@
             <param-name>com.sun.jersey.config.property.packages</param-name>
             <param-value>com.bc.calvalus.api</param-value>
         </init-param>
-        <init-param>
+        <!-- <init-param>
             <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
             <param-value>true</param-value>
-        </init-param>
+        </init-param> -->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
@@ -33,11 +27,32 @@
         <url-pattern>/api/*</url-pattern>
     </servlet-mapping>
 
+    <display-name>Calvalus OGC API Processes interfaces</display-name>
+    <servlet>
+        <servlet-name>OGC</servlet-name>
+        <!-- Define ServletContainer of Jersey -->
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <!-- Define the package to search for classes -->
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>com.bc.calvalus.ogcapiprocesses</param-value>
+        </init-param>
+        <!-- <init-param>
+            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+        </init-param> -->
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <!-- Map all the URLs to the Jersey ServletContainer -->
+    <servlet-mapping>
+        <servlet-name>OGC</servlet-name>
+        <url-pattern>/ogc-api/*</url-pattern>
+    </servlet-mapping>
+
     <security-role>
         <description>Users with access to Calvalus API</description>
         <role-name>bc</role-name>
-        <role-name>test</role-name>
-        <role-name>calwps</role-name>
     </security-role>
 
     <security-constraint>
@@ -48,12 +63,34 @@
             <http-method>POST</http-method>
             <http-method>PUT</http-method>
             <http-method>DELETE</http-method>
+            <http-method>OPTIONS</http-method>
+            <http-method>HEAD</http-method>
         </web-resource-collection>
         <auth-constraint>
             <role-name>bc</role-name>
-            <role-name>test</role-name>
-            <role-name>calwps</role-name>
         </auth-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>OGC API Processes</web-resource-name>
+            <url-pattern>/ogc-api/*</url-pattern>
+            <http-method>GET</http-method>
+            <http-method>POST</http-method>
+            <http-method>PUT</http-method>
+            <http-method>DELETE</http-method>
+            <http-method>HEAD</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>bc</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>OGC API Processes</web-resource-name>
+            <url-pattern>/ogc-api/*</url-pattern>
+            <http-method>OPTIONS</http-method>
+        </web-resource-collection>
     </security-constraint>
 
     <login-config>

@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.cli.CalvalusHadoopParameters;
 import com.bc.calvalus.production.cli.CalvalusHadoopRequestConverter;
 import com.bc.calvalus.production.util.DescriptorUtils;
+import com.bc.calvalus.upload.Utils;
 import com.sun.jersey.api.NotFoundException;
 import com.bc.calvalus.production.cli.CalvalusHadoopConnection;
 import com.sun.jersey.api.client.ClientResponse;
@@ -34,7 +35,7 @@ import java.util.logging.Logger;
 @Path("processor-descriptors")
 public class ProcessorDescriptorService {
 
-    private static Logger LOG = CalvalusLogger.getLogger();
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
@@ -134,7 +135,7 @@ public class ProcessorDescriptorService {
                 final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
                 hadoopConnection.createJobClient(hadoopParameters);
                 final int pos = pkg.indexOf('@');
-                final String packagePath = pos == -1
+                final String packagePath = pos != -1
                         ? hadoopConnection.getProcessorRootDir(pkg.substring(pos + 1)) + "/" + pkg.substring(0, pos)
                         : hadoopConnection.getProcessorRootDir(null) + "/" + pkg;
                 final String content = hadoopConnection.readFile(packagePath + "/" + name + "-descriptor.json");
@@ -154,22 +155,14 @@ public class ProcessorDescriptorService {
                     final String exampleContent = hadoopConnection.readFile(packagePath + "/" + exampleFilename);
                     final String localExamplePath = serviceDir + "/" + pkg + "/" + exampleFilename;
                     try (PrintStream out = new PrintStream(localExamplePath)) {
-                        out.print(content);
+                        out.print(exampleContent);
                     }
                 }
                 return Response.ok(content).build();
             }
             // read from cache
             if (new File(localPath).exists()) {
-                final StringBuilder accu = new StringBuilder();
-                try (BufferedReader reader = new BufferedReader(new FileReader(localPath))) {
-                    String line;
-                    while ((line = reader.readLine()) !=null){
-                        accu.append(line);
-                        accu.append("\n");
-                    }
-                }
-                String content = String.valueOf(accu);
+                String content = readFileContent(localPath);
                 if (roleMatcher.matches(content)) {
                     return Response.ok(content).build();
                 }
@@ -183,6 +176,18 @@ public class ProcessorDescriptorService {
             throw new WebApplicationException(e, Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                     .entity(e.getMessage()).type(MediaType.TEXT_PLAIN).build());
         }
+    }
+
+    private static String readFileContent(String localPath) throws IOException {
+        final StringBuilder accu = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(localPath))) {
+            String line;
+            while ((line = reader.readLine()) !=null){
+                accu.append(line);
+                accu.append("\n");
+            }
+        }
+        return String.valueOf(accu);
     }
 
     private static CalvalusHadoopParameters readCalvalusConfiguration(File calvalusConfigPath) throws IOException {

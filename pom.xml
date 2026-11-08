@@ -42,7 +42,6 @@
         <module>calvalus-wps-impl</module>
         <module>calvalus-reporting</module>
         <module>calvalus-rest</module>
-        <module>calvalus-ogc-api-processes</module>
     </modules>
 
     <repositories>
@@ -365,27 +364,27 @@
                 <artifactId>jackson-databind</artifactId>
                 <!-- version>2.2.3</version -->
                 <!--<version>2.9.5</version>-->
-                <version>2.10.3</version>
+                <version>2.11.3</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>2.10.3</version>
+                <version>2.11.3</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
-                <version>2.10.3</version>
+                <version>2.11.3</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
-                <version>2.10.3</version>
+                <version>2.11.3</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-xml</artifactId>
-                <version>2.10.3</version>
+                <version>2.11.3</version>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
@@ -413,6 +412,12 @@
                 <artifactId>jsr311-api</artifactId>
                 <version>1.1.1</version>
             </dependency>
+            <!-- <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>2.1.1</version>
+            </dependency> -->
+
             <dependency>
                 <groupId>org.rauschig</groupId>
                 <artifactId>jarchivelib</artifactId>

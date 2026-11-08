@@ -2,6 +2,7 @@ package com.bc.calvalus.api;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.util.DescriptorUtils;
+import com.bc.calvalus.upload.Utils;
 import com.sun.jersey.api.NotFoundException;
 
 import javax.servlet.ServletContext;
