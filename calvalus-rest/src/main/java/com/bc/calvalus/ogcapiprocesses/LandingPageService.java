@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 @Path("/")
 public class LandingPageService {
     private static Logger LOG = CalvalusLogger.getLogger();
-    public static final String CONFORMACE_REL_TYPE = "http://www.opengis.net/def/rel/ogc/1.0/conformance";
+    public static final String CONFORMANCE_REL_TYPE = "http://www.opengis.net/def/rel/ogc/1.0/conformance";
     public static final String PROCESSED_REL_TYPE = "http://www.opengis.net/def/rel/ogc/1.0/processes";
 
     @GET
@@ -32,7 +32,7 @@ public class LandingPageService {
 
         OGCLink conformanceLink = new OGCLink();
         conformanceLink.href = uriInfo.getBaseUriBuilder().path("conformance").build().toString();
-        conformanceLink.rel = CONFORMACE_REL_TYPE;
+        conformanceLink.rel = CONFORMANCE_REL_TYPE;
         conformanceLink.type = MediaType.APPLICATION_JSON;
         conformanceLink.title = "OGC API - Processes conformance classes implemented by this server";
 
