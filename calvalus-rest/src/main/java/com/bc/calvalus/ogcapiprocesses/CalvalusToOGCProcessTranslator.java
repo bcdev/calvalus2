@@ -29,9 +29,6 @@ public class CalvalusToOGCProcessTranslator {
         for (String key: calvalusDescriptor.parameterDescriptor.keySet()) {
             CalvalusParameterDescriptor parameterEntry = calvalusDescriptor.parameterDescriptor.get(key);
             OGCInputDescription input = new OGCInputDescription();
-            // TODO hardcoded values
-            input.minOccurs = 1;
-            input.maxOccurs = 1;
 
             input.schema = createSchemaFromParameter(parameterEntry.type, parameterEntry.defaultValue);
             inputDescriptions.put(key, input);
