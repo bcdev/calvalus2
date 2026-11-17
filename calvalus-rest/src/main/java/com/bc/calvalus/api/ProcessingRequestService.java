@@ -43,7 +43,7 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Path("processing-requests")
+@Path("requests")
 public class ProcessingRequestService {
 
     private static final SimpleDateFormat ISO_MILLIS_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -232,9 +232,14 @@ public class ProcessingRequestService {
             StringBuilder accu = new StringBuilder();
             CalvalusHadoopStatusConverter statusConverter = CalvalusHadoopStatusConverter.create(hadoopConnection, "json");
             statusConverter.initialiseJobStatus(accu);
+            int count = 0;
+            int limit = Integer.parseInt(System.getProperty("calvalus.numjobslisted", "100"));
             for (JobStatus job : jobs) {
                 if (username.equals(job.getUsername()) && jobIdMatcher.matches(job.getJobId())) {
                     statusConverter.accumulateJobStatus(job.getJobId(), job, accu);
+                }
+                if (++count > limit) {
+                    break;
                 }
             }
             statusConverter.finaliseJobStatus(accu);

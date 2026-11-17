@@ -31,7 +31,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Path("processor-descriptors")
+@Path("processors")
 public class ProcessorDescriptorService {
 
     private static Logger LOG = CalvalusLogger.getLogger();
