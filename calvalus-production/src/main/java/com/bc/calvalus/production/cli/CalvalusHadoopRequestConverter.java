@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.esa.snap.core.util.io.FileUtils;
 import org.jdom.Document;
@@ -318,11 +319,24 @@ public class CalvalusHadoopRequestConverter {
 
         translateStructuredParameters(structuredParameters, parameterTranslationRules, hadoopParameters);
 
-        // make relative output directory absolute
+        // make relative directory absolute
 
-        final String outputDir = hadoopParameters.get("calvalus.output.dir");
-        if (outputDir != null && ! outputDir.startsWith("/")) {
-            hadoopParameters.set("calvalus.output.dir", "/calvalus/home/" + userName + "/" + outputDir);
+        for (String pathProperty : new String[] {
+                "calvalus.output.dir",
+                "mapreduce.output.fileoutputformat.outputdir",
+                "calvalus.input.pathPatterns",
+                "mapreduce.input.fileinputformat.inputdir"
+        }) {
+            final String pathParameter = hadoopParameters.get(pathProperty);
+            if (pathParameter != null && ! pathParameter.startsWith("/")) {
+                final String[] paths = pathParameter.split(",");
+                for (int i=0; i<paths.length; ++i) {
+                    if (! pathParameter.startsWith("/")) {
+                        paths[i] = hadoopParameters.get("dfs.user.home.dir.prefix") + "/" + userName + "/" + paths[i];
+                    }
+                }
+                hadoopParameters.set(pathProperty, String.join(",", paths));
+            }
         }
 
         // patch java options with javaOptsHook if mapreduce.jvm.add-opens-as-default is set, i.e. for Java 21
