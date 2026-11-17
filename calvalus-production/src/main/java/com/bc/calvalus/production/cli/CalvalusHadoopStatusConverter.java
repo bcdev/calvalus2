@@ -43,19 +43,20 @@ public abstract class CalvalusHadoopStatusConverter {
 
     public void accumulateJobStatus(String id, JobStatus job, StringBuilder accu) throws IOException {
         separateJobStatus(accu);
-        double progress = job != null ? job.getMapProgress() * 0.9 + job.getReduceProgress() * 0.1 : 0.0;
+        final String name = job != null ? job.getJobName() : null;
+        double progress = job != null ? job.getMapProgress() * 0.9 + job.getReduceProgress() * 0.1 : -1.0;
         if (job == null) {
-            accumulateJobStatus(id, "NOT_FOUND", progress, null, accu);
+            accumulateJobStatus(id, "NOT_FOUND", progress, null, null, accu);
         } else if (job.getRunState() == JobStatus.SUCCEEDED) {
-            accumulateJobStatus(id, "SUCCEEDED", progress, null, accu);
+            accumulateJobStatus(id, "SUCCEEDED", progress, name, null, accu);
         } else if (job.getRunState() == JobStatus.FAILED) {
-            accumulateJobStatus(id, "FAILED", progress, hadoopConnection.getDiagnostics(job.getJobID()), accu);
+            accumulateJobStatus(id, "FAILED", progress, name, hadoopConnection.getDiagnostics(job.getJobID()), accu);
         } else if (job.getRunState() == JobStatus.KILLED) {
-            accumulateJobStatus(id, "CANCELLED", progress, hadoopConnection.getDiagnostics(job.getJobID()), accu);
+            accumulateJobStatus(id, "CANCELLED", progress, name, hadoopConnection.getDiagnostics(job.getJobID()), accu);
         } else if (job.getRunState() == JobStatus.RUNNING) {
-            accumulateJobStatus(id, "RUNNING", progress, null, accu);
+            accumulateJobStatus(id, "RUNNING", progress, name, null, accu);
         } else if (job.getRunState() == JobStatus.PREP) {
-            accumulateJobStatus(id, "WAITING", progress, null, accu);
+            accumulateJobStatus(id, "WAITING", progress, name, null, accu);
         } else {
             throw new IllegalArgumentException("unknown status " + job.getRunState());
         }
@@ -70,7 +71,7 @@ public abstract class CalvalusHadoopStatusConverter {
     /**
      * Compose formatted string for status
      */
-    public abstract void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu);
+    public abstract void accumulateJobStatus(String id, String status, double progress, String name, String message, StringBuilder accu);
 
     public abstract void accumulateJobConfiguration(String id, Iterable<Map.Entry<String, String>> configuration, StringBuilder accu);
 

@@ -14,12 +14,18 @@ public class CalvalusHadoopCsvStatusConverter extends CalvalusHadoopStatusConver
     }
 
     @Override
-    public void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu) {
+    public void accumulateJobStatus(String id, String status, double progress, String name, String message, StringBuilder accu) {
         accu.append(id);
         accu.append(",");
         accu.append(status);
         accu.append(",");
-        accu.append(String.format("%5.3f", progress));
+        if (progress >= 0.0) {
+            accu.append(String.format("%5.3f", progress));
+        }
+        accu.append(",");
+        if (name != null) {
+            accu.append(name);
+        }
         if (message != null) {
             accu.append(",");
             accu.append(message);

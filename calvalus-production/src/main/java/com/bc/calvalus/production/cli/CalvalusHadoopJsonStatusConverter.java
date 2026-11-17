@@ -14,13 +14,20 @@ public class CalvalusHadoopJsonStatusConverter extends CalvalusHadoopStatusConve
     }
 
     @Override
-    public void accumulateJobStatus(String id, String status, double progress, String message, StringBuilder accu) {
+    public void accumulateJobStatus(String id, String status, double progress, String name, String message, StringBuilder accu) {
         accu.append("\"");
         accu.append(id);
         accu.append("\": {\"status\": \"");
         accu.append(status);
-        accu.append("\", \"progress\": ");
-        accu.append(String.format("%5.3f", progress));
+        if (progress >= 0.0) {
+            accu.append("\", \"progress\": ");
+            accu.append(String.format("%5.3f", progress));
+        }
+        if (name != null) {
+            accu.append(", \"name\": \"");
+            accu.append(name);
+            accu.append("\"");
+        }
         if (message != null) {
             accu.append(", \"message\": \"");
             accu.append(message);
