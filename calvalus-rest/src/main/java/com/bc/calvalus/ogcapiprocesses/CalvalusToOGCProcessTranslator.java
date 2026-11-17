@@ -1,8 +1,14 @@
 package com.bc.calvalus.ogcapiprocesses;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusParameterDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.OGCInputDescription;
@@ -31,11 +37,44 @@ public class CalvalusToOGCProcessTranslator {
             inputDescriptions.put(key, input);
         }
 
+        OGCInputDescription inputProductTypeDescription = new OGCInputDescription();
+        ObjectNode inputProductTypeDescriptionSchema = JsonNodeFactory.instance.objectNode();
+        inputProductTypeDescriptionSchema.put("type", "string");
+        ArrayNode inputTypeEnum = inputProductTypeDescriptionSchema.putArray("enum");
+
         for (String inputProductType: calvalusDescriptor.inputProductTypes) {
-            OGCInputDescription inputDescription = new OGCInputDescription();
-            inputDescription.schema = createSchemaFromInputProductType(inputProductType);
-            inputDescriptions.put("inputProduct", inputDescription);
+            inputTypeEnum.add(inputProductType);
         }
+        inputProductTypeDescriptionSchema.put("default", calvalusDescriptor.inputProductTypes.get(0));
+        inputProductTypeDescription.schema =  inputProductTypeDescriptionSchema;
+        inputDescriptions.put("productType", inputProductTypeDescription);
+
+        // TODO remove temporary hardcoded inputs
+        ObjectNode outputPathSchema = JsonNodeFactory.instance.objectNode();
+        outputPathSchema.put("type", "string");
+        OGCInputDescription outputPathDescription = new OGCInputDescription();
+        outputPathDescription.schema = outputPathSchema;
+        // inputDescriptions.put("outputPath", outputPathDescription);
+        inputDescriptions.put("outputDir", outputPathDescription);
+
+        ObjectNode inputPathSchema = JsonNodeFactory.instance.objectNode();
+        inputPathSchema.put("type", "string");
+        OGCInputDescription inputPathDescription = new OGCInputDescription();
+        inputPathDescription.schema = outputPathSchema;
+        inputDescriptions.put("inputPath", inputPathDescription);
+
+        ObjectNode inputGeometrySchema = JsonNodeFactory.instance.objectNode();
+        ObjectNode inputGeometryItemType = JsonNodeFactory.instance.objectNode();
+        inputGeometryItemType.put("type", "number");
+        inputGeometrySchema.put("type", "array");
+        inputGeometrySchema.set("items", inputGeometryItemType);
+        inputGeometrySchema.put("minItems", 4);
+        inputGeometrySchema.put("maxItems", 4);
+        inputGeometrySchema.put("format", "bbox");
+        inputGeometrySchema.put("x-ui-widget", "map");
+        OGCInputDescription inputGeometryDescription = new OGCInputDescription();
+        inputGeometryDescription.schema = inputGeometrySchema;
+        inputDescriptions.put("inputGeometry", inputGeometryDescription);
 
         // TODO still a dummy implementation
         OGCOutputDescription outputDescription = new OGCOutputDescription();
@@ -94,15 +133,31 @@ public class CalvalusToOGCProcessTranslator {
         String schemaType = convertCalvalusToOgcSchemaType(type);
         schema.put("type", schemaType);
         if (defaultValue != null) {
-            schema.put("default", defaultValue);
+            schema.set("default", convert(TextNode.valueOf(defaultValue), schemaType));
         }
 
         return schema;
     }
 
-    // TODO empty for now
-    private ObjectNode createSchemaFromInputProductType(String productType) {
-        ObjectNode schema = JsonNodeFactory.instance.objectNode();
-        return schema;
+    public static JsonNode convert(JsonNode value, String type) {
+        if (value == null || value.isNull() || type == null) {
+            return value;
+        }
+        try {
+            switch (type) {
+                case "integer":
+                    return IntNode.valueOf(Integer.parseInt(value.asText()));
+                case "number":
+                    return DoubleNode.valueOf(Double.parseDouble(value.asText()));
+                case "boolean":
+                    return BooleanNode.valueOf(Boolean.parseBoolean(value.asText()));
+                default:
+                    return value;
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                "Default value '" + value.asText() + "' is not valid for type '" + type + "'", e
+            );
+        }
     }
 }

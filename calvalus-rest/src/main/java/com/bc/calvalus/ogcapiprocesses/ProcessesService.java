@@ -3,6 +3,9 @@ package com.bc.calvalus.ogcapiprocesses;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.ogcapiprocesses.model.OGCProcessDescription;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusFullProcessorDescriptor;
+import com.bc.calvalus.production.cli.CalvalusHadoopConnection;
+import com.bc.calvalus.production.cli.CalvalusHadoopParameters;
+import com.bc.calvalus.production.cli.CalvalusHadoopRequestConverter;
 import com.bc.calvalus.production.util.DescriptorUtils;
 import com.bc.calvalus.upload.Utils;
 import com.fasterxml.jackson.core.JsonParser;
@@ -10,10 +13,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.jersey.api.NotFoundException;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RunningJob;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -28,6 +34,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +46,7 @@ public class ProcessesService {
     private static Logger LOG = CalvalusLogger.getLogger();
     private static final String PACKAGE_SEPARATOR = "~";
     private static final CalvalusToOGCProcessTranslator CALVALUS_TO_OGC_PROCESS_TRANSLATOR = new CalvalusToOGCProcessTranslator();
+    private static final String PRODUCTION_TYPE_DIR = "production-types";
 
     @OPTIONS
     public Response options() {
@@ -229,6 +239,74 @@ public class ProcessesService {
                 .header("Access-Control-Allow-Credentials", "true")
                 .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
                 .header("Access-Control-Max-Age", "1209600")
+                            .build());
+        }
+    }
+
+    @POST
+    @Path("/{packageTildeName}/execution")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public Response submit(
+            @PathParam("packageTildeName") String pkgAndName,
+        @Context HttpServletRequest request,
+        //@Context SecurityContext securityContext,
+        @Context ServletContext context,
+        String requestContent
+    ) {
+        try {
+            final String username = Utils.getUserName(request, context);
+            final String[] userRoles = Utils.getUserRoles(request);
+            final String catalinaHome = System.getProperty("catalina.home");
+            final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
+            final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(username, userRoles);
+            // TODO
+            final String requestUrl = request.getRequestURL().toString();
+            final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
+
+            final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(
+                    hadoopConnection,
+                    username,
+                    roleMatcher,
+                    catalinaHome + "/content/" + PRODUCTION_TYPE_DIR,
+                    catalinaHome + "/content/" + serviceName
+            );
+
+            // read Calvalus configuration
+            final File calvalusConfigPath = new File(catalinaHome + "/content/" + serviceName + "/calvalus.properties");
+            final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
+
+            Map<String, Object> parsedRequestTl = requestConverter.parseRequest(requestContent);
+            Map<String, Object> parsedRequest = new HashMap<>();
+
+            // extract parameters from "inputs" and "outputs" fields
+            parsedRequest.putAll(((Map<String, Object>) parsedRequestTl.get("inputs")));
+            parsedRequest.putAll(((Map<String, Object>) parsedRequestTl.get("inputs")));
+            parsedRequest.put("productionType", "processing");
+
+
+            final CalvalusHadoopParameters hadoopParameters = requestConverter.collectParameters(
+                    parsedRequest,
+                    null,
+                    calvalusConfig
+            );
+
+            // convert into JobConf, install processor packages, prepare output directory, and submit job
+            final JobConf jobConf = requestConverter.createJob(hadoopParameters, null);
+            if (Boolean.parseBoolean(jobConf.get("overwrite", "false"))) {
+                hadoopConnection.deleteOutputDir(jobConf);
+            }
+            final RunningJob runningJob = hadoopConnection.submitJob(jobConf);
+
+            // return job ID
+            LOG.info("Production successfully ordered with ID " + runningJob.getID());
+            return Response.ok(String.valueOf(runningJob.getID()) + "\n").build();
+
+        } catch (Exception e) {
+            LOG.log(Level.SEVERE, e.getMessage(), e);
+            throw new WebApplicationException(e,
+                    Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                            .entity(e.getMessage())
+                            .type(MediaType.TEXT_PLAIN)
                             .build());
         }
     }
