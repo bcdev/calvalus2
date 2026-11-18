@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 @Path("processes")
 public class ProcessesService {
 
-    private static Logger LOG = CalvalusLogger.getLogger();
+    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String PACKAGE_SEPARATOR = "~";
     private static final CalvalusToOGCProcessTranslator CALVALUS_TO_OGC_PROCESS_TRANSLATOR = new CalvalusToOGCProcessTranslator();
     private static final String PRODUCTION_TYPE_DIR = "production-types";
