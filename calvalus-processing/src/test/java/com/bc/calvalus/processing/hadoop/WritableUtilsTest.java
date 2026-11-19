@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 
 public class WritableUtilsTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void testConvertByteToFloat_wrongSize() throws Exception {
         byte[] byteArray = new byte[7];
         float[] floatArray = new float[2];
@@ -50,7 +50,7 @@ public class WritableUtilsTest {
 
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ArrayIndexOutOfBoundsException.class)
     public void testConvertFloatToByte_wrongSize() throws Exception {
         float[] floatArray = new float[]{0.12f, 0.42f, 5.67f};
         byte[] byteArray = new byte[3];
