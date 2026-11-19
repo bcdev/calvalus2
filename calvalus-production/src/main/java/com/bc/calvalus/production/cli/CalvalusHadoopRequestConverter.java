@@ -353,8 +353,8 @@ public class CalvalusHadoopRequestConverter {
         return hadoopParameters;
     }
 
-    private static Pattern ABSOLUTE_PATH_PATTERN = Pattern.compile("^(/|[a-zA-Z0-9_-]+://)");
-    private static boolean isRelativePath(String pathParameter) {
+    private static Pattern ABSOLUTE_PATH_PATTERN = Pattern.compile("^(?:/|[a-zA-Z0-9_-]+://).*");
+    static boolean isRelativePath(String pathParameter) {
         return ! ABSOLUTE_PATH_PATTERN.matcher(pathParameter).matches();
     }
 
