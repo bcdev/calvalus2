@@ -113,7 +113,8 @@ public class OrderL3ProductionView extends OrderProductionView {
         l3ConfigForm.compositingPeriodLength.setValue(30);
 
         outputParametersForm = new OutputParametersForm(portalContext);
-        outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "NetCDF4", "GeoTIFF", "BigGeoTiff");
+        outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "NetCDF4", "NetCDF4-SEAGrid",
+                                                       "GeoTIFF", "BigGeoTiff");
 
         l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         updateTemporalParameters(productSetFilterForm.getValueMap());
