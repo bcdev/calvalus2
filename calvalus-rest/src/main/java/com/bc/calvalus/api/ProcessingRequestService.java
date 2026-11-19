@@ -37,6 +37,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -227,7 +228,12 @@ public class ProcessingRequestService {
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
             requestConverter.collectParameters(null, null, calvalusConfig);
             final JobStatus[] jobs = hadoopConnection.getAllJobs();
-
+            Arrays.sort(jobs, new Comparator<JobStatus>() {
+                @Override
+                public int compare(JobStatus job1, JobStatus job2) {
+                    return job2.getJobID().compareTo(job1.getJobID());
+                }
+            });
             // collect status entries
             StringBuilder accu = new StringBuilder();
             CalvalusHadoopStatusConverter statusConverter = CalvalusHadoopStatusConverter.create(hadoopConnection, "json");
@@ -237,9 +243,9 @@ public class ProcessingRequestService {
             for (JobStatus job : jobs) {
                 if (username.equals(job.getUsername()) && jobIdMatcher.matches(job.getJobId())) {
                     statusConverter.accumulateJobStatus(job.getJobId(), job, accu);
-                }
-                if (++count > limit) {
-                    break;
+                    if (++count > limit) {
+                        break;
+                    }
                 }
             }
             statusConverter.finaliseJobStatus(accu);
