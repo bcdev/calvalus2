@@ -58,7 +58,7 @@ public class TableInputFormat extends InputFormat {
         final String inputTableContent = configuration.get(JobConfigNames.CALVALUS_INPUT_TABLE_CONTENT);
         final String pathString = configuration.get(JobConfigNames.CALVALUS_INPUT_TABLE);
         if (inputTableContent != null) {
-            readTableContent(inputTableContent, configuration, splits);
+            readTableContent("<tableContent>" + inputTableContent + "</tableContent>", configuration, splits);
         } else if (pathString != null) {
             final Path inputTablePath = new Path(pathString);
             readTableFile(inputTablePath, configuration, splits);
