@@ -30,8 +30,8 @@ public class WritableUtils {
      */
     public static void convertByteToFloat(byte[] byteArray, float[] floatArray) {
         //Assert.argument(4 * floatArray.length == byteArray.length, "4 * floatArray.length == byteArray.length");
-        final int stop = Math.min(floatArray.length, byteArray.length / 4);
-        for (int i = 0; i < stop; i++) {
+        //final int stop = Math.min(floatArray.length, byteArray.length / 4);
+        for (int i = 0; i < floatArray.length; i++) {
             floatArray[i] = WritableComparator.readFloat(byteArray, i * 4);
         }
     }

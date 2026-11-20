@@ -112,19 +112,22 @@ public class PatternBasedInputFormat extends InputFormat {
     /**
      * Maps each input file to a single (file) split.
      * <p/>
-     * Input files are given by the configuration parameter
-     * {@link com.bc.calvalus.processing.JobConfigNames#CALVALUS_INPUT_PATH_PATTERNS}. Its value is expected to
-     * be a comma-separated list of file path patterns (HDFS URLs). These patterns can contain dates and region names.
-     *
-     * Alternatively, inputs are specified by geoInventory, dateRange, and regionGeoemtry.
-     *
-     * Alternatively, inputs are specified by catalogue, searchurl, searchxpath:
-     *     "catalogue"        : "provider=mundi&collection=Sentinel2&type=MSIL1C&level=L1C",
-     *    "catalogue.mundi.searchurl"     : "https://mundiwebservices.com/acdc/catalog/proxy/search/${collection}/opensearch?q=(sensingStartDate:[${start}T00:00:00Z%20TO%20${stop}T23:59:59Z]%20AND%20footprint:"Intersects(${polygon})")&processingLevel=${level}&startIndex=${offset}&maxRecords=${count}",
-     *    "catalogue.mundi.searchxpath" : "concat('s3a:/',substring-after(/a:feed/a:entry/a:link[@rel="enclosure"]/@href,'https://obs.eu-de.otc.t-systems.com'))",
-     *
-     *    "dateRanges"       : "[2018-04-24:2018-04-24]",
-     *    "regionGeometry"   : "POLYGON((10.624552319335976 45.58429059451441,10.719458959961003 45.58525169665108,10.71877231445319 45.55964882024322,10.625238964843788 45.5586872798687,10.624552319335976 45.58429059451441))",
+     * Input files are given by one of the following parameters or parameter combinations
+     * calvalus.input.pathPatterns: a comma-separated list of file path patterns (HDFS URLs). These patterns can contain dates and region names.
+     *   "calvalus.input.pathPatterns": "/calvalus/projects/hroc/l3-noqi-v01/6med/${yyyy}-${MM}/${dd}-33T/.*_P1D_CMEMS_HROC_L3-optics_.*.nc",
+     * calvalus.input.productIdentifiers: a comma-separated list of paths that shall not be interpreted by the client
+     *   "calvalus.input.productIdentifiers": ""s3a://eodata/Sentinel-2/MSI/L1C_N0500/2020/03/26/S2A_MSIL1C_20200326T100021_N0500_R122_T33UWA_20230612T174844.SAFE",
+     * geoInventory, dateRanges, and regionGeometry: using the Calvalus geo-inventory
+     *   "geoInventory": "/calvalus/geoInventory/OLCI_FR_L1_v2",
+     *   "dateRanges": "[2018-04-24:2018-04-24]",
+     *   "regionGeometry": "POLYGON((...))",
+     *   and optional productIdentifiers to filter file names
+     * catalogue, searchurl, searchjpath/searchxpath: using an OpenSearch or OData catalogue
+     *   "catalogue": "provider=mundi&collection=Sentinel2&type=MSIL1C&level=L1C",
+     *   "catalogue.mundi.searchurl": "https://mundiwebservices.com/acdc/catalog/proxy/search/${collection}/opensearch?q=(sensingStartDate:[${start}T00:00:00Z%20TO%20${stop}T23:59:59Z]%20AND%20footprint:"Intersects(${polygon})")&processingLevel=${level}&startIndex=${offset}&maxRecords=${count}",
+     *   "catalogue.mundi.searchxpath": "concat('s3a:/',substring-after(/a:feed/a:entry/a:link[@rel="enclosure"]/@href,'https://obs.eu-de.otc.t-systems.com'))",
+     *   "dateRanges": "[2018-04-24:2018-04-24]",
+     *   "regionGeometry": "POLYGON((10.624552319335976 45.58429059451441,10.719458959961003 45.58525169665108,10.71877231445319 45.55964882024322,10.625238964843788 45.5586872798687,10.624552319335976 45.58429059451441))",
      */
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
@@ -357,13 +360,29 @@ public class PatternBasedInputFormat extends InputFormat {
 
         } else if (! productIdentifiers.isEmpty()) {
 
-            // TODO This is an abuse of calvalus.input.productIdentifiers for a path list that is not checked on the client side
+            // S3 urls that cannot or shall not be checked/accessed at the client side
+
             Collection<String> orderedProductIdentifiers = conf.getStringCollection(
                     JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS
             );
             splits = new ArrayList<>();
+            List<DateRange> dateRanges = null;
+            // loop over identifiers is outside to allow date ranges for some of them while others are absolute
             for (String identifier : orderedProductIdentifiers) {
-                splits.add(new ProductSplit(new Path(identifier), -1, null));
+                if (InputPathResolver.containsDateVariables(identifier)) {
+                    if (dateRanges == null) {
+                        dateRanges = createDateRangeList(dateRangesString);
+                    }
+                    for (DateRange dateRange : dateRanges) {
+                        List<String> identifiers = getInputPatterns(identifier, dateRange.getStartDate(),
+                                                                    dateRange.getStopDate(), regionName);
+                        for (String dateIdentifier : identifiers) {
+                            splits.add(new ProductSplit(new Path(dateIdentifier), -1, null));
+                        }
+                    }
+                } else {
+                    splits.add(new ProductSplit(new Path(identifier), -1, null));
+                }
             }
 
         } else {
@@ -493,17 +512,18 @@ public class PatternBasedInputFormat extends InputFormat {
 
         // Do not strip "N0500" from pathReplacement:
         // pathReplacement = [...]/L2A/[...] (no N0500 in pathReplacement)
-        // n05xxswitchDate = 20231213T081331; input = S2A_[...]_20220129[...]_N0400_[...] (The baseline is not N05xx)
         // n05xxswitchDate = 20231213T081331; input = S2B_[...]_20221115[...]_N0511[...] (acquisition is before n05xxswitchDate)
         if (! pathReplacement.contains("_N0500")
                 || n05xxSwitchdate == null
                 || acquisitionDateReplacement == null
-                || ! inputBaseLineIsN05xx(productArchivePath)
-                || inputAcquisitionIsBeforeSwitchDate(matcher.replaceAll(acquisitionDateReplacement), n05xxSwitchdate)
+                || (inputBaseLineIsN05xx(productArchivePath)
+                    && inputAcquisitionIsBeforeSwitchDate(matcher.replaceAll(acquisitionDateReplacement), n05xxSwitchdate)
+                )
         ) {
             productArchivePath = matcher.replaceAll(pathReplacement);
         } else {
             // Do strip "N0500":
+            // n05xxswitchDate = 20231213T081331; input = S2A_[...]_20220129[...]_N0400_[...] (The baseline is not N05xx)
             // pathReplacement = [...]/L2A_N0500/[...]
             // n05xxswitchDate = 20231213T081331;
             // input = S2A_[...]_20260103[...]_N0510[...]

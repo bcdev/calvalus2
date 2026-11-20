@@ -47,6 +47,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class CalvalusHadoopRequestConverter {
 
@@ -328,10 +329,10 @@ public class CalvalusHadoopRequestConverter {
                 "mapreduce.input.fileinputformat.inputdir"
         }) {
             final String pathParameter = hadoopParameters.get(pathProperty);
-            if (pathParameter != null && ! pathParameter.startsWith("/")) {
+            if (pathParameter != null && isRelativePath(pathParameter)) {
                 final String[] paths = pathParameter.split(",");
                 for (int i=0; i<paths.length; ++i) {
-                    if (! pathParameter.startsWith("/")) {
+                    if (isRelativePath(paths[i])) {
                         paths[i] = hadoopParameters.get("dfs.user.home.dir.prefix") + "/" + userName + "/" + paths[i];
                     }
                 }
@@ -350,6 +351,11 @@ public class CalvalusHadoopRequestConverter {
         }
 
         return hadoopParameters;
+    }
+
+    private static Pattern ABSOLUTE_PATH_PATTERN = Pattern.compile("^(?:/|[a-zA-Z0-9_-]+://).*");
+    static boolean isRelativePath(String pathParameter) {
+        return ! ABSOLUTE_PATH_PATTERN.matcher(pathParameter).matches();
     }
 
     /**

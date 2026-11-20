@@ -38,13 +38,14 @@ public class JsonProductionRequestConverterTest {
     public void testConvertJsonRequestWithXml() throws Exception {
         String requestPath = getClass().getResource("processing-request-with-xml-parameters.json").getPath();
         final String jsonRequest = CalvalusHadoopRequestConverter.jsonifyRequest(requestPath);
-        assertTrue(jsonRequest.contains("<parameters>"));
+        assertTrue(jsonRequest.contains("\"parameters\""));
+        assertFalse(jsonRequest.contains("<parameters>"));
         assertTrue(jsonRequest.contains("NUM_TILE_ROWS"));
     }
 
     @Test
     public void testConvertParameters() throws IOException, InterruptedException, InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-        final String descriptorAndProductionTypeDir = "calvalus-production/src/test/resources/etc";
+        final String descriptorAndProductionTypeDir = "src/test/resources/etc";
         final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher("testuser", new String[] { "bc" });
         final CalvalusHadoopRequestConverter converter = new CalvalusHadoopRequestConverter(
                 null,
