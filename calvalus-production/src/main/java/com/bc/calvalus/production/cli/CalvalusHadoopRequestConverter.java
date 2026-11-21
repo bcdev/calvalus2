@@ -406,15 +406,26 @@ public class CalvalusHadoopRequestConverter {
      * @param update
      * @return
      */
-    private static void mergeFeatures(Map<String, Object> features, Map<String, Object> update) {
+    static void mergeFeatures(Map<String, Object> features, Map<String, Object> update) {
         for (Map.Entry<String, Object> entry : update.entrySet()) {
             // recursive call only if key is in both and both are maps
             // else either add or override with update
-            if (features.containsKey(entry.getKey())
-                    && features.get(entry.getKey()) instanceof Map
-                    && entry.getValue() instanceof Map)
-            {
-                mergeFeatures((Map<String, Object>) features.get(entry.getKey()), (Map<String, Object>) entry.getValue());
+            if (features.containsKey(entry.getKey())) {
+                if (features.get(entry.getKey()) instanceof Map && entry.getValue() instanceof Map) {
+                    mergeFeatures((Map<String, Object>) features.get(entry.getKey()), (Map<String, Object>) entry.getValue());
+                } else if (features.get(entry.getKey()) instanceof List && entry.getValue() instanceof List) {
+                    List<Map<String, Object>> featureList = (List<Map<String, Object>>) features.get(entry.getKey());
+                    List<Map<String, Object>> updateList = (List<Map<String, Object>>) entry.getValue();
+                    for (int i=0; i<updateList.size(); ++i) {
+                        if (i < featureList.size()) {
+                            mergeFeatures(featureList.get(i), updateList.get(i));
+                        } else {
+                            featureList.add(updateList.get(i));
+                        }
+                    }
+                } else {
+                    features.put(entry.getKey(), entry.getValue());
+                }
             } else {
                 features.put(entry.getKey(), entry.getValue());
             }
