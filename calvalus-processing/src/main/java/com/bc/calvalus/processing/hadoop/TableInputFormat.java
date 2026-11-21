@@ -13,11 +13,17 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -46,9 +52,86 @@ public class TableInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
 
+        List<InputSplit> splits = new ArrayList<InputSplit>();
         // parse request
         Configuration configuration = job.getConfiguration();
-        final Path inputTablePath = new Path(configuration.get(JobConfigNames.CALVALUS_INPUT_TABLE));
+        final String inputTableContent = configuration.get(JobConfigNames.CALVALUS_INPUT_TABLE_CONTENT);
+        final String pathString = configuration.get(JobConfigNames.CALVALUS_INPUT_TABLE);
+        if (inputTableContent != null) {
+            readTableContent("<tableContent>" + inputTableContent + "</tableContent>", configuration, splits);
+        } else if (pathString != null) {
+            final Path inputTablePath = new Path(pathString);
+            readTableFile(inputTablePath, configuration, splits);
+        } else {
+            throw new IllegalArgumentException(
+                    "either " + JobConfigNames.CALVALUS_INPUT_TABLE
+                            + " or " + JobConfigNames.CALVALUS_INPUT_TABLE_CONTENT
+                            + " expected for table input format");
+        }
+        return splits;
+    }
+
+    private static void readTableContent(String inputTableContent, Configuration configuration, List<InputSplit> splits) throws IOException {
+        try {
+            // parse content
+            Reader reader = new BufferedReader(new StringReader(inputTableContent));
+            SAXBuilder saxBuilder = new SAXBuilder();
+            Document document = saxBuilder.build(reader);
+            Element root = document.getRootElement();
+            // handle list of records
+            final List<Element> entries = root.getChildren();
+            for (Element entry : entries) {
+                // collect parameters
+                List<Element> fields = entry.getChildren();
+                final String[] parameters = new String[fields.size() * 2 - 2];
+                int j = 0;
+                String input = null;
+                for (Element f : fields) {
+                    if ("input".equals(f.getName())) {
+                        input = f.getText();
+                    } else {
+                        parameters[j++] = f.getName();
+                        parameters[j++] = f.getText();
+                    }
+                }
+                // determine path, length, hosts
+                final Path path = new Path(input);
+                final long size;
+                final String[] hosts;
+                if (input.startsWith("s3a:")) {
+                    // check access to file on server side only
+                    size = -1;
+                    hosts = null;
+                } else {
+                    // check access etc. on client side and skip missing and empty files
+                    final FileSystem fileSystem = path.getFileSystem(configuration);
+                    FileStatus status;
+                    try {
+                        status = fileSystem.getFileStatus(path);
+                    } catch (FileNotFoundException e) {
+                        status = null;
+                    }
+                    if (status == null) {
+                        LOG.warning("cannot find input " + input + ". skipping");
+                        continue;
+                    }
+                    BlockLocation[] locations = fileSystem.getFileBlockLocations(status, 0, status.getLen());
+                    if (locations == null || locations.length == 0) {
+                        LOG.warning("cannot find hosts of input " + input + ". skipping");
+                        continue;
+                    }
+                    size = status.getLen();
+                    hosts = locations[0].getHosts();
+                }
+                // add parameterized split and count
+                splits.add(new ParameterizedSplit(path, size, hosts, parameters));
+            }
+        } catch (JDOMException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private static void readTableFile(Path inputTablePath, Configuration configuration, List<InputSplit> splits) throws IOException {
         final FileSystem tableFS = inputTablePath.getFileSystem(configuration);
         final BufferedReader in = new BufferedReader(new InputStreamReader(tableFS.open(inputTablePath)));
         String headLine;
@@ -59,9 +142,8 @@ public class TableInputFormat extends InputFormat {
             }
         } while (headLine.startsWith("#"));
         final String[] attributes = headLine.split("[ \t]+");
-        List<InputSplit> splits = new ArrayList<InputSplit>();
-        int fileCounter = 0;
         boolean irregularTableDetected = false;
+        int fileCounter = 0;
         while (true) {
             final String line = in.readLine();
             if (line == null) {
@@ -123,7 +205,6 @@ public class TableInputFormat extends InputFormat {
             throw new IOException("no splits found in table " + inputTablePath.getName());
         }
         LOG.info(splits.size() + " splits added from table " + inputTablePath.getName() + " (from " + fileCounter + " listed).");
-        return splits;
     }
 
     /**
