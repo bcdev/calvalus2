@@ -196,8 +196,22 @@ In addition to either a plain or a leveled cube a time-chunked cube can be gener
 - Reducing maxReducers from the default 16 to 8 is reasonable for this test as there is a single time step only. The number of reducers needs to be large enought not to overload a single reducer to collect its part of the output.
       
 ### Credentials
+  
+The HDFS-based Calvalus cluster at BC as hdfs://calvalus as its primary file system. It can be read and written according to the file system credentials that distinguishes users, groups, and optionally ACLs. Calvalus clusters in the cloud use a primary file system hosted on a bucket on S3. The bucket and the credentials for that are commonly stored in the calvalus configuration used by the processing system instance. If a different bucket is the target for the created data cube then the credentials for that cube must be provided either by the request or by the calvalus configuration for the Calvalus cluster.
 
-TBD
+For the cht client, the default location of this configuration is ~/.calvalus/calvalus.config . It can be overridden by an environment variable CALVALUS_CONFIG in the my script of the processing system instance. For the calvalus REST client the location of the calvalus configuration is in the content directory of the proxy server.
+
+The configuration for a target bucket s3://water-services on AWS is
+
+```text
+fs.s3a.bucket.water-services.endpoint = s3.amazonaws.com
+fs.s3a.bucket.water-services.endpoint.region = eu-central-1
+fs.s3a.bucket.water-services.access.key = ...
+fs.s3a.bucket.water-services.secret.key = ...
+fs.s3a.bucket.water-services.connection.ssl.enabled = false
+```
+
+This either needs to be provided with the request, or it is part of the calvalus configuration in addition to the credentials for the primary file system bucket, e.g. s3://cyano .
 
 ### Understanding cube generation: descriptor and processors
 
