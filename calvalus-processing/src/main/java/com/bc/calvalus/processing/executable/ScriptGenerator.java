@@ -90,8 +90,8 @@ public class ScriptGenerator {
     public void addResource(Resource resource) {
         String path = resource.getPath();
         String name = new File(path).getName();
-        CalvalusLogger.getLogger().info("Adding resource " + name);
         String processedName = createProcessedResourceName(name, executableName);
+        CalvalusLogger.getLogger().info("Adding resource " + name + " as " + processedName);
         if (name.endsWith(VM_SUFFIX)) {
             resourceEngine.processAndAddResource(processedName, resource);
         } else {
@@ -161,7 +161,9 @@ public class ScriptGenerator {
     }
 
     private static String createProcessedResourceNameImpl(String name, String executable) {
-        name = name.substring(executable.length() + 1); // strip executable name from the front
+        if (executable != null && name.startsWith(executable + "-")) {
+            name = name.substring(executable.length() + 1); // strip executable name from the front
+        }
         if (name.endsWith(VM_SUFFIX)) {
             name = name.substring(0, name.length() - VM_SUFFIX.length()); // strip .vm from the end
         }

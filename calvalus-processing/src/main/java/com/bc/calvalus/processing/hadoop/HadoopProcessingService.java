@@ -404,7 +404,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().endsWith(".jar");
+                return isJar(path);
             }
         });
         for (FileStatus fileStatus : fileStatuses) {
@@ -420,7 +420,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().endsWith(".jar");
+                return isJar(path);
             }
         });
         for (FileStatus fileStatus : fileStatuses) {
@@ -655,19 +655,24 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     public static boolean isLib(Path libPath) {
-        String filename = libPath.getName();
+        final String filename = libPath.getName();
         return filename.endsWith(".so") || filename.contains(".so.") || filename.equals("VERSION.txt");
     }
 
+    public static boolean isJar(Path path) {
+        final String filename = path.getName();
+        return filename.endsWith(".jar");
+    }
+
     public static void addBundleScripts(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
-        final FileStatus[] libs = fs.listStatus(bundlePath, new PathFilter() {
+        final FileStatus[] scripts = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return ! isLib(path) && ! isArchive(path);
+                return ! isLib(path) && ! isArchive(path) && ! isJar(path);
             }
         });
-        for (FileStatus lib : libs) {
-            URI uri = fs.makeQualified(lib.getPath()).toUri();
+        for (FileStatus script : scripts) {
+            URI uri = fs.makeQualified(script.getPath()).toUri();
             DistributedCache.addCacheFile(uri, conf);
         }
     }

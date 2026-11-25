@@ -18,8 +18,10 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin;
+import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
@@ -28,10 +30,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
+
+import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -98,13 +103,48 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
                 }
             }
         }
+
+        // apply velocity to operator-*.vm files
+        final Configuration conf = getMapContext().getConfiguration();
+        final String scriptFiles = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
+        if (scriptFiles != null && scriptFiles.contains(".vm")) {
+            final File cwd = new File(".");
+            String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+            String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
+            Rectangle productRectangle = null;
+            Rectangle inputRectangle = getInputRectangle();
+            if (inputRectangle != null) {
+                Product inputProduct = getInputProduct();
+                if (inputProduct != null) {
+                    productRectangle = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+                } else {
+                    productRectangle = inputRectangle;
+                }
+            }
+            ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, null);
+            VelocityContext velocityContext = scriptGenerator.getVelocityContext();
+            velocityContext.put("system", System.getProperties());
+            velocityContext.put("configuration", conf);
+            velocityContext.put("parameterText", processorParameters);
+            velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
+
+            velocityContext.put("inputPath", inputPath);
+            velocityContext.put("inputFile", inputFile);
+            velocityContext.put("inputRectangle", getInputRectangle());
+            velocityContext.put("productRectangle", productRectangle);
+            velocityContext.put("outputPath", getOutputDirectoryPath());
+            velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+            velocityContext.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(getLogger()));
+            scriptGenerator.addScriptResources(conf, "");
+            scriptGenerator.writeScriptFiles(cwd, false);
+        }
+
         // bookkeeping of bytes read
         if (getMapContext().getInputSplit() instanceof FileSplit) {
             FileSplit fileSplit = (FileSplit) getMapContext().getInputSplit();
             getMapContext().getCounter("Direct File System Counters", "FILE_SPLIT_BYTES_READ").setValue(fileSplit.getLength());
         }
         //
-        Configuration conf = getConfiguration();
         final String user = conf.get("mapreduce.job.user.name");
         final String condaenvName = conf.get("calvalus.l2.condaenv");
         final String processorName = conf.get("calvalus.l2.operator");

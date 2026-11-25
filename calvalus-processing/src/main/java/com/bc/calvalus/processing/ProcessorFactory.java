@@ -247,7 +247,8 @@ public class ProcessorFactory {
             @Override
             public boolean accept(Path path) {
                 String filename = path.getName();
-                return (filename.startsWith("common-") || filename.startsWith(processorName + "-") || processorType == ProcessorType.PYTHON) && !isArchive(path);
+                return  (filename.startsWith("common-") || filename.startsWith(processorName + "-") || processorType == ProcessorType.PYTHON)
+                        && !isArchive(path) && !HadoopProcessingService.isLib(path) && !HadoopProcessingService.isJar(path);
             }
         });
         String[] processorFiles = new String[processorStatuses.length];
