@@ -40,9 +40,10 @@ public class CalvalusToOGCProcessTranslator {
         OGCInputDescription inputProductDescription = new OGCInputDescription();
         inputProductDescription.schema = productInputSchema();
         inputDescriptions.put("inputProduct", inputProductDescription);
-        //for (String inputProductType: calvalusDescriptor.inputProductTypes) {
-            // inputTypeEnum.add(inputProductType);
-        //}
+
+        OGCInputDescription outputDirDescription = new OGCInputDescription();
+        outputDirDescription.schema = outputDirInputSchema();
+        inputDescriptions.put("outputDir", outputDirDescription);
 
         // TODO still a dummy implementation
         OGCOutputDescription outputDescription = new OGCOutputDescription();
@@ -149,6 +150,23 @@ public class CalvalusToOGCProcessTranslator {
             throw new RuntimeException(e);
         }
 
+        return schema;
+    }
+
+    /**
+     * outputDir is a parameter that needs to be set for any processing job and is not specified in the
+     * processor descriptor.
+     * @return schema for outputDir
+     */
+    public static JsonNode outputDirInputSchema() {
+        // TODO move out of method
+        ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
+        JsonNode schema;
+        try (InputStream in = OpenApiRefResolver.class.getResourceAsStream("/schemas/output-dir.yml")) {
+            schema = yaml.readTree(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return schema;
     }
 }

@@ -8,8 +8,6 @@ input_types:
       minItems: 4
       maxItems: 4
       x-ui-widget: map
-      summary: summary
-      description: description
       title: Bounding Box
     time_selection:
       type: string
@@ -49,8 +47,8 @@ input_types:
         #  $ref: "#/input_types/schemas/collection"
 
 calvalus_input:
-  title: Input Product Selection
   schema:
+    title: Input Product Selection
     oneOf:
       - $ref: "#/input_types/schemas/map_time_range"
       - $ref: "#/input_types/schemas/identifier"

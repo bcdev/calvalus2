@@ -1,0 +1,3 @@
+title: Output Path
+description: Path where the output will be stored. Files already existing at this path may be overwritten.
+type: string
