@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusParameterDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.OGCInputDescription;
@@ -19,7 +18,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 
 public class CalvalusToOGCProcessTranslator {
     public OGCProcessDescription toOgcProcessDescription(CalvalusProcessorDescriptor calvalusDescriptor) {
@@ -38,44 +36,13 @@ public class CalvalusToOGCProcessTranslator {
             inputDescriptions.put(key, input);
         }
 
-        OGCInputDescription inputProductTypeDescription = new OGCInputDescription();
-        ObjectNode inputProductTypeDescriptionSchema = JsonNodeFactory.instance.objectNode();
-        inputProductTypeDescriptionSchema.put("type", "string");
-        ArrayNode inputTypeEnum = inputProductTypeDescriptionSchema.putArray("enum");
 
-        for (String inputProductType: calvalusDescriptor.inputProductTypes) {
-            inputTypeEnum.add(inputProductType);
-        }
-        inputProductTypeDescriptionSchema.put("default", calvalusDescriptor.inputProductTypes.get(0));
-        inputProductTypeDescription.schema =  inputProductTypeDescriptionSchema;
-        inputDescriptions.put("productType", inputProductTypeDescription);
-
-        // TODO remove temporary hardcoded inputs
-        ObjectNode outputPathSchema = JsonNodeFactory.instance.objectNode();
-        outputPathSchema.put("type", "string");
-        OGCInputDescription outputPathDescription = new OGCInputDescription();
-        outputPathDescription.schema = outputPathSchema;
-        // inputDescriptions.put("outputPath", outputPathDescription);
-        inputDescriptions.put("outputDir", outputPathDescription);
-
-        ObjectNode inputPathSchema = JsonNodeFactory.instance.objectNode();
-        inputPathSchema.put("type", "string");
-        OGCInputDescription inputPathDescription = new OGCInputDescription();
-        inputPathDescription.schema = outputPathSchema;
-        inputDescriptions.put("inputPath", inputPathDescription);
-
-        ObjectNode inputGeometrySchema = JsonNodeFactory.instance.objectNode();
-        ObjectNode inputGeometryItemType = JsonNodeFactory.instance.objectNode();
-        inputGeometryItemType.put("type", "number");
-        inputGeometrySchema.put("type", "array");
-        inputGeometrySchema.set("items", inputGeometryItemType);
-        inputGeometrySchema.put("minItems", 4);
-        inputGeometrySchema.put("maxItems", 4);
-        inputGeometrySchema.put("format", "bbox");
-        inputGeometrySchema.put("x-ui-widget", "map");
-        OGCInputDescription inputGeometryDescription = new OGCInputDescription();
-        inputGeometryDescription.schema = inputGeometrySchema;
-        inputDescriptions.put("inputGeometry", inputGeometryDescription);
+        OGCInputDescription inputProductDescription = new OGCInputDescription();
+        inputProductDescription.schema = productInputSchema();
+        inputDescriptions.put("inputProduct", inputProductDescription);
+        //for (String inputProductType: calvalusDescriptor.inputProductTypes) {
+            // inputTypeEnum.add(inputProductType);
+        //}
 
         // TODO still a dummy implementation
         OGCOutputDescription outputDescription = new OGCOutputDescription();
@@ -164,20 +131,18 @@ public class CalvalusToOGCProcessTranslator {
 
     /**
      * Constructs the schema for calvalus product input.
-     * The schema is mostly static, but collections are injected at run time, they depend on the descriptor.
-     * After collections are set, the "$ref" entries in the schema are resolved.
-     * @param collections Allowed collection values
+     * The schema is static, the "$ref" entries in the schema are resolved.
      * @return OpenAPI schema for calvalus product selection
      */
-    public static JsonNode areaTimeCollectionInput(List<String> collections) {
+    public static JsonNode productInputSchema() {
         // TODO move out of method
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
         JsonNode schema;
-        try (InputStream in = OpenApiRefResolver.class.getResourceAsStream("/schemas/map-time-collection.yml")) {
+        try (InputStream in = OpenApiRefResolver.class.getResourceAsStream("/schemas/input-product.yml")) {
             JsonNode root = yaml.readTree(in);
             // set input collections
-            ArrayNode collectionsNode = ((ObjectNode) root).putArray("collections");
-            collections.forEach(collectionsNode::add);
+            // ArrayNode collectionsNode = ((ObjectNode) root).putArray("collections");
+            // collections.forEach(collectionsNode::add);
 
              schema = OpenApiRefResolver.resolve(root.at("/calvalus_input"), root);
         } catch (IOException e) {

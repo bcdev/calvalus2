@@ -11,6 +11,10 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * This test is not used, due to removal collection-injection into the input schemas.
+ * Once collection selection is re-added, so should this test (HN, 2026-11-25)
+ */
 public class CalvalusToOGCProcessTranslatorTest {
     private static final String COLLECTIONS_PATH = "/schema/oneOf/0/properties/collection/enum";
     private static final ArrayList<String> COLLECTIONS = new ArrayList<>();
@@ -20,9 +24,10 @@ public class CalvalusToOGCProcessTranslatorTest {
         COLLECTIONS.add("Sentinel-3 SYN");
     }
 
-    @Test
+    // @Test
     public void testInjectCollections() {
-        JsonNode areaTimeCollectionInput = CalvalusToOGCProcessTranslator.areaTimeCollectionInput(COLLECTIONS);
+        //JsonNode areaTimeCollectionInput = CalvalusToOGCProcessTranslator.productInputSchema(COLLECTIONS);
+        JsonNode areaTimeCollectionInput = CalvalusToOGCProcessTranslator.productInputSchema();
         JsonNode actualCollectionsNode = areaTimeCollectionInput.at(COLLECTIONS_PATH);
         assertTrue(actualCollectionsNode.isArray());
         List<String> actualCollections = new ArrayList<>();

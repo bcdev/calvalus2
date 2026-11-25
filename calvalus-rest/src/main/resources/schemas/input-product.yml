@@ -37,7 +37,7 @@ input_types:
       enum:
         $ref: "#/collections"
 
-    map_time_range_collection:
+    map_time_range:
       title: Map with time range
       type: object
       properties:
@@ -45,12 +45,12 @@ input_types:
           $ref: "#/input_types/schemas/bounding_box"
         time_range:
           $ref: "#/input_types/schemas/time_range"
-        collection:
-          $ref: "#/input_types/schemas/collection"
+        #collection:
+        #  $ref: "#/input_types/schemas/collection"
 
 calvalus_input:
   title: Input Product Selection
   schema:
     oneOf:
-      - $ref: "#/input_types/schemas/map_time_range_collection"
+      - $ref: "#/input_types/schemas/map_time_range"
       - $ref: "#/input_types/schemas/identifier"
