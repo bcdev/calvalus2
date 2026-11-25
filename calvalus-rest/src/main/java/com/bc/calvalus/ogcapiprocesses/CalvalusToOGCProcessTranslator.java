@@ -144,7 +144,7 @@ public class CalvalusToOGCProcessTranslator {
             // ArrayNode collectionsNode = ((ObjectNode) root).putArray("collections");
             // collections.forEach(collectionsNode::add);
 
-             schema = OpenApiRefResolver.resolve(root.at("/calvalus_input"), root);
+             schema = OpenApiRefResolver.resolve(root.at("/calvalus_input/schema"), root);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
