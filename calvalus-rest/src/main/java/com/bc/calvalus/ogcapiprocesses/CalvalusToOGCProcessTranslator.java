@@ -14,8 +14,12 @@ import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.OGCInputDescription;
 import com.bc.calvalus.ogcapiprocesses.model.OGCOutputDescription;
 import com.bc.calvalus.ogcapiprocesses.model.OGCProcessDescription;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 
 public class CalvalusToOGCProcessTranslator {
     public OGCProcessDescription toOgcProcessDescription(CalvalusProcessorDescriptor calvalusDescriptor) {
@@ -156,5 +160,30 @@ public class CalvalusToOGCProcessTranslator {
                 "Default value '" + value.asText() + "' is not valid for type '" + type + "'", e
             );
         }
+    }
+
+    /**
+     * Constructs the schema for calvalus product input.
+     * The schema is mostly static, but collections are injected at run time, they depend on the descriptor.
+     * After collections are set, the "$ref" entries in the schema are resolved.
+     * @param collections Allowed collection values
+     * @return OpenAPI schema for calvalus product selection
+     */
+    public static JsonNode areaTimeCollectionInput(List<String> collections) {
+        // TODO move out of method
+        ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
+        JsonNode schema;
+        try (InputStream in = OpenApiRefResolver.class.getResourceAsStream("/schemas/map-time-collection.yml")) {
+            JsonNode root = yaml.readTree(in);
+            // set input collections
+            ArrayNode collectionsNode = ((ObjectNode) root).putArray("collections");
+            collections.forEach(collectionsNode::add);
+
+             schema = OpenApiRefResolver.resolve(root.at("/calvalus_input"), root);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return schema;
     }
 }

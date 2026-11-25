@@ -1,0 +1,56 @@
+collections: [] # set at runtime depending on product type specification
+input_types:
+  schemas:
+    bounding_box:
+      type: array
+      items:
+        type: number
+      minItems: 4
+      maxItems: 4
+      x-ui-widget: map
+      summary: summary
+      description: description
+      title: Bounding Box
+    time_selection:
+      type: string
+      format: date-time
+    identifier:
+      type: string
+      summary: summary
+      description: The product identifier
+      title: Product Identifier
+    time_range:
+      title: Time range
+      description: Choose a time (right edge exclusive)
+      type: object
+      x-ui-layout: row
+      properties:
+        start_time:
+          $ref: "#/input_types/schemas/time_selection"
+        stop_time:
+          $ref: "#/input_types/schemas/time_selection"
+    # Which collections appear is handled by product type and by which collections
+    # are configured in the csv table
+    collection:
+      title: Collection
+      type: string
+      enum:
+        $ref: "#/collections"
+
+    map_time_range_collection:
+      title: Map with time range
+      type: object
+      properties:
+        bbox:
+          $ref: "#/input_types/schemas/bounding_box"
+        time_range:
+          $ref: "#/input_types/schemas/time_range"
+        collection:
+          $ref: "#/input_types/schemas/collection"
+
+calvalus_input:
+  title: Input Product Selection
+  schema:
+    oneOf:
+      - $ref: "#/input_types/schemas/map_time_range_collection"
+      - $ref: "#/input_types/schemas/identifier"
