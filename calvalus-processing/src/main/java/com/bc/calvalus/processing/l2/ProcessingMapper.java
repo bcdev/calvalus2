@@ -179,7 +179,10 @@ public class ProcessingMapper extends Mapper<NullWritable, NullWritable, Text /*
         translateParameters(context);
         final Configuration jobConfig = context.getConfiguration();
         final String outputFormat = jobConfig.get(JobConfigNames.OUTPUT_FORMAT);
-        final String outputCompression = jobConfig.get(JobConfigNames.OUTPUT_COMPRESSION);
+        String outputCompression = jobConfig.get(JobConfigNames.OUTPUT_COMPRESSION);
+        if (outputCompression == null) {
+            outputCompression = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION);
+        }
 
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         String inputName = processorAdapter.getInputPath().getName();

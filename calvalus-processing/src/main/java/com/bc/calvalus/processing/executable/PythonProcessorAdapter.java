@@ -104,12 +104,11 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
             }
         }
 
-        // apply velocity to operator-*.vm files
+        // apply velocity to *.vm files
         final Configuration conf = getMapContext().getConfiguration();
         final String scriptFiles = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         if (scriptFiles != null && scriptFiles.contains(".vm")) {
             final File cwd = new File(".");
-            String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
             String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
             Rectangle productRectangle = null;
             Rectangle inputRectangle = getInputRectangle();
@@ -240,7 +239,10 @@ public class PythonProcessorAdapter extends ProcessorAdapter {
 
     protected void saveProcessedProductFiles(String[] outputFilesNames, ProgressMonitor pm) throws IOException {
         final Configuration conf = getConfiguration();
-        final String outputCompression = conf.get(JobConfigNames.OUTPUT_COMPRESSION);
+        String outputCompression = conf.get(JobConfigNames.OUTPUT_COMPRESSION);
+        if (outputCompression == null) {
+            outputCompression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION);
+        }
         String tableOutputFilename = null;
         if (getInputParameters().length > 0) {
             for (int i=0; i<getInputParameters().length; i+=2) {

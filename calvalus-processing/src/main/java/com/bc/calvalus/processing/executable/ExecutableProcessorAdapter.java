@@ -406,7 +406,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         } else {
             pm.beginTask("saving", 1);
             MapContext mapContext = getMapContext();
-            final String outputCompression = conf.get(JobConfigNames.OUTPUT_COMPRESSION);
+            String outputCompression = conf.get(JobConfigNames.OUTPUT_COMPRESSION);
+            if (outputCompression == null) {
+                outputCompression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION);
+            }
             if ("zip".equals(outputCompression) && outputFilenames.length == 1) {
                 LOG.info("Creating ZIP archive on HDFS.");
                 OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFilenames[0] + ".zip");
