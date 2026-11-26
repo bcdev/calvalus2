@@ -259,29 +259,44 @@ public class ProcessesService {
             final String catalinaHome = System.getProperty("catalina.home");
             final CalvalusHadoopConnection hadoopConnection = new CalvalusHadoopConnection(username);
             final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(username, userRoles);
-            // TODO
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
+            final int pos = pkgAndName.indexOf(PACKAGE_SEPARATOR);
+            if (pos == -1) {
+                throw new IllegalArgumentException(
+                        "Processes must declare a package and processors separated by '" + PACKAGE_SEPARATOR
+                        + "', but no '" + PACKAGE_SEPARATOR + "' was found for '" + pkgAndName + "'"
+                );
+            }
+            final String pkg = pkgAndName.substring(0, pos);
+            final String processorName = pkgAndName.substring(pos + 1);
+            LOG.info("Service name: " +  serviceName);
 
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(
                     hadoopConnection,
                     username,
                     roleMatcher,
                     catalinaHome + "/content/" + PRODUCTION_TYPE_DIR,
-                    catalinaHome + "/content/" + serviceName
+                    catalinaHome + "/content/" + serviceName + "/" + pkg
             );
+
+            LOG.info("processorDescriptorDir: " + catalinaHome + "/content/" + serviceName + "/" + pkg);
 
             // read Calvalus configuration
             final File calvalusConfigPath = new File(catalinaHome + "/content/" + serviceName + "/calvalus.properties");
             final Properties calvalusConfig = CalvalusHadoopRequestConverter.collectConfigParameters(calvalusConfigPath);
 
             Map<String, Object> parsedRequestTl = requestConverter.parseRequest(requestContent);
-            Map<String, Object> parsedRequest = new HashMap<>();
 
             // extract parameters from "inputs" and "outputs" fields
+            Map<String, Object> productInputs = CalvalusToOGCProcessTranslator.productInputsToParameter((Map<String, Object>) parsedRequestTl.get("inputProduct"));
+            parsedRequestTl.remove("inputProduct");
+
+            Map<String, Object> parsedRequest = new HashMap<>(productInputs);
             parsedRequest.putAll(((Map<String, Object>) parsedRequestTl.get("inputs")));
             parsedRequest.putAll(((Map<String, Object>) parsedRequestTl.get("inputs")));
             parsedRequest.put("productionType", "processing");
+            parsedRequest.put("processor", processorName);
 
 
             final CalvalusHadoopParameters hadoopParameters = requestConverter.collectParameters(

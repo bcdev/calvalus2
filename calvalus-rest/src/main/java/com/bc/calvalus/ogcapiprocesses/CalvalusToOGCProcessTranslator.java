@@ -2,22 +2,20 @@ package com.bc.calvalus.ogcapiprocesses;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.*;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusParameterDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
 import com.bc.calvalus.ogcapiprocesses.model.OGCInputDescription;
 import com.bc.calvalus.ogcapiprocesses.model.OGCOutputDescription;
 import com.bc.calvalus.ogcapiprocesses.model.OGCProcessDescription;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.apache.commons.lang.NotImplementedException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 public class CalvalusToOGCProcessTranslator {
     public OGCProcessDescription toOgcProcessDescription(CalvalusProcessorDescriptor calvalusDescriptor) {
@@ -151,6 +149,54 @@ public class CalvalusToOGCProcessTranslator {
         }
 
         return schema;
+    }
+
+    /**
+     *
+     * @param inputs
+     * @return
+     */
+    public static HashMap<String, Object> productInputsToParameter(Map<String, Object> inputProduct) {
+        final boolean isMapTemporalProductInput = inputProduct.get("bbox") != null;
+        if (!isMapTemporalProductInput) {
+            throw new NotImplementedException("Only Map + Time range is supported as input product");
+        }
+
+        // Map + time range
+        double[] bbox= (double[]) inputProduct.get("bbox");
+        String wkt = bbox2Wkt(bbox);
+
+        final ObjectNode timeRangeNode = (ObjectNode) inputProduct.get("time_range");
+        final String startTime = timeRangeNode.get("start_time").asText();
+        final String stopTime = timeRangeNode.get("stop_time").asText();
+
+        final String dateRanges = "[" + startTime + ":" + stopTime + "]";
+        HashMap<String, Object> calvalusInputParameters = new HashMap<>();
+        calvalusInputParameters.put("regionGeometry", wkt);
+        calvalusInputParameters.put("dateRanges", dateRanges);
+
+        return calvalusInputParameters;
+    }
+    // TODO find pre-made tool for this
+    private static String bbox2Wkt(double[] bbox) {
+        double MinX = bbox[0];
+        double MinY = bbox[1];
+        double MaxX = bbox[2];
+        double MaxY = bbox[3];
+        return String.format(
+                Locale.ROOT,
+                "POLYGON((%s %s, %s %s, %s %s, %s %S, %s %s))",
+                MinX,
+                MinY,
+                MaxX,
+                MinY,
+                MaxX,
+                MaxY,
+                MinX,
+                MaxY,
+                MinX,
+                MinY
+            );
     }
 
     /**
