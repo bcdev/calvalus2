@@ -184,6 +184,10 @@ public class CalvalusHadoopRequestConverter {
             } catch (FileNotFoundException e) {
                 throw new IllegalArgumentException("unknown production type " + productionType);
             }
+        } else if (! new File(translationRulePath).exists()) {
+            throw new IllegalAccessException(
+                    "production type not in request but " + translationRulePath + " not found"
+            );
         }
 
         // collect parameters, set defaults, merge structures
