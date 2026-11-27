@@ -261,6 +261,7 @@ public class ProcessesService {
             final DescriptorUtils.RoleMatcher roleMatcher = new DescriptorUtils.RoleMatcher(username, userRoles);
             final String requestUrl = request.getRequestURL().toString();
             final String serviceName = Paths.get(requestUrl).subpath(2, 3).toString();  // TODO check path
+            final String serviceDir = catalinaHome + "/content/" + serviceName;
             final int pos = pkgAndName.indexOf(PACKAGE_SEPARATOR);
             if (pos == -1) {
                 throw new IllegalArgumentException(
@@ -270,7 +271,19 @@ public class ProcessesService {
             }
             final String pkg = pkgAndName.substring(0, pos);
             final String processorName = pkgAndName.substring(pos + 1);
+            final String localPath = serviceDir + "/" + pkg + "/" + processorName + "-descriptor.json";
             LOG.info("Service name: " +  serviceName);
+
+            ObjectMapper jsonParser = new ObjectMapper();
+            jsonParser.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
+            jsonParser.configure(JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true);
+            String descriptorContent = readFileContent(localPath);
+            if (! roleMatcher.matches(descriptorContent)) {
+                return Response
+                        .status(Response.Status.NOT_FOUND)
+                        .entity("processor descriptor  " + pkg + "/" + processorName + " not found")
+                        .build();
+            }
 
             final CalvalusHadoopRequestConverter requestConverter = new CalvalusHadoopRequestConverter(
                     hadoopConnection,
@@ -289,11 +302,12 @@ public class ProcessesService {
             Map<String, Object> parsedRequestTl = requestConverter.parseRequest(requestContent);
 
             // extract parameters from "inputs" and "outputs" fields
-            Map<String, Object> productInputs = CalvalusToOGCProcessTranslator.productInputsToParameter((Map<String, Object>) parsedRequestTl.get("inputProduct"));
-            parsedRequestTl.remove("inputProduct");
+            Map<String, Object> requestInputs = (Map<String, Object>) parsedRequestTl.get("inputs");
+            Map<String, Object> productInputs = CalvalusToOGCProcessTranslator.productInputsToParameter((Map<String, Object>) requestInputs.get("inputProduct"));
+            requestInputs.remove("inputProduct");
 
-            Map<String, Object> parsedRequest = new HashMap<>(productInputs);
-            parsedRequest.putAll(((Map<String, Object>) parsedRequestTl.get("inputs")));
+            Map<String, Object> parsedRequest = new HashMap<>(requestInputs);
+            parsedRequest.putAll(productInputs);
             parsedRequest.putAll(((Map<String, Object>) parsedRequestTl.get("inputs")));
             parsedRequest.put("productionType", "processing");
             parsedRequest.put("processor", processorName);

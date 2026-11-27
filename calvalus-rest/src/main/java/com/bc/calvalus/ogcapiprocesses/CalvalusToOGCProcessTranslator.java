@@ -1,23 +1,25 @@
 package com.bc.calvalus.ogcapiprocesses;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
+import com.bc.calvalus.ogcapiprocesses.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
-import com.bc.calvalus.ogcapiprocesses.model.CalvalusParameterDescriptor;
-import com.bc.calvalus.ogcapiprocesses.model.CalvalusProcessorDescriptor;
-import com.bc.calvalus.ogcapiprocesses.model.OGCInputDescription;
-import com.bc.calvalus.ogcapiprocesses.model.OGCOutputDescription;
-import com.bc.calvalus.ogcapiprocesses.model.OGCProcessDescription;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.hadoop.mapred.JobStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class CalvalusToOGCProcessTranslator {
+    private static final Logger LOG = CalvalusLogger.getLogger();
     public OGCProcessDescription toOgcProcessDescription(CalvalusProcessorDescriptor calvalusDescriptor) {
         return toOgcProcessDescription(calvalusDescriptor, null);
     }
@@ -157,20 +159,28 @@ public class CalvalusToOGCProcessTranslator {
      * @return
      */
     public static HashMap<String, Object> productInputsToParameter(Map<String, Object> inputProduct) {
+        if (inputProduct == null) {
+            throw new IllegalArgumentException("inputProduct is null");
+        }
         final boolean isMapTemporalProductInput = inputProduct.get("bbox") != null;
         if (!isMapTemporalProductInput) {
             throw new NotImplementedException("Only Map + Time range is supported as input product");
         }
 
         // Map + time range
-        double[] bbox= (double[]) inputProduct.get("bbox");
-        String wkt = bbox2Wkt(bbox);
+        ArrayList<Number> bbox = (ArrayList<Number>) inputProduct.get("bbox");
+        double[] bboxArray = new double[bbox.size()];
+        for (int i = 0; i < bboxArray.length; i++) {
+            bboxArray[i] = bbox.get(i).doubleValue();
+        }
+        String wkt = bbox2Wkt(bboxArray);
 
-        final ObjectNode timeRangeNode = (ObjectNode) inputProduct.get("time_range");
-        final String startTime = timeRangeNode.get("start_time").asText();
-        final String stopTime = timeRangeNode.get("stop_time").asText();
+        final Map<String, Object> timeRangeNode = (Map<String, Object>) inputProduct.get("time_range");
+        final String startTime = timeRangeNode.get("start_time").toString().substring(0, DateUtils.DATE_FORMAT_STRING.length());
+        final String stopTime = timeRangeNode.get("stop_time").toString().substring(0, DateUtils.DATE_FORMAT_STRING.length());
 
         final String dateRanges = "[" + startTime + ":" + stopTime + "]";
+        LOG.info("dateRanges: " + dateRanges);
         HashMap<String, Object> calvalusInputParameters = new HashMap<>();
         calvalusInputParameters.put("regionGeometry", wkt);
         calvalusInputParameters.put("dateRanges", dateRanges);
