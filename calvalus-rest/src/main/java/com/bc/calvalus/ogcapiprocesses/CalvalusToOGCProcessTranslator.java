@@ -225,4 +225,22 @@ public class CalvalusToOGCProcessTranslator {
         }
         return schema;
     }
+
+    public static OGCJobStatus getOgcJobStatus(JobStatus hadoopJobStatus) {
+        JobStatus.State hadoopJobStatusEnum = hadoopJobStatus.getState();
+        switch (hadoopJobStatusEnum) {
+            case RUNNING:
+                return OGCJobStatus.RUNNING;
+            case SUCCEEDED:
+                return OGCJobStatus.SUCCESSFUL;
+            case FAILED:
+                return OGCJobStatus.FAILED;
+            case PREP:
+                return OGCJobStatus.ACCEPTED;
+            case KILLED:
+                return OGCJobStatus.DISMISSED;
+        }
+
+        return null;
+    }
 }
